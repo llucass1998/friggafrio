@@ -7,7 +7,8 @@ Date: 2026-07-25
 - **Modules integration tests**: ❌ Failed (Jest found no tests matching the pattern)
 
 ## 2. Storefront Tests
-*Pending E2E and responsive test results...*
+- **Responsive Tests**: ✅ Passed (6 tests passed after a component import fix)
+- **E2E Tests**: ❌ Failed (Test timeouts and `401 Unauthorized` errors during checkout flows)
 
 ## 3. Build Validation
 - **Storefront Build**: ✅ Succeeded (Vite build successful; some chunks exceed 500kB warning)
