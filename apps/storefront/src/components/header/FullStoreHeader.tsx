@@ -11,20 +11,8 @@ export function FullStoreHeader() {
 
   return (
     <header className="w-full bg-[var(--color-background)] border-b border-[var(--color-border)] relative z-40">
-      {/* Top bar (Telefone, Infos extras) */}
-      <div className="bg-[var(--color-surface-soft)] border-b border-[var(--color-border)] hidden md:block">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-8 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-          <div>Atendimento: Segunda a Sexta das 08h às 18h</div>
-          <div className="flex gap-4">
-            <a href="tel:+5511948777156" className="hover:text-[var(--color-primary)] transition-colors">
-              (11) 94877-7156
-            </a>
-            <Link to={`/${countryCode}/central-de-ajuda`} className="hover:text-[var(--color-primary)] transition-colors">
-              Central de Ajuda
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* O Top bar com telefone e infos extras foi migrado para o AccessibilityTopBar para unificar a acessibilidade e layout
+          conforme as instruções da Fase 2 */}
 
       {/* Main Header Area */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
