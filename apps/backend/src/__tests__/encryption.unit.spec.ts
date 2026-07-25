@@ -1,4 +1,4 @@
-import { encrypt, decrypt, hashValue } from "../../lib/encryption"
+import { encrypt, decrypt, hashValue } from "../lib/encryption"
 
 describe("Encryption", () => {
   beforeAll(() => {

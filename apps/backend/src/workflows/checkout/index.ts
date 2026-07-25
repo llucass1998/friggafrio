@@ -4,8 +4,9 @@ import {
   StepResponse,
   WorkflowResponse,
 } from "@medusajs/framework/workflows-sdk"
-import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules, MedusaError } from "@medusajs/framework/utils"
 import { PAYMENT_ATTEMPT_MODULE } from "../../modules/payment-attempt"
+import { PRODUCT_SALES_POLICY_MODULE } from "../../modules/product-sales-policy"
 
 const validateCartStockAndCalculate = createStep(
   "validate-cart-stock-and-calculate",
@@ -13,11 +14,23 @@ const validateCartStockAndCalculate = createStep(
     // 1. Resolve os modulos necessários (carrinho, inventário, etc)
     const cartService = container.resolve(Modules.CART)
     const pricingService = container.resolve(Modules.PRICING)
+    const productSalesPolicyService = container.resolve(PRODUCT_SALES_POLICY_MODULE) as any
 
-    // Simulação do core de negócio
     // a. Obtém Carrinho
-    // b. Regra de Negócio: recalcula baseado nos itens e estoque
-    // c. Valida Estoque de todos os itens do carrinho
+    const cart = await cartService.retrieveCart(input.cart_id, { relations: ["items", "items.product"] }) as any
+
+    // Validate QUOTE_ONLY rule across cart products
+    for (const item of cart.items || []) {
+      if (item.product?.id) {
+        const policyList = await productSalesPolicyService.listProductSalesPolicies({ product_id: item.product.id })
+        if (policyList.length > 0 && policyList[0].is_quote_only) {
+          throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `Product ${item.product.title} requires quote only and cannot be checked out directly.`)
+        }
+      }
+    }
+
+    // Regra de Negócio: recalcula baseado nos itens e estoque
+    // Valida Estoque de todos os itens do carrinho
 
     // Retorna Snapshot da validação
     return new StepResponse({
@@ -62,7 +75,7 @@ const generateIdempotencyKey = createStep(
 
 // The workflow defining the strict sequence
 export const checkoutWorkflow = createWorkflow(
-  "secure-checkout-workflow",
+  "checkout",
   (input: { cart_id: string }) => {
     // 1. Validar Estoque e Preços em Servidor
     const validationResult = validateCartStockAndCalculate(input)

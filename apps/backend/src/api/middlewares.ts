@@ -1,47 +1,25 @@
-import { defineMiddlewares } from "@medusajs/framework/http"
-
-// Store middlewares
+import { defineMiddlewares } from "@medusajs/medusa"
+import { validateDemoPriceCheckout } from "./middlewares/validate-demo-price"
 import { companyMiddlewares } from "./store/company/middlewares"
-import { meMiddlewares } from "./store/me/middlewares"
 import { employeesMiddlewares } from "./store/employees/middlewares"
-import { storeQuotesMiddlewares } from "./store/quotes/middlewares"
-import { dashboardMiddlewares } from "./store/dashboard/middlewares"
-import { storeUploadsMiddlewares } from "./store/uploads/middlewares"
-import { customerProfileMiddlewares } from "./store/customer-profile/middlewares"
-import { storeCheckoutMiddlewares } from "./store/checkout/middlewares"
-
-// Admin middlewares
-import { adminCompaniesMiddlewares } from "./admin/companies/middlewares"
-import { adminQuotesMiddlewares } from "./admin/quotes/middlewares"
-
-// Custom middlewares
-import { requireCompanySetup } from "./middlewares/require-company-setup"
+import { customersMiddlewares } from "./store/customers/middlewares"
+import { googleMiddlewares } from "./store/google/middlewares"
 
 export default defineMiddlewares({
   routes: [
-    // Store routes
-    ...companyMiddlewares,
-    ...meMiddlewares,
-    ...employeesMiddlewares,
-    ...storeQuotesMiddlewares,
-    ...dashboardMiddlewares,
-    ...storeUploadsMiddlewares,
-    ...customerProfileMiddlewares,
-    ...storeCheckoutMiddlewares,
-    // Admin routes
-    ...adminCompaniesMiddlewares,
-    ...adminQuotesMiddlewares,
-    // Protect cart completion and checkout session initiation
-    // for B2B employees whose company setup is incomplete
     {
+      method: "POST",
+      matcher: "/store/carts/:id/payment-collections",
+      middlewares: [validateDemoPriceCheckout],
+    },
+    {
+      method: "POST",
       matcher: "/store/carts/:id/complete",
-      method: "POST",
-      middlewares: [requireCompanySetup],
+      middlewares: [validateDemoPriceCheckout],
     },
-    {
-      matcher: "/store/company/initiate-checkout-session",
-      method: "POST",
-      middlewares: [requireCompanySetup],
-    },
+    ...companyMiddlewares,
+    ...employeesMiddlewares,
+    ...customersMiddlewares,
+    ...googleMiddlewares
   ],
 })

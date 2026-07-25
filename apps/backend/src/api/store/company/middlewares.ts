@@ -7,35 +7,35 @@ import { z } from "@medusajs/framework/zod"
 
 const SetupCompanySchema = z.object({
   // Auth credentials
-  email: z.string().email("Valid email is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email(),
+  password: z.string(),
   // Company data
-  company_name: z.string().min(1, "Company name is required"),
-  company_email: z.string().email("Valid company email is required"),
+  company_name: z.string(),
+  company_email: z.string().email(),
   company_phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   postal_code: z.string().optional(),
   country_code: z.string().optional(),
-  logo_url: z.string().url().optional(),
+  logo_url: z.string().optional(),
   // Admin customer data
-  admin_first_name: z.string().min(1, "Admin first name is required"),
-  admin_last_name: z.string().min(1, "Admin last name is required"),
+  admin_first_name: z.string(),
+  admin_last_name: z.string(),
   admin_phone: z.string().optional(),
 })
 
 const CreateCompanyAddressSchema = z.object({
-  name: z.string().min(1, "Address label is required"),
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
+  name: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
   company_name: z.string().nullable().optional(),
-  address_1: z.string().min(1, "Address is required"),
+  address_1: z.string(),
   address_2: z.string().nullable().optional(),
-  city: z.string().min(1, "City is required"),
+  city: z.string(),
   province: z.string().nullable().optional(),
-  postal_code: z.string().min(1, "Postal code is required"),
-  country_code: z.string().min(1, "Country is required"),
+  postal_code: z.string(),
+  country_code: z.string(),
   phone: z.string().nullable().optional(),
   is_default_shipping: z.boolean().optional(),
   is_default_billing: z.boolean().optional(),
@@ -43,16 +43,16 @@ const CreateCompanyAddressSchema = z.object({
 })
 
 const UpdateCompanyAddressSchema = z.object({
-  name: z.string().min(1).optional(),
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().min(1).optional(),
+  name: z.string().optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
   company_name: z.string().nullable().optional(),
-  address_1: z.string().min(1).optional(),
+  address_1: z.string().optional(),
   address_2: z.string().nullable().optional(),
-  city: z.string().min(1).optional(),
+  city: z.string().optional(),
   province: z.string().nullable().optional(),
-  postal_code: z.string().min(1).optional(),
-  country_code: z.string().min(1).optional(),
+  postal_code: z.string().optional(),
+  country_code: z.string().optional(),
   phone: z.string().nullable().optional(),
   is_default_shipping: z.boolean().optional(),
   is_default_billing: z.boolean().optional(),
@@ -60,7 +60,7 @@ const UpdateCompanyAddressSchema = z.object({
 })
 
 const UpdateMyCompanySchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().optional(),
   email: z.string().email().optional(),
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),

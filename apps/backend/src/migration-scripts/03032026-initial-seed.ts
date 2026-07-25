@@ -184,7 +184,7 @@ export default async function migration_03032026_initial_seed({
         stock_location_id: stockLocation.id,
       },
       [Modules.FULFILLMENT]: {
-        fulfillment_provider_id: "manual_manual",
+        fulfillment_provider_id: "local-pickup_local-pickup",
       },
     });
   } else {
@@ -216,7 +216,12 @@ export default async function migration_03032026_initial_seed({
     shippingProfile = shippingProfiles[0];
   }
 
-  const fulfillmentSets = await fulfillmentModuleService.listFulfillmentSets();
+  const fulfillmentSets = await fulfillmentModuleService.listFulfillmentSets(
+    {},
+    {
+      relations: ["service_zones"],
+    }
+  );
 
   let fulfillmentSet;
   if (!fulfillmentSets.length) {
@@ -262,7 +267,7 @@ export default async function migration_03032026_initial_seed({
         {
           name: "Standard Worldwide Shipping",
           price_type: "flat",
-          provider_id: "manual_manual",
+          provider_id: "local-pickup_local-pickup",
           service_zone_id: fulfillmentSet.service_zones[0].id,
           shipping_profile_id: shippingProfile.id,
           type: {

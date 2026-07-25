@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import crypto from "crypto"
+import { processMercadoPagoWebhookWorkflow } from "../../../workflows/payments/process-mercado-pago-webhook"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const signature = req.headers["x-signature"] as string
@@ -35,12 +36,20 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     return
   }
 
-  // TODO: Em uma implementação de produção, a partir daqui emitiríamos um evento
-  // para processamento em background (RabbitMQ, Redis Queue) ao invés de
-  // travar o retorno.
-  //
-  // const eventBus = req.scope.resolve("eventBusService")
-  // await eventBus.emit("mercado-pago.webhook.received", { payload: req.body })
+  try {
+    const webhookData = req.body as Record<string, unknown>
+    const eventId = (webhookData?.id || reqId) as string
+
+    // Dispara a execução assíncrona/durável do workflow de conciliação
+    await processMercadoPagoWebhookWorkflow(req.scope).run({
+      input: {
+        event_id: eventId,
+        data: webhookData,
+      },
+    })
+  } catch (err: any) {
+    req.scope.resolve("logger").error(`[MP Webhook Workflow] Error: ${err.message}`)
+  }
 
   res.status(200).json({ received: true })
 }
