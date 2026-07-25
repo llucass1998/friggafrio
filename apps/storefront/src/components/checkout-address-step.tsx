@@ -235,7 +235,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
         {/* Shipping Address */}
         <div className="flex flex-col gap-2">
           <h3 className="text-zinc-900 !text-base font-semibold">
-            Shipping Address
+            Endereço de Entrega
           </h3>
           {hasCompanyAddresses ? (
             <CompanyAddressSelector
@@ -268,7 +268,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
             }}
           />
           <label htmlFor="same_as_billing" className="text-sm">
-            Billing address is the same as shipping address
+            O endereço de cobrança é o mesmo da entrega
           </label>
         </div>
 
@@ -276,7 +276,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
         {!sameAsBilling && (
           <div className="flex flex-col gap-2">
             <h3 className="text-zinc-900 !text-base font-semibold">
-              Billing Address
+              Endereço de Cobrança
             </h3>
             {hasCompanyBillingAddresses ? (
               <CompanyAddressSelector
@@ -298,7 +298,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
         {/* Email */}
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className="block text-sm font-medium">
-            Email Address
+            Email
           </label>
           <Input
             id="email"
@@ -309,17 +309,17 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
               setEmailTouched(true)
             }}
             onBlur={() => setEmailTouched(true)}
-            placeholder="your@email.com"
+            placeholder="seu@email.com"
             className="w-full"
             aria-invalid={!!(emailTouched && (!email.trim() || !email.includes("@")))}
             aria-describedby={emailTouched && (!email.trim() || !email.includes("@")) ? "email-error" : "email-desc"}
           />
           <p id="email-desc" className="text-xs text-zinc-600">
-            You'll receive order updates to this email.
+            Você receberá atualizações do pedido neste email.
           </p>
           {emailTouched && (!email.trim() || !email.includes("@")) && (
             <p id="email-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
-              Please enter a valid email address.
+              Por favor, insira um email válido.
             </p>
           )}
         </div>
@@ -332,7 +332,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
 
         <div className="flex">
           <Button type="submit" disabled={!isFormValid() || isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-            Next
+            Próximo
           </Button>
         </div>
       </form>
@@ -351,7 +351,7 @@ function CompanyAddressSelector({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm text-zinc-600">Select a company address</p>
+      <p className="text-sm text-zinc-600">Selecione um endereço da empresa</p>
       {addresses.map((addr) => {
         const isSelected = selectedId === addr.id
         return (

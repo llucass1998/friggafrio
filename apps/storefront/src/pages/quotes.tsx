@@ -14,22 +14,17 @@ import {
 } from "@medusajs/icons"
 import { toast } from "sonner"
 import type { Quote } from "@/lib/data/quotes"
+import { formatCurrencyAmount } from "@/lib/utils/currency"
 
 function formatCurrency(
   amount: number | null | undefined,
   currencyCode: string
 ): string {
-  if (amount === null || amount === undefined) return "-"
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+  return formatCurrencyAmount({ amount, currencyCode })
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("pt-BR", {
     month: "short",
     day: "numeric",
     year: "numeric",

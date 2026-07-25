@@ -36,7 +36,7 @@ const Cart = () => {
   }
 
   const cartItems = sortCartItems(cart?.items || [])
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
+  const itemCount = getCartItemCount(cartItems)
 
   const handleRequestQuote = () => {
     if (!isAuthenticated) {
@@ -145,7 +145,7 @@ const Cart = () => {
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: CheckoutStepKey.ADDRESSES }} className="block">
-                    <Button className="w-full" size="lg">
+                    <Button className="w-full" size="lg" disabled={cartItems.some(item => !item.variant_id || item.quantity <= 0)}>
                       Proceed to Checkout
                     </Button>
                   </Link>

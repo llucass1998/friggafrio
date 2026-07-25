@@ -88,27 +88,27 @@ const Checkout = () => {
     return [
       {
         key: CheckoutStepKey.ADDRESSES,
-        title: "Addresses",
-        description: "Enter your shipping and billing addresses.",
+        title: "Endereços",
+        description: "Insira seus endereços de entrega e cobrança.",
         completed: !!(cart?.shipping_address && cart?.billing_address),
       },
       {
         key: CheckoutStepKey.DELIVERY,
-        title: "Delivery",
-        description: "Select a shipping method.",
+        title: "Entrega",
+        description: "Selecione um método de entrega.",
         completed: !!cart?.shipping_methods?.length,
       },
       {
         key: CheckoutStepKey.PAYMENT,
-        title: "Payment",
+        title: "Pagamento",
         description:
-          "Select a payment method. You won't be charged until you place your order.",
+          "Selecione um método de pagamento. Você não será cobrado até concluir o pedido.",
         completed: !!cart?.payment_collection?.payment_sessions?.length,
       },
       {
         key: CheckoutStepKey.REVIEW,
-        title: "Review",
-        description: "Review your order details before placing your order.",
+        title: "Revisão",
+        description: "Revise os detalhes do seu pedido antes de concluir.",
         completed: false,
       },
     ]

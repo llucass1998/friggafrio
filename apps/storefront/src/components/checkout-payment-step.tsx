@@ -259,7 +259,7 @@ const PaymentStep = ({
     <div className="flex flex-col gap-8">
       {!paidByGiftcard && hasSavedMethods && (
         <div className="space-y-3">
-          <p className="text-sm font-medium text-zinc-700">Select a company payment method</p>
+          <p className="text-sm font-medium text-zinc-700">Selecione um método de pagamento da empresa</p>
           {savedPaymentMethods.map((method) => {
             const card = method.data?.card
             const isSelected = selectedSavedMethodId === method.data.id
@@ -279,11 +279,11 @@ const PaymentStep = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-zinc-900">
-                    {card ? cardBrandLabel(card.brand) : "Card"} ending in {card?.last4 || "****"}
+                    {card ? cardBrandLabel(card.brand) : "Cartão"} terminado em {card?.last4 || "****"}
                   </p>
                   {card && (
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      Expires {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
+                      Expira em {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
                     </p>
                   )}
                 </div>
@@ -323,13 +323,13 @@ const PaymentStep = ({
       {paidByGiftcard && (
         <div className="flex flex-col w-1/3">
           <p className="text-base font-semibold text-zinc-900 mb-1">
-            Payment method
+            Método de pagamento
           </p>
           <p
             className="text-base font-semibold text-zinc-600"
             data-testid="payment-method-summary"
           >
-            Gift card
+            Cartão presente
           </p>
         </div>
       )}
@@ -351,7 +351,7 @@ const PaymentStep = ({
           disabled={isInitiating}
           className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
-          Back
+          Voltar
         </Button>
         <Button
           onClick={handleSubmit}
@@ -359,7 +359,7 @@ const PaymentStep = ({
           data-testid="submit-payment-button"
           className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
-          Next
+          Próximo
         </Button>
       </div>
     </div>

@@ -18,7 +18,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
 
-  const itemCount = cart?.items?.length ?? 0
+  const itemCount = getCartItemCount(cart?.items)
   const countryCode = (params as { countryCode?: string })?.countryCode || "us"
 
   return (
