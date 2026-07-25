@@ -19,11 +19,12 @@ import {
   ArrowPath,
 } from "@medusajs/icons"
 import type { HttpTypes } from "@medusajs/types"
+import { formatCurrencyAmount } from "@/lib/utils/currency"
 
 function formatDate(dateValue: string | Date | undefined | null): string {
   if (!dateValue) return "-"
   const date = typeof dateValue === "string" ? new Date(dateValue) : dateValue
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("pt-BR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -34,13 +35,7 @@ function formatCurrency(
   amount: number | null | undefined,
   currencyCode: string
 ): string {
-  if (amount === null || amount === undefined) return "-"
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+  return formatCurrencyAmount({ amount, currencyCode })
 }
 
 function getOrderStatusConfig(status: string) {

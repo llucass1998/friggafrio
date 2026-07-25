@@ -78,14 +78,14 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
 
       <div className="flex items-center gap-4">
         <Button variant="secondary" onClick={onBack} disabled={isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-          Back
+          Voltar
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!selectedOptionId || isSubmitting}
           className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
-          Next
+          Próximo
         </Button>
       </div>
     </div>

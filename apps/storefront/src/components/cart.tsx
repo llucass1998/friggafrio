@@ -18,7 +18,7 @@ import {
   useApplyPromoCode,
   useRemovePromoCode,
 } from "@/lib/hooks/use-cart"
-import { sortCartItems } from "@/lib/utils/cart"
+import { sortCartItems, getCartItemCount } from "@/lib/utils/cart"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
 import { getPricePercentageDiff } from "@/lib/utils/price"
 import { useCartDrawer } from "@/lib/context/cart"
@@ -465,7 +465,7 @@ export const CartDropdown = () => {
   const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
   const sortedItems = sortCartItems(cart?.items || [])
-  const itemCount = sortedItems?.reduce((total, item) => total + item.quantity, 0) || 0
+  const itemCount = getCartItemCount(sortedItems)
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
@@ -526,7 +526,7 @@ export const CartDropdown = () => {
                   </Button>
                 </Link>
                 <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
-                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
+                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={sortedItems?.some(item => !item.variant_id || item.quantity <= 0)}>
                     Finalizar compra
                   </Button>
                 </Link>

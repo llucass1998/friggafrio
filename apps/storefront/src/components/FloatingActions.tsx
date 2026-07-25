@@ -13,7 +13,7 @@ export function FloatingActions() {
     fields: DEFAULT_CART_DROPDOWN_FIELDS,
   });
 
-  const itemCount = cart?.items?.reduce((total, item) => total + Number(item.quantity ?? 0), 0) ?? 0;
+  const itemCount = getCartItemCount(cart?.items);
   const showCart = itemCount > 0;
   const displayCount = itemCount > 99 ? "99+" : itemCount;
 

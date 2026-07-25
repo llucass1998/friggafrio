@@ -80,20 +80,20 @@ const AddressForm = ({
     const newErrors: Record<string, string> = {}
 
     if (!addressFormData.first_name?.trim())
-      newErrors.first_name = "First name is required"
+      newErrors.first_name = "Nome é obrigatório"
     if (!addressFormData.last_name?.trim())
-      newErrors.last_name = "Last name is required"
+      newErrors.last_name = "Sobrenome é obrigatório"
     if (!addressFormData.address_1?.trim())
-      newErrors.address_1 = "Address is required"
-    if (!addressFormData.city?.trim()) newErrors.city = "City is required"
+      newErrors.address_1 = "Endereço é obrigatório"
+    if (!addressFormData.city?.trim()) newErrors.city = "Cidade é obrigatória"
     if (!addressFormData.postal_code?.trim())
-      newErrors.postal_code = "Postal code is required"
+      newErrors.postal_code = "CEP é obrigatório"
     if (!addressFormData.country_code?.trim())
-      newErrors.country_code = "Country is required"
+      newErrors.country_code = "País é obrigatório"
     const countryCodeExists = countriesInput.some(
       (country) => country.code === addressFormData.country_code
     )
-    if (!countryCodeExists) newErrors.country_code = "Country is invalid"
+    if (!countryCodeExists) newErrors.country_code = "País inválido"
 
     setErrors(newErrors)
     const isValid = Object.keys(newErrors).length === 0

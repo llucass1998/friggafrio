@@ -22,7 +22,7 @@ const ReviewStep = ({ cart, onBack }: ReviewStepProps) => {
         <>
           <div className="flex flex-col gap-2">
             <h3 className="text-zinc-900 !text-base font-semibold">
-              Shipping Address
+              Endereço de Entrega
             </h3>
             <Address address={cart.shipping_address} />
           </div>
@@ -30,7 +30,7 @@ const ReviewStep = ({ cart, onBack }: ReviewStepProps) => {
           {cart.shipping_methods?.[0] && (
             <div className="flex flex-col gap-2">
               <h3 className="text-zinc-900 !text-base font-semibold">
-                Shipping Method
+                Método de Entrega
               </h3>
               <div className="text-sm text-zinc-600 flex items-center gap-2">
                 <div>{cart.shipping_methods[0].name}</div>
@@ -49,37 +49,36 @@ const ReviewStep = ({ cart, onBack }: ReviewStepProps) => {
       {/* Payment Information */}
       <div className="flex flex-col gap-2">
         <h3 className="text-zinc-900 !text-base font-semibold">
-          Billing Address
+          Endereço de Cobrança
         </h3>
         <div className="text-sm text-zinc-600">
           {cart.billing_address ? (
             <Address address={cart.billing_address} />
           ) : (
-            <span>Same as shipping address</span>
+            <span>Mesmo que o endereço de entrega</span>
           )}
         </div>
       </div>
       <div className="flex flex-col gap-2">
         <h3 className="text-zinc-900 !text-base font-semibold">
-          Payment Method
+          Método de Pagamento
         </h3>
         <div className="text-sm text-zinc-600 flex items-center gap-2">
           {activeSession && (
             <PaymentMethodInfo provider_id={activeSession.provider_id} />
           )}
-          {paidByGiftcard && <span>Gift Card</span>}
+          {paidByGiftcard && <span>Cartão Presente</span>}
         </div>
       </div>
 
       <p className="text-sm text-zinc-600">
-        When you place your order, your payment will be authorized and we'll
-        start processing your order.
+        Ao fazer seu pedido, seu pagamento será autorizado e começaremos a processar seu pedido.
       </p>
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
         <Button variant="secondary" onClick={onBack} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-          Back
+          Voltar
         </Button>
 
         <PaymentButton cart={cart} />
