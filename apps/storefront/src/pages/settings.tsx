@@ -4,7 +4,6 @@ import { useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
 import { toast } from "sonner"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare } from "@medusajs/icons"
 import { loadStripe } from "@stripe/stripe-js"
@@ -925,7 +924,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
 }
 
 export default function SettingsPage() {
-  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee } = useAuth()
+  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee, isAuthenticated } = useAuth()
   const searchParams = useSearch({ strict: false }) as { tab?: string } | undefined
   const initialTab = (searchParams?.tab as "profile" | "company" | "addresses" | "payment_methods") || "profile"
   const [activeTab, setActiveTab] = useState<"profile" | "company" | "addresses" | "payment_methods">(initialTab)
@@ -1146,7 +1145,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -1626,6 +1625,6 @@ export default function SettingsPage() {
           )
         )}
       </div>
-    </DashboardPageLayout>
+    </div>
   )
 }

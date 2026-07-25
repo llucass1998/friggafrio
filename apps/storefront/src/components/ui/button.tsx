@@ -10,10 +10,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-white hover:bg-accent-hover focus:ring-accent",
-  secondary: "bg-slate-800 text-white hover:bg-slate-700 focus:ring-slate-500",
-  outline: "border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary focus:ring-accent",
-  ghost: "text-text-secondary hover:bg-surface-hover hover:text-text-primary focus:ring-accent",
+  primary: "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] focus:ring-[var(--color-primary)] hover:shadow-sm active:scale-[0.98]",
+  secondary: "bg-[var(--color-navy)] text-white hover:bg-[var(--color-navy)]/90 focus:ring-[var(--color-navy)] hover:shadow-sm active:scale-[0.98]",
+  outline: "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:bg-[#F5F8FA] hover:text-[var(--color-navy)] hover:border-[var(--color-primary)]/50 focus:ring-[var(--color-primary)] active:scale-[0.98]",
+  ghost: "text-[var(--color-text-secondary)] hover:bg-[#F5F8FA] hover:text-[var(--color-navy)] focus:ring-[var(--color-primary)] active:scale-[0.98]",
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -23,24 +23,24 @@ const sizeClasses: Record<ButtonSize, string> = {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className = "", 
-    variant = "primary", 
-    size = "md", 
+  ({
+    className = "",
+    variant = "primary",
+    size = "md",
     isLoading = false,
     disabled,
-    children, 
-    ...props 
+    children,
+    ...props
   }, ref) => {
     return (
       <button
         ref={ref}
         className={`
           inline-flex items-center justify-center gap-2
-          font-medium rounded-lg
-          transition-colors duration-200
+          font-bold rounded-[var(--radius-button)]
+          motion-interactive
           focus:outline-none focus:ring-2 focus:ring-offset-2
-          cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100 disabled:hover:bg-inherit
           ${variantClasses[variant]}
           ${sizeClasses[size]}
           ${className}

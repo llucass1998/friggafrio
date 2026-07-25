@@ -78,7 +78,7 @@ const ReviewStep = ({ cart, onBack }: ReviewStepProps) => {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
-        <Button variant="secondary" onClick={onBack}>
+        <Button variant="secondary" onClick={onBack} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
           Back
         </Button>
 

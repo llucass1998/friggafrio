@@ -14,6 +14,9 @@ services:
       - MERCADO_PAGO_ACCESS_TOKEN=${MERCADO_PAGO_ACCESS_TOKEN}
       - MERCADO_PAGO_WEBHOOK_SECRET=${MERCADO_PAGO_WEBHOOK_SECRET}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - STORE_CORS=https://www.friggafrio.com.br,https://friggafrio.com.br
+      - ADMIN_CORS=https://admin.friggafrio.com.br
+      - AUTH_CORS=https://admin.friggafrio.com.br,https://www.friggafrio.com.br
     ports:
       - "9000:9000"
     healthcheck:
@@ -58,6 +61,26 @@ services:
     # Porta NÃO exportada para fora
     expose:
       - 6379
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - backend
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   postgres-data:

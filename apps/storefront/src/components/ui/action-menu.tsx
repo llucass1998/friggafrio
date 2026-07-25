@@ -96,7 +96,7 @@ export function ActionMenu({ items }: ActionMenuProps) {
           <div
             ref={menuRef}
             style={{ top: position.top, left: position.left }}
-            className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999]"
+            className="fixed w-48 bg-white rounded-[var(--radius-card)] shadow-xl border border-[#E5EDF4] py-1 z-[9999] motion-dropdown animate-in fade-in-0 zoom-in-95 duration-[var(--motion-duration-fast)]"
           >
             {items.map((item, index) => {
               const Icon = item.icon
@@ -110,7 +110,7 @@ export function ActionMenu({ items }: ActionMenuProps) {
                     }
                   }}
                   disabled={item.disabled || item.loading}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses(item.variant)}`}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed motion-interactive ${getVariantClasses(item.variant)}`}
                 >
                   {item.loading ? (
                     <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />

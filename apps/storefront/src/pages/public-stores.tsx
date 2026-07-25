@@ -1,21 +1,49 @@
+import { useState } from "react"
+import { storeLocations } from "../config/store-locations"
 import { storeConfig } from "../config/store"
-import { StoreMap } from "../components/store-location/StoreMap"
-import { StoreLocationCard } from "../components/store-location/StoreLocationCard"
-import { StoreGallery } from "../components/store-location/StoreGallery"
-import { Link, useNavigate, useSearch } from "@tanstack/react-router"
-import { MapPin, PhoneCall, Info } from "lucide-react"
+import { GoogleStoreMap } from "../components/store-locations/GoogleStoreMap"
+import { StoreStreetView } from "../components/store-locations/StoreStreetView"
+import { StoreLocationCard } from "../components/store-locations/StoreLocationCard"
+import { Link } from "@tanstack/react-router"
+import { MapPin, PhoneCall, Info, Navigation, Eye, Image as ImageIcon } from "lucide-react"
 
 export function PublicStoresPage() {
-  const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { unidade?: string }
-  const activeLocationId = search.unidade || storeConfig.locations[0].id
+  const activeLocations = storeLocations.filter(loc => loc.active)
 
-  const activeLocation = storeConfig.locations.find(l => l.id === activeLocationId) || storeConfig.locations[0]
-  const fullAddress = `${activeLocation.address.street}, ${activeLocation.address.number}, ${activeLocation.address.district} - ${activeLocation.address.city}/${activeLocation.address.state}`
-  const mapSearchQuery = `${activeLocation.name} ${fullAddress}`
+  // By default, select the first active location for the map pane
+  const [selectedLocationId, setSelectedLocationId] = useState<string>(
+    activeLocations.length > 0 ? activeLocations[0].id : ""
+  )
+  const [activeTab, setActiveTab] = useState<"map" | "streetview" | "photos">("map")
+
+  const activeLocation = activeLocations.find(l => l.id === selectedLocationId) || activeLocations[0]
+
+  // Se não houver nenhuma loja ativa (teoricamente impossível pelo dataset atual, mas tipado seguro)
+  if (!activeLocation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F8FA]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-[#E5EDF4]">
+          <h1 className="text-2xl font-bold text-[var(--color-navy)] mb-2">Lojas em atualização</h1>
+          <p className="text-[var(--color-text-muted)]">Nossas informações de lojas estão sendo atualizadas.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const handleSelectLocation = (id: string) => {
+    setSelectedLocationId(id)
+    // Scroll down to map section when selecting a store on mobile
+    const mapSection = document.getElementById("map-panel")
+    if (mapSection) {
+      mapSection.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
 
   return (
-    <div className="w-full bg-[var(--color-surface)] min-h-screen pb-16">
+    <div className="w-full bg-[#FAFAFA] min-h-screen pb-16 font-sans">
+      <div aria-live="polite" className="sr-only">
+        {activeLocation ? `${activeLocation.name} selecionada.` : ''}
+      </div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -28,16 +56,16 @@ export function PublicStoresPage() {
             email: storeConfig.email,
             address: {
               "@type": "PostalAddress",
-              streetAddress: `${activeLocation.address.street}, ${activeLocation.address.number}`,
-              addressLocality: activeLocation.address.district,
-              addressRegion: activeLocation.address.state,
-              postalCode: activeLocation.address.postalCode,
+              streetAddress: activeLocation.addressLine,
+              addressLocality: activeLocation.district,
+              addressRegion: activeLocation.stateCode,
+              postalCode: activeLocation.postalCode,
               addressCountry: "BR",
             },
             sameAs: [storeConfig.instagramUrl],
-            hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapSearchQuery)}`,
+            hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${activeLocation.name} ${activeLocation.addressLine} ${activeLocation.district} ${activeLocation.city} ${activeLocation.stateCode} ${activeLocation.postalCode}`)}`,
             department: [
-              ...storeConfig.locations
+              ...activeLocations
                 .filter((l) => l.id !== activeLocation.id)
                 .map((loc) => ({
                   "@type": "LocalBusiness",
@@ -45,10 +73,10 @@ export function PublicStoresPage() {
                   telephone: storeConfig.phone,
                   address: {
                     "@type": "PostalAddress",
-                    streetAddress: `${loc.address.street}, ${loc.address.number}`,
-                    addressLocality: loc.address.district,
-                    addressRegion: loc.address.state,
-                    postalCode: loc.address.postalCode,
+                    streetAddress: loc.addressLine,
+                    addressLocality: loc.district,
+                    addressRegion: loc.stateCode,
+                    postalCode: loc.postalCode,
                     addressCountry: "BR",
                   },
                 })),
@@ -57,9 +85,9 @@ export function PublicStoresPage() {
         }}
       />
 
-      {/* Page Header (Hero Interno) */}
-      <div className="bg-[var(--color-surface-soft)] pt-12 pb-16 px-4 sm:px-6 lg:px-8 border-b border-[var(--color-border)]">
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
+      {/* Page Header */}
+      <div className="bg-white pt-10 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#E5EDF4]">
+        <div className="max-w-[1320px] mx-auto flex flex-col items-center text-center">
           {/* Breadcrumb */}
           <nav className="flex text-sm text-[var(--color-text-muted)] mb-8" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2">
@@ -70,135 +98,129 @@ export function PublicStoresPage() {
                 <span className="mx-2">/</span>
               </li>
               <li>
-                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossa Loja</span>
+                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossas lojas</span>
               </li>
             </ol>
           </nav>
 
-          <div className="inline-flex items-center rounded-full border border-[var(--color-accent)] bg-white px-3 py-1 text-xs font-semibold text-[var(--color-primary)] mb-6 shadow-sm">
-            Visite a FriggaFrio
-          </div>
-
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--color-navy)] mb-6">
-            Nossa Loja
+            Nossas lojas
           </h1>
           <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
-            Visite a FriggaFrio e encontre gases refrigerantes, compressores, componentes, ferramentas e atendimento especializado para refrigeração e ar-condicionado.
+            Encontre a unidade FriggaFrio mais próxima e conheça nossos canais de atendimento para produtos de refrigeração e climatização.
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
 
-        {/* Tabs / Location Selector */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-[var(--color-surface-soft)] p-1.5 rounded-full border border-[var(--color-border)] flex gap-1">
-            {storeConfig.locations.map((location) => (
-              <button
+        {/* Store Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 mb-16">
+          {activeLocations.map((location, index) => {
+            // Se tivermos um número ímpar de lojas e esta for a última, ela centraliza.
+            const isLastOddItem = activeLocations.length % 2 !== 0 && index === activeLocations.length - 1
+
+            return (
+              <div
                 key={location.id}
-                onClick={() => navigate({ to: '/nossa-loja', search: { unidade: location.id }, replace: true })}
-                className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
-                  activeLocation.id === location.id
-                    ? "bg-white text-[var(--color-primary)] shadow-sm border border-[var(--color-border)]"
-                    : "text-[var(--color-text-muted)] hover:text-[var(--color-navy)]"
-                }`}
-                aria-selected={activeLocation.id === location.id}
-                role="tab"
+                className={isLastOddItem ? "md:col-span-2 md:w-[calc(50%-0.75rem)] lg:w-[calc(50%-1rem)] md:justify-self-center w-full" : "w-full"}
               >
-                {location.shortName}
+                <StoreLocationCard
+                  location={location}
+                  isSelected={selectedLocationId === location.id}
+                  onSelect={() => handleSelectLocation(location.id)}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Selected Map Panel */}
+        <div id="map-panel" className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-[#E5EDF4] mb-20 scroll-mt-24">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-[#E5EDF4] pb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--color-navy)]">{activeLocation.name}</h2>
+              <p className="text-[var(--color-text-muted)] mt-1">{activeLocation.addressLine} - {activeLocation.district}</p>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex bg-[#F5F8FA] p-1.5 rounded-xl border border-[#E5EDF4] self-start md:self-auto w-full md:w-auto overflow-x-auto">
+              <button
+                onClick={() => setActiveTab("map")}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  activeTab === "map"
+                    ? "bg-white text-[var(--color-primary)] shadow-sm"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-navy)] hover:bg-black/5"
+                }`}
+              >
+                <Navigation className="w-4 h-4" />
+                Mapa
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Location Display Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
-
-          {/* Gallery / Visual Left Side (58%) */}
-          <div className="lg:col-span-7">
-            <StoreGallery locationId={activeLocation.id} locationName={activeLocation.name} address={fullAddress} />
-          </div>
-
-          {/* Card Info Right Side (42%) */}
-          <div className="lg:col-span-5">
-            <StoreLocationCard location={activeLocation} />
-          </div>
-        </div>
-
-        {/* Map Section */}
-        <div className="mb-20">
-          <StoreMap locationQuery={mapSearchQuery} address={fullAddress} />
-        </div>
-
-        {/* Section: Sobre a loja */}
-        <div className="mb-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-extrabold text-[var(--color-navy)] mb-6">Sobre a FriggaFrio</h2>
-            <p className="text-[var(--color-text-muted)] leading-relaxed mb-6">
-              A FriggaFrio oferece produtos e soluções para refrigeração comercial, industrial e doméstica. Em nossas lojas, clientes, técnicos e empresas encontram gases refrigerantes, compressores, componentes, ferramentas, tubos, isolamentos e atendimento especializado para diferentes aplicações.
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm">
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Atendimento especializado</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Nossa equipe auxilia na identificação de produtos conforme o equipamento e as especificações técnicas.</p>
+              <button
+                onClick={() => setActiveTab("streetview")}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  activeTab === "streetview"
+                    ? "bg-white text-[var(--color-primary)] shadow-sm"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-navy)] hover:bg-black/5"
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                Vista da rua
+              </button>
             </div>
-            <div className="bg-white p-5 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm">
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Variedade para refrigeração</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Encontre gases refrigerantes, compressores, ferramentas e componentes para diferentes sistemas.</p>
-            </div>
-            <div className="bg-white p-5 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm">
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Atendimento para profissionais e empresas</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Estrutura preparada para atender técnicos, instaladores, empresas e projetos de refrigeração.</p>
-            </div>
+          </div>
+
+          <div className="w-full">
+            {activeTab === "map" && <GoogleStoreMap location={activeLocation} />}
+            {activeTab === "streetview" && <StoreStreetView location={activeLocation} />}
           </div>
         </div>
 
         {/* Section: Antes de Visitar */}
-        <div className="mt-16 md:mt-24 border-t border-[var(--color-border)] pt-16">
+        <div className="mt-16 md:mt-24 border-t border-[#E5EDF4] pt-16">
           <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--color-navy)] mb-8 text-center">Antes de visitar a loja</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm text-center">
-              <div className="w-12 h-12 rounded-full bg-[var(--color-surface-soft)] mx-auto flex items-center justify-center mb-4 border border-[var(--color-border)]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="bg-white p-6 md:p-8 rounded-[var(--radius-card)] border border-[#E5EDF4] shadow-sm text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F8FA] mx-auto flex items-center justify-center mb-6 border border-[#E5EDF4]">
                 <Info className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Consulte a disponibilidade</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <h3 className="text-lg font-bold text-[var(--color-navy)] mb-3">Consulte a disponibilidade</h3>
+              <p className="text-[var(--color-text-muted)] leading-relaxed">
                 Confirme o estoque e a unidade antes de se deslocar.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm text-center">
-              <div className="w-12 h-12 rounded-full bg-[var(--color-surface-soft)] mx-auto flex items-center justify-center mb-4 border border-[var(--color-border)]">
-                <MapPin className="w-6 h-6 text-[var(--color-primary)]" />
+            <div className="bg-white p-6 md:p-8 rounded-[var(--radius-card)] border border-[#E5EDF4] shadow-sm text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F8FA] mx-auto flex items-center justify-center mb-6 border border-[#E5EDF4]">
+                <ImageIcon className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Envie o código ou uma foto</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <h3 className="text-lg font-bold text-[var(--color-navy)] mb-3">Envie uma foto da peça</h3>
+              <p className="text-[var(--color-text-muted)] leading-relaxed">
                 Se possuir o código, modelo ou fotografia da peça, envie para nossa equipe pelo WhatsApp.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm text-center">
-              <div className="w-12 h-12 rounded-full bg-[var(--color-surface-soft)] mx-auto flex items-center justify-center mb-4 border border-[var(--color-border)]">
-                <PhoneCall className="w-6 h-6 text-[var(--color-primary)]" />
+            <div className="bg-white p-6 md:p-8 rounded-[var(--radius-card)] border border-[#E5EDF4] shadow-sm text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F8FA] mx-auto flex items-center justify-center mb-6 border border-[#E5EDF4]">
+                <MapPin className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
-              <h3 className="font-bold text-[var(--color-navy)] mb-2">Confirme a unidade</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <h3 className="text-lg font-bold text-[var(--color-navy)] mb-3">Confirme a unidade</h3>
+              <p className="text-[var(--color-text-muted)] leading-relaxed">
                 Alguns produtos podem estar disponíveis em apenas uma das lojas.
               </p>
             </div>
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-12 text-center">
             <a
               href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent(`Olá! Gostaria de confirmar a disponibilidade de um produto e saber em qual unidade da FriggaFrio posso retirá-lo.`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3.5 px-8 rounded-[var(--radius-button)] shadow-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
+              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 px-8 rounded-xl shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
+              <PhoneCall className="w-5 h-5" />
               Confirmar pelo WhatsApp
             </a>
           </div>

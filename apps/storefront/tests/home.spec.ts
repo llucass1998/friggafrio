@@ -17,5 +17,5 @@ test('Header contém busca e navegação corretas', async ({ page }) => {
   await page.goto('/');
 
   // Navegação
-  await expect(page.getByRole('link', { name: 'Gases Refrigerantes' }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Quem Somos' }).first()).toBeVisible();
 });

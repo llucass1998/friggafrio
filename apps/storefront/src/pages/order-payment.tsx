@@ -10,7 +10,6 @@ import {
   useInitOrderPaymentSession,
 } from "@/lib/hooks/use-orders"
 import { useCartPaymentMethods } from "@/lib/hooks/use-checkout"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { Thumbnail } from "@/components/ui/thumbnail"
 import { Price } from "@/components/ui/price"
 import { Button } from "@/components/ui/button"
@@ -469,7 +468,7 @@ export default function OrderPaymentPage() {
   // Loading and auth states
   if (!isAuthenticated && !authLoading) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Complete Order</h1>
           <p className="text-gray-500 mt-1">Complete the checkout for your order.</p>
@@ -489,13 +488,13 @@ export default function OrderPaymentPage() {
             Sign In
           </Link>
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   if (isLoading) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Complete Order</h1>
           <p className="text-gray-500 mt-1">Complete the checkout for your order.</p>
@@ -503,13 +502,13 @@ export default function OrderPaymentPage() {
         <div className="flex items-center justify-center py-12">
           <ArrowPath className="w-8 h-8 animate-spin text-gray-400" />
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   if (!order) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Complete Order</h1>
           <p className="text-gray-500 mt-1">Complete the checkout for your order.</p>
@@ -527,13 +526,13 @@ export default function OrderPaymentPage() {
             Back to Orders
           </Link>
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   if (isPaid) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Complete Order</h1>
           <p className="text-gray-500 mt-1">Complete the checkout for your order.</p>
@@ -551,12 +550,12 @@ export default function OrderPaymentPage() {
             Back to Orders
           </Link>
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <Link
           to={"/$countryCode/orders" as string} params={{ countryCode }}
@@ -1022,6 +1021,6 @@ export default function OrderPaymentPage() {
           </div>
         </div>
       </div>
-    </DashboardPageLayout>
+    </div>
   )
 }

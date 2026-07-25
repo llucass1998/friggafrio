@@ -1,6 +1,5 @@
 import { CartEmpty } from "@/components/cart"
 import CheckoutProgress from "@/components/checkout-progress"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { StripeElementsProvider } from "@/components/stripe-elements-provider"
 import { Loading } from "@/components/ui/loading"
 import { useCart } from "@/lib/hooks/use-cart"
@@ -33,7 +32,7 @@ function CheckoutSetupBlocker({
     .map((s) => s.label.toLowerCase())
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-lg mx-auto py-16 text-center">
         <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg
@@ -72,7 +71,7 @@ function CheckoutSetupBlocker({
           </a>
         </div>
       </div>
-    </DashboardPageLayout>
+    </div>
   )
 }
 
@@ -186,7 +185,7 @@ const Checkout = () => {
   }
 
   return (
-    <DashboardPageLayout className="flex flex-col gap-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <CheckoutProgress
         steps={steps}
         currentStepIndex={currentStepIndex}
@@ -270,7 +269,7 @@ const Checkout = () => {
           {!cart && !cartLoading && <CartEmpty />}
         </Suspense>
       </div>
-    </DashboardPageLayout>
+    </div>
   )
 }
 

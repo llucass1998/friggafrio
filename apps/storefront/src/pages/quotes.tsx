@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { Link, useParams, useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useQuotes, useAcceptQuote, useRejectQuote, useQuotePreview, type QuoteWithRequestedBy } from "@/lib/hooks/use-quotes"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu"
 import {
   DocumentText,
@@ -415,26 +414,26 @@ export default function QuotesPage() {
 
   if (authLoading) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="w-8 h-8 border-2 border-teal-600/30 border-t-teal-600 rounded-full animate-spin" />
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   if (!isAuthenticated) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-gray-500">Please log in to view your quotes.</p>
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -702,6 +701,6 @@ export default function QuotesPage() {
           }
         />
       )}
-    </DashboardPageLayout>
+    </div>
   )
 }

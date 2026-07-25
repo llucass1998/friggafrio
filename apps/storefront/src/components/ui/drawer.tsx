@@ -4,12 +4,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { XMarkMini } from "@medusajs/icons"
 import { clsx } from "clsx"
 
+// Componente acessível e robusto de Drawer animado manualmente (CSS + state).
 const Drawer = DialogPrimitive.Root
-
 const DrawerTrigger = DialogPrimitive.Trigger
-
 const DrawerClose = DialogPrimitive.Close
-
 const DrawerPortal = DialogPrimitive.Portal
 
 const DrawerOverlay = React.forwardRef<
@@ -18,7 +16,11 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     className={clsx(
-      "fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-[#051428]/45 backdrop-blur-[2px]",
+      "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
+      "data-[state=open]:transition-opacity data-[state=closed]:transition-opacity",
+      "data-[state=open]:duration-[280ms] data-[state=closed]:duration-[240ms]",
+      "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
       className
     )}
     {...props}
@@ -28,16 +30,14 @@ const DrawerOverlay = React.forwardRef<
 DrawerOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const drawerVariants = cva(
-  "fixed z-50 bg-white shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out",
+  "fixed z-50 bg-white shadow-xl transition-transform",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b border-zinc-200 data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
-        bottom:
-          "inset-x-0 bottom-0 border-t border-zinc-200 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r border-zinc-200 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
-        right:
-          "inset-y-0 right-0 h-full w-full border-l border-zinc-200 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-[420px]",
+        top: "inset-x-0 top-0 border-b border-zinc-200 data-[state=closed]:-translate-y-full data-[state=open]:translate-y-0",
+        bottom: "inset-x-0 bottom-0 border-t border-zinc-200 data-[state=closed]:translate-y-full data-[state=open]:translate-y-0",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r border-zinc-200 data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0 sm:max-w-sm",
+        right: "inset-y-0 right-0 h-full w-full border-l border-zinc-200 data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 sm:max-w-[420px]",
       },
     },
     defaultVariants: {
@@ -60,17 +60,26 @@ const DrawerContent = React.forwardRef<
     <DrawerOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      aria-describedby={undefined}
-      className={clsx(drawerVariants({ side }), className)}
+      className={clsx(
+        drawerVariants({ side }),
+        "group",
+        // Animação CSS direta baseada em data-state sem depender de plugins animate-in
+        "data-[state=open]:duration-[420ms] data-[state=closed]:duration-[320ms]",
+        "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
+        className
+      )}
       {...props}
     >
       {!hideClose && (
-        <DialogPrimitive.Close className="absolute right-4 top-4 text-zinc-600 hover:text-zinc-500 transition-colors focus:outline-none disabled:pointer-events-none">
+        <DialogPrimitive.Close className="absolute right-4 top-4 text-zinc-600 hover:text-zinc-500 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] motion-interactive disabled:pointer-events-none">
           <XMarkMini className="h-5 w-5" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Fechar carrinho</span>
         </DialogPrimitive.Close>
       )}
-      {children}
+      {/* O conteúdo interno perde opacidade discretamente antes de sair e entra com delay suave */}
+      <div className="flex flex-col h-full opacity-100 group-data-[state=closed]:opacity-0 transition-opacity duration-[320ms]">
+        {children}
+      </div>
     </DialogPrimitive.Content>
   </DrawerPortal>
 ))

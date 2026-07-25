@@ -2,13 +2,14 @@ import { useState } from "react"
 import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LockClosedSolid } from "@medusajs/icons"
+import { GoogleLogin } from "@react-oauth/google"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "us"
-  const { login } = useAuth()
-  
+  const { login, loginWithGoogle } = useAuth()
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -29,6 +30,26 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error("Login error:", err)
       setError("Invalid email or password. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("")
+    setIsLoading(true)
+
+    try {
+      if (credentialResponse.credential) {
+        await loginWithGoogle(credentialResponse.credential)
+        console.log("[LoginPage] Google login successful, navigating to home")
+        navigate({ to: "/$countryCode", params: { countryCode } })
+      } else {
+        throw new Error("No credential received from Google")
+      }
+    } catch (err: any) {
+      console.error("Google Login error:", err)
+      setError(err.message || "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -56,6 +77,28 @@ export default function LoginPage() {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
+
+          {/* Google Auth */}
+          <div className="mb-6 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                console.error("Google Login falhou na inicialização")
+                setError("Falha ao abrir pop-up do Google. Verifique o bloqueador de pop-ups.")
+              }}
+              shape="rectangular"
+              text="continue_with"
+              theme="outline"
+              size="large"
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-[var(--color-border)]"></div>
+            <span className="px-4 text-sm text-[var(--color-text-muted)]">ou</span>
+            <div className="flex-1 border-t border-[var(--color-border)]"></div>
+          </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">

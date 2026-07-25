@@ -5,7 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 
 type FormatPriceParams = {
   amount: number
-  currency_code: string
+  currency_code?: string
   minimumFractionDigits?: number
   maximumFractionDigits?: number
   locale?: string
@@ -13,10 +13,10 @@ type FormatPriceParams = {
 
 export const formatPrice = ({
   amount,
-  currency_code,
+  currency_code = "BRL",
   minimumFractionDigits,
   maximumFractionDigits,
-  locale = "en-US",
+  locale = "pt-BR",
 }: FormatPriceParams): string => {
   return currency_code && !isEmpty(currency_code)
     ? new Intl.NumberFormat(locale, {

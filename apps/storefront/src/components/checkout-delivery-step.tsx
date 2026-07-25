@@ -30,10 +30,13 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
     }
   }, [shippingOptions, selectedOptionId])
 
+  const [mutationError, setMutationError] = useState<string | null>(null)
+
   const handleSubmit = async () => {
     if (!selectedOptionId || isSubmitting) return
 
     setIsSubmitting(true)
+    setMutationError(null)
     await setShippingMethodMutation.mutateAsync(
       {
         shipping_option_id: selectedOptionId,
@@ -45,8 +48,8 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
         onSettled: () => {
           setIsSubmitting(false)
         },
-        onError: () => {
-          // Error is handled by mutation state
+        onError: (err: any) => {
+          setMutationError(err.message || "Failed to select shipping method. Please try again.")
         },
       }
     )
@@ -54,7 +57,8 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="shipping-options-title">
+        <h3 id="shipping-options-title" className="sr-only">Opções de frete</h3>
         {shippingOptions?.map((option) => (
           <ShippingItemSelector
             key={option.id}
@@ -66,13 +70,20 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
         ))}
       </div>
 
+      {mutationError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-900 rounded-md" aria-live="assertive">
+          {mutationError}
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
-        <Button variant="secondary" onClick={onBack} disabled={isSubmitting}>
+        <Button variant="secondary" onClick={onBack} disabled={isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
           Back
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!selectedOptionId || isSubmitting}
+          className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
           Next
         </Button>

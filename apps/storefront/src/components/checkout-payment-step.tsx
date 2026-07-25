@@ -336,8 +336,9 @@ const PaymentStep = ({
 
       {error && (
         <div
-          className="text-rose-900 text-sm"
+          className="text-rose-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md"
           data-testid="payment-method-error-message"
+          aria-live="assertive"
         >
           {error}
         </div>
@@ -348,6 +349,7 @@ const PaymentStep = ({
           variant="secondary"
           onClick={onBack}
           disabled={isInitiating}
+          className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
           Back
         </Button>
@@ -355,6 +357,7 @@ const PaymentStep = ({
           onClick={handleSubmit}
           disabled={!canProceed || isInitiating}
           data-testid="submit-payment-button"
+          className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         >
           Next
         </Button>

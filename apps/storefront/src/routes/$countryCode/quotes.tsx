@@ -7,7 +7,7 @@ export const Route = createFileRoute("/$countryCode/quotes")({
     return {
       meta: [
         {
-          title: "Quotes | ProLift Equipment Portal",
+          title: "Quotes | FriggaFrio",
         },
         {
           name: "description",

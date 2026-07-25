@@ -119,19 +119,21 @@ const StripePaymentButton = ({
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-2">
       <Button
         disabled={notReady || submitting || !stripe || (!savedPaymentMethodId && !elements)}
         onClick={handlePayment}
         data-testid="place-order-button"
-        className={className}
+        className={`motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${className || ""}`}
       >
         {submitting ? "Processing..." : "Place Order"}
       </Button>
       {errorMessage && (
-        <div className="text-red-500 text-sm mt-2">{errorMessage}</div>
+        <div className="text-red-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md" aria-live="assertive">
+          {errorMessage}
+        </div>
       )}
-    </>
+    </div>
   )
 }
 
@@ -170,19 +172,21 @@ const ManualPaymentButton = ({
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-2">
       <Button
         disabled={notReady || submitting}
         onClick={handlePayment}
         data-testid="place-order-button"
-        className={className}
+        className={`motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${className || ""}`}
       >
         Place Order
       </Button>
       {errorMessage && (
-        <div className="text-red-500 text-sm mt-2">{errorMessage}</div>
+        <div className="text-red-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md" aria-live="assertive">
+          {errorMessage}
+        </div>
       )}
-    </>
+    </div>
   )
 }
 

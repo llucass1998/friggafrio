@@ -11,12 +11,12 @@ const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 
 const selectTriggerVariants = cva(
-  "flex items-center justify-between whitespace-nowrap text-sm text-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+  "flex items-center justify-between whitespace-nowrap text-sm text-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 motion-interactive",
   {
     variants: {
       variant: {
         default:
-          "h-10 w-full border border-zinc-300 bg-white px-3 py-2 shadow-sm ring-offset-white focus:ring-1 focus:ring-zinc-400",
+          "h-10 w-full rounded-[var(--radius-input)] border border-[#E5EDF4] bg-white px-3 py-2 shadow-sm ring-offset-white focus:ring-1 focus:ring-[var(--color-primary)] hover:border-[#CBD9E6]",
         minimal: "gap-2",
       },
     },
@@ -89,7 +89,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={clsx(
-        "relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden border border-zinc-200 bg-white text-zinc-900 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]",
+        "relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-[var(--radius-card)] border border-[#E5EDF4] bg-white text-zinc-900 shadow-lg motion-dropdown animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
@@ -132,7 +132,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={clsx(
-      "relative flex w-full cursor-default select-none items-center py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-zinc-100 focus:text-zinc-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-[#F5F8FA] focus:text-[var(--color-primary)] rounded-[var(--radius-button)] motion-interactive data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}

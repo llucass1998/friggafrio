@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router"
 import { lazy } from "react"
 import { Toaster } from "sonner"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import appCss from "../styles/app.css?url"
 
 const NotFound = lazy(() => import("@/components/not-found"))
@@ -19,13 +20,13 @@ export const Route = createRootRouteWithContext<{
 }>()({
   loader: async ({ context }) => {
     const { queryClient } = context
-    
+
     // Pre-populate regions cache
     await queryClient.ensureQueryData({
       queryKey: ["regions"],
       queryFn: () => listRegions({ fields: "id, name, currency_code, *countries" }),
     })
-    
+
     return {}
   },
   head: () => ({
@@ -60,9 +61,11 @@ function RootComponent() {
       <body>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <CartProvider>
-              <Layout />
-            </CartProvider>
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+              <CartProvider>
+                <Layout />
+              </CartProvider>
+            </GoogleOAuthProvider>
           </AuthProvider>
         </QueryClientProvider>
         <Toaster position="bottom-right" richColors />

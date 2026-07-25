@@ -3,12 +3,12 @@ import LoginPage from "@/pages/login"
 import { sdk } from "@/lib/medusa"
 
 export const Route = createFileRoute("/$countryCode/account/login")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ params }) => {
     // Check if already authenticated, redirect to home
     try {
       await sdk.store.customer.retrieve()
-      // If successful, user is already logged in
-      throw redirect({ to: "/$countryCode", params: { countryCode: "us" } })
+      // If successful, user is already logged in, redirect to proper country code
+      throw redirect({ to: "/$countryCode", params: { countryCode: params.countryCode || "br" } })
     } catch (error: any) {
       // Re-throw redirect
       if (error?.to) throw error
@@ -18,8 +18,8 @@ export const Route = createFileRoute("/$countryCode/account/login")({
   },
   head: () => ({
     meta: [
-      { title: "Sign In | ProLift Equipment" },
-      { name: "description", content: "Sign in to your ProLift Equipment account to view pricing, place orders, and manage your equipment." },
+      { title: "Login | FriggaFrio" },
+      { name: "description", content: "Faça login na sua conta FriggaFrio para acessar preços, orçamentos e gerenciar seus pedidos." },
     ],
   }),
   component: LoginPage,
