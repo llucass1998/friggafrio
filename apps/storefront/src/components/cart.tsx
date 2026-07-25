@@ -25,6 +25,7 @@ import { useCartDrawer } from "@/lib/context/cart"
 import { Minus, Plus, Trash, XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Link, useLocation } from "@tanstack/react-router"
+import { ShoppingCart } from "lucide-react"
 import { clsx } from "clsx"
 import { useState } from "react"
 
@@ -473,33 +474,28 @@ export const CartDropdown = () => {
     fields: DEFAULT_CART_DROPDOWN_FIELDS,
   })
   const location = useLocation()
-  const countryCode = getCountryCodeFromPath(location.pathname) || "us"
+  const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
   const sortedItems = sortCartItems(cart?.items || [])
   const itemCount = sortedItems?.reduce((total, item) => total + item.quantity, 0) || 0
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
-      <DrawerTrigger asChild>
-        <button className="text-zinc-600 hover:text-zinc-500 h-full cursor-pointer">
-          Cart ({itemCount})
-        </button>
-      </DrawerTrigger>
-
-      <DrawerContent className="flex flex-col">
-        <DrawerHeader>
-          <DrawerTitle>Shopping Cart</DrawerTitle>
+      <DrawerContent className="flex flex-col z-[100] h-full sm:max-w-md w-full right-0 left-auto" style={{ right: 0, left: 'auto', bottom: 0 }}>
+        <DrawerHeader className="border-b border-[var(--color-border)]">
+          <DrawerTitle className="text-xl font-bold text-[var(--color-navy)]">Seu Carrinho</DrawerTitle>
         </DrawerHeader>
 
         {/* Empty Cart */}
         {(!cart || itemCount === 0) && (
           <div className="flex flex-col items-center justify-center flex-1 p-6">
-            <span className="text-base font-medium text-zinc-600 mb-4">
-              Your cart is empty
+            <ShoppingCart className="w-16 h-16 text-[var(--color-border)] mb-4" />
+            <span className="text-base font-medium text-[var(--color-text-muted)] mb-4">
+              Seu carrinho está vazio
             </span>
             <Link to="/$countryCode/store" params={{ countryCode }} onClick={closeCart}>
-              <Button variant="secondary" size="sm">
-                Explore products
+              <Button variant="primary" size="sm">
+                Explorar produtos
               </Button>
             </Link>
           </div>
@@ -508,7 +504,7 @@ export const CartDropdown = () => {
         {/* Cart Items */}
         {cart && itemCount > 0 && (
           <>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
               {sortedItems?.map((item) => (
                 <CartLineItem
                   key={item.id}
@@ -520,17 +516,24 @@ export const CartDropdown = () => {
               ))}
             </div>
 
-            <DrawerFooter>
+            <DrawerFooter className="border-t border-[var(--color-border)] bg-[var(--color-surface-soft)]">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-base font-medium text-zinc-600">Subtotal</span>
-                <Price price={cart.item_subtotal} currencyCode={cart.currency_code} />
+                <span className="text-base font-bold text-[var(--color-navy)]">Subtotal</span>
+                <Price price={cart.item_subtotal} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
               </div>
 
-              <Link to="/$countryCode/cart" params={{ countryCode }} onClick={closeCart}>
-                <Button className="w-full" variant="primary">
-                  Go to cart
-                </Button>
-              </Link>
+              <div className="flex flex-col gap-2">
+                <Link to="/$countryCode/cart" params={{ countryCode }} onClick={closeCart} className="w-full">
+                  <Button className="w-full bg-white border border-[var(--color-border)] text-[var(--color-navy)] hover:bg-[var(--color-surface)]">
+                    Ver carrinho
+                  </Button>
+                </Link>
+                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" }} onClick={closeCart} className="w-full">
+                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white">
+                    Finalizar compra
+                  </Button>
+                </Link>
+              </div>
             </DrawerFooter>
           </>
         )}

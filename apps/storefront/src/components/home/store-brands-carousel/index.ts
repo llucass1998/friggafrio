@@ -1,0 +1,1 @@
+export { StoreBrandsCarousel } from "./StoreBrandsCarousel"

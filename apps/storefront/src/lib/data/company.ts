@@ -1,4 +1,4 @@
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 /**
  * Company data for creating a new company

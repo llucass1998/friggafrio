@@ -18,10 +18,10 @@ for (const viewport of viewports) {
     expect(bodyWidth).toBeLessThanOrEqual(windowWidth);
     
     // Verifica menu no mobile vs desktop
-    if (viewport.width < 768) {
-      await expect(page.getByLabel('Abrir menu mobile')).toBeVisible();
+    if (viewport.width < 1024) {
+      await expect(page.getByLabel('Abrir menu mobile').first()).toBeVisible();
     } else {
-      await expect(page.getByLabel('Abrir menu mobile')).not.toBeVisible();
+      await expect(page.getByLabel('Abrir menu mobile').first()).not.toBeVisible();
     }
   });
 }

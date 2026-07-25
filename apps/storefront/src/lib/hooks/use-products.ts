@@ -1,7 +1,7 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query"
 import { HttpTypes } from "@medusajs/types"
 import { queryKeys } from "@/lib/utils/query-keys"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 type ProductListQueryParams = HttpTypes.StoreProductListParams & {
   option_value_id?: string | string[]

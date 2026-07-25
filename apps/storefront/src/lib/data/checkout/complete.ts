@@ -1,6 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { getStoredCart, removeStoredCart } from "@/lib/utils/cart"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { QueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/utils/query-keys"
 

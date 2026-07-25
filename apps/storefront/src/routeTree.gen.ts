@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as NossaLojaRouteImport } from './routes/nossa-loja'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -35,6 +36,11 @@ import { Route as CountryCodeOrderOrderIdConfirmedRouteImport } from './routes/$
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NossaLojaRoute = NossaLojaRouteImport.update({
+  id: '/nossa-loja',
+  path: '/nossa-loja',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
   '/store': typeof StoreRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
   '/store': typeof StoreRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
   '/store': typeof StoreRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/health'
+    | '/nossa-loja'
     | '/store'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/health'
+    | '/nossa-loja'
     | '/store'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/health'
+    | '/nossa-loja'
     | '/store'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
@@ -302,6 +314,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   HealthRoute: typeof HealthRoute
+  NossaLojaRoute: typeof NossaLojaRoute
   StoreRoute: typeof StoreRoute
 }
 
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/store'
       fullPath: '/store'
       preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nossa-loja': {
+      id: '/nossa-loja'
+      path: '/nossa-loja'
+      fullPath: '/nossa-loja'
+      preLoaderRoute: typeof NossaLojaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -511,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   HealthRoute: HealthRoute,
+  NossaLojaRoute: NossaLojaRoute,
   StoreRoute: StoreRoute,
 }
 export const routeTree = rootRouteImport

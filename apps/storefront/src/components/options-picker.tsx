@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { clsx } from "clsx"
 import { ChevronRight } from "@medusajs/icons"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
 
 type ProductOptionValue = {

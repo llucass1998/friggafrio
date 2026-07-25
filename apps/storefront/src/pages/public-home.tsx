@@ -3,16 +3,18 @@ import { BenefitsSection } from "../components/home/BenefitsSection"
 import { FeaturedCategories } from "../components/home/FeaturedCategories"
 import { FeaturedProducts } from "../components/home/FeaturedProducts"
 import { ServicesSection } from "../components/home/ServicesSection"
-import { ContactBanner } from "../components/home/ContactBanner"
+import { StoreBrandsCarousel } from "../components/home/store-brands-carousel"
+
 
 export function PublicHomePage() {
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full relative">
       <HeroSection />
       <BenefitsSection />
       <FeaturedCategories />
-      <FeaturedProducts />
       <ServicesSection />
+      <StoreBrandsCarousel />
+      <FeaturedProducts />
     </div>
   )
 }

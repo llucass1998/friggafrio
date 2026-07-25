@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import AcceptInvitePage from "@/pages/accept-invite"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 export const Route = createFileRoute("/$countryCode/account/accept-invite")({
   validateSearch: (search: Record<string, unknown>) => {

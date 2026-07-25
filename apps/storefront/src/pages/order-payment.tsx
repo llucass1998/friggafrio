@@ -19,7 +19,7 @@ import AddressForm from "@/components/address-form"
 import PaymentContainer from "@/components/payment-container"
 import { formatOrderId } from "@/lib/utils/order"
 import { AddressFormData } from "@/lib/types/global"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { useQuery } from "@tanstack/react-query"
 import {
   ShoppingBag,

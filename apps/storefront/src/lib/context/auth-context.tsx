@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { HttpTypes } from "@medusajs/types"
 import { getMe, Employee, CustomerWithEmployee } from "@/lib/data/me"
 
@@ -20,21 +20,28 @@ const AuthContext = createContext<AuthContextType | null>(null)
 const AUTH_STATE_KEY = "auth_state"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Check cached auth state to avoid loading flash
-  const cachedAuthState = typeof window !== "undefined" ? sessionStorage.getItem(AUTH_STATE_KEY) : null
-  const initialAuthState = cachedAuthState === "authenticated"
-  
-  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthState)
-  // Only show loading on very first load when we don't know auth state
-  const [isLoading, setIsLoading] = useState(cachedAuthState === null)
+  // SSR-safe state initialization without relying on window/sessionStorage during render
+  // This ensures the server and initial client render always match
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
   const [employee, setEmployee] = useState<Employee | null>(null)
+
+  // Sync with sessionStorage only on the client side after hydration
+  useEffect(() => {
+    const cachedAuthState = sessionStorage.getItem(AUTH_STATE_KEY)
+    if (cachedAuthState === "authenticated") {
+      setIsAuthenticated(true)
+    }
+  }, [])
 
   const fetchCustomer = useCallback(async () => {
     console.log("[AuthContext] fetchCustomer called")
     try {
       // Fetch basic customer data
-      throw new Error('Bypass Auth');
+      const { customer } = await sdk.store.customer.retrieve({
+        fields: "id,email,first_name,last_name,phone,has_account"
+      })
       console.log("[AuthContext] customer retrieved:", customer?.email)
 
       // Fetch employee data before updating any state so the layout

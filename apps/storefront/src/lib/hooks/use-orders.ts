@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/utils/query-keys"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { reorder } from "@/lib/data/order"
 import { useAuth } from "@/lib/hooks/use-auth"
 

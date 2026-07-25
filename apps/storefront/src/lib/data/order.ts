@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { setStoredCart } from "@/lib/utils/cart"
 import { sendPostRequest } from "@/lib/data/custom"
 

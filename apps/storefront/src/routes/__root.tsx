@@ -30,13 +30,13 @@ export const Route = createRootRouteWithContext<{
   },
   head: () => ({
     links: [
-      { rel: "icon", type: "image/svg+xml", href: "/images/prolift-favicon.svg" },
-      { rel: "shortcut icon", href: "/images/prolift-favicon.svg" },
-      { rel: "apple-touch-icon", href: "/images/prolift-favicon.svg" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "shortcut icon", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "stylesheet", href: appCss },
     ],
     meta: [
-      { title: "ProLift Equipment" },
+      { title: "FriggaFrio | Refrigeração e Ar Condicionado" },
       { charSet: "UTF-8" },
       {
         name: "viewport",

@@ -1,4 +1,4 @@
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 export interface DashboardStats {
   total_orders: number
