@@ -201,7 +201,7 @@ const Checkout = () => {
           </p>
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="text-zinc-900 text-xl">Order Summary</h2>
+          <h2 className="text-zinc-900 text-xl">Resumo do Pedido</h2>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-24">
