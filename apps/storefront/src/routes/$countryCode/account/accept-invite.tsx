@@ -22,7 +22,7 @@ export const Route = createFileRoute("/$countryCode/account/accept-invite")({
   },
   head: () => ({
     meta: [
-      { title: "Accept Invite | ProLift Equipment" },
+      { title: "Accept Invite | FriggaFrio" },
       { name: "description", content: "Accept your team invitation and create your account." },
     ],
   }),

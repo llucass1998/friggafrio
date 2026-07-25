@@ -1,38 +1,59 @@
 import { PublicHeader } from "./public-header"
 import { PublicFooter } from "./public-footer"
-import { PreviewBanner } from "./preview-banner"
 import { FloatingActions } from "./FloatingActions"
 import { FloatingWhatsAppButton } from "./floating-whatsapp-button"
+import { CartDropdown } from "./cart"
+import {
+  AccessibilityProvider,
+  AccessibilityTopBar,
+  AccessibilityPanel,
+  AccessibilityFloatingButton,
+  SkipLinks,
+  ReadingGuide,
+  VLibrasWidget,
+  LiveRegion
+} from "./accessibility"
 
 interface PublicLayoutProps {
   children: React.ReactNode
 }
 
 export function PublicLayout({ children }: PublicLayoutProps) {
-  const bannerFlag = import.meta.env.VITE_SHOW_BANNER_FOR_PREVIEW
-  // Show banner whenever the env var is defined (set in dev/preview, absent in production).
-  // Treat "false" and "0" as opt-out values.
-  const showBanner =
-    bannerFlag !== undefined &&
-    bannerFlag !== "false" &&
-    bannerFlag !== "0" &&
-    bannerFlag !== false
-
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex flex-col font-sans text-[var(--color-text)]">
-      <PreviewBanner forceShow={showBanner} />
-      <PublicHeader bannerVisible={showBanner} />
+    <AccessibilityProvider>
+      <div className="min-h-screen bg-[var(--color-background)] flex flex-col font-sans text-[var(--color-text)]">
+        <SkipLinks />
+        <LiveRegion />
 
-      {/* Ajuste de espaçamento pro header: h-16 (mobile) + top bar h-8 (desktop) + header md h-20 */}
-      <main className={`flex-1 flex flex-col ${showBanner ? "pt-[140px] md:pt-[156px]" : "pt-16 md:pt-28"}`}>
-        {children}
-      </main>
+        <AccessibilityTopBar />
+        <PublicHeader />
 
-      <PublicFooter />
+        {/* Ajuste de espaçamento pro header: h-16 (mobile) + top bar h-8 (desktop) + header md h-20 */}
+        {/* Adicionado padding para compensar a AccessibilityTopBar */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className={`flex-1 flex flex-col focus:outline-none pt-16 md:pt-[148px]`}
+        >
+          {children}
+        </main>
 
-      {/* Botões fixos globais */}
-      <FloatingWhatsAppButton />
-      <FloatingActions />
-    </div>
+        <PublicFooter />
+
+        {/* Botões fixos globais */}
+        <FloatingWhatsAppButton />
+        <FloatingActions />
+        <AccessibilityFloatingButton />
+
+        {/* Dropdown/Drawer Global do Carrinho */}
+        <CartDropdown />
+
+        {/* Painel e Recursos Visuais de Acessibilidade */}
+        <AccessibilityPanel />
+        <ReadingGuide />
+        <VLibrasWidget />
+      </div>
+    </AccessibilityProvider>
   )
 }
+

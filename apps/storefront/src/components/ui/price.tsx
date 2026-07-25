@@ -1,7 +1,9 @@
+import { formatCurrencyAmount } from "@/lib/utils/currency"
+
 interface PriceProps {
   price?: number | null
   amount?: number
-  currencyCode: string
+  currencyCode?: string
   className?: string
   textSize?: "small" | "medium" | "large"
   textWeight?: "normal" | "plus"
@@ -15,7 +17,7 @@ interface PriceProps {
 export function Price({
   price,
   amount,
-  currencyCode,
+  currencyCode = "BRL",
   className = "",
   textSize = "medium",
   textWeight = "normal",
@@ -29,10 +31,7 @@ export function Price({
     return <span className={className}>--</span>
   }
 
-  const formatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode,
-  }).format(value)
+  const formatted = formatCurrencyAmount({ amount: value, currencyCode })
 
   const sizeClasses = {
     small: "text-sm",
@@ -51,10 +50,7 @@ export function Price({
     <span className={`${sizeClasses[textSize]} ${weightClasses[textWeight]} text-zinc-900 ${className}`}>
       {originalPrice && (
         <span className="text-zinc-500 line-through mr-2">
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: currencyCode,
-          }).format(originalPrice.price)}
+          {formatCurrencyAmount({ amount: originalPrice.price, currencyCode })}
         </span>
       )}
       {displayValue}

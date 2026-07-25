@@ -6,7 +6,7 @@ import { getEmployees, updateEmployeeSpendingLimit, inviteEmployee, getEmployeeI
 import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu"
 import { PencilSquare, ChevronUpMini, ChevronDownMini, ArrowLeftMini, ArrowRightMini, XMark, CheckMini, MagnifyingGlassMini, Plus, EnvelopeSolid, Clock, Users, ArrowPath, SquareTwoStack } from "@medusajs/icons"
 import { toast } from "sonner"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
+import { formatCurrencyAmount } from "@/lib/utils/currency"
 
 type Tab = "employees" | "invites"
 
@@ -14,13 +14,8 @@ type SortField = "name" | "email" | "spending_limit"
 type SortOrder = "asc" | "desc"
 
 function formatCurrency(amount: number | null): string {
-  if (amount === null) return "Unlimited"
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+  if (amount === null) return "Ilimitado"
+  return formatCurrencyAmount({ amount })
 }
 
 function SortIcon({ field, currentField, order }: { field: SortField; currentField: SortField; order: SortOrder }) {
@@ -576,11 +571,11 @@ export default function EmployeesPage() {
 
   if (authLoading) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="w-8 h-8 border-2 border-teal-600/30 border-t-teal-600 rounded-full animate-spin" />
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
@@ -592,7 +587,7 @@ export default function EmployeesPage() {
   const totalPages = data?.pageCount || 1
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -877,6 +872,6 @@ export default function EmployeesPage() {
           error={inviteError}
         />
       )}
-    </DashboardPageLayout>
+    </div>
   )
 }

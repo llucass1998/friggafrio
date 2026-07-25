@@ -7,7 +7,7 @@ export const Route = createFileRoute("/$countryCode/order/$orderId/payment")({
     return {
       meta: [
         {
-          title: "Order Payment | ProLift Equipment Portal",
+          title: "Order Payment | FriggaFrio",
         },
         {
           name: "description",

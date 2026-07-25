@@ -1,21 +1,4 @@
-export type StoreAddress = {
-  street: string;
-  number: string;
-  district: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-};
-
-export type StoreLocation = {
-  id: string;
-  name: string;
-  shortName: string;
-  type: "store";
-  isPrimary: boolean;
-  address: StoreAddress;
-};
+import { StoreLocation, storeLocations } from "./store-locations"
 
 export type StoreConfig = {
   name: string;
@@ -36,38 +19,5 @@ export const storeConfig: StoreConfig = {
   phone: "(11) 4580-1227",
   whatsappNumber: "5511948777156",
   instagramUrl: "https://www.instagram.com/frigga.frio/",
-  locations: [
-    {
-      id: "loja-1",
-      name: "FriggaFrio — Loja 1",
-      shortName: "Loja 1",
-      type: "store",
-      isPrimary: true,
-      address: {
-        street: "Alameda Glete",
-        number: "663",
-        district: "Campos Elíseos",
-        city: "São Paulo",
-        state: "SP",
-        postalCode: "01215-001",
-        country: "Brasil",
-      },
-    },
-    {
-      id: "loja-2",
-      name: "FriggaFrio — Loja 2",
-      shortName: "Loja 2",
-      type: "store",
-      isPrimary: false,
-      address: {
-        street: "Alameda Glete",
-        number: "926",
-        district: "Campos Elíseos",
-        city: "São Paulo",
-        state: "SP",
-        postalCode: "01215-001",
-        country: "Brasil",
-      },
-    },
-  ],
+  locations: storeLocations,
 } as const;

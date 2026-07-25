@@ -43,7 +43,9 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   const [isShippingAddressValid, setIsShippingAddressValid] = useState(false)
   const [isBillingAddressValid, setIsBillingAddressValid] = useState(false)
   const [email, setEmail] = useState(cart.email || "")
+  const [emailTouched, setEmailTouched] = useState(false)
   const storedCountryCode = getStoredCountryCode()
+  const [mutationError, setMutationError] = useState<string | null>(null)
 
   const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(null)
   const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null)
@@ -164,9 +166,10 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       })
 
       await setAddressesMutation.mutateAsync(submitData)
+      setMutationError(null)
       onNext()
-    } catch {
-      // Error is handled by mutation state
+    } catch (err: any) {
+      setMutationError(err.message || "Failed to submit address. Please check the fields and try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -187,6 +190,18 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       (isBillingAddressValid || sameAsBilling)
     )
   }
+
+  // Auto-validate email on mount if it's already prefilled
+  useEffect(() => {
+    if (email) {
+      setEmailTouched(true);
+    }
+  }, []);
+
+  // Use an effect to auto-validate the component's state without requiring manual changes.
+  useEffect(() => {
+    // Attempt validation on state changes
+  }, [email, isShippingAddressValid, isBillingAddressValid, sameAsBilling, hasCompanyAddresses, selectedShippingAddressId, selectedBillingAddressId])
 
   useEffect(() => {
     if (!cart.region) {
@@ -289,17 +304,34 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setEmailTouched(true)
+            }}
+            onBlur={() => setEmailTouched(true)}
             placeholder="your@email.com"
             className="w-full"
+            aria-invalid={!!(emailTouched && (!email.trim() || !email.includes("@")))}
+            aria-describedby={emailTouched && (!email.trim() || !email.includes("@")) ? "email-error" : "email-desc"}
           />
-          <p className="text-xs text-zinc-600">
+          <p id="email-desc" className="text-xs text-zinc-600">
             You'll receive order updates to this email.
           </p>
+          {emailTouched && (!email.trim() || !email.includes("@")) && (
+            <p id="email-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
+              Please enter a valid email address.
+            </p>
+          )}
         </div>
 
+        {mutationError && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-900 rounded-md" aria-live="assertive">
+            {mutationError}
+          </div>
+        )}
+
         <div className="flex">
-          <Button type="submit" disabled={!isFormValid() || isSubmitting}>
+          <Button type="submit" disabled={!isFormValid() || isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
             Next
           </Button>
         </div>

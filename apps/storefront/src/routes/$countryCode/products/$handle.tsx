@@ -81,7 +81,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       return {
         meta: [
           {
-            title: "Product Not Found | ProLift Equipment",
+            title: "Product Not Found | FriggaFrio",
           },
         ],
       };
@@ -96,7 +96,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       image: (product.images as any)?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
       brand: {
         "@type": "Brand",
-        name: "ProLift Equipment",
+        name: "FriggaFrio",
       },
       offers: {
         "@type": "Offer",
@@ -114,7 +114,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     return {
       meta: [
         {
-          title: `${product.title} | ProLift Equipment`,
+          title: `${product.title} | FriggaFrio`,
         },
         {
           name: "description",
@@ -122,12 +122,12 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         },
         {
           property: "og:title",
-          content: `${product.title} | ProLift Equipment`,
+          content: `${product.title} | FriggaFrio`,
         },
         {
           property: "og:description",
           content:
-            product.description || "Check out this product on ProLift Equipment",
+            product.description || "Check out this product on FriggaFrio",
         },
         {
           property: "og:image",

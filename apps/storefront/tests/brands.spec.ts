@@ -16,8 +16,8 @@ test('Seção de Marcas é renderizada corretamente e contém marcas confirmadas
   
   // Validate correct source files
   await expect(page.locator('img[alt="Logo da Bitzer"]')).toHaveAttribute('src', '/images/brands/bitzer.webp');
-  await expect(page.locator('img[alt="Logo da Siccom"]')).toHaveAttribute('src', '/images/brands/siccom.webp');
-  await expect(page.locator('img[alt="Logo da Coel"]')).toHaveAttribute('src', '/images/brands/coel.webp');
+  await expect(page.locator('img[alt="Logo da Siccom"]')).toHaveAttribute('src', '/images/brands/siccom.jpg');
+  await expect(page.locator('img[alt="Logo da Coel"]')).toHaveAttribute('src', '/images/brands/coel.jpg');
 });
 
 test('Produtos Especializados tem nome e termina antes do footer', async ({ page }) => {

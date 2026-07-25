@@ -9,12 +9,12 @@ export function FloatingActions() {
 
   // Cart logic
   const { openCart } = useCartDrawer();
-  const { data: cart, isLoading } = useCart({
+  const { data: cart } = useCart({
     fields: DEFAULT_CART_DROPDOWN_FIELDS,
   });
 
-  const itemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) ?? 0;
-  const showCart = itemCount > 0 && !isLoading;
+  const itemCount = cart?.items?.reduce((total, item) => total + Number(item.quantity ?? 0), 0) ?? 0;
+  const showCart = itemCount > 0;
   const displayCount = itemCount > 99 ? "99+" : itemCount;
 
   useEffect(() => {

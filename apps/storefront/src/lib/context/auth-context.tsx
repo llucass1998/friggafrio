@@ -10,6 +10,7 @@ interface AuthContextType {
   employee: Employee | null
   isAdmin: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   logout: () => Promise<void>
   refetch: () => Promise<void>
 }
@@ -88,9 +89,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     console.log("[AuthContext] login called")
     await sdk.auth.login("customer", "emailpass", { email, password })
-    console.log("[AuthContext] sdk.auth.login successful, fetching customer")
+    console.log("[AuthContext] sdk.auth.login successful, fetching customer. Cookies:", document.cookie)
     await fetchCustomer()
     console.log("[AuthContext] login complete, isAuthenticated:", isAuthenticated)
+  }
+
+  const loginWithGoogle = async (credential: string) => {
+    console.log("[AuthContext] loginWithGoogle called")
+    // Post token to Medusa backend for validation and session creation
+    const response = await fetch(`${import.meta.env.VITE_MEDUSA_BACKEND_URL}/auth/customer/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || "Erro ao fazer login com Google")
+    }
+
+    console.log("[AuthContext] Google login successful in backend, fetching customer")
+    await fetchCustomer()
   }
 
   const logout = async () => {
@@ -123,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         employee,
         isAdmin: employee?.is_admin ?? false,
         login,
+        loginWithGoogle,
         logout,
         refetch,
       }}

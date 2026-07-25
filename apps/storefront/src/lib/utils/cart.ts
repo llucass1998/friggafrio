@@ -29,6 +29,12 @@ export const sortCartItems = (items: HttpTypes.StoreCartLineItem[]): HttpTypes.S
   })
 }
 
+// ============ CART HELPERS ============
+
+export const getCartItemCount = (items?: HttpTypes.StoreCartLineItem[]): number => {
+  return items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
+}
+
 // ============ OPTIMISTIC CART ============
 
 export interface OptimisticCartItem {

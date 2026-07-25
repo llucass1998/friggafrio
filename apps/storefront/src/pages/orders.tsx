@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { Link, useParams, useNavigate, useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useCustomerOrders, useReorder } from "@/lib/hooks/use-orders"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu"
 import { Thumbnail } from "@/components/ui/thumbnail"
 import { Price } from "@/components/ui/price"
@@ -453,7 +452,7 @@ export default function OrdersPage() {
 
   if (!isAuthenticated && !authLoading) {
     return (
-      <DashboardPageLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
           <p className="text-gray-500 mt-1">View and manage your orders.</p>
@@ -473,12 +472,12 @@ export default function OrdersPage() {
             Sign In
           </Link>
         </div>
-      </DashboardPageLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
         <p className="text-gray-500 mt-1">
@@ -656,6 +655,6 @@ export default function OrdersPage() {
           isReordering={reorderingId === selectedOrder.id}
         />
       )}
-    </DashboardPageLayout>
+    </div>
   )
 }

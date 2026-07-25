@@ -119,38 +119,42 @@ const AddressForm = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="first_name" className="block text-sm font-medium">
-            First Name
+            Nome
           </label>
           <Input
             name="first_name"
             id="first_name"
             type="text"
             autoComplete="given-name"
-            value={addressFormData.first_name}
+            value={addressFormData.first_name ?? ""}
             onChange={(e) => handleChange("first_name", e.target.value)}
-            placeholder="First name"
+            placeholder="Nome"
+            aria-invalid={!!(errors.first_name && touchedFields.first_name)}
+            aria-describedby={errors.first_name && touchedFields.first_name ? "first_name-error" : undefined}
           />
           {errors.first_name && touchedFields.first_name && (
-            <div className="text-rose-900 text-sm mt-1">
+            <div id="first_name-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
               {errors.first_name}
             </div>
           )}
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="last_name" className="block text-sm font-medium">
-            Last Name
+            Sobrenome
           </label>
           <Input
             name="last_name"
             id="last_name"
             type="text"
             autoComplete="family-name"
-            value={addressFormData.last_name}
+            value={addressFormData.last_name ?? ""}
             onChange={(e) => handleChange("last_name", e.target.value)}
-            placeholder="Last name"
+            placeholder="Sobrenome"
+            aria-invalid={!!(errors.last_name && touchedFields.last_name)}
+            aria-describedby={errors.last_name && touchedFields.last_name ? "last_name-error" : undefined}
           />
           {errors.last_name && touchedFields.last_name && (
-            <div className="text-rose-900 text-sm mt-1">
+            <div id="last_name-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
               {errors.last_name}
             </div>
           )}
@@ -160,103 +164,111 @@ const AddressForm = ({
       {/* Company */}
       <div className="flex flex-col gap-2">
         <label htmlFor="company" className="block text-sm font-medium">
-          Company
+          Empresa
         </label>
         <Input
           name="company"
           id="company"
           type="text"
           autoComplete="organization"
-          value={addressFormData.company}
+          value={addressFormData.company ?? ""}
           onChange={(e) => handleChange("company", e.target.value)}
-          placeholder="Company name"
+          placeholder="Nome da empresa (opcional)"
         />
+      </div>
+
+      {/* CEP */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor="postal_code" className="block text-sm font-medium">
+          CEP
+        </label>
+        <Input
+          name="postal_code"
+          id="postal_code"
+          type="text"
+          autoComplete="postal-code"
+          value={addressFormData.postal_code ?? ""}
+          onChange={(e) => handleChange("postal_code", e.target.value)}
+          placeholder="00000-000"
+          aria-invalid={!!(errors.postal_code && touchedFields.postal_code)}
+          aria-describedby={errors.postal_code && touchedFields.postal_code ? "postal_code-error" : undefined}
+        />
+        {errors.postal_code && touchedFields.postal_code && (
+          <div id="postal_code-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
+            {errors.postal_code}
+          </div>
+        )}
       </div>
 
       {/* Address fields */}
       <div className="flex flex-col gap-2">
         <label htmlFor="address_1" className="block text-sm font-medium">
-          Address Line 1
+          Endereço e Número
         </label>
         <Input
           name="address_1"
           id="address_1"
           type="text"
           autoComplete="street-address"
-          value={addressFormData.address_1}
+          value={addressFormData.address_1 ?? ""}
           onChange={(e) => handleChange("address_1", e.target.value)}
-          placeholder="Address line 1"
+          placeholder="Ex: Rua das Flores, 123"
+          aria-invalid={!!(errors.address_1 && touchedFields.address_1)}
+          aria-describedby={errors.address_1 && touchedFields.address_1 ? "address_1-error" : undefined}
         />
         {errors.address_1 && touchedFields.address_1 && (
-          <div className="text-rose-900 text-sm mt-1">{errors.address_1}</div>
+          <div id="address_1-error" className="text-rose-900 text-sm mt-1" aria-live="polite">{errors.address_1}</div>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="address_2" className="block text-sm font-medium">
-          Address Line 2
+          Complemento / Bairro
         </label>
         <Input
           name="address_2"
           id="address_2"
           type="text"
-          value={addressFormData.address_2}
+          value={addressFormData.address_2 ?? ""}
           onChange={(e) => handleChange("address_2", e.target.value)}
-          placeholder="Address line 2"
+          placeholder="Ex: Apto 42, Centro"
         />
       </div>
 
-      {/* City, Province, Postal Code */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* City, Province */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="city" className="block text-sm font-medium">
-            City
+            Cidade
           </label>
           <Input
             name="city"
             id="city"
             type="text"
             autoComplete="address-level2"
-            value={addressFormData.city}
+            value={addressFormData.city ?? ""}
             onChange={(e) => handleChange("city", e.target.value)}
-            placeholder="City"
+            placeholder="Cidade"
+            aria-invalid={!!(errors.city && touchedFields.city)}
+            aria-describedby={errors.city && touchedFields.city ? "city-error" : undefined}
           />
           {errors.city && touchedFields.city && (
-            <div className="text-rose-900 text-sm mt-1">{errors.city}</div>
+            <div id="city-error" className="text-rose-900 text-sm mt-1" aria-live="polite">{errors.city}</div>
           )}
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="province" className="block text-sm font-medium">
-            State / Province
+            Estado
           </label>
           <Input
             name="province"
             id="province"
             type="text"
             autoComplete="address-level1"
-            value={addressFormData.province}
+            value={addressFormData.province ?? ""}
             onChange={(e) => handleChange("province", e.target.value)}
-            placeholder="State / Province"
+            placeholder="Ex: SP"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="postal_code" className="block text-sm font-medium">
-            Postal Code
-          </label>
-          <Input
-            name="postal_code"
-            id="postal_code"
-            type="text"
-            autoComplete="postal-code"
-            value={addressFormData.postal_code}
-            onChange={(e) => handleChange("postal_code", e.target.value)}
-            placeholder="Postal code"
-          />
-          {errors.postal_code && touchedFields.postal_code && (
-            <div className="text-rose-900 text-sm mt-1">
-              {errors.postal_code}
-            </div>
-          )}
         </div>
       </div>
 
@@ -266,7 +278,7 @@ const AddressForm = ({
           htmlFor="country_code"
           className="block text-sm font-medium text-zinc-900 mb-2"
         >
-          Country
+          País
         </label>
         {lockedCountryCode ? (
           <Input
@@ -280,11 +292,15 @@ const AddressForm = ({
         ) : (
           <Select
             name="country_code"
-            value={addressFormData.country_code}
+            value={addressFormData.country_code ?? ""}
             onValueChange={(value) => handleChange("country_code", value)}
           >
-            <SelectTrigger className="!border-zinc-200 !rounded-none !text-base !font-medium !px-4 !py-2 !h-auto !shadow-none !ring-0 focus:!ring-0">
-              <SelectValue placeholder="Select country" />
+            <SelectTrigger
+              className="!border-zinc-200 !rounded-none !text-base !font-medium !px-4 !py-2 !h-auto !shadow-none !ring-0 focus:!ring-0"
+              aria-invalid={!!(errors.country_code && touchedFields.country_code)}
+              aria-describedby={errors.country_code && touchedFields.country_code ? "country_code-error" : undefined}
+            >
+              <SelectValue placeholder="Selecione o país" />
             </SelectTrigger>
             <SelectContent>
               {countriesInput.map((country) => (
@@ -296,7 +312,7 @@ const AddressForm = ({
           </Select>
         )}
         {errors.country_code && touchedFields.country_code && (
-          <div className="text-rose-900 text-sm mt-1">
+          <div id="country_code-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
             {errors.country_code}
           </div>
         )}
@@ -305,16 +321,16 @@ const AddressForm = ({
       {/* Phone */}
       <div className="flex flex-col gap-2">
         <label htmlFor="phone" className="block text-sm font-medium">
-          Phone
+          Telefone
         </label>
         <Input
           name="phone"
           id="phone"
           type="tel"
           autoComplete="tel"
-          value={addressFormData.phone}
+          value={addressFormData.phone ?? ""}
           onChange={(e) => handleChange("phone", e.target.value)}
-          placeholder="Phone number"
+          placeholder="Telefone (com DDD)"
         />
       </div>
 
@@ -327,10 +343,10 @@ const AddressForm = ({
             onClick={onCancel}
             disabled={isLoading}
           >
-            Cancel
+            Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading} variant="primary">
-            Save
+            Salvar
           </Button>
         </div>
       )}
