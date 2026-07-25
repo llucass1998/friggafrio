@@ -63,7 +63,7 @@ const StripePaymentButton = ({
   const clientSecret = activeSession?.data?.client_secret as string | undefined
 
   const handlePayment = async () => {
-    if (!stripe) return
+    if (!stripe || submitting) return
 
     setSubmitting(true)
     setErrorMessage(null)
@@ -152,6 +152,7 @@ const ManualPaymentButton = ({
   const completeOrderMutation = useCompleteCartOrder()
 
   const handlePayment = async () => {
+    if (submitting) return
     setSubmitting(true)
     setErrorMessage(null)
 

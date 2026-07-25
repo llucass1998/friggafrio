@@ -431,6 +431,7 @@ export default function OrderPaymentPage() {
   }
 
   const handlePayment = async () => {
+    if (payOrderMutation.isPending || isPaid) return;
     try {
       await payOrderMutation.mutateAsync(orderId)
       toast.success("Payment successful! Your order is now being processed.")
@@ -931,7 +932,7 @@ export default function OrderPaymentPage() {
                   </Button>
                   <Button
                     onClick={handlePayment}
-                    disabled={payOrderMutation.isPending}
+                    disabled={payOrderMutation.isPending || isPaid}
                     className="flex-1"
                   >
                     {payOrderMutation.isPending ? (
