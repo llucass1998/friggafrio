@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router"
 import { getRegion } from "@/lib/data/regions"
 import Store from "@/pages/store"
-import { listAndSortProducts } from "@/lib/data/products"
+import { listProducts } from "@/lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
@@ -40,14 +40,13 @@ export const Route = createFileRoute("/$countryCode/store")({
 
     const { products } = await queryClient.ensureQueryData({
       queryKey: ["products", { region_id: region.id, optionValueIds }],
-      queryFn: () => listAndSortProducts({
+      queryFn: () => listProducts({
         query_params: {
           limit: 100,
           order: "-created_at",
           fields: "*variants.calculated_price,*categories,*variants.options"
         },
         region_id: region.id,
-        optionValueIds,
       }),
     })
 
@@ -55,7 +54,7 @@ export const Route = createFileRoute("/$countryCode/store")({
       countryCode,
       region,
       products: products as HttpTypes.StoreProduct[],
-      optionValueIds,
+      optionValueIds: optionValueIds as any,
     })
   },
   head: ({ loaderData }) => {

@@ -4,41 +4,31 @@ import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { getRegion } from "@/lib/data/regions"
 import { PublicProductCard } from "../public-product-card"
-import { useHydrated } from "@/lib/hooks/use-hydrated"
 
 export function FeaturedProducts() {
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
 
-  const hydrated = useHydrated()
-
-  // Buscar região do contexto atual
-  const { data: region, isError: isRegionError } = useQuery({
+  const { data: region } = useQuery({
     queryKey: ["region", countryCode],
     queryFn: () => getRegion({ country_code: countryCode }),
-    enabled: hydrated,
-    retry: 1,
   })
 
-  // Buscar os últimos produtos publicados que pertencem à região
-  const productsQuery = useQuery({
+  // Buscar todos os produtos publicados 
+  const { data: productsData, isLoading } = useQuery({
     queryKey: queryKeys.products.latest(4, region?.id || ""),
     queryFn: () =>
       listProducts({
-        query_params: {
-          limit: 4,
+        queryParams: {
+          
           order: "-created_at",
         },
-        region_id: region!.id,
+        regionId: region!.id,
       }),
-    enabled: hydrated && !!region?.id,
-    retry: 1,
+    enabled: !!region?.id,
   })
 
-  const isLoading = !hydrated || productsQuery.isPending || (!region && !isRegionError)
-  const isError = productsQuery.isError || isRegionError
-  const products = productsQuery.data?.response?.products || []
-  const showEmptyState = !isLoading && !isError && products.length === 0
+  const products = productsData?.response?.products || []
 
   return (
     <section className="py-10 md:py-16 lg:py-24 bg-white relative w-full mb-12 md:mb-20">
@@ -49,8 +39,8 @@ export function FeaturedProducts() {
             <p className="text-[var(--color-text-muted)] text-sm md:text-base">As soluções mais procuradas para o seu projeto</p>
           </div>
           <Link
-            to={"/$countryCode" as string}
-            params={{ countryCode }}
+            to={"/" as any}
+            
             className="hidden md:inline-flex text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
           >
             Ver todos os produtos
@@ -59,7 +49,6 @@ export function FeaturedProducts() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-            {/* Skeletons para carregamento */}
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] h-[400px]">
                 <div className="aspect-square bg-gray-200" />
@@ -72,25 +61,15 @@ export function FeaturedProducts() {
               </div>
             ))}
           </div>
-        ) : isError ? (
-          <div className="text-center py-12 min-h-[400px] flex flex-col gap-4 items-center justify-center">
-            <p className="text-[var(--color-text-muted)]">Não foi possível carregar os produtos agora.</p>
-            <button
-              onClick={() => productsQuery.refetch()}
-              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-[var(--radius-button)] font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        ) : showEmptyState ? (
-          <div className="text-center py-12 text-[var(--color-text-muted)] min-h-[400px] flex items-center justify-center">
-            Nenhum produto especializado encontrado no momento.
-          </div>
-        ) : (
+        ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {products.map((product) => (
-              <PublicProductCard key={product.id} product={product} isNew />
+              <PublicProductCard key={product.id} product={product as any} isNew />
             ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-[var(--color-text-muted)] min-h-[400px] flex items-center justify-center">
+            Nenhum produto especializado encontrado no momento.
           </div>
         )}
       </div>

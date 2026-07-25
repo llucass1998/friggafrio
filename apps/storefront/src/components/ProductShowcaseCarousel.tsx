@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import clsx from 'clsx';
 
 const slides = [
@@ -75,7 +75,7 @@ export function ProductShowcaseCarousel() {
                     {slide.description}
                   </p>
                   <Link 
-                    to={slide.link} 
+                    to={slide.link as any} 
                     className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition-colors"
                     tabIndex={isActive ? 0 : -1}
                   >
