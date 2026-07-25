@@ -1,0 +1,95 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/backend/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/backend-ci.yml"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "apps/backend/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: frigga_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d frigga_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/frigga_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-only-jwt-secret-replace-at-runtime
+      COOKIE_SECRET: ci-only-cookie-secret-replace-at-runtime
+      CSRF_SECRET: ci-only-csrf-secret-replace-at-runtime
+      DATA_ENCRYPTION_KEY: ci-only-valid-encryption-key-for-tests-only
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build backend
+        run: pnpm --filter backend build
+
+      # O banco local não está sendo provido pelo container em algumas máquinas Windows locais,
+      # Porém aqui no CI os containers foram declarados através da aba services nativa do actions.
+      - name: Run migrations
+        run: pnpm --filter backend exec medusa db:migrate
+
+      - name: Unit tests
+        run: pnpm --filter backend test:unit

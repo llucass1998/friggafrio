@@ -1,0 +1,11 @@
+@layer theme {
+  :root {
+    --radius-button-sm: 10px;
+    --radius-button: 12px;
+    --radius-button-lg: 14px;
+    
+    --radius-card-sm: 12px;
+    --radius-card: 16px;
+    --radius-card-lg: 18px;
+  }
+}
