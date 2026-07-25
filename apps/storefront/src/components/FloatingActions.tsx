@@ -3,6 +3,7 @@ import { useCartDrawer } from "@/lib/context/cart";
 import { useCart } from "@/lib/hooks/use-cart";
 import { ShoppingCart } from "lucide-react";
 import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart";
+import { getCartItemCount } from "@/lib/utils/cart";
 
 export function FloatingActions() {
   const [showScroll, setShowScroll] = useState(false);
