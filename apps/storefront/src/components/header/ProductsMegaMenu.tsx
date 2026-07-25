@@ -41,7 +41,7 @@ export function ProductsMegaMenu() {
 
           <div className="mt-6 px-6">
             <Link
-              to="/br/store"
+              to={"/$countryCode/store" as any} 
               className="text-[var(--color-primary)] font-medium hover:underline flex items-center gap-1 text-sm"
             >
               Ver todos os produtos

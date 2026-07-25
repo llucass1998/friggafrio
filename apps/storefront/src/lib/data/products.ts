@@ -1,94 +1,93 @@
-import { sdk } from "@/lib/medusa";
-import { HttpTypes } from "@medusajs/types";
+import { sdk } from "@/lib/medusa"
+import { HttpTypes } from "@medusajs/types"
+import { cache } from "react"
+// import { getAuthHeaders } from "./cookies" // Unused and missing
 
-export type ListProductsQueryParams = HttpTypes.StoreProductListParams & {
-  option_value_id?: string | string[]
-}
-
-export const listProducts = async ({
-  page_param = 1,
-  query_params,
-  region_id,
-}: {
-  page_param?: number;
-  query_params?: ListProductsQueryParams;
-  region_id?: string;
-}): Promise<{
-  response: {
-    products: HttpTypes.StoreProduct[];
-    count: number;
-    next_page: number | null;
-  }
-}> => {
-  const limit = query_params?.limit || 12;
-  const offset = (page_param - 1) * limit;
-
-  try {
-    const response = await sdk.store.product.list({
+export const listProducts = cache(
+  async ({
+    pageParam = 1,
+    queryParams,
+    query_params, // For compatibility
+    countryCode,
+    regionId,
+    region_id, // For compatibility
+  }: {
+    pageParam?: number
+    queryParams?: any
+    query_params?: any
+    countryCode?: string
+    regionId?: string
+    region_id?: string
+  }) => {
+    const qParams = queryParams || query_params || {};
+    const rId = regionId || region_id;
+    
+    const limit = qParams.limit || 12
+    const offset = (pageParam - 1) * limit
+    
+    const storeParams: any = {
       limit,
       offset,
-      region_id,
-      ...query_params,
-    });
-
-    const next_page =
-      response.count > offset + limit ? page_param + 1 : null;
-
-    return {
-      response: {
-        products: response.products,
-        count: response.count,
-        next_page,
-      }
+      region_id: rId,
+      ...qParams,
     };
-  } catch (error) {
-    console.error("Error fetching products", error);
-    return {
-      response: {
-        products: [],
-        count: 0,
-        next_page: null,
+    
+    return sdk.store.product
+      .list(storeParams, { next: { tags: ["products"] } }) 
+      .then(({ products, count }) => {
+        return {
+          response: { products, count },
+          products, // Return products directly for compatibility
+          count,
+          nextPage: count > offset + limit ? pageParam + 1 : null,
+          queryParams: storeParams,
+        }
+      })
+      .catch((error) => {
+        console.error("Store API Product List Error:", error);
+        return { response: { products: [], count: 0 }, products: [], count: 0, nextPage: null, queryParams: storeParams };
+      });
+  }
+)
+
+export const retrieveProduct = cache(
+  async (params: any, additionalArgs?: any) => {
+    // If it's a string, it's an ID
+    if (typeof params === 'string') {
+      return sdk.store.product.retrieve(params, { region_id: additionalArgs }, { next: { tags: ["products"] } })
+    }
+    
+    // If it's an object with a handle, we need to list by handle
+    if (params && params.handle) {
+      const { products } = await sdk.store.product.list({
+        handle: params.handle,
+        region_id: params.region_id,
+        fields: params.fields,
+      }, { next: { tags: ["products"] } });
+      
+      if (!products || products.length === 0) {
+        console.log("NOT FOUND REGION ID:", params.region_id); throw new Error(`Product with handle ${params.handle} not found`);
       }
-    };
+      return products[0];
+    }
+    
+    // If it's an object with an ID
+    if (params && params.id) {
+      return sdk.store.product.retrieve(params.id, { 
+        region_id: params.region_id,
+        fields: params.fields 
+      }, { next: { tags: ["products"] } });
+    }
+    
+    throw new Error("Invalid parameters for retrieveProduct");
   }
-}
+)
 
-export const listAndSortProducts = async ({
-  page_param = 1,
-  query_params,
-  region_id,
-  optionValueIds,
-}: {
-  page_param?: number;
-  query_params?: ListProductsQueryParams;
-  region_id?: string;
-  optionValueIds?: string[];
-}) => {
-  return listProducts({
-    page_param,
-    query_params,
-    region_id,
-  })
-}
-
-export const retrieveProduct = async ({
-  handle,
-  region_id,
-  fields,
-}: {
-  handle: string;
-  region_id?: string;
-  fields?: string;
-}): Promise<HttpTypes.StoreProduct> => {
-  const response = await sdk.store.product.list({
-    handle,
-    region_id,
-    fields,
-  });
-
-  if (!response.products || response.products.length === 0) {
-    throw new Error(`Product with handle ${handle} not found`);
+export const getProductByHandle = cache(
+  async (handle: string, regionId: string) => {
+    return sdk.store.product.list({
+      handle,
+      region_id: regionId,
+    }).then(({ products }) => products[0])
   }
-
-  return response.products[0];
-}
+)

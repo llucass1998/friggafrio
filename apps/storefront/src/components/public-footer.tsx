@@ -32,7 +32,7 @@ export function PublicFooter() {
   const countryCode = params.countryCode || "br"
   const currentYear = new Date().getFullYear()
 
-  const primaryLocation = storeConfig.locations.filter(l => l.isPrimary)[0]
+  const primaryLocation = storeConfig.locations[0]
 
   return (
     <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0 border-t-[8px] border-[#bae6fd]">
@@ -211,7 +211,7 @@ export function PublicFooter() {
                 {storeConfig.name} - CNPJ: 00.000.000/0000-00
                 <span className="hidden md:inline"> | </span>
                 <span className="block md:inline mt-1 md:mt-0">
-                  {primaryLocation?.address.street}, {primaryLocation?.address.number} - {primaryLocation?.address.city} - {primaryLocation?.address.state} - CEP: {primaryLocation?.address.postalCode}
+                  {primaryLocation?.addressLine} - {primaryLocation?.district} - {primaryLocation?.city} - {primaryLocation?.stateCode} - CEP: {primaryLocation?.postalCode}
                 </span>
               </p>
               <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">

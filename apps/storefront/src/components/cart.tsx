@@ -433,32 +433,20 @@ export const CartPromo = ({ cart }: CartPromoProps) => {
 
 export const CartEmpty = () => {
   const location = useLocation()
-  const countryCode = getCountryCodeFromPath(location.pathname) || "us"
+  const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6">
-      <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-        <svg
-          className="w-10 h-10 text-accent"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-          />
-        </svg>
+    <div className="flex flex-col items-center justify-center py-16 px-6 motion-dropdown animate-in slide-in-from-bottom-2 fade-in-0">
+      <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-soft)] border border-[#E5EDF4] flex items-center justify-center mb-6">
+        <ShoppingCart className="w-10 h-10 text-[#8EA6BC] opacity-60" />
       </div>
-      <h2 className="text-2xl font-bold text-text-primary mb-2">Your cart is empty</h2>
-      <p className="text-text-secondary text-center max-w-md mb-8">
-        Looks like you haven't added any equipment to your cart yet. Browse our catalog to find what you need.
+      <h2 className="text-2xl font-bold text-[var(--color-navy)] mb-2">Seu carrinho está vazio</h2>
+      <p className="text-[var(--color-text-muted)] text-center max-w-md mb-8">
+        Encontre produtos para refrigeração e climatização e adicione os itens que deseja consultar ou comprar.
       </p>
       <Link to="/$countryCode/store" params={{ countryCode }}>
         <Button variant="primary" size="lg">
-          Browse Products
+          Explorar produtos
         </Button>
       </Link>
     </div>
@@ -481,20 +469,28 @@ export const CartDropdown = () => {
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
-      <DrawerContent className="flex flex-col z-[100] h-full sm:max-w-md w-full right-0 left-auto" style={{ right: 0, left: 'auto', bottom: 0 }}>
-        <DrawerHeader className="border-b border-[var(--color-border)]">
+      <DrawerContent
+        className="flex flex-col z-[100] h-full sm:max-w-md w-full right-0 left-auto border-l border-[#E5EDF4]"
+        style={{ right: 0, left: 'auto', bottom: 0 }}
+        aria-describedby="cart-drawer-description"
+      >
+        <DrawerHeader className="border-b border-[#E5EDF4]">
           <DrawerTitle className="text-xl font-bold text-[var(--color-navy)]">Seu Carrinho</DrawerTitle>
+          <div id="cart-drawer-description" className="sr-only">Lista de itens adicionados ao carrinho.</div>
         </DrawerHeader>
 
         {/* Empty Cart */}
         {(!cart || itemCount === 0) && (
-          <div className="flex flex-col items-center justify-center flex-1 p-6">
-            <ShoppingCart className="w-16 h-16 text-[var(--color-border)] mb-4" />
-            <span className="text-base font-medium text-[var(--color-text-muted)] mb-4">
-              Seu carrinho está vazio
-            </span>
+          <div className="flex flex-col items-center justify-center flex-1 p-6 motion-dropdown animate-in fade-in-0 duration-[var(--motion-duration-medium)]">
+            <div className="w-20 h-20 rounded-2xl bg-[#F5F8FA] border border-[#E5EDF4] flex items-center justify-center mb-6">
+              <ShoppingCart className="w-10 h-10 text-[#8EA6BC] opacity-60" />
+            </div>
+            <h2 className="text-xl font-bold text-[var(--color-navy)] mb-2">Seu carrinho está vazio</h2>
+            <p className="text-sm text-[var(--color-text-muted)] text-center max-w-[260px] mb-8">
+              Encontre produtos para refrigeração e climatização e adicione os itens que deseja consultar ou comprar.
+            </p>
             <Link to="/$countryCode/store" params={{ countryCode }} onClick={closeCart}>
-              <Button variant="primary" size="sm">
+              <Button variant="primary" size="sm" className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
                 Explorar produtos
               </Button>
             </Link>
@@ -504,19 +500,20 @@ export const CartDropdown = () => {
         {/* Cart Items */}
         {cart && itemCount > 0 && (
           <>
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 motion-dropdown animate-in slide-in-from-bottom-2 fade-in-0 duration-[var(--motion-duration-medium)]">
               {sortedItems?.map((item) => (
-                <CartLineItem
-                  key={item.id}
-                  item={item}
-                  cart={cart}
-                  type="compact"
-                  fields={DEFAULT_CART_DROPDOWN_FIELDS}
-                />
+                <div key={item.id} className="animate-in fade-in-0 duration-[var(--motion-duration-fast)]">
+                  <CartLineItem
+                    item={item}
+                    cart={cart}
+                    type="compact"
+                    fields={DEFAULT_CART_DROPDOWN_FIELDS}
+                  />
+                </div>
               ))}
             </div>
 
-            <DrawerFooter className="border-t border-[var(--color-border)] bg-[var(--color-surface-soft)]">
+            <DrawerFooter className="border-t border-[#E5EDF4] bg-[#F5F8FA] motion-dropdown animate-in slide-in-from-bottom-4 fade-in-0 duration-[var(--motion-duration-slow)]">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-base font-bold text-[var(--color-navy)]">Subtotal</span>
                 <Price price={cart.item_subtotal} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
@@ -524,12 +521,12 @@ export const CartDropdown = () => {
 
               <div className="flex flex-col gap-2">
                 <Link to="/$countryCode/cart" params={{ countryCode }} onClick={closeCart} className="w-full">
-                  <Button className="w-full bg-white border border-[var(--color-border)] text-[var(--color-navy)] hover:bg-[var(--color-surface)]">
+                  <Button className="w-full bg-white border-2 border-[#E5EDF4] text-[var(--color-navy)] hover:bg-[#E5EDF4]/50 motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
                     Ver carrinho
                   </Button>
                 </Link>
-                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" }} onClick={closeCart} className="w-full">
-                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white">
+                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
+                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
                     Finalizar compra
                   </Button>
                 </Link>

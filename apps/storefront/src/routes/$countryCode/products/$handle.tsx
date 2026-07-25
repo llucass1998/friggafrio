@@ -17,11 +17,11 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     });
 
     if (!region || !handle) {
-      throw notFound();
+      console.error("ERROR IN LOADER"); throw notFound();
     }
 
     // Single comprehensive product fetch with all needed fields
-    const product = await queryClient.ensureQueryData({
+    const productData = await queryClient.ensureQueryData({
       queryKey: ["product", handle, region.id],
       queryFn: async () => {
         try {
@@ -31,11 +31,14 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
             fields:
               "*variants, +variants.inventory_quantity, +variants.manage_inventory, +variants.allow_backorder, +variants.calculated_price, *images, *options, *options.values, *collection, *tags",
           });
-        } catch {
-          throw notFound();
+        } catch(e) {
+          console.error("ERROR IN LOADER"); throw notFound();
         }
       },
     });
+
+    // Cast as product to handle missing types safely
+    const product = productData as unknown as HttpTypes.StoreProduct;
 
     // Ensure related products are loaded for SSR to prevent hydration mismatch
     // This ensures consistent rendering between server and client
@@ -53,7 +56,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         }
 
         if (product.tags && product.tags.length > 0) {
-          params.tag_id = product.tags.map((tag) => tag.id);
+          params.tag_id = product.tags.map((tag: any) => tag.id);
         }
 
         const { products } = await listProducts({
@@ -61,14 +64,14 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
           region_id: region.id,
         });
 
-        return products.filter((p) => p.id !== product.id);
+        return products.filter((p: any) => p.id !== product.id);
       },
     });
 
     return sanitize({
       countryCode,
       region,
-      product: product as HttpTypes.StoreProduct,
+      product,
     });
   },
   head: ({ loaderData }) => {
@@ -90,7 +93,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       "@type": "Product",
       name: product.title,
       description: product.description,
-      image: product.images?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
+      image: (product.images as any)?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
       brand: {
         "@type": "Brand",
         name: "ProLift Equipment",
@@ -99,14 +102,14 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         "@type": "Offer",
         availability: "https://schema.org/InStock",
         priceCurrency: region?.currency_code?.toUpperCase(),
-        price: product.variants?.[0]?.calculated_price?.calculated_amount
-          ? product.variants[0].calculated_price.calculated_amount.toFixed(2)
+        price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount
+          ? (product.variants as any)[0].calculated_price.calculated_amount.toFixed(2)
           : undefined,
       },
     };
 
     // Get first product image for preloading (critical for LCP)
-    const firstImageUrl = product.images?.[0]?.url || product.thumbnail;
+    const firstImageUrl = (product.images as any)?.[0]?.url || product.thumbnail;
 
     return {
       meta: [

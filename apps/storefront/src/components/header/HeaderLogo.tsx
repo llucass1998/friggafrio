@@ -10,7 +10,7 @@ export function HeaderLogo({ compact = false }: HeaderLogoProps) {
 
   return (
     <Link
-      to={`/${countryCode}`}
+      to={"/$countryCode" as any} 
       className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
       aria-label="Ir para a página inicial da FriggaFrio"
     >
