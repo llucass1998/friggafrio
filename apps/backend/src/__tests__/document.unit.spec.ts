@@ -1,4 +1,4 @@
-import { isValidCpf, isValidCnpj, normalizeDocument } from "../../lib/validation/document"
+import { isValidCpf, isValidCnpj, normalizeDocument } from "../lib/validation/document"
 
 describe("Document validation", () => {
   it("should normalize documents correctly", () => {

@@ -62,6 +62,24 @@ module.exports = defineConfig({
       resolve: "./src/modules/audit-log",
     },
     {
+      resolve: "./src/modules/product-sales-policy",
+    },
+    {
+      resolve: "@medusajs/medusa/fulfillment",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/zero-cost-fulfillment",
+            id: "local-pickup",
+          },
+          {
+            resolve: "./src/modules/zero-cost-fulfillment",
+            id: "frigga-driver",
+          }
+        ]
+      }
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       options: {
         providers: [
