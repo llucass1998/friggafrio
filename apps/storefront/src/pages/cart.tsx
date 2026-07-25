@@ -4,7 +4,6 @@ import {
   CartEmpty,
   CartPromo,
 } from "@/components/cart"
-import { DashboardPageLayout } from "@/components/dashboard-page-layout"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { CheckoutStepKey } from "@/lib/types/global"
@@ -67,7 +66,7 @@ const Cart = () => {
   }
 
   return (
-    <DashboardPageLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {cartLoading ? (
         <Loading />
       ) : cartItems.length === 0 ? (
@@ -183,7 +182,7 @@ const Cart = () => {
           </div>
         </div>
       )}
-    </DashboardPageLayout>
+    </div>
   )
 }
 
