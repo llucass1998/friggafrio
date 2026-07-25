@@ -11,7 +11,7 @@ import {
   type Quote,
 } from "@/lib/data/quotes"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 export interface QuoteWithRequestedBy extends Quote {
   requested_by?: {

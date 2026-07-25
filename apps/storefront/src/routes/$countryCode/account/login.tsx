@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import LoginPage from "@/pages/login"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 
 export const Route = createFileRoute("/$countryCode/account/login")({
   beforeLoad: async () => {

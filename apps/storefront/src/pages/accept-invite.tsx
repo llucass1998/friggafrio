@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams, useSearch, Link } from "@tanstack/react-router"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { User, BuildingsSolid } from "@medusajs/icons"
 
 interface FormData {

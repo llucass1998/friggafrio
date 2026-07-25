@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { productCategories, applicationCategories, mainNavigation } from "./categories"
 import { HeaderSearch } from "./HeaderSearch"
 import { HeaderActions } from "./HeaderActions"
+import { HeaderLogo } from "./HeaderLogo"
 
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
@@ -34,7 +35,7 @@ export function HeaderMobileDrawer() {
       <button
         className="lg:hidden p-2 -ml-2 text-[var(--color-navy)] hover:text-[var(--color-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
         onClick={() => setIsOpen(true)}
-        aria-label="Abrir menu"
+        aria-label="Abrir menu mobile"
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -56,15 +57,9 @@ export function HeaderMobileDrawer() {
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-          <Link
-            to={`/${countryCode}`}
-            className="flex items-center gap-2"
-            onClick={closeDrawer}
-          >
-            <span className="font-heading font-black text-2xl tracking-tighter text-[var(--color-navy)] uppercase">
-              Friggafrio
-            </span>
-          </Link>
+          <div onClick={closeDrawer}>
+            <HeaderLogo compact />
+          </div>
           <button
             onClick={closeDrawer}
             className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors rounded-full hover:bg-[var(--color-surface-soft)]"
@@ -144,6 +139,15 @@ export function HeaderMobileDrawer() {
                 Institucional & Serviços
               </h3>
               <ul className="space-y-1">
+                <li>
+                  <Link
+                    to="/nossa-loja"
+                    onClick={closeDrawer}
+                    className="block px-4 py-3 text-sm font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
+                  >
+                    Nossa Loja
+                  </Link>
+                </li>
                 {mainNavigation
                   .filter(
                     (nav) =>

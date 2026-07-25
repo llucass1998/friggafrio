@@ -1,6 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { retrieveCart } from "@/lib/data/cart"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { getStoredCart } from "@/lib/utils/cart"
 
 /**

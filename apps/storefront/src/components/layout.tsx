@@ -9,7 +9,7 @@ import { OnboardingTour } from "./onboarding-tour"
 export default function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { isAuthenticated, isLoading, employee } = useAuth()
-  
+
   console.log("[Layout] render - isAuthenticated:", isAuthenticated, "isLoading:", isLoading)
 
   useEffect(() => {
@@ -25,25 +25,26 @@ export default function Layout() {
     localStorage.setItem("sidebar_collapsed", String(newState))
   }
 
-  // Only show loading when we're loading AND we think the user might be authenticated
-  // This prevents loading flash for unauthenticated users on public pages
-  const cachedAuthState = typeof window !== "undefined" ? sessionStorage.getItem("auth_state") : null
-  const shouldShowLoading = isLoading && (cachedAuthState === "authenticated" || cachedAuthState === null)
-  
-  if (shouldShowLoading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full"></div>
-      </div>
-    )
-  }
+  // Always use PublicLayout as the shell for unauthenticated or unknown states.
+  // This matches the SSR render exactly, avoiding hydration mismatch.
+  // We only show the dashboard if explicitly authenticated and loaded.
 
-  // For unauthenticated users, render public layout
+  // For unauthenticated users (or while we are figuring it out), render public layout
   if (!isAuthenticated) {
     return (
       <PublicLayout>
         <Outlet />
       </PublicLayout>
+    )
+  }
+
+  // If we are authenticated but still loading employee data, we show a localized spinner inside the dashboard shell
+  // But we avoid returning a full screen spinner that replaces the layout.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full"></div>
+      </div>
     )
   }
 
@@ -57,7 +58,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <Sidebar countryCode="us" collapsed={isCollapsed} onToggle={toggleCollapsed} />
-      <main 
+      <main
         className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[72px]" : "ml-[280px]"
         }`}

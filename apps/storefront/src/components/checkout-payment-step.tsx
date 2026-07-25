@@ -11,7 +11,7 @@ import {
   isPaidWithGiftCard,
 } from "@/lib/utils/checkout"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { getStoredCart } from "@/lib/utils/cart"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { HttpTypes } from "@medusajs/types"

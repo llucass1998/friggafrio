@@ -3,6 +3,7 @@ import { HeaderSearch } from "./HeaderSearch"
 import { HeaderActions } from "./HeaderActions"
 import { HeaderDesktopNav } from "./HeaderDesktopNav"
 import { HeaderMobileDrawer } from "./HeaderMobileDrawer"
+import { HeaderLogo } from "./HeaderLogo"
 
 export function FullStoreHeader() {
   const params = useParams({ strict: false }) as { countryCode?: string }
@@ -27,22 +28,17 @@ export function FullStoreHeader() {
 
       {/* Main Header Area */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4 lg:gap-8">
+        <div className="flex items-center justify-between h-24 gap-4 lg:gap-8">
 
           {/* Mobile Menu & Logo */}
           <div className="flex items-center gap-2 lg:gap-0">
             <HeaderMobileDrawer />
-            <Link
-              to={`/${countryCode}`}
-              className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
-            >
-              <span className="font-heading font-black text-2xl tracking-tighter text-[var(--color-navy)] uppercase hidden sm:block">
-                Friggafrio
-              </span>
-              <span className="font-heading font-black text-2xl tracking-tighter text-[var(--color-navy)] uppercase sm:hidden">
-                Frigga
-              </span>
-            </Link>
+            <div className="hidden sm:block lg:block">
+              <HeaderLogo />
+            </div>
+            <div className="block sm:hidden">
+              <HeaderLogo compact />
+            </div>
           </div>
 
           {/* Search (Desktop) */}

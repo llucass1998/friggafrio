@@ -1,4 +1,4 @@
-import { sdk } from "@/lib/utils/sdk";
+import { sdk } from "@/lib/medusa";
 import { HttpTypes } from "@medusajs/types";
 
 export type ListProductsQueryParams = HttpTypes.StoreProductListParams & {
@@ -14,11 +14,43 @@ export const listProducts = async ({
   query_params?: ListProductsQueryParams;
   region_id?: string;
 }): Promise<{
-  products: HttpTypes.StoreProduct[];
-  count: number;
-  next_page: number | null;
+  response: {
+    products: HttpTypes.StoreProduct[];
+    count: number;
+    next_page: number | null;
+  }
 }> => {
-  return { products: [], count: 0, next_page: null }
+  const limit = query_params?.limit || 12;
+  const offset = (page_param - 1) * limit;
+
+  try {
+    const response = await sdk.store.product.list({
+      limit,
+      offset,
+      region_id,
+      ...query_params,
+    });
+
+    const next_page =
+      response.count > offset + limit ? page_param + 1 : null;
+
+    return {
+      response: {
+        products: response.products,
+        count: response.count,
+        next_page,
+      }
+    };
+  } catch (error) {
+    console.error("Error fetching products", error);
+    return {
+      response: {
+        products: [],
+        count: 0,
+        next_page: null,
+      }
+    };
+  }
 }
 
 export const listAndSortProducts = async ({
@@ -32,7 +64,11 @@ export const listAndSortProducts = async ({
   region_id?: string;
   optionValueIds?: string[];
 }) => {
-  return { products: [], count: 0, next_page: null }
+  return listProducts({
+    page_param,
+    query_params,
+    region_id,
+  })
 }
 
 export const retrieveProduct = async ({
@@ -44,5 +80,15 @@ export const retrieveProduct = async ({
   region_id?: string;
   fields?: string;
 }): Promise<HttpTypes.StoreProduct> => {
-  throw new Error("Mock Product not found");
+  const response = await sdk.store.product.list({
+    handle,
+    region_id,
+    fields,
+  });
+
+  if (!response.products || response.products.length === 0) {
+    throw new Error(`Product with handle ${handle} not found`);
+  }
+
+  return response.products[0];
 }

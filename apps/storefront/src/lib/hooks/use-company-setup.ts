@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { useAuth } from "@/lib/hooks/use-auth"
 
 export interface CompanySetupStep {

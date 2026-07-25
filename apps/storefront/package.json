@@ -12,6 +12,7 @@
     "test:responsive": "playwright test tests/responsive.spec.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
     "@medusajs/icons": "2.18.0",
     "@medusajs/js-sdk": "2.18.0",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -27,10 +28,13 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "17.2.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "lodash-es": "4.17.21",
     "lucide-react": "^1.26.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "react-hook-form": "^7.71.1",
     "sonner": "^2.0.7",
     "tailwindcss": "4.1.12",
     "tailwindcss-animate": "^1.0.7",

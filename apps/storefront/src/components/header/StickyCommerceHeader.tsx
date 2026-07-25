@@ -4,6 +4,7 @@ import { HeaderSearch } from "./HeaderSearch"
 import { HeaderActions } from "./HeaderActions"
 import { HeaderDesktopNav } from "./HeaderDesktopNav"
 import { HeaderMobileDrawer } from "./HeaderMobileDrawer"
+import { HeaderLogo } from "./HeaderLogo"
 
 export function StickyCommerceHeader() {
   const [isVisible, setIsVisible] = useState(false)
@@ -35,14 +36,7 @@ export function StickyCommerceHeader() {
           {/* Logo & Mobile Menu */}
           <div className="flex items-center gap-2">
             <HeaderMobileDrawer />
-            <Link
-              to={`/${countryCode}`}
-              className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
-            >
-              <span className="font-heading font-black text-xl tracking-tighter text-[var(--color-navy)] uppercase">
-                Friggafrio
-              </span>
-            </Link>
+            <HeaderLogo compact />
           </div>
 
           {/* Navigation (Desktop) */}

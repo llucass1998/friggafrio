@@ -1,4 +1,4 @@
-import { sdk } from "@/lib/utils/sdk";
+import { sdk } from "@/lib/medusa";
 import { HttpTypes } from "@medusajs/types";
 
 export const listRegions = async ({ fields }: { fields?: string } = {}): Promise<HttpTypes.StoreRegion[]> => {

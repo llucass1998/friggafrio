@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
+import { ProductImagePlaceholder } from "./product/ProductImagePlaceholder"
 
 interface PublicProductCardProps {
   product: HttpTypes.StoreProduct
@@ -12,7 +13,19 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
 
   const thumbnail = product.thumbnail || product.images?.[0]?.url
   const sku = product.variants?.[0]?.sku || "N/A"
-  const brand = product.collection?.title || "Friggafrio"
+
+  // Brand pode vir do metadado ou collection
+  const metadata = product.metadata as Record<string, any> || {}
+  const brand = (metadata.brand as string) || product.collection?.title || "Friggafrio"
+
+  // Controle de Preço e Orçamento
+  const isDemoPrice = metadata.is_demo_price === true
+  const hasRealImages = metadata.has_real_images === true
+
+  // Preço
+  const brlPrice = product.variants?.[0]?.calculated_price?.calculated_amount
+    ? product.variants[0].calculated_price.calculated_amount
+    : null
 
   return (
     <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
@@ -27,7 +40,14 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
             Novo
           </span>
         )}
-        {thumbnail ? (
+
+        {!hasRealImages && (
+          <span className="absolute bottom-3 right-3 z-10 px-2 py-1 text-[10px] font-semibold text-[var(--color-text-muted)] bg-white/80 backdrop-blur-sm rounded-[4px] shadow-sm">
+            Imagem em breve
+          </span>
+        )}
+
+        {thumbnail && hasRealImages ? (
           <img
             src={thumbnail}
             alt={product.title}
@@ -35,10 +55,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
             className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-muted)]">
-             <svg xmlns="http://www.w3.org/w3.org/2000/svg" className="w-12 h-12 mb-2 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-             <span className="text-xs font-medium opacity-50">Sem Imagem</span>
-          </div>
+          <ProductImagePlaceholder productName={product.title} />
         )}
       </Link>
 
@@ -63,17 +80,36 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
         {/* Actions - Bottom aligned */}
         <div className="mt-auto pt-4 border-t border-[var(--color-border)]">
           <div className="flex flex-col gap-1 mb-4">
-             {/* No futuro, quando integrado à autenticação e preços de B2B, isso pode mostrar preço ou solicitar auth */}
-            <span className="text-xs text-[var(--color-text-muted)] italic">Consulte o valor</span>
+             {brlPrice && isDemoPrice ? (
+               <>
+                 <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
+                   Valor em configuração
+                 </span>
+                 <span className="text-lg font-bold text-[var(--color-text)]">
+                   R$ {(brlPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                 </span>
+               </>
+             ) : brlPrice ? (
+                 <span className="text-lg font-bold text-[var(--color-text)]">
+                   R$ {(brlPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                 </span>
+             ) : (
+                <span className="text-xs text-[var(--color-text-muted)] italic">Consulte o valor</span>
+             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Link
               to={"/$countryCode/products/$handle" as string} params={{ countryCode, handle: product.handle }}
-              className="flex items-center justify-center w-full px-3 py-2.5 text-sm font-semibold text-[var(--color-primary)] bg-white border border-[var(--color-primary)] rounded-[var(--radius-button-sm)] hover:bg-[var(--color-surface-soft)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+              className="flex items-center justify-center w-full px-3 py-2.5 text-sm font-semibold text-[var(--color-primary)] bg-white border border-[var(--color-primary)] rounded-[var(--radius-button-sm)] hover:bg-[var(--color-surface-soft)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] col-span-1"
             >
-              Ver detalhes
+              Detalhes
             </Link>
+            <button
+              className="flex items-center justify-center w-full px-3 py-2.5 text-sm font-semibold text-[var(--color-navy)] bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-button-sm)] hover:bg-gray-200 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] col-span-1"
+            >
+              Orçamento
+            </button>
           </div>
         </div>
       </div>

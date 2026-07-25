@@ -1,6 +1,6 @@
 import { getStoredCart, removeStoredCart} from "@/lib/utils/cart"
 import { queryKeys } from "@/lib/utils/query-keys"
-import { sdk } from "@/lib/utils/sdk"
+import { sdk } from "@/lib/medusa"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
