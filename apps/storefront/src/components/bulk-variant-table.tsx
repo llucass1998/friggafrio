@@ -18,7 +18,7 @@ export function BulkVariantTable({ product, region }: BulkVariantTableProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [isAdding, setIsAdding] = useState(false)
   const location = useLocation()
-  const countryCode = getCountryCodeFromPath(location.pathname) || "us"
+  const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
   const addToCartMutation = useAddToCart({
     fields: DEFAULT_CART_DROPDOWN_FIELDS,

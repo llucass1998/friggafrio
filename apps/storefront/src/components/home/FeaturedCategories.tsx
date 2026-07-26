@@ -4,7 +4,7 @@ import { listCategories } from "@/lib/data/categories"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 
 export function FeaturedCategories() {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   const hydrated = useHydrated()

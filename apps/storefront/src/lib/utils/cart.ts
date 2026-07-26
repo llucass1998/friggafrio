@@ -67,7 +67,7 @@ export const createOptimisticCartItem = (
   product: HttpTypes.StoreProduct,
   quantity: number = 1
 ): OptimisticCartItem => {
-  const unitPrice = variant.calculated_price?.calculated_amount || 0
+  const unitPrice = variant.calculated_price?.calculated_amount ?? 0
 
   return {
     id: `optimistic-${variant.id}-${Date.now()}`,

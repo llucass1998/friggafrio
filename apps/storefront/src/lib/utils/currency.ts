@@ -8,13 +8,14 @@ export type FormatCurrencyParams = {
 
 export const formatCurrencyAmount = ({
   amount,
-  currencyCode = "BRL",
+  currencyCode,
   minimumFractionDigits = 2,
   maximumFractionDigits = 2,
   locale = "pt-BR",
 }: FormatCurrencyParams): string => {
   if (amount === null || amount === undefined) return "-"
-  
+  if (!currencyCode) return "-"
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currencyCode.toUpperCase(),

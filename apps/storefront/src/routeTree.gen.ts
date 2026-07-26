@@ -9,8 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrocasRouteImport } from './routes/trocas'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as QuemSomosRouteImport } from './routes/quem-somos'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as NossaLojaRouteImport } from './routes/nossa-loja'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -35,6 +38,16 @@ import { Route as CountryCodeAccountAcceptInviteRouteImport } from './routes/$co
 import { Route as CountryCodeOrderOrderIdPaymentRouteImport } from './routes/$countryCode/order/$orderId/payment'
 import { Route as CountryCodeOrderOrderIdConfirmedRouteImport } from './routes/$countryCode/order/$orderId/confirmed'
 
+const TrocasRoute = TrocasRouteImport.update({
+  id: '/trocas',
+  path: '/trocas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -43,6 +56,11 @@ const StoreRoute = StoreRouteImport.update({
 const QuemSomosRoute = QuemSomosRouteImport.update({
   id: '/quem-somos',
   path: '/quem-somos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NossaLojaRoute = NossaLojaRouteImport.update({
@@ -177,8 +195,11 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
   '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/quem-somos': typeof QuemSomosRoute
   '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
@@ -203,8 +224,11 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
   '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/quem-somos': typeof QuemSomosRoute
   '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
@@ -231,8 +255,11 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/health': typeof HealthRoute
   '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/quem-somos': typeof QuemSomosRoute
   '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
@@ -260,8 +287,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/health'
     | '/nossa-loja'
+    | '/privacidade'
     | '/quem-somos'
     | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
@@ -286,8 +316,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/health'
     | '/nossa-loja'
+    | '/privacidade'
     | '/quem-somos'
     | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
@@ -313,8 +346,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/health'
     | '/nossa-loja'
+    | '/privacidade'
     | '/quem-somos'
     | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
@@ -341,12 +377,29 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   HealthRoute: typeof HealthRoute
   NossaLojaRoute: typeof NossaLojaRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   QuemSomosRoute: typeof QuemSomosRoute
   StoreRoute: typeof StoreRoute
+  TermosRoute: typeof TermosRoute
+  TrocasRoute: typeof TrocasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trocas': {
+      id: '/trocas'
+      path: '/trocas'
+      fullPath: '/trocas'
+      preLoaderRoute: typeof TrocasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store': {
       id: '/store'
       path: '/store'
@@ -359,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/quem-somos'
       fullPath: '/quem-somos'
       preLoaderRoute: typeof QuemSomosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nossa-loja': {
@@ -574,8 +634,11 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   HealthRoute: HealthRoute,
   NossaLojaRoute: NossaLojaRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   QuemSomosRoute: QuemSomosRoute,
   StoreRoute: StoreRoute,
+  TermosRoute: TermosRoute,
+  TrocasRoute: TrocasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

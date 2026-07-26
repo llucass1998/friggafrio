@@ -6,7 +6,7 @@ import { HeaderMobileDrawer } from "./HeaderMobileDrawer"
 import { HeaderLogo } from "./HeaderLogo"
 
 export function FullStoreHeader() {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   return (

@@ -15,7 +15,7 @@ type SortOrder = "asc" | "desc"
 
 function formatCurrency(amount: number | null): string {
   if (amount === null) return "Ilimitado"
-  return formatCurrencyAmount({ amount })
+  return formatCurrencyAmount({ amount, currencyCode: "BRL" })
 }
 
 function SortIcon({ field, currentField, order }: { field: SortField; currentField: SortField; order: SortOrder }) {

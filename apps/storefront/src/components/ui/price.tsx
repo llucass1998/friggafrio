@@ -17,7 +17,7 @@ interface PriceProps {
 export function Price({
   price,
   amount,
-  currencyCode = "BRL",
+  currencyCode,
   className = "",
   textSize = "medium",
   textWeight = "normal",
@@ -31,7 +31,7 @@ export function Price({
     return <span className={className}>--</span>
   }
 
-  const formatted = formatCurrencyAmount({ amount: value, currencyCode })
+  const formatted = formatCurrencyAmount({ amount: value, currencyCode: currencyCode })
 
   const sizeClasses = {
     small: "text-sm",
@@ -50,7 +50,7 @@ export function Price({
     <span className={`${sizeClasses[textSize]} ${weightClasses[textWeight]} text-zinc-900 ${className}`}>
       {originalPrice && (
         <span className="text-zinc-500 line-through mr-2">
-          {formatCurrencyAmount({ amount: originalPrice.price, currencyCode })}
+          {formatCurrencyAmount({ amount: originalPrice.price, currencyCode: currencyCode })}
         </span>
       )}
       {displayValue}

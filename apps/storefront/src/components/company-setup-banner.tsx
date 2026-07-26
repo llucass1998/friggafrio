@@ -89,8 +89,8 @@ function SetupStepCard({
 }
 
 export function CompanySetupBanner() {
-  const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const params = useParams({ strict: false }) as Record<string, string>
+  const countryCode = params.countryCode || "br"
   const { isAdmin } = useAuth()
   const { data: setupStatus, isLoading } = useCompanySetupStatus()
 

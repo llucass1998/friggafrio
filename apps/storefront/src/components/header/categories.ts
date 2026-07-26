@@ -97,6 +97,4 @@ export const mainNavigation: NavigationItem[] = [
   { id: "nav-compressores", label: "Compressores", href: "/br/store?category=compressores" },
   { id: "nav-camara", label: "Câmara Fria", href: "/br/store?category=camara-fria" },
   { id: "nav-ferramentas", label: "Ferramentas", href: "/br/store?category=ferramentas" },
-  { id: "nav-servicos", label: "Serviços", href: "/br/store?category=servicos" },
-  { id: "nav-central", label: "Central Técnica", href: "/br/store?category=central-tecnica" },
 ]

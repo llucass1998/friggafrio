@@ -49,7 +49,7 @@ export const getPricesForVariant = (variant: HttpTypes.StoreProductVariant | und
   percentage_diff: string;
 } | null => {
   const calculatedPrice = variant?.calculated_price
-  if (!calculatedPrice?.calculated_amount || !calculatedPrice.currency_code) {
+  if (calculatedPrice?.calculated_amount === null || calculatedPrice?.calculated_amount === undefined || !calculatedPrice.currency_code) {
     return null
   }
 
