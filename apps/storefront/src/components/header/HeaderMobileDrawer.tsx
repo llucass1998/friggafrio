@@ -124,7 +124,7 @@ export function HeaderMobileDrawer() {
                   <Link
                     to="/nossa-loja"
                     onClick={closeDrawer}
-                    className="block px-4 py-3 text-sm font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
+                    className="block px-4 py-4 text-[15px] font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
                   >
                     Nossa Loja
                   </Link>

@@ -151,7 +151,10 @@ export function ProductPage() {
 
             {/* Tabs Content */}
             <div className="mt-auto">
-              <div className="border-b border-[var(--color-border)] flex gap-6 overflow-x-auto scrollbar-hide">
+              <div className="relative border-b border-[var(--color-border)]">
+                <div className="flex gap-6 overflow-x-auto scrollbar-hide pr-12 md:pr-0">
+                  {/* Fade right indicator */}
+                  <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[var(--color-background)] to-transparent pointer-events-none md:hidden" />
                 {["description", "specs", "documents"].map((tab) => (
                   <button
                     key={tab}
@@ -165,6 +168,7 @@ export function ProductPage() {
                     {tab === "description" ? "Descrição" : tab === "specs" ? "Especificações" : "Documentos"}
                   </button>
                 ))}
+                </div>
               </div>
 
               <div className="py-6 min-h-[200px]">
