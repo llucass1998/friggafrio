@@ -46,7 +46,7 @@ export function StoreBrandsCarousel() {
 
         <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className={`flex ${isFewBrands ? 'md:justify-center' : ''} -ml-4`}>
+            <div className={`flex ${isFewBrands ? "md:justify-center" : ""} -ml-4`}>
               {activeBrands.map((brand) => (
                 <div
                   key={brand.id}

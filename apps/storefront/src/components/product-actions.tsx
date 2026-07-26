@@ -99,12 +99,12 @@ const ProductActions = memo(function ProductActions({
   
   // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
   // For Phase 20, we assume any B2B-flagged product or explicitly 'quote_only' metadata triggers this.
-  const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !(selectedVariant?.inventory_quantity ? selectedVariant.inventory_quantity > 0 : true);
+  const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !(selectedVariant?.inventory_quantity ? selectedVariant.inventory_quantity > 0 : true)
   
   const handleQuoteRequest = () => {
-    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || 'N/A'})`);
-    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
-  };
+    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || "N/A"})`)
+    window.open(`https://wa.me/5511999999999?text=${message}`, "_blank")
+  }
 
   const handleAddToCart = async () => {
     if (!selectedVariant?.id || !canBuySelected) return null
@@ -135,19 +135,19 @@ const ProductActions = memo(function ProductActions({
   }
 
   // Generate Button Text
-  let buttonText = "Comprar";
-  let buttonDisabled = true;
+  let buttonText = "Comprar"
+  let buttonDisabled = true
 
   if (purchaseState.status === "unavailable") {
-    buttonText = "Indisponível";
+    buttonText = "Indisponível"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação";
+    buttonText = "Preço em confirmação"
   } else if (!selectedVariant) {
-    buttonText = "Selecione uma opção";
+    buttonText = "Selecione uma opção"
   } else if (!isValidVariant || !canBuySelected) {
-    buttonText = "Sem estoque";
+    buttonText = "Sem estoque"
   } else {
-    buttonDisabled = false;
+    buttonDisabled = false
   }
 
   return (

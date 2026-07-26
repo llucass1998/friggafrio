@@ -42,7 +42,7 @@ export function PublicStoresPage() {
   return (
     <div className="w-full bg-[#FAFAFA] min-h-screen pb-16 font-sans">
       <div aria-live="polite" className="sr-only">
-        {activeLocation ? `${activeLocation.name} selecionada.` : ''}
+        {activeLocation ? `${activeLocation.name} selecionada.` : ""}
       </div>
       <script
         type="application/ld+json"

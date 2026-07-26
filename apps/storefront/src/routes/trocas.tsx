@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import TrocasPage from "@/pages/support/trocas";
+import { createFileRoute } from "@tanstack/react-router"
+import TrocasPage from "@/pages/support/trocas"
 
 export const Route = createFileRoute("/trocas")({
   component: TrocasPage,
@@ -12,4 +12,4 @@ export const Route = createFileRoute("/trocas")({
       },
     ],
   }),
-});
+})

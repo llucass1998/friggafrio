@@ -21,7 +21,7 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
     if (location.placeId) {
       url += `&destination=Place+ID:${location.placeId}`
     } else {
-      const addressString = `${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`;
+      const addressString = `${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`
       url += `&destination=${encodeURIComponent(addressString)}`
     }
     window.open(url, "_blank", "noopener,noreferrer")
@@ -35,7 +35,7 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
                 if (onSelect) onSelect()
               }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           if (onSelect) onSelect()
         }

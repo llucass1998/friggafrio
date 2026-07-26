@@ -1,9 +1,9 @@
 import { Outlet } from "@tanstack/react-router"
-import { PublicLayout } from "./public-layout"
+import { PublicLayout } from "@/components/public-layout"
 import { useAuth } from "@/lib/hooks/use-auth"
 
 export default function Layout() {
-  const { isAuthenticated, isLoading } = useAuth()
+  
 
   // Logging removido para produção
 

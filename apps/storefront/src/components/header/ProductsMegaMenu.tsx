@@ -63,7 +63,7 @@ export function ProductsMegaMenu() {
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {activeCategoryData.children?.filter(child => !child.id.endsWith('-all')).map((child) => (
+            {activeCategoryData.children?.filter(child => !child.id.endsWith("-all")).map((child) => (
               <Link
                 key={child.id}
                 to={child.href as any}

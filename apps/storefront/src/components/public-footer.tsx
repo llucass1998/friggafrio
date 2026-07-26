@@ -15,14 +15,14 @@ function Accordion({ title, children, defaultOpen = false }: { title: string, ch
         aria-expanded={isOpen}
       >
         <span className="text-sm font-bold text-white uppercase tracking-wider">{title}</span>
-        <svg className={`w-5 h-5 text-gray-400 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className={`w-5 h-5 text-gray-400 transform transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <h3 className="hidden md:block text-sm font-bold text-white uppercase tracking-wider mb-4">
         {title}
       </h3>
-      <div className={`overflow-hidden transition-all duration-300 md:block md:max-h-none md:opacity-100 md:mb-0 ${isOpen ? 'max-h-[500px] opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+      <div className={`overflow-hidden transition-all duration-300 md:block md:max-h-none md:opacity-100 md:mb-0 ${isOpen ? "max-h-[500px] opacity-100 mb-4" : "max-h-0 opacity-0"}`}>
         {children}
       </div>
     </div>
@@ -36,13 +36,13 @@ export function PublicFooter() {
   const { customer } = useAuth()
 
   const getAccountHref = (baseHref: string) => {
-    if (baseHref.startsWith('/account') && !customer && baseHref !== '/account/login' && baseHref !== '/account/register') {
+    if (baseHref.startsWith("/account") && !customer && baseHref !== "/account/login" && baseHref !== "/account/register") {
       return `/${countryCode}/account/login?returnTo=${encodeURIComponent(`/${countryCode}${baseHref}`)}`
     }
     
-    return baseHref.startsWith('/account') 
+    return baseHref.startsWith("/account") 
       ? `/${countryCode}${baseHref}`
-      : baseHref.startsWith('/') ? `/${countryCode}${baseHref}` : baseHref
+      : baseHref.startsWith("/") ? `/${countryCode}${baseHref}` : baseHref
   }
 
   const primaryLocation = storeConfig.locations[0]
@@ -62,7 +62,7 @@ export function PublicFooter() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm uppercase">Televendas</h4>
-                <a href={`tel:${storeConfig.phone.replace(/\D/g, '')}`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{storeConfig.phone}</a>
+                <a href={`tel:${storeConfig.phone.replace(/\D/g, "")}`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{storeConfig.phone}</a>
               </div>
             </div>
 

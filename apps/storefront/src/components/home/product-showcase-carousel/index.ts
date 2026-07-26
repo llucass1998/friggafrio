@@ -1,3 +1,3 @@
-export * from './ProductShowcaseCarousel';
-export * from './carousel-data';
-export * from './types';
+export * from "./ProductShowcaseCarousel"
+export * from "./carousel-data"
+export * from "./types"
