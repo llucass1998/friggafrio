@@ -5,7 +5,7 @@ import Address from "@/components/address"
 import PaymentMethodInfo from "@/components/payment-method-info"
 import { isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { formatOrderId } from "@/lib/utils/order"
-import { useLoaderData, Link, useParams, getRouteApi } from "@tanstack/react-router"
+import { Link, getRouteApi } from "@tanstack/react-router"
 import { CheckCircleSolid, ShoppingBag } from "@medusajs/icons"
 import { Package, Truck, Info, MapPin, CreditCard, FileText } from "lucide-react"
 import type { HttpTypes } from "@medusajs/types"
@@ -56,7 +56,9 @@ const translateFulfillmentStatus = (status?: string) => {
 }
 
 const OrderConfirmation = () => {
-  const { countryCode } = useParams({ strict: false })
+  const _params = routeApi.useParams()
+  const countryCode = (_params as any).countryCode || "br"
+
   const { order } = routeApi.useLoaderData()
 
   if (!order) {

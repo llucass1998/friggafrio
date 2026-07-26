@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useSearch } from "@tanstack/react-router"
+import { useSearch, useNavigate, useParams } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare } from "@medusajs/icons"
+import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare, ArrowRightOnRectangle as LogOut } from "@medusajs/icons"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 
@@ -922,7 +922,15 @@ function AddressesSection({ companyData }: { companyData: Company }) {
 }
 
 export default function SettingsPage() {
-  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee } = useAuth()
+  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee, logout } = useAuth()
+  const navigate = useNavigate()
+  const params = useParams({ strict: false }) as Record<string, string>
+  const countryCode = params.countryCode || "br"
+
+  const handleLogout = async () => {
+    await logout()
+    navigate({ to: "/$countryCode", params: { countryCode } })
+  }
   const searchParams = useSearch({ strict: false }) as { tab?: string } | undefined
   const initialTab = (searchParams?.tab as "profile" | "company" | "addresses" | "payment_methods") || "profile"
   const [activeTab, setActiveTab] = useState<"profile" | "company" | "addresses" | "payment_methods">(initialTab)
@@ -1146,9 +1154,15 @@ export default function SettingsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
         {/* Header */}
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
           <p className="text-slate-500 mt-1">Gerencie as configurações e preferências da sua conta</p>
+        </div>
+        <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+          <LogOut className="w-4 h-4" />
+          Sair da Conta
+        </button>
         </div>
 
         {/* Tabs */}

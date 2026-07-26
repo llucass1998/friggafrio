@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { NavigationItem, productCategories, applicationCategories, mainNavigation } from "@/components/header/categories"
+import { productCategories } from "@/components/header/categories"
 import { useState } from "react"
 
 export function ProductsMegaMenu() {
@@ -16,7 +16,7 @@ export function ProductsMegaMenu() {
       </button>
 
       {/* Dropdown Container */}
-      <div className="absolute top-full left-0 w-[800px] xl:w-[1000px] bg-[var(--color-background)] shadow-2xl rounded-b-lg border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex overflow-hidden">
+      <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] xl:w-[1000px] bg-[var(--color-background)] shadow-2xl rounded-lg border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex overflow-hidden">
 
         {/* Left Sidebar - Categories */}
         <div className="w-1/3 bg-[var(--color-surface)] border-r border-[var(--color-border)] py-4">
@@ -41,7 +41,7 @@ export function ProductsMegaMenu() {
 
           <div className="mt-6 px-6">
             <Link
-              to={"/$countryCode/store" as any} 
+              to="/$countryCode/store" params={{ countryCode: "br" }} 
               className="text-[var(--color-primary)] font-medium hover:underline flex items-center gap-1 text-sm"
             >
               Ver todos os produtos

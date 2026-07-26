@@ -375,12 +375,14 @@ export default function OrderPaymentPage() {
     try {
       const billingData = sameAsBilling ? shippingAddress : billingAddress
       
-      const { country_code: _shippingCountry, ...shippingWithoutCountry } = shippingAddress
-      const shippingPayload = order?.shipping_address?.country_code 
-        ? shippingWithoutCountry 
+      const { country_code, ...shippingWithoutCountry } = shippingAddress
+      void country_code
+      const shippingPayload = order?.shipping_address?.country_code
+        ? shippingWithoutCountry
         : shippingAddress
-      
-      const { country_code: _billingCountry, ...billingWithoutCountry } = billingData
+
+      const { country_code: _billing_country_code, ...billingWithoutCountry } = billingData
+      void _billing_country_code
       const billingPayload = (order?.billing_address?.country_code || (sameAsBilling && order?.shipping_address?.country_code))
         ? billingWithoutCountry 
         : billingData

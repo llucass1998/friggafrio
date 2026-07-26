@@ -37,8 +37,8 @@ export type StoreLocation = {
 export const storeLocations: StoreLocation[] = [
   {
     id: "loja-1",
-    name: "FriggaFrio — Loja 1",
-    shortName: "Loja 1",
+    name: "FriggaFrio",
+    shortName: "Loja",
     addressLine: "Alameda Glete, 663",
     district: "Campos Elíseos",
     city: "São Paulo",

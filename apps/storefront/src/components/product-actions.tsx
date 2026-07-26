@@ -2,7 +2,7 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
-import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
+import { getVariantOptionsKeymap } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
@@ -99,9 +99,9 @@ const ProductActions = memo(function ProductActions({
   
   // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
   // For Phase 20, we assume any B2B-flagged product or explicitly 'quote_only' metadata triggers this.
-  const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !(selectedVariant?.inventory_quantity ? selectedVariant.inventory_quantity > 0 : true)
+  const _isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !(selectedVariant?.inventory_quantity ? selectedVariant.inventory_quantity > 0 : true)
   
-  const handleQuoteRequest = () => {
+  const _handleQuoteRequest = () => {
     const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || "N/A"})`)
     window.open(`https://wa.me/5511999999999?text=${message}`, "_blank")
   }
@@ -126,7 +126,7 @@ const ProductActions = memo(function ProductActions({
           toast.success(`${product.title} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
-        onError: (err) => {
+        onError: (_err) => {
           // Error telemetry could go here
           toast.error("Não foi possível adicionar o produto ao carrinho")
         }

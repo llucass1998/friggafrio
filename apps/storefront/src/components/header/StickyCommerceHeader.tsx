@@ -1,4 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router"
+import { useParams } from "@tanstack/react-router"
 import { useState, useEffect } from "react"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderActions } from "@/components/header/HeaderActions"
@@ -9,7 +9,7 @@ import { HeaderLogo } from "@/components/header/HeaderLogo"
 export function StickyCommerceHeader() {
   const [isVisible, setIsVisible] = useState(false)
   const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
+  const _countryCode = params.countryCode || "br"
 
   useEffect(() => {
     const handleScroll = () => {

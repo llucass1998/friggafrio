@@ -33,7 +33,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <main
           id="main-content"
           tabIndex={-1}
-          className={`flex-1 flex flex-col focus:outline-none pt-16 md:pt-[148px]`}
+          className="flex-1 flex flex-col focus:outline-none"
         >
           {children}
         </main>

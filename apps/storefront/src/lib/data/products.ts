@@ -1,5 +1,5 @@
 import { sdk } from "@/lib/medusa"
-import { HttpTypes } from "@medusajs/types"
+
 import { cache } from "react"
 // import { getAuthHeaders } from "@/lib/data/cookies" // Unused and missing
 
@@ -8,7 +8,7 @@ export const listProducts = cache(
     pageParam = 1,
     queryParams,
     query_params, // For compatibility
-    countryCode,
+    countryCode: _countryCode,
     regionId,
     region_id, // For compatibility
   }: {
@@ -43,7 +43,7 @@ export const listProducts = cache(
           queryParams: storeParams,
         }
       })
-      .catch((error) => {
+      .catch((_error) => {
         // Logging silenced for production
         return { response: { products: [], count: 0 }, products: [], count: 0, nextPage: null, queryParams: storeParams }
       })

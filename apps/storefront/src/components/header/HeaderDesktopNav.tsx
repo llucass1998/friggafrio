@@ -16,7 +16,7 @@ export function HeaderDesktopNav() {
           <ChevronDown className="w-4 h-4 transition-transform group-hover:-rotate-180" />
         </button>
 
-        <div className="absolute top-full left-0 w-64 bg-white shadow-xl rounded-b-md border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+        <div className="absolute top-[calc(100%+8px)] left-0 w-64 bg-white shadow-xl rounded-md border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
           {applicationCategories.map((app) => (
             <Link
               key={app.id}

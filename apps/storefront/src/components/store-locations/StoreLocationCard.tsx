@@ -43,11 +43,8 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
-      className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 border-2 cursor-pointer
+      className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 border-2 border-[#E5EDF4] hover:border-[var(--color-primary)]/50 hover:shadow-xl hover:-translate-y-2
         motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]
-        ${isSelected 
-          ? "border-[var(--color-primary)] ring-4 ring-[var(--color-primary)]/10 shadow-md" 
-          : "border-[#E5EDF4] hover:border-[var(--color-primary)]/50 hover:shadow-xl hover:-translate-y-2"}
       `}
     >
 
@@ -63,12 +60,7 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
           <GooglePlacePhoto location={location} />
         )}
         
-        {isSelected && (
-          <div className="absolute top-4 right-4 bg-[var(--color-primary)] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" />
-            Unidade selecionada
-          </div>
-        )}
+        
       </div>
 
       {/* Content Section */}
@@ -99,31 +91,17 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
 
         {/* Actions */}
         <div className="flex flex-col gap-3 mt-auto">
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onSelect}
-              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-colors ${
-                isSelected
-                  ? "bg-[var(--color-surface-soft)] text-[var(--color-navy)] cursor-default"
-                  : "bg-white border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
-              }`}
-              aria-label={`Visualizar ${location.name} no mapa`}
-            >
-              <Map className="w-5 h-5" />
-              {isSelected ? "No mapa" : "Ver no mapa"}
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDirections()
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-hover)] transition-colors"
-              aria-label={`Traçar rota até a ${location.name}`}
-            >
-              <Navigation className="w-5 h-5" />
-              Como chegar
-            </button>
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDirections()
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-hover)] transition-colors w-full"
+            aria-label={`Traçar rota até a ${location.name}`}
+          >
+            <Navigation className="w-5 h-5" />
+            Como chegar
+          </button>
           <button
             onClick={(e) => {
                 e.stopPropagation()

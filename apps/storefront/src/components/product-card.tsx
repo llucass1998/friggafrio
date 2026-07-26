@@ -12,17 +12,17 @@ import { DocumentText } from "@medusajs/icons"
 
 interface ProductCardProps {
   product: HttpTypes.StoreProduct
-  regionId: string
+  ____regionId: string
   countryCode: string
 }
 
-export function ProductCard({ product, regionId, countryCode }: ProductCardProps) {
+export function ProductCard({ product, regionId: _regionId, countryCode: _countryCode }: ProductCardProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const addToCartMutation = useAddToCart()
   const createQuoteFromCartMutation = useCreateQuoteFromCart()
-  const { data: cart } = useCart()
+  const { data: _cart } = useCart()
   const [isQuoting, setIsQuoting] = useState(false)
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   

@@ -18,9 +18,7 @@ const DrawerOverlay = React.forwardRef<
     className={clsx(
       "fixed inset-0 z-50 bg-[#051428]/45 backdrop-blur-[2px]",
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
-      "data-[state=open]:transition-opacity data-[state=closed]:transition-opacity",
-      "data-[state=open]:duration-[280ms] data-[state=closed]:duration-[240ms]",
-      "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -37,7 +35,7 @@ const drawerVariants = cva(
         top: "inset-x-0 top-0 border-b border-zinc-200 data-[state=closed]:-translate-y-full data-[state=open]:translate-y-0",
         bottom: "inset-x-0 bottom-0 border-t border-zinc-200 data-[state=closed]:translate-y-full data-[state=open]:translate-y-0",
         left: "inset-y-0 left-0 h-full w-3/4 border-r border-zinc-200 data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0 sm:max-w-sm",
-        right: "inset-y-0 right-0 h-full w-full border-l border-zinc-200 data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 sm:max-w-[420px]",
+        right: "inset-y-0 right-0 h-full w-full border-l border-zinc-200 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right sm:max-w-[420px]",
       },
     },
     defaultVariants: {
@@ -64,8 +62,7 @@ const DrawerContent = React.forwardRef<
         drawerVariants({ side }),
         "group",
         // Animação CSS direta baseada em data-state sem depender de plugins animate-in
-        "data-[state=open]:duration-[420ms] data-[state=closed]:duration-[320ms]",
-        "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
+        "duration-300 ease-in-out",
         className
       )}
       {...props}
