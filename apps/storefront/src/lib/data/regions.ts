@@ -6,7 +6,7 @@ export const listRegions = cache(async ({ fields }: { fields?: string } = {}): P
   return sdk.store.region.list({ fields }, { next: { tags: ["regions"] } })
     .then(({ regions }) => regions)
     .catch((error) => {
-      console.error("Error listing regions:", error);
+      // Logging silenced for production
       return [];
     });
 });
@@ -15,7 +15,7 @@ export const retrieveRegion = cache(async ({ id, fields }: { id: string; fields?
   return sdk.store.region.retrieve(id, { fields }, { next: { tags: ["regions"] } })
     .then(({ region }) => region)
     .catch((error) => {
-      console.error(`Error retrieving region ${id}:`, error);
+      // Logging silenced for production
       throw error;
     });
 });
@@ -35,7 +35,7 @@ export const getRegion = cache(async ({ country_code, fields }: { country_code: 
     // If not found, just return the first region as fallback
     return region || regions[0];
   } catch (error) {
-    console.error("Error in getRegion:", error);
+    // Logging silenced for production
     return null;
   }
 });

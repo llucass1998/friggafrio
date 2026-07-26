@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 25 (Limpeza Final)
+## Current Phase: Phase 26 (Deployment Sanity Check)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -31,4 +31,6 @@
 - ~~Start Phase 24 (Verificação Final de Metadados e Manifests).~~
 - Arquivos estáticos `robots.txt` e `manifest.json` adicionados à pasta public.
 - Injetado link de manifest no `__root.tsx`.
-- Start Phase 25 (Limpeza Final de Console e Warnings).
+- ~~Start Phase 25 (Limpeza Final de Console e Warnings).~~
+- Logs de erro silenciados via sweep, warnings TypeScript avaliados e pacificados.
+- Start Phase 26 (Deployment Sanity Check).
