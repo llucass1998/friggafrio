@@ -37,6 +37,8 @@ export const Route = createRootRouteWithContext<{
       { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "manifest", href: "/manifest.json" },
       { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     ],
     meta: [
       { title: "FriggaFrio | Refrigeração e Ar Condicionado" },

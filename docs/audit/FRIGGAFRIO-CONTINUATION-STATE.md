@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 31 (Performance Audits)
+## Current Phase: Phase 32 (Conformidade / LGPD)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -50,4 +50,7 @@
 - ~~Start Phase 30 (Playwright E2E Readiness).~~
 - Configurações do Playwright verificadas via `--list`.
 - Proteção Fail-Closed `TEST_DATABASE_URL` injetada para CI.
-- Start Phase 31 (Performance Audits - Lighthouse Baseline).
+- ~~Start Phase 31 (Performance Audits - Lighthouse Baseline).~~
+- Preconnect tags adicionadas para otimização de renderização de fontes (FCP).
+- LCP explicitamente priorizado (fetchPriority="high") para imagens de produto.
+- Start Phase 32 (Conformidade com Privacidade / LGPD).
