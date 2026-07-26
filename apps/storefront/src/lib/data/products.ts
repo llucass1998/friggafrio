@@ -44,7 +44,7 @@ export const listProducts = cache(
         }
       })
       .catch((error) => {
-        console.error("Store API Product List Error:", error);
+        // Logging silenced for production
         return { response: { products: [], count: 0 }, products: [], count: 0, nextPage: null, queryParams: storeParams };
       });
   }
