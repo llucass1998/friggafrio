@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Price } from "@/components/ui/price"
 import { getActivePaymentSession, isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { HttpTypes } from "@medusajs/types"
+import {
+  PAYMENT_UNAVAILABLE_MESSAGE,
+  paymentAvailability,
+} from "@/lib/config/payment-availability"
 
 interface ReviewStepProps {
   cart: HttpTypes.StoreCart;
@@ -72,7 +76,9 @@ const ReviewStep = ({ cart, onBack }: ReviewStepProps) => {
       </div>
 
       <p className="text-sm text-zinc-600">
-        Ao fazer seu pedido, seu pagamento será autorizado e começaremos a processar seu pedido.
+        {paymentAvailability.processingEnabled
+          ? "Ao fazer seu pedido, seu pagamento será autorizado e começaremos a processar seu pedido."
+          : PAYMENT_UNAVAILABLE_MESSAGE}
       </p>
 
       {/* Action Buttons */}

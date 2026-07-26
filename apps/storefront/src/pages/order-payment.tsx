@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { Link, useParams, useNavigate } from "@tanstack/react-router"
+import { Link, useParams } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import {
   useOrder,
-  usePayOrder,
   useUpdateOrderAddress,
   useOrderShippingOptions,
   useSetOrderShippingMethod,
@@ -31,6 +30,10 @@ import {
   CreditCard,
 } from "@medusajs/icons"
 import { toast } from "sonner"
+import {
+  PAYMENT_UNAVAILABLE_MESSAGE,
+  paymentAvailability,
+} from "@/lib/config/payment-availability"
 
 type OrderPaymentStep = "address" | "shipping" | "payment" | "review"
 
@@ -135,7 +138,6 @@ export default function OrderPaymentPage() {
   const params = useParams({ strict: false }) as { countryCode?: string; orderId?: string }
   const countryCode = params.countryCode || "us"
   const orderId = params.orderId || ""
-  const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading, employee } = useAuth()
 
   const { data: order, isLoading: orderLoading, refetch: refetchOrder } = useOrder({
@@ -160,7 +162,7 @@ export default function OrderPaymentPage() {
       )
       return response.addresses
     },
-    enabled: !!employee,
+    enabled: paymentAvailability.processingEnabled && !!employee,
   })
 
   // Fetch saved payment methods for B2B employees
@@ -182,7 +184,6 @@ export default function OrderPaymentPage() {
   const updateAddressMutation = useUpdateOrderAddress()
   const setShippingMethodMutation = useSetOrderShippingMethod()
   const initPaymentSessionMutation = useInitOrderPaymentSession()
-  const payOrderMutation = usePayOrder()
 
   // Determine what's missing
   const hasShippingAddress = !!(
@@ -414,6 +415,11 @@ export default function OrderPaymentPage() {
   }
 
   const handlePaymentSubmit = async () => {
+    if (!paymentAvailability.processingEnabled) {
+      toast.error(PAYMENT_UNAVAILABLE_MESSAGE)
+      return
+    }
+
     if (!selectedPaymentMethod) {
       toast.error("Please select a payment method")
       return
@@ -427,17 +433,6 @@ export default function OrderPaymentPage() {
       setCurrentStep("review")
     } catch (error: any) {
       toast.error(error?.message || "Failed to initialize payment")
-    }
-  }
-
-  const handlePayment = async () => {
-    if (payOrderMutation.isPending || isPaid) return;
-    try {
-      await payOrderMutation.mutateAsync(orderId)
-      toast.success("Payment successful! Your order is now being processed.")
-      navigate({ to: `/${countryCode}/orders` })
-    } catch (error: any) {
-      toast.error(error?.message || "Payment failed. Please try again.")
     }
   }
 
@@ -762,7 +757,17 @@ export default function OrderPaymentPage() {
                 Payment Method
               </h2>
 
-              {hasSavedPaymentMethods && (
+              {!paymentAvailability.processingEnabled && (
+                <div
+                  className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900"
+                  role="status"
+                >
+                  <p className="font-semibold">Pagamento temporariamente indisponível</p>
+                  <p className="mt-1 text-sm">{PAYMENT_UNAVAILABLE_MESSAGE}</p>
+                </div>
+              )}
+
+              {paymentAvailability.processingEnabled && hasSavedPaymentMethods && (
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-gray-700">Select a company payment method</p>
                   {savedPaymentMethods.map((method) => {
@@ -803,7 +808,7 @@ export default function OrderPaymentPage() {
                 </div>
               )}
 
-              {!hasSavedPaymentMethods && (
+              {paymentAvailability.processingEnabled && !hasSavedPaymentMethods && (
                 <>
                   {availablePaymentMethods.length === 0 ? (
                     <p className="text-gray-500">No payment methods available.</p>
@@ -828,9 +833,17 @@ export default function OrderPaymentPage() {
                 </Button>
                 <Button
                   onClick={handlePaymentSubmit}
-                  disabled={!isPaymentStepValid || initPaymentSessionMutation.isPending}
+                  disabled={
+                    !paymentAvailability.processingEnabled ||
+                    !isPaymentStepValid ||
+                    initPaymentSessionMutation.isPending
+                  }
                 >
-                  {initPaymentSessionMutation.isPending ? "Processing..." : "Continue to Review"}
+                  {!paymentAvailability.processingEnabled
+                    ? "Pagamento indisponível"
+                    : initPaymentSessionMutation.isPending
+                      ? "Processing..."
+                      : "Continue to Review"}
                 </Button>
               </div>
             </div>
@@ -910,19 +923,20 @@ export default function OrderPaymentPage() {
                   })()
                 ) : (
                   <p className="text-gray-700">
-                    {selectedPaymentMethod?.includes("stripe")
+                    {!paymentAvailability.processingEnabled
+                      ? "Pagamento temporariamente indisponível"
+                      : selectedPaymentMethod?.includes("stripe")
                       ? "Credit Card (Stripe)"
-                      : "Manual Payment"}
+                      : "Método não homologado"}
                   </p>
                 )}
               </div>
 
               {/* Payment Button */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-800">
-                    By clicking "Complete Payment", you agree to pay the total amount for this order.
-                    For B2B orders, payment may be processed on account.
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-amber-900" role="status">
+                    {PAYMENT_UNAVAILABLE_MESSAGE}
                   </p>
                 </div>
 
@@ -931,21 +945,10 @@ export default function OrderPaymentPage() {
                     Back
                   </Button>
                   <Button
-                    onClick={handlePayment}
-                    disabled={payOrderMutation.isPending || isPaid}
+                    disabled
                     className="flex-1"
                   >
-                    {payOrderMutation.isPending ? (
-                      <>
-                        <ArrowPath className="w-5 h-5 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <CurrencyDollar className="w-5 h-5 mr-2" />
-                        Complete Payment - <Price price={order.total} currencyCode={order.currency_code} />
-                      </>
-                    )}
+                    Pagamento indisponível
                   </Button>
                 </div>
               </div>

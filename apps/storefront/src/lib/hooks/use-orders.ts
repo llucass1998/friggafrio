@@ -3,6 +3,7 @@ import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
 import { reorder } from "@/lib/data/order"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { assertPaymentProcessingEnabled } from "@/lib/config/payment-availability"
 
 interface OrderWithPlacedBy {
   id: string
@@ -66,27 +67,6 @@ export const useOrder = ({
       return order
     },
     enabled: !!order_id,
-  })
-}
-
-export const usePayOrder = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (orderId: string) => {
-      const response = await sdk.client.fetch<{ order: any; payment: any }>(
-        `/store/customers/me/orders/${orderId}/pay`,
-        {
-          method: "POST",
-          body: {},
-        }
-      )
-      return response
-    },
-    onSuccess: (_, orderId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.customer.orders() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) })
-    },
   })
 }
 
@@ -182,6 +162,8 @@ export const useInitOrderPaymentSession = () => {
       orderId: string
       provider_id: string
     }) => {
+      assertPaymentProcessingEnabled()
+
       const response = await sdk.client.fetch<{ payment_collection: any }>(
         `/store/customers/me/orders/${orderId}/payment-session`,
         {

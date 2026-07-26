@@ -64,6 +64,10 @@ export interface Quote {
       quantity: number
       unit_price: number
       total: number
+      variant_id?: string
+      variant?: {
+        id: string
+      }
       actions?: Array<{ action: string }>
     }>
     total: number

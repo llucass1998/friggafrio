@@ -1,0 +1,381 @@
+name: FriggaFrio CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  PAYMENTS_ENABLED: "false"
+  PAYMENT_PROVIDER_ENABLED: "false"
+  JWT_SECRET: ci-test-jwt-secret
+  COOKIE_SECRET: ci-test-cookie-secret
+  CSRF_SECRET: ci-test-csrf-secret
+  DATA_ENCRYPTION_KEY: ci-test-encryption-key-not-secret
+  STORE_CORS: http://127.0.0.1:5173
+  ADMIN_CORS: http://127.0.0.1:9000
+  AUTH_CORS: http://127.0.0.1:5173
+
+jobs:
+  quality:
+    name: Quality and repository hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Reject tracked generated or sensitive artifacts
+        run: node scripts/ci/check-forbidden-artifacts.mjs
+
+      - name: Validate workflow and repository formatting
+        run: pnpm exec prettier --check .github/workflows/ci.yml
+
+  backend:
+    name: Backend build, types, lint and unit tests
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare reports
+        run: mkdir -p ci-artifacts
+
+      - name: Build backend and generate Medusa types
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend build 2>&1 | tee ci-artifacts/backend-build.log
+
+      - name: Typecheck backend
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend typecheck 2>&1 | tee ci-artifacts/backend-typecheck.log
+
+      - name: Lint backend
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend lint 2>&1 | tee ci-artifacts/backend-lint.log
+
+      - name: Unit tests backend
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend test:unit 2>&1 | tee ci-artifacts/backend-unit.log
+
+      - name: Upload backend failure reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-failure-${{ github.run_id }}
+          path: ci-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  storefront:
+    name: Storefront lint, types, unit tests and build
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare reports
+        run: mkdir -p ci-artifacts
+
+      - name: Lint storefront
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter storefront lint 2>&1 | tee ci-artifacts/storefront-lint.log
+
+      - name: Typecheck storefront
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter storefront typecheck 2>&1 | tee ci-artifacts/storefront-typecheck.log
+
+      - name: Unit tests storefront
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter storefront test:unit 2>&1 | tee ci-artifacts/storefront-unit.log
+
+      - name: Build storefront client and SSR
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter storefront build 2>&1 | tee ci-artifacts/storefront-build.log
+
+      - name: Upload storefront failure reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: storefront-failure-${{ github.run_id }}
+          path: ci-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  integration:
+    name: PostgreSQL, Redis, migrations and integration
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: frigga_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d frigga_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/frigga_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/frigga_test
+      REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare reports
+        run: mkdir -p ci-artifacts
+
+      - name: Migrate empty database
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend exec medusa db:migrate --all-or-nothing --execute-safe-links 2>&1 | tee ci-artifacts/migrate-empty.log
+
+      - name: Prove migrations are idempotent
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend exec medusa db:migrate --all-or-nothing --execute-safe-links 2>&1 | tee ci-artifacts/migrate-existing.log
+
+      - name: Reject unapproved commercial seed data
+        run: pnpm --filter backend exec node scripts/ci/assert-no-commercial-seed.mjs
+
+      - name: HTTP integration tests
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter backend test:integration:http 2>&1 | tee ci-artifacts/backend-integration.log
+
+      - name: Upload integration failure reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: integration-failure-${{ github.run_id }}
+          path: ci-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  e2e:
+    name: Playwright end-to-end
+    needs:
+      - backend
+      - storefront
+      - integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: frigga_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d frigga_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/frigga_e2e
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/frigga_e2e
+      REDIS_URL: redis://127.0.0.1:6379
+      VITE_MEDUSA_BACKEND_URL: http://127.0.0.1:9000
+      VITE_PAYMENTS_ENABLED: "false"
+      VITE_PAYMENT_PROVIDER_ENABLED: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm --filter storefront exec playwright install --with-deps chromium
+
+      - name: Migrate E2E database
+        run: pnpm --filter backend exec medusa db:migrate --all-or-nothing --execute-safe-links
+
+      - name: Start backend
+        shell: bash
+        run: |
+          mkdir -p ci-artifacts
+          pnpm --filter backend dev > ci-artifacts/backend-e2e.log 2>&1 &
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:9000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy."
+          exit 1
+
+      - name: Run Playwright
+        run: pnpm --filter storefront test:e2e
+
+      - name: Upload E2E failure reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-failure-${{ github.run_id }}
+          path: |
+            apps/storefront/playwright-report/
+            apps/storefront/test-results/
+            ci-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  security:
+    name: Secret history scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Prepare report directory
+        run: mkdir -p ci-artifacts
+
+      - name: Scan Git history with redacted output
+        run: >-
+          docker run --rm
+          -v "$PWD:/repo"
+          ghcr.io/gitleaks/gitleaks:v8.24.2
+          git --redact=100
+          --report-format=sarif
+          --report-path=/repo/ci-artifacts/gitleaks.sarif
+          /repo
+
+      - name: Upload secret scan report on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: secret-scan-${{ github.run_id }}
+          path: ci-artifacts/gitleaks.sarif
+          if-no-files-found: ignore
+          retention-days: 7

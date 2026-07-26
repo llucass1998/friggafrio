@@ -80,14 +80,14 @@ export default function OrderConfirmation({
   total = 50,
 }: OrderConfirmationProps) {
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: currency.toUpperCase(),
     }).format(amount);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("pt-BR", {
       weekday: "short",
       year: "numeric",
       month: "short",
@@ -101,23 +101,23 @@ export default function OrderConfirmation({
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section>
-            <Text style={styles.heading}>Dear Customer,</Text>
-            <Text style={styles.heading}>Thank you for your purchase!</Text>
+            <Text style={styles.heading}>Prezado Cliente,</Text>
+            <Text style={styles.heading}>Obrigado pela sua compra!</Text>
           </Section>
 
           <Section>
             <Text style={styles.text}>
-              Order number: <strong>{displayId}</strong>
+              Número do pedido: <strong>{displayId}</strong>
             </Text>
             <Text style={styles.text}>
-              Order date: <strong>{formatDate(createdAt)}</strong>
+              Data do pedido: <strong>{formatDate(createdAt)}</strong>
             </Text>
           </Section>
 
           <Hr style={styles.hr} />
 
           <Section>
-            <Text style={styles.heading}>Order Summary</Text>
+            <Text style={styles.heading}>Resumo do Pedido</Text>
             {items.map((item, index) => (
               <Row key={index} style={styles.itemRow}>
                 <Column style={styles.itemImageColumn}>
@@ -132,7 +132,7 @@ export default function OrderConfirmation({
                 <Column style={{ verticalAlign: "top" }}>
                   <Text style={styles.itemTitle}>{item.title}</Text>
                   <Text style={{ ...styles.textSecondary, margin: "0" }}>
-                    Quantity: {item.quantity} ×{" "}
+                    Quantidade: {item.quantity} ×{" "}
                     {item.compare_at_unit_price && (
                       <>
                         <span style={styles.strikethrough}>
@@ -152,7 +152,7 @@ export default function OrderConfirmation({
             <Section style={{ margin: "24px 0" }}>
               <Row style={styles.summaryRow}>
                 <Column>
-                  <Text style={styles.summaryText}>Subtotal (incl. VAT)</Text>
+                  <Text style={styles.summaryText}>Subtotal (inc. impostos)</Text>
                 </Column>
                 <Column align="right">
                   <Text style={styles.summaryText}>
@@ -162,7 +162,7 @@ export default function OrderConfirmation({
               </Row>
               <Row style={styles.summaryRow}>
                 <Column>
-                  <Text style={styles.summaryText}>Discount Total</Text>
+                  <Text style={styles.summaryText}>Total de Descontos</Text>
                 </Column>
                 <Column align="right">
                   <Text style={styles.summaryText}>
@@ -172,7 +172,7 @@ export default function OrderConfirmation({
               </Row>
               <Row style={styles.summaryRow}>
                 <Column>
-                  <Text style={styles.summaryText}>Shipping Total</Text>
+                  <Text style={styles.summaryText}>Total de Frete</Text>
                 </Column>
                 <Column align="right">
                   <Text style={styles.summaryText}>
@@ -192,7 +192,7 @@ export default function OrderConfirmation({
               </Row>
               <Row style={styles.summaryRow}>
                 <Column>
-                  <Text style={styles.summaryTextItalic}>VAT Amount</Text>
+                  <Text style={styles.summaryTextItalic}>Valor dos Impostos</Text>
                 </Column>
                 <Column align="right">
                   <Text style={styles.summaryTextItalic}>
@@ -206,7 +206,7 @@ export default function OrderConfirmation({
           <Hr style={styles.hr} />
 
           <Section>
-            <Text style={styles.heading}>Shipping Address</Text>
+            <Text style={styles.heading}>Endereço de Entrega</Text>
             <Section style={{ margin: "24px 0" }}>
               <Text style={styles.text}>
                 {shippingAddress.first_name} {shippingAddress.last_name}

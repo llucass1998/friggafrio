@@ -11,7 +11,7 @@ export const Route = createFileRoute("/$countryCode/order/$orderId/payment")({
         },
         {
           name: "description",
-          content: "Complete payment for your order.",
+          content: "Pagamento temporariamente indisponível.",
         },
       ],
     }

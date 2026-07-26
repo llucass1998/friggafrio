@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link, useParams, useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useQuotes, useAcceptQuote, useRejectQuote, useQuotePreview, type QuoteWithRequestedBy } from "@/lib/hooks/use-quotes"
@@ -76,7 +76,6 @@ interface QuoteDetailModalProps {
   quote: Quote
   quoteWithPreview: Quote | undefined
   isLoadingPreview: boolean
-  countryCode: string
   onClose: () => void
   onAccept: () => void
   onReject: () => void
@@ -88,7 +87,6 @@ function QuoteDetailModal({
   quote,
   quoteWithPreview,
   isLoadingPreview,
-  countryCode,
   onClose,
   onAccept,
   onReject,
@@ -231,7 +229,10 @@ function QuoteDetailModal({
                     <tbody className="divide-y divide-gray-100">
                       {displayItems.map((item) => {
                         // Get variant_id from item or from nested variant object
-                        const itemVariantId = (item as any).variant_id || (item as any).variant?.id
+                        const itemVariantId =
+                          "variant_id" in item && typeof item.variant_id === "string"
+                            ? item.variant_id
+                            : item.variant?.id
                         
                         // Get original price from cart items (matched by variant_id)
                         const originalData = itemVariantId ? originalPriceMap.get(itemVariantId) : undefined
@@ -401,7 +402,7 @@ export default function QuotesPage() {
   const handleViewOrder = (orderId: string) => {
     setSelectedQuote(null)
     navigate({
-      to: "/$countryCode/orders",
+      to: "/$countryCode/account/orders",
       params: { countryCode },
       search: { orderId },
     })
@@ -685,7 +686,6 @@ export default function QuotesPage() {
           quote={selectedQuote}
           quoteWithPreview={quoteWithPreview}
           isLoadingPreview={isLoadingPreview}
-          countryCode={countryCode}
           onClose={() => setSelectedQuote(null)}
           onAccept={() => handleAccept(selectedQuote.id)}
           onReject={() => handleReject(selectedQuote.id)}

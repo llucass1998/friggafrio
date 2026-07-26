@@ -2,6 +2,10 @@ import { getStoredCart, removeStoredCart} from "@/lib/utils/cart"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  assertPaymentProcessingEnabled,
+  paymentAvailability,
+} from "@/lib/config/payment-availability"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
 
@@ -121,7 +125,7 @@ export const useCartPaymentMethods = ({
       })
       return payment_providers
     },
-    enabled: !!region_id,
+    enabled: paymentAvailability.processingEnabled && !!region_id,
     staleTime: 0,
   })
 }
@@ -137,6 +141,8 @@ export const useInitiateCartPaymentSession = () => {
       provider_id: string;
       data?: Record<string, unknown>;
     }) => {
+      assertPaymentProcessingEnabled()
+
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
 
@@ -164,6 +170,8 @@ export const useCompleteCartOrder = () => {
 
   return useMutation({
     mutationFn: async () => {
+      assertPaymentProcessingEnabled()
+
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
 

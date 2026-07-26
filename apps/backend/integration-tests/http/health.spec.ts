@@ -1,11 +1,18 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 jest.setTimeout(60 * 1000)
 
+const databaseUrl = process.env.TEST_DATABASE_URL
+
+if (!databaseUrl) {
+  throw new Error("TEST_DATABASE_URL is required for HTTP integration tests")
+}
+
 medusaIntegrationTestRunner({
   inApp: true,
   env: {
-    DATABASE_URL: "postgres://postgres:postgrespassword@localhost:5433/frigga_test",
-    DB_URL: "postgres://postgres:postgrespassword@localhost:5433/frigga_test"
+    DATABASE_URL: databaseUrl,
+    DB_URL: databaseUrl,
+    POSTGRES_URL: databaseUrl,
   },
   testSuite: ({ api }) => {
     describe("Ping", () => {

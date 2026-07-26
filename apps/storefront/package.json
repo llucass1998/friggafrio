@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "lint": "eslint src",
+    "test": "pnpm test:unit",
+    "test:unit": "tsx --test tests/unit/cart.test.mjs",
+    "typecheck": "tsc --noEmit",
     "serve": "vite preview",
     "preview": "vite preview",
     "test:e2e": "playwright test",

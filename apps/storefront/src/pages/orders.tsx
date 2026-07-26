@@ -19,7 +19,7 @@ import {
   ArrowPath,
 } from "@medusajs/icons"
 import type { HttpTypes } from "@medusajs/types"
-import { formatCurrencyAmount } from "@/lib/utils/currency"
+import { paymentAvailability } from "@/lib/config/payment-availability"
 
 function formatDate(dateValue: string | Date | undefined | null): string {
   if (!dateValue) return "-"
@@ -29,13 +29,6 @@ function formatDate(dateValue: string | Date | undefined | null): string {
     day: "numeric",
     year: "numeric",
   })
-}
-
-function formatCurrency(
-  amount: number | null | undefined,
-  currencyCode: string
-): string {
-  return formatCurrencyAmount({ amount, currencyCode })
 }
 
 function getOrderStatusConfig(status: string) {
@@ -79,7 +72,7 @@ function getPaymentStatusConfig(status: string | undefined) {
       return {
         label: "Awaiting Payment",
         bgClass: "bg-amber-100 text-amber-700",
-        showPayButton: true,
+        showPayButton: paymentAvailability.processingEnabled,
       }
     case "awaiting":
       return {
@@ -192,7 +185,7 @@ function OrderDetailModal({
                       Payment Required
                     </h4>
                     <p className="text-sm text-amber-600">
-                      Complete payment to process your order
+                      Pagamento temporariamente indisponível
                     </p>
                   </div>
                 </div>
@@ -418,7 +411,7 @@ export default function OrdersPage() {
         setSelectedOrder(order)
         // Clear the search param after opening
         navigate({
-          to: "/$countryCode/orders",
+          to: "/$countryCode/account/orders",
           params: { countryCode: countryCode || "us" },
           search: {},
           replace: true,
@@ -430,7 +423,7 @@ export default function OrdersPage() {
   const handleReorder = async (orderId: string) => {
     setReorderingId(orderId)
     try {
-      const cart = await reorderMutation.mutateAsync({ orderId })
+      await reorderMutation.mutateAsync({ orderId })
       // Navigate to the review step of checkout
       navigate({
         to: "/$countryCode/checkout",
@@ -559,7 +552,13 @@ export default function OrdersPage() {
                       label: "Pay Now",
                       icon: CurrencyDollar,
                       onClick: () => {
-                        window.location.href = `/${countryCode}/order/${order.id}/payment`
+                        const orderId = order.id
+                        if (!countryCode || !orderId) return
+
+                        navigate({
+                          to: "/$countryCode/order/$orderId/payment",
+                          params: { countryCode, orderId },
+                        })
                       },
                       variant: "primary",
                     })
