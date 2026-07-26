@@ -34,7 +34,7 @@ export function Navbar() {
               params={{ countryCode }}
               className="text-xl font-semibold tracking-tight text-gray-900"
             >
-              ForkliftPro
+              FriggaFrio
             </Link>
 
             {/* Center nav - desktop */}
@@ -44,28 +44,28 @@ export function Navbar() {
                 params={{ countryCode }}
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                All Equipment
+                Produtos
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
                 params={{ countryCode, handle: "forklifts" }}
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Forklifts
+                Categorias
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
                 params={{ countryCode, handle: "material-handlers" }}
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Material Handlers
+                Ofertas
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
                 params={{ countryCode, handle: "parts-accessories" }}
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Parts
+                Contato
               </Link>
             </nav>
 
@@ -80,13 +80,14 @@ export function Navbar() {
                 <MagnifyingGlass className="w-5 h-5" />
               </button>
 
-              {/* Account */}
+              {/* Minha Conta */}
               <Link
                 to={"/$countryCode/account" as string}
                 params={{ countryCode }}
                 className="hidden sm:block p-2 text-gray-500 hover:text-gray-900 transition-colors"
               >
                 <User className="w-5 h-5" />
+                <span className="sr-only">Minha Conta</span>
               </Link>
 
               {/* Cart */}
@@ -96,6 +97,7 @@ export function Navbar() {
                 className="relative p-2 text-gray-500 hover:text-gray-900 transition-colors"
               >
                 <ShoppingBag className="w-5 h-5" />
+                <span className="sr-only">Carrinho de Compras</span>
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center font-medium">
                     {itemCount}
@@ -127,7 +129,9 @@ export function Navbar() {
                 <MagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search equipment..."
+                  aria-label="Pesquisar"
+                  title="Pesquisar"
+                  placeholder="Buscar produtos..."
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
                   autoFocus
                 />
@@ -146,7 +150,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-3 text-gray-900 font-medium"
               >
-                All Equipment
+                Produtos
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
@@ -154,7 +158,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-3 text-gray-600"
               >
-                Forklifts
+                Categorias
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
@@ -162,7 +166,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-3 text-gray-600"
               >
-                Material Handlers
+                Ofertas
               </Link>
               <Link
                 to="/$countryCode/categories/$handle"
@@ -170,7 +174,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-3 text-gray-600"
               >
-                Parts
+                Contato
               </Link>
               <div className="pt-4 border-t border-gray-100">
                 <Link
@@ -179,7 +183,7 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block py-3 text-gray-600"
                 >
-                  Account
+                  Minha Conta
                 </Link>
               </div>
             </nav>
