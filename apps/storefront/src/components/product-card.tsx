@@ -83,7 +83,7 @@ export function ProductCard({ product, regionId, countryCode }: ProductCardProps
         >
           {primaryImage ? (
             <>
-              <img
+              <img width="300" height="300"
                 src={primaryImage}
                 alt={product.title}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${secondImage ? "group-hover:opacity-0" : "group-hover:scale-105 transition-transform"}`}
