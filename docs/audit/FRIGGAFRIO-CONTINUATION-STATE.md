@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 22 (Documentação e UX UI)
+## Current Phase: Phase 23 (Acessibilidade / A11y)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -23,4 +23,7 @@
 2. ~~**Phase 21 Goal**: Translate `apps/backend/src/email-templates/order-confirmation.tsx` from English to pt-BR.~~ (Fixed)
 
 ## Next Steps
-- Start Phase 22 (UI/UX Review & Error Boundaries).
+- ~~Start Phase 22 (UI/UX Review & Error Boundaries).~~
+- Error boundaries injetados (`__root.tsx`, `components/error-boundary.tsx`).
+- Sanitização de console logs e esquema SEO concluídos (`products/$handle.tsx`, `products.ts`, `layout.tsx`).
+- Start Phase 23 (Accessibility & A11y).

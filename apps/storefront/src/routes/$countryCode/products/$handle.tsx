@@ -17,7 +17,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     });
 
     if (!region || !handle) {
-      console.error("ERROR IN LOADER"); throw notFound();
+      throw notFound();
     }
 
     // Single comprehensive product fetch with all needed fields
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
               "*variants, +variants.inventory_quantity, +variants.manage_inventory, +variants.allow_backorder, +variants.calculated_price, *images, *options, *options.values, *collection, *tags",
           });
         } catch(e) {
-          console.error("ERROR IN LOADER"); throw notFound();
+          // Logging removido em produção throw notFound();
         }
       },
     });
@@ -103,7 +103,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         availability: "https://schema.org/InStock",
         priceCurrency: region?.currency_code?.toUpperCase(),
         price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== null && (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== undefined
-          ? (product.variants as any)[0].calculated_price.calculated_amount.toFixed(2)
+          ? ((product.variants as any)[0].calculated_price.calculated_amount / 100).toFixed(2)
           : undefined,
       },
     };
