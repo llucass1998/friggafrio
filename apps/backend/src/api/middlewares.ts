@@ -1,3 +1,9 @@
+import {
+  authRateLimit,
+  registerRateLimit,
+  globalApiRateLimit,
+  secureHeaders,
+} from "./middlewares/rate-limiting";
 import { defineMiddlewares } from "@medusajs/medusa";
 import { validateDemoPriceCheckout } from "./middlewares/validate-demo-price";
 import { companyMiddlewares } from "./store/company/middlewares";
@@ -8,9 +14,36 @@ import {
   blockPaymentsWhenDisabled,
   blockUnsafePaymentConfirmation,
 } from "./middlewares/payment-containment";
+import {
+  protectSessionMutation,
+  requireTrustedAuthOrigin,
+} from "../lib/auth/session-security";
 
 export default defineMiddlewares({
   routes: [
+    {
+      matcher: /.*/,
+      middlewares: [secureHeaders],
+    },
+    {
+      matcher: "^/store(?:/|$)",
+      middlewares: [globalApiRateLimit],
+    },
+    {
+      matcher: /^\/store(?:\/|$)/,
+      methods: ["POST", "PUT", "PATCH", "DELETE"],
+      middlewares: [protectSessionMutation],
+    },
+    {
+      matcher: /^\/auth\/(?:session|token\/refresh)$/,
+      methods: ["POST", "DELETE"],
+      middlewares: [requireTrustedAuthOrigin, authRateLimit],
+    },
+    {
+      matcher: "/auth/customer/google",
+      method: "POST",
+      middlewares: [requireTrustedAuthOrigin, authRateLimit],
+    },
     {
       method: "POST",
       matcher: "/store/customers/me/orders/:id/pay",

@@ -10,7 +10,7 @@ test('Página Inicial carrega e exibe componentes Frigga', async ({ page }) => {
   await expect(page.locator('h2', { hasText: 'Produtos Especializados FriggaFrio' })).toBeVisible();
 
   // Seção de Serviços
-  await expect(page.getByText('Serviços Especializados Friggafrio')).toBeVisible();
+  await expect(page.getByText('Marcas que você encontra na FriggaFrio')).toBeVisible();
 });
 
 test('Header contém busca e navegação corretas', async ({ page }) => {

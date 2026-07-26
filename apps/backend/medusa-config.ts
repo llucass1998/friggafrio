@@ -1,7 +1,22 @@
 import { defineConfig, loadEnv } from "@medusajs/framework/utils";
 import { getPaymentAvailability } from "./src/utils/payment-availability";
+import { getSessionCookieName } from "./src/lib/auth/session-security";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
+
+const nodeEnv = process.env.NODE_ENV || "development";
+const isSecureSessionEnvironment = ["production", "staging"].includes(nodeEnv);
+const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 10 * 60 * 60 * 1000);
+
+if (!Number.isSafeInteger(sessionTtlMs) || sessionTtlMs <= 0) {
+  throw new Error("SESSION_TTL_MS must be a positive integer.");
+}
+
+if (isSecureSessionEnvironment && !process.env.REDIS_URL) {
+  throw new Error(
+    "REDIS_URL is required in production and staging to persist authenticated sessions.",
+  );
+}
 
 const stripeApiKey = process.env.STRIPE_API_KEY;
 const isStripeConfigured = !!stripeApiKey;
@@ -48,6 +63,21 @@ module.exports = defineConfig({
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    redisUrl: process.env.REDIS_URL,
+    sessionOptions: {
+      name: getSessionCookieName(),
+      resave: false,
+      rolling: true,
+      saveUninitialized: false,
+      ttl: sessionTtlMs,
+    },
+    cookieOptions: {
+      httpOnly: true,
+      secure: isSecureSessionEnvironment,
+      sameSite: "lax",
+      path: "/",
+      priority: "high",
+    },
 
     http: {
       storeCors: process.env.STORE_CORS!,

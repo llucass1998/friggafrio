@@ -10,7 +10,7 @@ export const storeUploadsMiddlewares: MiddlewareRoute[] = [
     method: ["POST"],
     matcher: "/store/uploads",
     middlewares: [
-      authenticate("customer", ["bearer", "session"]),
+      authenticate("customer", ["session"]),
       validateAndTransformBody(
         z.object({
           filename: z.string(),

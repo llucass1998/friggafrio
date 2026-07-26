@@ -1,25 +1,17 @@
-import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { MedusaError } from "@medusajs/framework/utils"
-import { acceptEmployeeInviteWorkflow } from "../../../../../workflows/accept-employee-invite"
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import { acceptEmployeeInviteWorkflow } from "../../../../../workflows/accept-employee-invite";
 
 type AcceptInviteBody = {
-  token: string
-  first_name: string
-  last_name: string
-  phone?: string
-}
+  token: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  password: string;
+};
 
-export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
-  const { token, first_name, last_name, phone } = req.validatedBody as AcceptInviteBody
-
-  // Require authentication - the auth_identity was created during registration
-  const authIdentityId = req.auth_context?.auth_identity_id
-  if (!authIdentityId) {
-    throw new MedusaError(
-      MedusaError.Types.UNAUTHORIZED,
-      "Authentication required. Please register first."
-    )
-  }
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { token, first_name, last_name, phone, password } =
+    req.validatedBody as AcceptInviteBody;
 
   const { result } = await acceptEmployeeInviteWorkflow(req.scope).run({
     input: {
@@ -27,9 +19,9 @@ export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse)
       first_name,
       last_name,
       phone,
-      auth_identity_id: authIdentityId,
+      password,
     },
-  })
+  });
 
   res.json({
     success: true,
@@ -45,5 +37,5 @@ export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse)
       spending_limit: result.spending_limit,
     },
     company_id: result.company_id,
-  })
+  });
 }

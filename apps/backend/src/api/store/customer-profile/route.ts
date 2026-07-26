@@ -1,5 +1,8 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { z } from "zod";
+import type {
+  AuthenticatedMedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http";
+import { z } from "@medusajs/framework/zod";
 import { CUSTOMER_PROFILE_MODULE } from "../../../modules/customer-profile";
 import {
   isValidCpf,
@@ -36,8 +39,11 @@ const serializeCustomerProfile = (profile: CustomerProfileResponseSource) => ({
   marketing_consent: profile.marketing_consent,
 });
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const customerId = req.user?.customer_id;
+export const GET = async (
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+) => {
+  const customerId = req.auth_context?.actor_id;
   if (!customerId) {
     res.status(401).json({ message: "Unauthorized" });
     return;
@@ -67,8 +73,11 @@ const updateProfileSchema = z.object({
   marketing_consent: z.boolean().optional(),
 });
 
-export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-  const customerId = req.user?.customer_id;
+export const POST = async (
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+) => {
+  const customerId = req.auth_context?.actor_id;
   if (!customerId) {
     res.status(401).json({ message: "Unauthorized" });
     return;

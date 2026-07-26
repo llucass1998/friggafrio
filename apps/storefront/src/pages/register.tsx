@@ -652,7 +652,7 @@ export default function RegisterPage() {
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => {
-                  console.error("Google Login falhou na inicialização")
+                  console.error("Google Login falhou na inicializacao")
                   setServerError("Falha ao abrir pop-up do Google. Verifique o bloqueador de pop-ups.")
                 }}
                 shape="rectangular"

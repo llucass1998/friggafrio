@@ -1,0 +1,120 @@
+# Header dinâmico
+- [ ] Todos os componentes de Header foram localizados.
+- [ ] Todos os layouts que renderizam Header foram localizados.
+- [ ] Não existem dois Headers concorrentes.
+- [ ] O mesmo Header é usado na Home.
+- [ ] O mesmo Header é usado em Minha Conta.
+- [ ] O mesmo Header é usado em Quem Somos.
+- [ ] O mesmo Header é usado em Nossa Loja.
+- [ ] O mesmo Header é usado em Produtos.
+- [ ] Header completo aparece no topo da página.
+- [ ] Header se torna compacto ao rolar.
+- [ ] Barra utilitária recolhe ao rolar.
+- [ ] Linha principal permanece sticky.
+- [ ] Header restaura o estado completo ao voltar ao topo.
+- [ ] Não existe salto visual abrupto.
+- [ ] Não existe layout shift significativo.
+- [ ] Logo possui dimensão correta.
+- [ ] Busca permanece utilizável.
+- [ ] Navegação permanece utilizável.
+- [ ] Conta permanece utilizável.
+- [ ] Carrinho permanece utilizável.
+- [ ] Mega menu funciona.
+- [ ] Mobile funciona.
+- [ ] Tablet funciona.
+- [ ] Desktop funciona.
+- [ ] Reduced Motion funciona.
+
+# Minha Conta
+- [ ] Layout atual foi auditado.
+- [ ] Página não utiliza coluna excessivamente estreita.
+- [ ] Dashboard ocupa corretamente a largura disponível.
+- [ ] Toda interface está em pt-BR.
+- [ ] Menu lateral foi implementado.
+- [ ] Visão geral foi implementada.
+- [ ] Dados pessoais foram implementados.
+- [ ] Endereços foram implementados ou integrados.
+- [ ] Pedidos utilizam dados reais.
+- [ ] Orçamentos utilizam dados reais.
+- [ ] Segurança e acesso foram implementados.
+- [ ] Estados vazios foram implementados.
+- [ ] Loading foi implementado.
+- [ ] Erros foram implementados.
+- [ ] Mobile funciona.
+- [ ] Desktop funciona.
+- [ ] Nenhum dado falso foi criado.
+
+# Logout
+- [ ] Erro foi reproduzido.
+- [ ] Handler atual foi localizado.
+- [ ] Requisição real foi capturada.
+- [ ] sdk.auth.logout foi executado.
+- [ ] DELETE /auth/session foi confirmado.
+- [ ] Resposta vazia ou 204 foi aceita.
+- [ ] Estado autenticado foi atualizado imediatamente.
+- [ ] Query do cliente foi limpa.
+- [ ] Queries privadas foram removidas.
+- [ ] Contexto do Router foi invalidado.
+- [ ] Loaders protegidos foram reexecutados.
+- [ ] Header mudou imediatamente para Entrar.
+- [ ] Redirecionamento ocorreu sem F5.
+- [ ] Botão voltar não recupera dados privados.
+- [ ] Refresh confirma sessão encerrada.
+- [ ] Carrinho foi preservado conforme a regra atual.
+- [ ] Uma única chamada ocorre por clique.
+- [ ] Promise é tratada.
+- [ ] Erro possui feedback visual.
+
+# Transições
+- [ ] Versão do TanStack Router foi identificada.
+- [ ] Suporte a View Transitions foi identificado.
+- [ ] View Transition foi configurada quando suportada.
+- [ ] Fallback CSS foi implementado.
+- [ ] A key da transição muda conforme pathname.
+- [ ] Outlet está no local correto.
+- [ ] Header não é desmontado.
+- [ ] Footer não é desmontado.
+- [ ] Providers não são desmontados.
+- [ ] Transição aparece na Home.
+- [ ] Transição aparece em Produtos.
+- [ ] Transição aparece em Minha Conta.
+- [ ] Transição aparece em Quem Somos.
+- [ ] Transição aparece em Nossa Loja.
+- [ ] Voltar do navegador funciona.
+- [ ] Scroll restoration funciona.
+- [ ] Reduced Motion funciona.
+- [ ] Nenhuma transição causa hydration mismatch.
+
+# CSS e causa raiz
+- [ ] Todos os arquivos globais foram identificados.
+- [ ] Ordem de importação foi identificada.
+- [ ] Regras `transition: none` foram auditadas.
+- [ ] Regras `animation: none` foram auditadas.
+- [ ] Regras `prefers-reduced-motion` foram auditadas.
+- [ ] Preferência manual de movimento foi auditada.
+- [ ] Classe de acessibilidade foi auditada.
+- [ ] Seletores com `!important` foram auditados.
+- [ ] Height do Header foi auditado.
+- [ ] Min-height do Header foi auditado.
+- [ ] Padding do Header foi auditado.
+- [ ] Wrappers do Header foram auditados.
+- [ ] Wrapper da conta foi auditado.
+- [ ] Regra CSS vencedora foi identificada.
+- [ ] Arquivo e linha foram documentados.
+- [ ] Regra obsoleta foi removida.
+- [ ] Alteração foi confirmada em computed styles.
+
+# Qualidade
+- [ ] Sem `/undefined`.
+- [ ] Sem `/null`.
+- [ ] Sem `/dk`.
+- [ ] Sem hydration mismatch.
+- [ ] Sem Uncaught Promise.
+- [ ] Sem erro crítico no Console.
+- [ ] Sem request duplicado.
+- [ ] TypeScript aprovado.
+- [ ] Lint aprovado.
+- [ ] Build aprovado.
+- [ ] Unitários aprovados.
+- [ ] Integração aprovada.
+- [ ] E2E aprovado.

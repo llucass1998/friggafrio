@@ -2,13 +2,13 @@ import {
   MiddlewareRoute,
   validateAndTransformBody,
   authenticate,
-} from "@medusajs/framework/http"
-import { z } from "@medusajs/framework/zod"
+} from "@medusajs/framework/http";
+import { z } from "@medusajs/framework/zod";
 
 const SetupCompanySchema = z.object({
   // Auth credentials
   email: z.string().email(),
-  password: z.string(),
+  password: z.string().min(8).max(100),
   // Company data
   company_name: z.string(),
   company_email: z.string().email(),
@@ -23,7 +23,7 @@ const SetupCompanySchema = z.object({
   admin_first_name: z.string(),
   admin_last_name: z.string(),
   admin_phone: z.string().optional(),
-})
+});
 
 const CreateCompanyAddressSchema = z.object({
   name: z.string(),
@@ -40,7 +40,7 @@ const CreateCompanyAddressSchema = z.object({
   is_default_shipping: z.boolean().optional(),
   is_default_billing: z.boolean().optional(),
   is_billing_only: z.boolean().optional(),
-})
+});
 
 const UpdateCompanyAddressSchema = z.object({
   name: z.string().optional(),
@@ -57,7 +57,7 @@ const UpdateCompanyAddressSchema = z.object({
   is_default_shipping: z.boolean().optional(),
   is_default_billing: z.boolean().optional(),
   is_billing_only: z.boolean().optional(),
-})
+});
 
 const UpdateMyCompanySchema = z.object({
   name: z.string().optional(),
@@ -69,8 +69,10 @@ const UpdateMyCompanySchema = z.object({
   postal_code: z.string().nullable().optional(),
   country_code: z.string().nullable().optional(),
   logo_url: z.string().nullable().optional(),
-  spend_limit_reset_frequency: z.enum(["none", "daily", "weekly", "monthly", "yearly"]).optional(),
-})
+  spend_limit_reset_frequency: z
+    .enum(["none", "daily", "weekly", "monthly", "yearly"])
+    .optional(),
+});
 
 export const companyMiddlewares: MiddlewareRoute[] = [
   {
@@ -85,45 +87,45 @@ export const companyMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/company/me",
     method: "POST",
     middlewares: [
-      authenticate("customer", ["bearer", "session"]),
+      authenticate("customer", ["session"]),
       validateAndTransformBody(UpdateMyCompanySchema),
     ],
   },
   {
     matcher: "/store/company/checkout-payment-methods",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/initiate-checkout-session",
     method: "POST",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/payment-methods",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/payment-methods",
     method: "POST",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/payment-methods/:id",
     method: "DELETE",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/addresses",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/addresses",
     method: "POST",
     middlewares: [
-      authenticate("customer", ["bearer", "session"]),
+      authenticate("customer", ["session"]),
       validateAndTransformBody(CreateCompanyAddressSchema),
     ],
   },
@@ -131,28 +133,28 @@ export const companyMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/company/addresses/:id",
     method: "POST",
     middlewares: [
-      authenticate("customer", ["bearer", "session"]),
+      authenticate("customer", ["session"]),
       validateAndTransformBody(UpdateCompanyAddressSchema),
     ],
   },
   {
     matcher: "/store/company/addresses/:id",
     method: "DELETE",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/setup-status",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/orders",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
   {
     matcher: "/store/company/quotes",
     method: "GET",
-    middlewares: [authenticate("customer", ["bearer", "session"])],
+    middlewares: [authenticate("customer", ["session"])],
   },
-]
+];
