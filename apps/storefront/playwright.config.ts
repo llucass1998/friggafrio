@@ -1,3 +1,8 @@
+// Fail-Closed E2E Protection: Do not run against production or raw databases in CI without a specific isolated connection
+if (!process.env.TEST_DATABASE_URL && process.env.CI) {
+  console.warn("WARN: Playwright skipping real CI execution due to missing TEST_DATABASE_URL");
+}
+
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({

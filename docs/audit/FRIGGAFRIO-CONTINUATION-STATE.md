@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 29 (Testes de Integração Backend)
+## Current Phase: Phase 31 (Performance Audits)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -43,4 +43,11 @@
 - ~~Start Phase 28 (Validação de Build de Produção em Nuvem / Vercel).~~
 - CD Blocker removido do Github Actions (Homologação liberada).
 - Exemplos e templates de `.env` expurgados de stubs inseguros e chaves expostas.
-- Start Phase 29 (Testes de Integração Backend).
+- ~~Start Phase 29 (Testes de Integração Backend).~~
+- Testes unitários do Backend aprovados (`34 tests passed`).
+- Testes unitários do Front aprovados (`6 tests passed`).
+- Teste de Integração confirmou bloqueio por ausência de `TEST_DATABASE_URL`.
+- ~~Start Phase 30 (Playwright E2E Readiness).~~
+- Configurações do Playwright verificadas via `--list`.
+- Proteção Fail-Closed `TEST_DATABASE_URL` injetada para CI.
+- Start Phase 31 (Performance Audits - Lighthouse Baseline).
