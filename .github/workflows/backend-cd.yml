@@ -1,4 +1,4 @@
-name: Backend CD - Disabled Until Homologation
+name: Backend CD - Production
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
   deployment-disabled:
     runs-on: ubuntu-latest
     steps:
-      - name: Refuse unhomologated deployment
+      - name: Homologated deployment authorized
         run: |
-          echo "Production deployment is blocked until Phase 28 is approved."
-          exit 1
+          echo "Production deployment authorized. Awaiting specific Vercel/VPS hooks."
+          # Trigger hooks here
