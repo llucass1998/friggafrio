@@ -1,6 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
-import { ProductImagePlaceholder } from "./product/ProductImagePlaceholder"
+import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 
 import { useState } from "react"
 import { useCartDrawer } from "@/lib/context/cart"
@@ -24,7 +24,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   const thumbnail = product.thumbnail || product.images?.[0]?.url
   const sku = product.variants?.[0]?.sku || "N/A"
 
-  const metadata = product.metadata as Record<string, any> || {}
+  const metadata = (product.metadata ?? {}) as Record<string, unknown>
   const brand = (metadata.brand as string) || product.collection?.title || "Friggafrio"
   const hasRealImages = metadata.has_real_images === true
 
@@ -36,21 +36,28 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   // para que o botão vire "Escolher opções" e leve a PDP ao invés de barrar
   if (purchaseState.status === "out_of_stock") {
     // Se o backend retornou nulo na query de inventário mas o item existe e tem preço na StoreAPI, liberamos o front.
-    const priceAvailable = product.variants?.some((v: any) => v.calculated_price && v.calculated_price.calculated_amount !== null && v.calculated_price.calculated_amount !== undefined)
-    if (priceAvailable && product.variants?.length === 1) {
-        const variant = product.variants?.find((v: any) => v.calculated_price && v.calculated_price.calculated_amount !== null && v.calculated_price.calculated_amount !== undefined) as any
-        if (variant) {
-            purchaseState = { status: "purchasable", variant, price: variant.calculated_price.calculated_amount ?? 0 }
-        }
+    const variantsWithPrice = (product.variants ?? []).filter(
+      (variant) => variant.calculated_price?.calculated_amount != null
+    )
+    if (variantsWithPrice.length === 1 && product.variants?.length === 1) {
+      const variant = variantsWithPrice[0]
+      purchaseState = {
+        status: "purchasable",
+        variant,
+        price: variant.calculated_price?.calculated_amount ?? 0,
+      }
     } else if (product.variants && product.variants.length > 1) {
-       purchaseState = { status: "select_variant", reason: "Multiple variants exist" }
+      purchaseState = { status: "select_variant", variants: product.variants }
     }
   }
 
   // Resgata o preço geral
+  const firstCalculatedPrice = product.variants?.[0]?.calculated_price
   const displayPrice = purchaseState.status === "purchasable"
     ? purchaseState.price
-    : (product.variants?.[0] as any)?.calculated_price?.calculated_amount ?? 0;
+    : firstCalculatedPrice?.calculated_amount ?? 0
+  const displayCurrency =
+    countryCode === "br" ? "BRL" : firstCalculatedPrice?.currency_code || "BRL"
 
   const { openCart } = useCartDrawer()
   const queryClient = useQueryClient()
@@ -89,30 +96,30 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   }
 
   // Botão FASE 8 states
-  let buttonText = "Comprar";
-  let buttonDisabled = true;
+  let buttonText = "Comprar"
+  let buttonDisabled = true
 
   if (purchaseState.status === "purchasable") {
-    buttonDisabled = false;
+    buttonDisabled = false
   } else if (purchaseState.status === "select_variant") {
-    buttonText = "Escolher opções";
-    buttonDisabled = true; // Navega pra página do produto no clique geral
+    buttonText = "Escolher opções"
+    buttonDisabled = true // Navega pra página do produto no clique geral
   } else if (purchaseState.status === "out_of_stock") {
-    buttonText = "Sem estoque";
+    buttonText = "Sem estoque"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação";
+    buttonText = "Preço em confirmação"
   } else {
-    buttonText = "Indisponível";
+    buttonText = "Indisponível"
   }
 
   // Em public card, se for "Escolher Opções", o clique do botão deve levar pra PDP
   const handleActionClick = (e: React.MouseEvent) => {
     if (purchaseState.status === "select_variant") {
       // Deixa o clique subir (propagação) pra disparar o Link que envolve o card, ou pode explicitamente mudar de pagina se precisar
-      return;
+      return
     }
-    handleBuy(e);
-  };
+    handleBuy(e)
+  }
 
   return (
     <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden transition-all duration-[var(--motion-duration-card,300ms)] ease-[var(--ease-standard,cubic-bezier(0.2,0.8,0.2,1))] hover:-translate-y-[5px] hover:shadow-lg hover:border-[var(--color-primary)] group flex flex-col h-full focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
@@ -173,12 +180,12 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
                    Valor em configuração
                  </span>
                  <span className="text-xl font-bold text-[var(--color-text)]">
-                   {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
+                   {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrency })}
                  </span>
                </>
              ) : displayPrice && purchaseState.status !== "price_pending" ? (
                  <span className="text-xl font-bold text-[var(--color-navy)]">
-                   {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
+                   {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrency })}
                  </span>
              ) : (
                 <span className="text-sm font-medium text-[var(--color-text-muted)] italic">Consulte o valor</span>

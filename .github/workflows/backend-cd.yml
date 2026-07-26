@@ -1,40 +1,16 @@
-name: Backend CD
+name: Backend CD - Disabled Until Homologation
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  deploy:
+  deployment-disabled:
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build and Push Docker image
+      - name: Refuse unhomologated deployment
         run: |
-          echo "Placeholder for Docker Push to GHCR"
-          # echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          # docker build -f apps/backend/Dockerfile -t ghcr.io/frigga/backend:${{ github.sha }} .
-          # docker push ghcr.io/frigga/backend:${{ github.sha }}
-
-      - name: Deploy to Server
-        run: |
-          echo "Placeholder for SSH / Docker Compose Up on Host"
-          # ssh -i key user@host "cd deploy && docker-compose up -d"
-
-      - name: Run Migrations
-        run: |
-          echo "Executing migrations via remote docker exec"
-
-      - name: Smoke Tests
-        run: |
-          echo "Running health checks against production URL"
-          # curl -f http://api.frigga.com/health/live || exit 1
-          # curl -f http://api.frigga.com/health/ready || exit 1
+          echo "Production deployment is blocked until Phase 28 is approved."
+          exit 1

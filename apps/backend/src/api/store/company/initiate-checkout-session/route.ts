@@ -8,6 +8,10 @@ import {
   Modules,
 } from "@medusajs/framework/utils"
 import { z } from "@medusajs/framework/zod"
+import {
+  getPaymentAvailability,
+  sendPaymentUnavailable,
+} from "../../../../utils/payment-availability"
 
 const InitiateSessionSchema = z.object({
   cart_id: z.string(),
@@ -19,6 +23,10 @@ export async function POST(
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) {
+  if (!getPaymentAvailability().processingEnabled) {
+    return sendPaymentUnavailable(res)
+  }
+
   const customerId = req.auth_context?.actor_id
   if (!customerId) {
     throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized")

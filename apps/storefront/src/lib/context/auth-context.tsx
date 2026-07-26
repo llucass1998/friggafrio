@@ -1,21 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
+import { useState, useEffect, useCallback, ReactNode } from "react"
 import { sdk } from "@/lib/medusa"
 import { HttpTypes } from "@medusajs/types"
-import { getMe, Employee, CustomerWithEmployee } from "@/lib/data/me"
-
-interface AuthContextType {
-  isAuthenticated: boolean
-  isLoading: boolean
-  customer: HttpTypes.StoreCustomer | null
-  employee: Employee | null
-  isAdmin: boolean
-  login: (email: string, password: string) => Promise<void>
-  loginWithGoogle: (credential: string) => Promise<void>
-  logout: () => Promise<void>
-  refetch: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextType | null>(null)
+import { getMe, Employee } from "@/lib/data/me"
+import { AuthContext } from "@/lib/context/auth-context-value"
 
 // Key to track auth state to avoid loading flash on navigation
 const AUTH_STATE_KEY = "auth_state"
@@ -37,13 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const fetchCustomer = useCallback(async () => {
-    console.log("[AuthContext] fetchCustomer called")
     try {
       // Fetch basic customer data
       const { customer } = await sdk.store.customer.retrieve({
         fields: "id,email,first_name,last_name,phone,has_account"
       })
-      console.log("[AuthContext] customer retrieved:", customer?.email)
 
       // Fetch employee data before updating any state so the layout
       // never sees isAuthenticated=true with employee still null.
@@ -54,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { customer: customerWithEmployee } = await getMe()
         if (customerWithEmployee.employee) {
           employeeData = customerWithEmployee.employee
-          console.log("[AuthContext] employee data retrieved:", employeeData.is_admin ? "admin" : "buyer")
         }
       } catch {
         // Not a B2B customer or error fetching employee data
@@ -68,8 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== "undefined") {
         sessionStorage.setItem(AUTH_STATE_KEY, "authenticated")
       }
-    } catch (error) {
-      console.log("[AuthContext] fetchCustomer error:", error)
+    } catch {
       setCustomer(null)
       setEmployee(null)
       setIsAuthenticated(false)
@@ -77,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem(AUTH_STATE_KEY, "unauthenticated")
       }
     } finally {
-      console.log("[AuthContext] fetchCustomer done, setting isLoading=false")
       setIsLoading(false)
     }
   }, [])
@@ -87,24 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchCustomer])
 
   const login = async (email: string, password: string) => {
-    console.log("[AuthContext] login called")
     const response = await sdk.auth.login("customer", "emailpass", { email, password })
-    if (response.token) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("medusa_auth_token", response.token)
-      }
+    if (typeof response !== "string") {
+      throw new Error("O login requer uma etapa adicional de autenticação.")
     }
-    console.log("[AuthContext] sdk.auth.login successful, fetching customer. Cookies:", document.cookie)
     await fetchCustomer()
-    console.log("[AuthContext] login complete, isAuthenticated:", isAuthenticated)
   }
 
   const loginWithGoogle = async (credential: string) => {
-    console.log("[AuthContext] loginWithGoogle called")
     // Post token to Medusa backend for validation and session creation
     const response = await fetch(`${import.meta.env.VITE_MEDUSA_BACKEND_URL}/auth/customer/google`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ credential }),
     })
 
@@ -113,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(errorData.message || "Erro ao fazer login com Google")
     }
 
-    console.log("[AuthContext] Google login successful in backend, fetching customer")
     await fetchCustomer()
   }
 
@@ -158,12 +134,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
 }

@@ -1,7 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { storeConfig } from "../config/store"
 import { footerNavigation } from "../config/footer-navigation"
-import { useAuth } from "../lib/context/auth-context"
+import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
 
 function Accordion({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) {

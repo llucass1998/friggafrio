@@ -10,6 +10,7 @@ function MenuIcon({ className }: { className?: string }) {
   )
 }
 import { useCart } from "@/lib/hooks/use-cart"
+import { getCartItemCount } from "@/lib/utils/cart"
 import { useState } from "react"
 
 export function Navbar() {

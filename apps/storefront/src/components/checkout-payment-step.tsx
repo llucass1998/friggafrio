@@ -18,6 +18,11 @@ import { HttpTypes } from "@medusajs/types"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { useCallback, useEffect, useState } from "react"
 import { CreditCard } from "@medusajs/icons"
+import {
+  PAYMENT_UNAVAILABLE_MESSAGE,
+  assertPaymentProcessingEnabled,
+  paymentAvailability,
+} from "@/lib/config/payment-availability"
 
 interface SavedPaymentMethod {
   id: string
@@ -65,6 +70,8 @@ const useInitiateCompanyPaymentSession = () => {
       provider_id: string
       payment_method_id: string
     }) => {
+      assertPaymentProcessingEnabled()
+
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
 
@@ -109,7 +116,7 @@ const PaymentStep = ({
       )
       return response.payment_methods
     },
-    enabled: !!employee,
+    enabled: paymentAvailability.processingEnabled && !!employee,
   })
 
   const hasSavedMethods = savedPaymentMethods.length > 0
@@ -254,6 +261,25 @@ const PaymentStep = ({
     : isStripe
       ? isPaymentDetailsComplete && !!activeSession
       : !!selectedPaymentMethod || paidByGiftcard
+
+  if (!paymentAvailability.processingEnabled) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900"
+          role="status"
+        >
+          <p className="font-semibold">Pagamento temporariamente indisponível</p>
+          <p className="mt-1 text-sm">{PAYMENT_UNAVAILABLE_MESSAGE}</p>
+        </div>
+        <div>
+          <Button variant="secondary" onClick={onBack}>
+            Voltar
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">

@@ -1,9 +1,24 @@
 import { defineConfig, loadEnv } from "@medusajs/framework/utils";
+import { getPaymentAvailability } from "./src/utils/payment-availability";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
 const stripeApiKey = process.env.STRIPE_API_KEY;
 const isStripeConfigured = !!stripeApiKey;
+const paymentAvailability = getPaymentAvailability();
+const paymentProviders =
+  paymentAvailability.processingEnabled && isStripeConfigured
+    ? [
+        {
+          resolve: "@medusajs/medusa/payment-stripe",
+          id: "stripe",
+          options: {
+            apiKey: stripeApiKey,
+            webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+          },
+        },
+      ]
+    : [];
 
 module.exports = defineConfig({
   admin: {
@@ -65,45 +80,11 @@ module.exports = defineConfig({
       resolve: "./src/modules/product-sales-policy",
     },
     {
-      resolve: "@medusajs/medusa/fulfillment",
-      options: {
-        providers: [
-          {
-            resolve: "./src/modules/zero-cost-fulfillment",
-            id: "local-pickup",
-          },
-          {
-            resolve: "./src/modules/zero-cost-fulfillment",
-            id: "frigga-driver",
-          }
-        ]
-      }
-    },
-    {
       resolve: "@medusajs/medusa/payment",
       options: {
-        providers: [
-          {
-            resolve: "./src/modules/mercado-pago",
-            id: "mercado-pago",
-            options: {
-              accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
-              webhookSecret: process.env.MERCADO_PAGO_WEBHOOK_SECRET,
-            },
-          },
-          ...(isStripeConfigured
-            ? [
-                {
-                  resolve: "@medusajs/medusa/payment-stripe",
-                  id: "stripe",
-                  options: {
-                    apiKey: stripeApiKey,
-                    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-                  },
-                },
-              ]
-            : []),
-        ],
+        // Mercado Pago remains quarantined until its provider and webhook are
+        // implemented and homologated. No provider is registered by default.
+        providers: paymentProviders,
       },
     },
     {

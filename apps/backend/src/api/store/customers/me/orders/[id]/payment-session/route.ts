@@ -1,6 +1,10 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError, ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createPaymentSessionsWorkflow } from "@medusajs/medusa/core-flows"
+import {
+  getPaymentAvailability,
+  sendPaymentUnavailable,
+} from "../../../../../../../utils/payment-availability"
 
 type InitPaymentSessionBody = {
   provider_id: string
@@ -10,6 +14,10 @@ export const POST = async (
   req: AuthenticatedMedusaRequest<InitPaymentSessionBody>,
   res: MedusaResponse
 ) => {
+  if (!getPaymentAvailability().processingEnabled) {
+    return sendPaymentUnavailable(res)
+  }
+
   const customerId = req.auth_context?.actor_id
 
   if (!customerId) {

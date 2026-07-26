@@ -18,13 +18,14 @@
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "medusa lint",
+    "test": "pnpm test:unit",
+    "test:integration": "pnpm test:integration:http",
+    "typecheck": "tsc --noEmit",
     "dev:tee": "medusa develop 2>&1 | tee -a ../backend.log",
     "test:integration:http": "cross-env TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:integration:modules": "cross-env TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
     "test:unit": "cross-env TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
-    "email:dev": "email-preview --dir ./src/email-templates --port 9004 --hostname 0.0.0.0",
-    "seed:frigga-demo": "medusa exec ./src/scripts/seed-frigga-demo-catalog.ts",
-    "seed:frigga-real": "medusa exec ./src/scripts/seed-frigga-real-products.ts"
+    "email:dev": "email-preview --dir ./src/email-templates --port 9004 --hostname 0.0.0.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

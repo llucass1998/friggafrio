@@ -1,9 +1,57 @@
-.pnpm_store
-storefront.log
-backend.log
-node_modules
-.turbo
-.vscode
+.pnpm_store/
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/build/
+**/coverage/
+**/playwright-report/
+**/test-results/
+**/.cache/
+**/.vite/
+**/*.tsbuildinfo
+
+*.log
+*.log.*
+
+.turbo/
+.vscode/
+.idea/
+.claude/*.lock
+
+# Local secrets and authentication artifacts
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.test
+**/token.txt
+**/*.token
+**/*access-token*
+**/*refresh-token*
+
+# Database exports and generated reports
+*.dump
+*.backup
+pg_dump*.sql
+dump-*.sql
+*-dump.sql
+lighthouse-report*
+/checkout_audit_report.txt
+
+# Temporary screenshots, patches, uploads, and scratch files
+**/screenshots/
+**/uploads/
+.local-quarantine/
+*.tmp
+*.temp
+*.tmp.patch
+*.wip.patch
+temp_*.html
+
+# Local source-asset archive; optimized public assets are versioned in the storefront
+/imgs/**
+!/imgs/products/
+!/imgs/products/README.md
+
 # Local Netlify folder
-.netlify
-.vite
+.netlify/

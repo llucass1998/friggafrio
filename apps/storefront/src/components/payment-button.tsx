@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { useCompleteCartOrder } from "@/lib/hooks/use-checkout"
-import { isManual, isStripe } from "@/lib/utils/checkout"
+import { isStripe } from "@/lib/utils/checkout"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
+import {
+  PAYMENT_UNAVAILABLE_MESSAGE,
+  paymentAvailability,
+} from "@/lib/config/payment-availability"
 import { HttpTypes } from "@medusajs/types"
 import { useStripe, useElements } from "@stripe/react-stripe-js"
 import { useLocation, useNavigate } from "@tanstack/react-router"
@@ -13,6 +17,21 @@ type PaymentButtonProps = {
 }
 
 const PaymentButton = ({ cart, className }: PaymentButtonProps) => {
+  if (!paymentAvailability.processingEnabled) {
+    return (
+      <div className="flex flex-col gap-2" role="status">
+        <Button
+          disabled
+          data-testid="place-order-button"
+          className={className}
+        >
+          Pagamento indisponível
+        </Button>
+        <p className="text-sm text-amber-800">{PAYMENT_UNAVAILABLE_MESSAGE}</p>
+      </div>
+    )
+  }
+
   const notReady =
     !cart ||
     !cart.shipping_address ||
@@ -31,10 +50,8 @@ const PaymentButton = ({ cart, className }: PaymentButtonProps) => {
           className={className}
         />
       )
-    case isManual(paymentSession?.provider_id):
-      return <ManualPaymentButton notReady={notReady} className={className} />
     default:
-      return <Button disabled>Select a payment method</Button>
+      return <Button disabled>Método de pagamento não homologado</Button>
   }
 }
 
@@ -127,60 +144,6 @@ const StripePaymentButton = ({
         className={`motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${className || ""}`}
       >
         {submitting ? "Processing..." : "Place Order"}
-      </Button>
-      {errorMessage && (
-        <div className="text-red-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md" aria-live="assertive">
-          {errorMessage}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const ManualPaymentButton = ({
-  notReady,
-  className,
-}: {
-  notReady: boolean
-  className?: string
-}) => {
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const countryCode = getCountryCodeFromPath(location.pathname)
-  const completeOrderMutation = useCompleteCartOrder()
-
-  const handlePayment = async () => {
-    if (submitting) return
-    setSubmitting(true)
-    setErrorMessage(null)
-
-    try {
-      const order = await completeOrderMutation.mutateAsync()
-
-      navigate({
-        to: `/${countryCode}/order/${order.id}/confirmed`,
-        replace: true,
-      })
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to place order"
-      )
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Button
-        disabled={notReady || submitting}
-        onClick={handlePayment}
-        data-testid="place-order-button"
-        className={`motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${className || ""}`}
-      >
-        Place Order
       </Button>
       {errorMessage && (
         <div className="text-red-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md" aria-live="assertive">
