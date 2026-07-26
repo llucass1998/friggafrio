@@ -5,7 +5,7 @@ import { cache } from "react"
 export const listRegions = cache(async ({ fields }: { fields?: string } = {}): Promise<HttpTypes.StoreRegion[]> => {
   return sdk.store.region.list({ fields }, { next: { tags: ["regions"] } })
     .then(({ regions }) => regions)
-    .catch((error) => {
+    .catch((_error) => {
       // Logging silenced for production
       return []
     })
@@ -34,7 +34,7 @@ export const getRegion = cache(async ({ country_code, fields }: { country_code: 
     
     // If not found, just return the first region as fallback
     return region || regions[0]
-  } catch (error) {
+  } catch (_error) {
     // Logging silenced for production
     return null
   }

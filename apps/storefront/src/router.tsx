@@ -28,6 +28,7 @@ export function createRouter() {
     defaultPreload: "intent", // Puxa os chunks sob demanda quando o usuário foca ou passa o mouse no link
     defaultNotFoundComponent: NotFound,
     scrollRestoration: true,
+    defaultViewTransition: true,
   })
   setupRouterSsrQueryIntegration({
     router,

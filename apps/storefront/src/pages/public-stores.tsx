@@ -98,13 +98,13 @@ export function PublicStoresPage() {
                 <span className="mx-2">/</span>
               </li>
               <li>
-                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossas lojas</span>
+                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossa Loja</span>
               </li>
             </ol>
           </nav>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--color-navy)] mb-6">
-            Nossas lojas
+            Nossa Loja
           </h1>
           <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
             Encontre a unidade FriggaFrio mais próxima e conheça nossos canais de atendimento para produtos de refrigeração e climatização.
@@ -116,15 +116,15 @@ export function PublicStoresPage() {
       <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
 
         {/* Store Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 mb-16">
+        <div className="grid grid-cols-1 max-w-2xl mx-auto gap-6 lg:gap-8 mb-16">
           {activeLocations.map((location, index) => {
             // Se tivermos um número ímpar de lojas e esta for a última, ela centraliza.
-            const isLastOddItem = activeLocations.length % 2 !== 0 && index === activeLocations.length - 1
+            
 
             return (
               <div
                 key={location.id}
-                className={isLastOddItem ? "md:col-span-2 md:w-[calc(50%-0.75rem)] lg:w-[calc(50%-1rem)] md:justify-self-center w-full" : "w-full"}
+                className="w-full"
               >
                 <StoreLocationCard
                   location={location}

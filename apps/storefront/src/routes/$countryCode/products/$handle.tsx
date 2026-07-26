@@ -31,7 +31,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
             fields:
               "*variants, +variants.inventory_quantity, +variants.manage_inventory, +variants.allow_backorder, +variants.calculated_price, *images, *options, *options.values, *collection, *tags",
           })
-        } catch(e) {
+        } catch {
           // Logging removido em produção throw notFound();
         }
       },

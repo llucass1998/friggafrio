@@ -1,11 +1,11 @@
 import { useAuth } from "@/lib/hooks/use-auth"
 import { PublicHomePage } from "@/pages/public-home"
-import { Link, useParams } from "@tanstack/react-router"
+import {  useParams } from "@tanstack/react-router"
 
 export default function Home() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { _isAuthenticated, isLoading: _authLoading } = useAuth()
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "br"
+  const _countryCode = params.countryCode || "br"
 
   // Sempre mostramos a Home pública para quem acessa a raiz.
   return (

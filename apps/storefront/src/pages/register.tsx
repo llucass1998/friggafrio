@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
-  const { login, loginWithGoogle } = useAuth()
+  const { loginWithGoogle } = useAuth()
 
   const [registerType, setRegisterType] = useState<"PERSON" | "COMPANY">("PERSON")
   const [showPassword, setShowPassword] = useState(false)
@@ -175,7 +175,7 @@ export default function RegisterPage() {
     try {
       if (credentialResponse.credential) {
         // Redireciona com base no hook centralizado
-        const { useAuth } = await import("@/lib/hooks/use-auth")
+        
         // Como useAuth não pode ser chamado fora da renderização do componente,
         // a gente usa ele lá em cima.
         await loginWithGoogle(credentialResponse.credential)

@@ -87,7 +87,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
           toast.success(`${product.title} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
-        onError: (err) => {
+        onError: (_err) => {
           // Error telemetry could go here
           toast.error("Não foi possível adicionar este produto ao carrinho. Tente novamente.")
         }

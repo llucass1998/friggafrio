@@ -1,7 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
-import { productCategories, applicationCategories, mainNavigation } from "@/components/header/categories"
+import { productCategories, applicationCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
@@ -10,7 +10,7 @@ export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
+  const _countryCode = params.countryCode || "br"
 
   // Prevent body scroll when drawer is open
   useEffect(() => {

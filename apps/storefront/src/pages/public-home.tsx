@@ -11,8 +11,8 @@ export function PublicHomePage() {
       <HeroSection />
       <BenefitsSection />
       <FeaturedCategories />
-      <StoreBrandsCarousel />
       <FeaturedProducts />
+      <StoreBrandsCarousel />
     </div>
   )
 }
