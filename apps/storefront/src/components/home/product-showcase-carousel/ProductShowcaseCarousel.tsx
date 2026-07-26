@@ -1,14 +1,14 @@
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
 import { useCallback, useEffect, useState, useRef } from "react"
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { showcaseSlides } from "@/components/home/product-showcase-carousel/carousel-data"
 import { ProductShowcaseSlide } from "@/components/home/product-showcase-carousel/ProductShowcaseSlide"
 import "./carousel.css"
 
 export function ProductShowcaseCarousel() {
   const autoplayRef = useRef(
-    Autoplay({ delay: 6000, stopOnInteraction: true, stopOnMouseEnter: true })
+    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
   )
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -19,32 +19,29 @@ export function ProductShowcaseCarousel() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [canScrollPrev, setCanScrollPrev] = useState(false)
   const [canScrollNext, setCanScrollNext] = useState(false)
+  const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [isPlaying, setIsPlaying] = useState(true)
 
   const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev()
+    if (emblaApi) {
+      setDirection('prev')
+      emblaApi.scrollPrev()
+    }
   }, [emblaApi])
 
   const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext()
+    if (emblaApi) {
+      setDirection('next')
+      emblaApi.scrollNext()
+    }
   }, [emblaApi])
 
   const scrollTo = useCallback((index: number) => {
-    if (emblaApi) emblaApi.scrollTo(index)
-  }, [emblaApi])
-
-  const toggleAutoplay = useCallback(() => {
-    const autoplay = emblaApi?.plugins()?.autoplay
-    if (!autoplay) return
-
-    if (autoplay.isPlaying()) {
-      autoplay.stop()
-      setIsPlaying(false)
-    } else {
-      autoplay.play()
-      setIsPlaying(true)
+    if (emblaApi) {
+      setDirection(index > selectedIndex ? 'next' : 'prev')
+      emblaApi.scrollTo(index)
     }
-  }, [emblaApi])
+  }, [emblaApi, selectedIndex])
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
@@ -62,6 +59,10 @@ export function ProductShowcaseCarousel() {
     const autoplay = emblaApi?.plugins()?.autoplay
     if (autoplay) {
       emblaApi.on("autoplay:play", () => setIsPlaying(true))
+      emblaApi.on("select", () => {
+        // Embla autoplay always goes next by default
+        if (autoplay.isPlaying()) setDirection("next")
+      })
       emblaApi.on("autoplay:stop", () => setIsPlaying(false))
     }
 
@@ -102,18 +103,19 @@ export function ProductShowcaseCarousel() {
 
   return (
     <div
-      className="relative w-full mx-auto group"
+      className="relative w-full group"
       aria-roledescription="carousel"
       aria-label="Destaques de Equipamentos Friggafrio"
     >
       {/* Viewport */}
-      <div className="overflow-hidden rounded-[var(--radius-card-lg)]" ref={emblaRef}>
+      <div className="overflow-hidden md:rounded-none px-2 sm:px-4 md:px-0" ref={emblaRef}>
         <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
           {showcaseSlides.map((slide, index) => (
             <ProductShowcaseSlide
               key={slide.id}
               slide={slide}
               isActive={index === selectedIndex}
+              direction={direction}
             />
           ))}
         </div>
@@ -138,16 +140,8 @@ export function ProductShowcaseCarousel() {
         <ChevronRight className="w-7 h-7" />
       </button>
 
-      {/* Indicadores e Controles Inferiores */}
-      <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-40">
-        <button
-          onClick={toggleAutoplay}
-          className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors focus-visible:outline-2 focus-visible:outline-white"
-          aria-label={isPlaying ? "Pausar apresentação" : "Retomar apresentação"}
-        >
-          {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
-        </button>
-
+      {/* Indicadores */}
+      <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center z-40">
         <div className="flex gap-2">
           {showcaseSlides.map((_, index) => {
             const active = index === selectedIndex
@@ -158,7 +152,7 @@ export function ProductShowcaseCarousel() {
                 className={`carousel-indicator-bar relative h-2.5 rounded-full overflow-hidden focus-visible:outline-2 focus-visible:outline-white ${
                   active ? "carousel-indicator-active w-12 bg-white/30" : "w-2.5 bg-white/50 hover:bg-white/80"
                 }`}
-                aria-label={`Ir para o slide ${index + 1}`}
+                aria-label={`Ir para o destaque ${index + 1} de ${showcaseSlides.length}`}
                 aria-current={active ? "true" : "false"}
                 data-playing={isPlaying}
               >

@@ -4,9 +4,10 @@ import { ShowcaseSlide } from "@/components/home/product-showcase-carousel/types
 interface ProductShowcaseSlideProps {
   slide: ShowcaseSlide;
   isActive: boolean;
+  direction?: 'next' | 'prev';
 }
 
-export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlideProps) {
+export function ProductShowcaseSlide({ slide, isActive, direction = 'next' }: ProductShowcaseSlideProps) {
   return (
     <div
       className="carousel-slide flex-none w-full min-w-0"
@@ -14,8 +15,9 @@ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlidePr
       aria-roledescription="slide"
       aria-label={slide.title}
       data-active={isActive ? "true" : "false"}
+      data-direction={direction}
     >
-      <div className="relative w-full rounded-[var(--radius-card-lg)] bg-[var(--color-surface)] overflow-hidden flex flex-col items-start justify-end group h-[clamp(430px,100vw,520px)] sm:h-[clamp(420px,52vw,540px)] lg:h-[clamp(520px,40vw,700px)]">
+      <div className="relative w-full rounded-[var(--radius-card-lg)] md:rounded-none bg-[var(--color-surface)] overflow-hidden flex flex-col items-start justify-end group h-[clamp(400px,110vw,500px)] sm:h-[clamp(330px,34vw,410px)] lg:h-[clamp(340px,22vw,440px)]">
 
         {/* Placeholder / Image */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -50,16 +52,16 @@ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlidePr
         <div
           className="absolute inset-0 z-20 pointer-events-none"
           style={{
-            background: "linear-gradient(90deg, rgba(3, 32, 63, 0.92) 0%, rgba(3, 32, 63, 0.72) 35%, rgba(3, 32, 63, 0.18) 68%, transparent 100%)"
+            background: "linear-gradient(90deg, rgba(3, 32, 63, 0.86) 0%, rgba(3, 32, 63, 0.64) 30%, rgba(3, 32, 63, 0.18) 58%, transparent 76%)"
           }}
         ></div>
 
         {/* Slide Content */}
-        <div className="relative z-30 p-6 sm:p-10 lg:p-16 text-left w-full max-w-[620px] mb-8 sm:mb-4 lg:mb-8">
+        <div className="relative z-30 p-6 sm:p-10 lg:p-16 text-left w-full max-w-[620px] mb-6 sm:mb-4 lg:mb-6">
           <span className="carousel-category text-sm lg:text-base font-bold text-[var(--color-primary)] uppercase tracking-wider mb-2 lg:mb-4 block">
             DESTAQUE
           </span>
-          <h3 className="carousel-title text-2xl lg:text-[40px] leading-tight font-bold text-white mb-4">
+          <h3 className="carousel-title text-2xl lg:text-[36px] leading-tight font-bold text-white mb-4">
             {slide.title}
           </h3>
           <p className="carousel-desc text-white/90 text-sm sm:text-base lg:text-lg mb-8 line-clamp-2 lg:line-clamp-3">
