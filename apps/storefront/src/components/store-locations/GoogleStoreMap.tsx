@@ -3,14 +3,15 @@ import { StoreLocation } from "@/config/store-locations"
 
 interface GoogleStoreMapProps {
   location: StoreLocation
+  className?: string
 }
 
-export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
+export function GoogleStoreMap({ location, className = "" }: GoogleStoreMapProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY
 
   if (!apiKey) {
     return (
-      <div className="w-full h-[420px] lg:h-[520px] bg-[#F5F8FA] rounded-2xl border-2 border-[#E5EDF4] flex flex-col items-center justify-center p-6 text-center">
+      <div className={`w-full bg-[#F5F8FA] flex flex-col items-center justify-center p-6 text-center ${className}`}>
         <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 text-[var(--color-primary)]">
           <MapPin className="w-8 h-8" />
         </div>
@@ -35,7 +36,6 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
     )
   }
 
-  // Use Place ID se disponível, caso contrário use a string do endereço completo
   const queryParam = location.placeId
     ? `q=place_id:${location.placeId}`
     : `q=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
@@ -43,7 +43,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
 
   return (
-    <div className="w-full h-[420px] lg:h-[520px] rounded-2xl overflow-hidden border-2 border-[#E5EDF4] shadow-sm bg-[#F5F8FA]">
+    <div className={`w-full bg-[#F5F8FA] overflow-hidden ${className}`}>
       <iframe
         title={`Mapa da ${location.name}`}
         width="100%"

@@ -3,14 +3,15 @@ import { StoreLocation } from "@/config/store-locations"
 
 interface StoreStreetViewProps {
   location: StoreLocation
+  className?: string
 }
 
-export function StoreStreetView({ location }: StoreStreetViewProps) {
+export function StoreStreetView({ location, className = "" }: StoreStreetViewProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY
 
   if (!apiKey) {
     return (
-      <div className="w-full h-[420px] lg:h-[520px] bg-[#F5F8FA] rounded-2xl border-2 border-[#E5EDF4] flex flex-col items-center justify-center p-6 text-center">
+      <div className={`w-full bg-[#F5F8FA] flex flex-col items-center justify-center p-6 text-center ${className}`}>
         <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 text-[var(--color-primary)]">
           <Eye className="w-8 h-8" />
         </div>
@@ -39,7 +40,7 @@ export function StoreStreetView({ location }: StoreStreetViewProps) {
   const embedUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&${queryParam}`
 
   return (
-    <div className="w-full h-[420px] lg:h-[520px] rounded-2xl overflow-hidden border-2 border-[#E5EDF4] shadow-sm bg-[#F5F8FA]">
+    <div className={`w-full bg-[#F5F8FA] overflow-hidden ${className}`}>
       <iframe
         title={`Street View da ${location.name}`}
         width="100%"

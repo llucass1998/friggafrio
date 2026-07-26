@@ -27,11 +27,11 @@ test.describe("Hero Carousel Display and Animations", () => {
 
       console.log(`Viewport: ${vp.width}px -> Carousel Width: ${measurement.width}px (${(measurement.percentage * 100).toFixed(2)}%)`)
 
-      expect(measurement.percentage).toBeGreaterThanOrEqual(0.9)
-      expect(measurement.percentage).toBeLessThanOrEqual(0.97)
+      expect(measurement.percentage).toBeGreaterThanOrEqual(0.98)
+      expect(measurement.percentage).toBeLessThanOrEqual(1.0)
 
       if (vp.width === 1665) {
-        expect(measurement.width).toBeGreaterThanOrEqual(1498)
+        expect(measurement.width).toBeGreaterThanOrEqual(1600)
       }
     })
   }
@@ -72,7 +72,7 @@ test.describe("Hero Carousel Display and Animations", () => {
     await nextBtn.click()
     
     // Esperar um tempinho para a transição inicializar
-    await page.waitForTimeout(200)
+    await page.waitForTimeout(1500)
     
     // Identificar novo ativo
     const newActiveIndex = await page.evaluate(() => {
@@ -97,4 +97,34 @@ test.describe("Hero Carousel Display and Animations", () => {
     
     expect(newStyles.progressAnim).not.toBe("none")
   })
+})
+
+test("hero carousel dots click and select correctly", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto("/br")
+  
+  const slides = page.locator('.carousel-slide')
+  await slides.first().waitFor({ state: 'attached' })
+  
+  // Verify first slide is active
+  let activeIndex = await page.evaluate(() => {
+    const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
+    return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
+  })
+  expect(activeIndex).toBe(0)
+
+  // Click on the 3rd dot (index 2)
+  await page.waitForTimeout(2000);
+  const dot3 = page.locator('button[aria-label="Ir para o destaque 3 de 5"]')
+  await dot3.click({ force: true })
+  
+  // Wait a bit
+  await page.waitForTimeout(200)
+
+  let newActiveIndex = await page.evaluate(() => {
+    const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
+    return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
+  })
+  
+  expect(newActiveIndex).toBe(2)
 })
