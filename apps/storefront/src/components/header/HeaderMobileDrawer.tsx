@@ -9,7 +9,7 @@ import { HeaderLogo } from "./HeaderLogo"
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   // Prevent body scroll when drawer is open
@@ -136,7 +136,7 @@ export function HeaderMobileDrawer() {
 
             <div>
               <h3 className="px-4 py-2 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                Institucional & Serviços
+                Institucional
               </h3>
               <ul className="space-y-1">
                 <li>
@@ -148,22 +148,6 @@ export function HeaderMobileDrawer() {
                     Nossa Loja
                   </Link>
                 </li>
-                {mainNavigation
-                  .filter(
-                    (nav) =>
-                      nav.id === "nav-servicos" || nav.id === "nav-central"
-                  )
-                  .map((nav) => (
-                    <li key={nav.id}>
-                      <Link
-                        to={nav.href as any}
-                        onClick={closeDrawer}
-                        className="block px-4 py-3 text-sm font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
-                      >
-                        {nav.label}
-                      </Link>
-                    </li>
-                  ))}
               </ul>
             </div>
           </nav>

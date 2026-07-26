@@ -30,7 +30,7 @@ function Accordion({ title, children, defaultOpen = false }: { title: string, ch
 }
 
 export function PublicFooter() {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
   const currentYear = new Date().getFullYear()
   const { customer } = useAuth()

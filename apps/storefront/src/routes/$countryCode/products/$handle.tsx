@@ -102,7 +102,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         "@type": "Offer",
         availability: "https://schema.org/InStock",
         priceCurrency: region?.currency_code?.toUpperCase(),
-        price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount
+        price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== null && (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== undefined
           ? (product.variants as any)[0].calculated_price.calculated_amount.toFixed(2)
           : undefined,
       },

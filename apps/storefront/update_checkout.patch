@@ -1,0 +1,35 @@
+--- ../storefront/tests/checkout.spec.ts
++++ ../storefront/tests/checkout.spec.ts
+@@ -32,5 +32,32 @@
+     }
+     
+-    await expect(page.getByRole('link', { name: /finalizar compra|checkout/i }).first()).toBeVisible({ timeout: 5000 });
++    const checkoutLink = page.getByRole('link', { name: /finalizar compra|checkout/i }).first();
++    await expect(checkoutLink).toBeVisible({ timeout: 5000 });
++    await checkoutLink.click();
++    
++    // Wait for checkout page
++    await page.waitForURL('**/checkout*');
++    
++    // Let's verify we reached the checkout page
++    await expect(page.locator('text=/checkout|finalizar/i').first()).toBeVisible({ timeout: 10000 });
++    
++    // Now we need to fill the shipping address form
++    // Assuming standard Medusa UI checkout fields:
++    await page.getByPlaceholder(/nome/i).first().fill('João');
++    await page.getByPlaceholder(/sobrenome/i).first().fill('Silva');
++    await page.getByPlaceholder(/endereço/i).first().fill('Rua das Flores 123');
++    await page.getByPlaceholder(/cidade/i).first().fill('São Paulo');
++    await page.getByPlaceholder(/cep|código postal/i).first().fill('01001-000');
++    await page.getByPlaceholder(/telefone/i).first().fill('11999999999');
++    
++    // We also need an email if not logged in
++    const emailInput = page.getByPlaceholder(/email/i).first();
++    if (await emailInput.isVisible()) {
++      await emailInput.fill('joao@example.com');
++    }
++    
++    // Proceed to next step
++    // We'll leave it here for now until we see what fields exactly exist in our custom checkout UI
+   });
+ });

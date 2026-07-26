@@ -88,7 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     console.log("[AuthContext] login called")
-    await sdk.auth.login("customer", "emailpass", { email, password })
+    const response = await sdk.auth.login("customer", "emailpass", { email, password })
+    if (response.token) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("medusa_auth_token", response.token)
+      }
+    }
     console.log("[AuthContext] sdk.auth.login successful, fetching customer. Cookies:", document.cookie)
     await fetchCustomer()
     console.log("[AuthContext] login complete, isAuthenticated:", isAuthenticated)
@@ -114,6 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("medusa_auth_token")
+      }
       await sdk.auth.logout()
     } finally {
       // Update cached state so navigation doesn't show loading

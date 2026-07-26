@@ -2,7 +2,6 @@ import { HeroSection } from "../components/home/HeroSection"
 import { BenefitsSection } from "../components/home/BenefitsSection"
 import { FeaturedCategories } from "../components/home/FeaturedCategories"
 import { FeaturedProducts } from "../components/home/FeaturedProducts"
-import { ServicesSection } from "../components/home/ServicesSection"
 import { StoreBrandsCarousel } from "../components/home/store-brands-carousel"
 
 
@@ -12,7 +11,6 @@ export function PublicHomePage() {
       <HeroSection />
       <BenefitsSection />
       <FeaturedCategories />
-      <ServicesSection />
       <StoreBrandsCarousel />
       <FeaturedProducts />
     </div>

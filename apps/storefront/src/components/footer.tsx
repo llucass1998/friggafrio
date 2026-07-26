@@ -1,7 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router"
 
 export function Footer() {
-  const params = useParams({ strict: false })
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = (params as { countryCode?: string })?.countryCode || "us"
   const currentYear = new Date().getFullYear()
 

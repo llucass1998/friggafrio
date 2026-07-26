@@ -14,7 +14,7 @@ import { useState } from "react"
 
 export function Navbar() {
   const { data: cart } = useCart()
-  const params = useParams({ strict: false })
+  const params = useParams({ strict: false }) as Record<string, string>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
 

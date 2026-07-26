@@ -6,7 +6,7 @@ import { getRegion } from "@/lib/data/regions"
 import { PublicProductCard } from "../public-product-card"
 
 export function FeaturedProducts() {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   const { data: region } = useQuery({
@@ -14,13 +14,13 @@ export function FeaturedProducts() {
     queryFn: () => getRegion({ country_code: countryCode }),
   })
 
-  // Buscar todos os produtos publicados 
+  // Buscar todos os produtos publicados
   const { data: productsData, isLoading } = useQuery({
     queryKey: queryKeys.products.latest(4, region?.id || ""),
     queryFn: () =>
       listProducts({
         queryParams: {
-          
+
           order: "-created_at",
         },
         regionId: region!.id,
@@ -40,7 +40,7 @@ export function FeaturedProducts() {
           </div>
           <Link
             to={"/" as any}
-            
+
             className="hidden md:inline-flex text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
           >
             Ver todos os produtos

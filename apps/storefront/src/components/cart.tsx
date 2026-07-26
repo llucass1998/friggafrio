@@ -37,20 +37,19 @@ type LineItemPriceProps = {
 }
 
 export const LineItemPrice = ({ item, currencyCode, className }: LineItemPriceProps) => {
-  const { total, original_total } = item
-  const originalPrice = original_total
-  const currentPrice = total
-  const hasReducedPrice = currentPrice && originalPrice && currentPrice < originalPrice
+  const originalPrice = item.original_total
+  const currentPrice = item.total
+  const hasReducedPrice = currentPrice !== null && currentPrice !== undefined && originalPrice !== null && originalPrice !== undefined && currentPrice < originalPrice
 
   return (
     <Price
-      price={currentPrice || 0}
+      price={currentPrice ?? 0}
       currencyCode={currencyCode}
       originalPrice={
         hasReducedPrice
           ? {
-              price: originalPrice || 0,
-              percentage: getPricePercentageDiff(originalPrice || 0, currentPrice || 0),
+              price: originalPrice ?? 0,
+              percentage: getPricePercentageDiff(originalPrice ?? 0, currentPrice ?? 0),
             }
           : undefined
       }
@@ -175,7 +174,7 @@ const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
 
         <div className="flex items-center justify-between mt-2">
           <CartItemQuantitySelector item={item} fields={fields} />
-          <Price price={item.total || 0} currencyCode={cart.currency_code} textSize="small" />
+          <Price price={item.total ?? 0} currencyCode={cart.currency_code} textSize="small" />
         </div>
       </div>
     </div>
@@ -203,7 +202,7 @@ const DisplayCartLineItem = ({ item, cart, className }: CartLineItemProps) => {
         <p className="text-sm text-zinc-600">Quantity: {item.quantity}</p>
       </div>
       <div className="text-right">
-        <Price price={item.total || 0} currencyCode={cart.currency_code} textWeight="plus" />
+        <Price price={item.total ?? 0} currencyCode={cart.currency_code} textWeight="plus" />
       </div>
     </div>
   )
@@ -257,7 +256,7 @@ export const CartLineItem = ({
             <LineItemPrice item={item} currencyCode={cart.currency_code} className="text-lg font-semibold" />
             {item.quantity > 1 && (
               <p className="text-xs text-text-muted mt-1">
-                <Price price={(item.total || 0) / item.quantity} currencyCode={cart.currency_code} /> each
+                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> each
               </p>
             )}
           </div>
@@ -282,7 +281,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">Subtotal</span>
           <Price
-            price={cart.item_subtotal}
+            price={cart.item_subtotal ?? 0}
             currencyCode={cart.currency_code}
             className="text-text-primary font-medium"
           />
@@ -290,7 +289,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
 
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">Shipping</span>
-          {cart.shipping_total ? (
+          {cart.shipping_total !== null && cart.shipping_total !== undefined ? (
             <Price
               price={cart.shipping_total}
               currencyCode={cart.currency_code}
@@ -301,7 +300,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
           )}
         </div>
 
-        {cart.discount_total > 0 && (
+        {cart.discount_total !== null && cart.discount_total !== undefined && cart.discount_total > 0 ? (
           <div className="flex justify-between text-sm">
             <span className="text-text-secondary">Discount</span>
             <Price
@@ -311,11 +310,11 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
               className="text-emerald-600 font-medium"
             />
           </div>
-        )}
+        ) : null}
 
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">Tax</span>
-          {cart.tax_total ? (
+          {cart.tax_total !== null && cart.tax_total !== undefined ? (
             <Price
               price={cart.tax_total}
               currencyCode={cart.currency_code}
@@ -330,10 +329,10 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
       <div className="border-t border-border pt-4">
         <div className="flex justify-between items-center">
           <span className="text-base font-semibold text-text-primary">Total</span>
-          <Price 
-            price={cart.total} 
-            currencyCode={cart.currency_code} 
-            className="text-xl font-bold text-text-primary" 
+          <Price
+            price={cart.total ?? 0}
+            currencyCode={cart.currency_code}
+            className="text-xl font-bold text-text-primary"
           />
         </div>
       </div>
@@ -516,7 +515,7 @@ export const CartDropdown = () => {
             <DrawerFooter className="border-t border-[#E5EDF4] bg-[#F5F8FA] motion-dropdown animate-in slide-in-from-bottom-4 fade-in-0 duration-[var(--motion-duration-slow)]">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-base font-bold text-[var(--color-navy)]">Subtotal</span>
-                <Price price={cart.item_subtotal} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
+                <Price price={cart.item_subtotal ?? 0} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
               </div>
 
               <div className="flex flex-col gap-2">

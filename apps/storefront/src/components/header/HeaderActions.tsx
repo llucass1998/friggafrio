@@ -6,7 +6,7 @@ import { formatPrice } from "../../lib/utils/price"
 import { useCartDrawer } from "../../lib/context/cart"
 
 export function HeaderActions({ compact = false }: { compact?: boolean }) {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   const { isAuthenticated, customer } = useAuth()

@@ -5,7 +5,7 @@ interface HeaderLogoProps {
 }
 
 export function HeaderLogo({ compact = false }: HeaderLogoProps) {
-  const params = useParams({ strict: false }) as { countryCode?: string }
+  const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
   return (

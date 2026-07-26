@@ -6,6 +6,12 @@ export const sdk = new Medusa({
   debug: import.meta.env.DEV,
   publishableKey: MEDUSA_PUBLISHABLE_KEY,
   auth: {
-    type: "session",
+    type: "token",
+    getToken: () => {
+      if (typeof window !== "undefined") {
+        return localStorage.getItem("medusa_auth_token") || ""
+      }
+      return ""
+    }
   },
 })

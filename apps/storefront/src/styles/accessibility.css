@@ -1,0 +1,76 @@
+/* FASE 5: SYSTEM-LEVEL CSS VARIABLES & MEDIA QUERIES */
+
+/* Core Variables mapped to Data Attributes on Root */
+:root {
+  --a11y-font-scale: 1;
+  --a11y-contrast: normal;
+  --a11y-spacing-letter: normal;
+  --a11y-spacing-line: 1.5;
+  --a11y-saturate: 100%;
+}
+
+:root[data-a11y-contrast="high"] {
+  --color-background: #000000;
+  --color-text: #FFFFFF;
+  --color-text-muted: #E0E0E0;
+  --color-text-secondary: #F5F5F5;
+  --color-primary: #FFFF00; /* High Contrast Yellow */
+  --color-primary-hover: #E6E600;
+  --color-navy: #FFFFFF;
+  --color-surface: #111111;
+  --color-surface-soft: #222222;
+  --color-surface-hover: #333333;
+  --color-border: #444444;
+  --color-accent: #FFFF00;
+}
+
+:root[data-a11y-grayscale="true"] {
+  --a11y-saturate: 0%;
+}
+
+/* Applying properties safely without breaking flex/grid logic */
+html {
+  filter: saturate(var(--a11y-saturate));
+}
+
+p, span, h1, h2, h3, h4, h5, h6, a, button, li, label, input, textarea, select {
+  letter-spacing: var(--a11y-spacing-letter) !important;
+  line-height: var(--a11y-spacing-line) !important;
+}
+
+/* FASE 7: TYPOGRAPHY SCALING */
+/* Scale typography elements without affecting layout containers/icons */
+p, span:not(.lucide), a, button:not(.icon-only), label, li, td, th {
+  font-size: calc(1rem * var(--a11y-font-scale));
+}
+h1 { font-size: calc(2.25rem * var(--a11y-font-scale)); }
+h2 { font-size: calc(1.875rem * var(--a11y-font-scale)); }
+h3 { font-size: calc(1.5rem * var(--a11y-font-scale)); }
+h4 { font-size: calc(1.25rem * var(--a11y-font-scale)); }
+h5 { font-size: calc(1.125rem * var(--a11y-font-scale)); }
+h6 { font-size: calc(1rem * var(--a11y-font-scale)); }
+
+/* Ensure high contrast outlines for Focus */
+*:focus-visible {
+  outline: 3px solid var(--color-accent) !important;
+  outline-offset: 3px !important;
+}
+
+/* FASE 8: ANIMATION CONTROL */
+:root[data-a11y-reduce-motion="true"] *,
+:root[data-a11y-reduce-motion="true"] *::before,
+:root[data-a11y-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Print Styles for A11y */
+@media print {
+  .a11y-skip-link,
+  #accessibility-panel,
+  #accessibility-floating-button {
+    display: none !important;
+  }
+}
