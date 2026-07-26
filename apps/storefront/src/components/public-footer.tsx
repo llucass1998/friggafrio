@@ -1,6 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router"
-import { storeConfig } from "../config/store"
-import { footerNavigation } from "../config/footer-navigation"
+import { storeConfig } from "@/config/store"
+import { footerNavigation } from "@/config/footer-navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
 

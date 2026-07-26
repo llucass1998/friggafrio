@@ -1,7 +1,6 @@
 import { Link, useLoaderData } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
 import ProductPrice from "@/components/product-price"
-import { BulkVariantTable } from "@/components/bulk-variant-table"
 import { ImageGallery } from "@/components/ui/image-gallery"
 import { ChevronRight, Check } from "@medusajs/icons"
 import ProductActions from "@/components/product-actions"

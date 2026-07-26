@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { NavigationItem, productCategories, applicationCategories, mainNavigation } from "./categories"
+import { NavigationItem, productCategories, applicationCategories, mainNavigation } from "@/components/header/categories"
 import { useState } from "react"
 
 export function ProductsMegaMenu() {

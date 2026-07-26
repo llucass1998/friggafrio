@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { PublicStoresPage } from "../pages/public-stores"
+import { PublicStoresPage } from "@/pages/public-stores"
 
 export const Route = createFileRoute("/nossa-loja")({
   component: PublicStoresPage,

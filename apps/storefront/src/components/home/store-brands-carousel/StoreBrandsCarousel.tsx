@@ -2,8 +2,8 @@ import { useCallback } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { storeBrands } from "../../../config/brands"
-import { BrandLogoCard } from "./BrandLogoCard"
+import { storeBrands } from "@/config/brands"
+import { BrandLogoCard } from "@/components/home/store-brands-carousel/BrandLogoCard"
 
 export function StoreBrandsCarousel() {
   const activeBrands = storeBrands.filter((brand) => brand.active).sort((a, b) => a.order - b.order)

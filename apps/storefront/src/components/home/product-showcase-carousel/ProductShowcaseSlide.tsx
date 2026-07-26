@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { ShowcaseSlide } from "./types"
+import { ShowcaseSlide } from "@/components/home/product-showcase-carousel/types"
 
 interface ProductShowcaseSlideProps {
   slide: ShowcaseSlide;

@@ -1,4 +1,4 @@
-import { ShowcaseSlide } from "./types"
+import { ShowcaseSlide } from "@/components/home/product-showcase-carousel/types"
 
 export const showcaseSlides: ShowcaseSlide[] = [
   {

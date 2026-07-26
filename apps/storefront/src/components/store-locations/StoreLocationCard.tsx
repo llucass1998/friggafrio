@@ -1,6 +1,6 @@
 import { MapPin, Phone, MessageSquare, Navigation, Map } from "lucide-react"
-import { StoreLocation } from "../../config/store-locations"
-import { GooglePlacePhoto } from "./GooglePlacePhoto"
+import { StoreLocation } from "@/config/store-locations"
+import { GooglePlacePhoto } from "@/components/store-locations/GooglePlacePhoto"
 
 interface StoreLocationCardProps {
   location: StoreLocation

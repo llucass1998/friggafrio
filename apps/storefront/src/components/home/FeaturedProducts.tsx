@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { getRegion } from "@/lib/data/regions"
-import { PublicProductCard } from "../public-product-card"
+import { PublicProductCard } from "@/components/public-product-card"
 
 export function FeaturedProducts() {
   const params = useParams({ strict: false }) as Record<string, string>
