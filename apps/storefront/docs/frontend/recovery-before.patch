@@ -1,0 +1,77 @@
+diff --git a/apps/backend/src/scripts/force-reset-admin.ts b/apps/backend/src/scripts/force-reset-admin.ts
+deleted file mode 100644
+index 576798c..0000000
+--- a/apps/backend/src/scripts/force-reset-admin.ts
++++ /dev/null
+@@ -1,40 +0,0 @@
+-import { Modules } from "@medusajs/framework/utils"
+-import { ExecArgs } from "@medusajs/framework/types"
+-import { createUsersWorkflow } from "@medusajs/core-flows"
+-
+-export default async function forceResetAdmin({ container }: ExecArgs) {
+-  console.log("Forcing a new admin account creation with linked identity...");
+-  
+-  const authModuleService = container.resolve(Modules.AUTH)
+-  const userModuleService = container.resolve(Modules.USER)
+-  
+-  // Use a completely new email to bypass any existing conflicts
+-  const newEmail = "admin3@friggafrio.com.br";
+-  const newPass = "supersecret";
+-  
+-  try {
+-    console.log("1. Creating auth identity...");
+-    const { authIdentity } = await authModuleService.register("emailpass", {
+-      body: {
+-        email: newEmail,
+-        password: newPass
+-      }
+-    });
+-    console.log("-> Auth identity created:", authIdentity.id);
+-    
+-    console.log("2. Creating user...");
+-    const newUser = await userModuleService.createUsers({
+-      email: newEmail,
+-      first_name: "Admin3",
+-      last_name: "Friggafrio"
+-    });
+-    console.log("-> User created:", newUser.id);
+-    
+-    console.log("--- SUCCESS ---");
+-    console.log(`Email: ${newEmail}`);
+-    console.log(`Senha: ${newPass}`);
+-    
+-  } catch (e) {
+-    console.error("Failed:", e.message);
+-  }
+-}
+diff --git a/apps/backend/src/scripts/force-reset-admin2.ts b/apps/backend/src/scripts/force-reset-admin2.ts
+deleted file mode 100644
+index 3aa5123..0000000
+--- a/apps/backend/src/scripts/force-reset-admin2.ts
++++ /dev/null
+@@ -1,25 +0,0 @@
+-import { Modules } from "@medusajs/framework/utils"
+-import { ExecArgs } from "@medusajs/framework/types"
+-
+-export default async function forceResetAdmin({ container }: ExecArgs) {
+-  const authModuleService = container.resolve(Modules.AUTH)
+-  
+-  const newEmail = "admin4@friggafrio.com.br";
+-  const newPass = "supersecret";
+-  
+-  try {
+-    const authIdentity = await authModuleService.createAuthIdentities({
+-      provider_identities: [{
+-        provider: "emailpass",
+-        entity_id: newEmail,
+-        provider_metadata: {
+-          password: newPass
+-        }
+-      }]
+-    });
+-    
+-    console.log("Created raw auth identity:", authIdentity[0].id);
+-  } catch (e) {
+-    console.log("Failed creating auth raw:", e.message);
+-  }
+-}
