@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 23 (Acessibilidade / A11y)
+## Current Phase: Phase 24 (Metadados e Manifests)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -26,4 +26,6 @@
 - ~~Start Phase 22 (UI/UX Review & Error Boundaries).~~
 - Error boundaries injetados (`__root.tsx`, `components/error-boundary.tsx`).
 - Sanitização de console logs e esquema SEO concluídos (`products/$handle.tsx`, `products.ts`, `layout.tsx`).
-- Start Phase 23 (Accessibility & A11y).
+- ~~Start Phase 23 (Accessibility & A11y).~~
+- Injetados aria-labels e ajustes de i18n na Navbar base.
+- Start Phase 24 (Verificação Final de Metadados e Manifests).
