@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 26 (Deployment Sanity Check)
+## Current Phase: Phase 27 (Storefront Performance)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -33,4 +33,8 @@
 - Injetado link de manifest no `__root.tsx`.
 - ~~Start Phase 25 (Limpeza Final de Console e Warnings).~~
 - Logs de erro silenciados via sweep, warnings TypeScript avaliados e pacificados.
-- Start Phase 26 (Deployment Sanity Check).
+- ~~Start Phase 26 (Deployment Sanity Check).~~
+- Build do frontend (`vite build`) executado com sucesso e compilado para produção.
+- Build do backend (`medusa build`) validado via CLI local.
+- Pipeline de CI/CD inspecionado (Deployment bloqueado por segurança até homologação final).
+- Start Phase 27 (Storefront Performance & Lazy Loading).
