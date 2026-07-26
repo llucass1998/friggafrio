@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
 
   return {
+    
+    define: {
+      __APP_GIT_SHA__: JSON.stringify("8cc018d"),
+      __APP_GIT_BRANCH__: JSON.stringify("fix/frontend-source-of-truth"),
+      __APP_BUILD_TIME__: JSON.stringify("2026-07-26T18:17:29.068Z")
+    },
     plugins: [
       Terminal({ console: "terminal", output: ["terminal"] }),
       viteTsConfigPaths({ projects: ["./tsconfig.json"] }),
