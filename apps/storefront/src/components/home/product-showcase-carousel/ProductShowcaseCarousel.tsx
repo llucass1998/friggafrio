@@ -125,19 +125,19 @@ export function ProductShowcaseCarousel() {
       <button
         onClick={scrollPrev}
         disabled={!canScrollPrev}
-        className="absolute left-6 top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:scale-105 hover:shadow-lg transition-all duration-180 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] active:scale-95"
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-16 bg-white/30 hover:bg-white/50 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-180 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95"
         aria-label="Ver slide anterior"
       >
-        <ChevronLeft className="w-7 h-7" />
+        <ChevronLeft className="w-8 h-8" />
       </button>
 
       <button
         onClick={scrollNext}
         disabled={!canScrollNext}
-        className="absolute right-6 top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:scale-105 hover:shadow-lg transition-all duration-180 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] active:scale-95"
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-16 bg-white/30 hover:bg-white/50 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-180 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95"
         aria-label="Ver próximo slide"
       >
-        <ChevronRight className="w-7 h-7" />
+        <ChevronRight className="w-8 h-8" />
       </button>
 
       {/* Indicadores */}
