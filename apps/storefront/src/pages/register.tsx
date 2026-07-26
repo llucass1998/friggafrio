@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
-  const { loginWithGoogle } = useAuth()
+  const { loginWithGoogle, login } = useAuth()
 
   const [registerType, setRegisterType] = useState<"PERSON" | "COMPANY">("PERSON")
   const [showPassword, setShowPassword] = useState(false)

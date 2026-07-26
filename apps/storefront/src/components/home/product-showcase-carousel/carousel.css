@@ -1,0 +1,81 @@
+.carousel-slide-img {
+  transform: scale(1.025);
+  transition: transform 6000ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-slide-img {
+    transform: none !important;
+    transition: none !important;
+  }
+  .carousel-title, .carousel-desc, .carousel-cta, .carousel-category {
+    transform: none !important;
+    transition: opacity 300ms ease-out !important;
+  }
+}
+
+.carousel-slide[data-active="true"] .carousel-slide-img {
+  transform: scale(1.075);
+}
+
+.carousel-category {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms ease-out 40ms, transform 400ms ease-out 40ms;
+}
+.carousel-slide[data-active="true"] .carousel-category {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.carousel-title {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 400ms ease-out 100ms, transform 400ms ease-out 100ms;
+}
+.carousel-slide[data-active="true"] .carousel-title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.carousel-desc {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 400ms ease-out 170ms, transform 400ms ease-out 170ms;
+}
+.carousel-slide[data-active="true"] .carousel-desc {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.carousel-cta {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms ease-out 230ms, transform 400ms ease-out 230ms;
+}
+.carousel-slide[data-active="true"] .carousel-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.carousel-indicator-bar {
+  /* Using width transition for the container expanding/collapsing on active state */
+  /* This one is fast and happens rarely, but still, we will keep it minimal */
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+.carousel-indicator-progress {
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.carousel-indicator-active .carousel-indicator-progress {
+  animation: carouselProgress 6000ms linear forwards;
+}
+.carousel-indicator-active[data-playing="false"] .carousel-indicator-progress {
+  animation-play-state: paused;
+}
+
+@keyframes carouselProgress {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}

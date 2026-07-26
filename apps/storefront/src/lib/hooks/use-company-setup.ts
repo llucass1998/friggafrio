@@ -20,7 +20,7 @@ export interface CompanySetupStatus {
 }
 
 export function useCompanySetupStatus() {
-  const { isAuthenticated, _isAdmin } = useAuth()
+  const { isAuthenticated } = useAuth()
 
   return useQuery({
     queryKey: ["company-setup-status"],

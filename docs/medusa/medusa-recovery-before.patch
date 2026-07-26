@@ -1,0 +1,385 @@
+diff --git a/apps/storefront/register-page-debug.png b/apps/storefront/register-page-debug.png
+index 39f3dcd..b2f5edd 100644
+Binary files a/apps/storefront/register-page-debug.png and b/apps/storefront/register-page-debug.png differ
+diff --git a/apps/storefront/src/components/home/HeroSection.tsx b/apps/storefront/src/components/home/HeroSection.tsx
+index 1641a1f..54792f6 100644
+--- a/apps/storefront/src/components/home/HeroSection.tsx
++++ b/apps/storefront/src/components/home/HeroSection.tsx
+@@ -2,11 +2,22 @@ import { ProductShowcaseCarousel } from "@/components/home/product-showcase-caro
+ 
+ export function HeroSection() {
+   return (
+-    <section className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pt-8 pb-12">
+-        <div className="w-full">
+-          <ProductShowcaseCarousel />
+-        </div>
++    <section
++      aria-label="Destaques da FriggaFrio"
++      className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)] w-full overflow-x-clip py-6 lg:py-8"
++    >
++      <div
++        data-testid="home-hero-carousel"
++        className="
++          mx-auto
++          relative z-10
++          w-[calc(100vw-24px)]
++          sm:w-[calc(100vw-32px)]
++          md:w-[calc(100vw-48px)]
++          xl:w-[min(96vw,1740px)]
++        "
++      >
++        <ProductShowcaseCarousel />
+       </div>
+     </section>
+   )
+diff --git a/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseCarousel.tsx b/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseCarousel.tsx
+index 9551c6c..199329e 100644
+--- a/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseCarousel.tsx
++++ b/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseCarousel.tsx
+@@ -1,19 +1,25 @@
+ import useEmblaCarousel from "embla-carousel-react"
+-import { useCallback, useEffect, useState } from "react"
+-import { ChevronLeft, ChevronRight } from "lucide-react"
++import Autoplay from "embla-carousel-autoplay"
++import { useCallback, useEffect, useState, useRef } from "react"
++import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react"
+ import { showcaseSlides } from "@/components/home/product-showcase-carousel/carousel-data"
+ import { ProductShowcaseSlide } from "@/components/home/product-showcase-carousel/ProductShowcaseSlide"
++import "./carousel.css"
+ 
+ export function ProductShowcaseCarousel() {
+-  const [emblaRef, emblaApi] = useEmblaCarousel({
+-    loop: true,
+-    align: "center",
+-    skipSnaps: false
+-  })
++  const autoplayRef = useRef(
++    Autoplay({ delay: 6000, stopOnInteraction: true, stopOnMouseEnter: true })
++  )
++
++  const [emblaRef, emblaApi] = useEmblaCarousel(
++    { loop: true, align: "center", skipSnaps: false },
++    [autoplayRef.current]
++  )
+ 
+   const [selectedIndex, setSelectedIndex] = useState(0)
+   const [canScrollPrev, setCanScrollPrev] = useState(false)
+   const [canScrollNext, setCanScrollNext] = useState(false)
++  const [isPlaying, setIsPlaying] = useState(true)
+ 
+   const scrollPrev = useCallback(() => {
+     if (emblaApi) emblaApi.scrollPrev()
+@@ -27,6 +33,19 @@ export function ProductShowcaseCarousel() {
+     if (emblaApi) emblaApi.scrollTo(index)
+   }, [emblaApi])
+ 
++  const toggleAutoplay = useCallback(() => {
++    const autoplay = emblaApi?.plugins()?.autoplay
++    if (!autoplay) return
++
++    if (autoplay.isPlaying()) {
++      autoplay.stop()
++      setIsPlaying(false)
++    } else {
++      autoplay.play()
++      setIsPlaying(true)
++    }
++  }, [emblaApi])
++
+   const onSelect = useCallback(() => {
+     if (!emblaApi) return
+     setSelectedIndex(emblaApi.selectedScrollSnap())
+@@ -40,7 +59,12 @@ export function ProductShowcaseCarousel() {
+     emblaApi.on("select", onSelect)
+     emblaApi.on("reInit", onSelect)
+ 
+-    // Suporte ao teclado acessível
++    const autoplay = emblaApi?.plugins()?.autoplay
++    if (autoplay) {
++      emblaApi.on("autoplay:play", () => setIsPlaying(true))
++      emblaApi.on("autoplay:stop", () => setIsPlaying(false))
++    }
++
+     const handleKeyDown = (e: KeyboardEvent) => {
+       if (document.activeElement?.closest('[aria-roledescription="carousel"]')) {
+         if (e.key === "ArrowLeft") scrollPrev()
+@@ -49,16 +73,36 @@ export function ProductShowcaseCarousel() {
+     }
+     window.addEventListener("keydown", handleKeyDown)
+ 
++    const handleVisibilityChange = () => {
++      if (document.visibilityState === "hidden") {
++        autoplay?.stop()
++      } else if (isPlaying) {
++        autoplay?.play()
++      }
++    }
++    document.addEventListener("visibilitychange", handleVisibilityChange)
++
+     return () => {
+       emblaApi.off("select", onSelect)
+       emblaApi.off("reInit", onSelect)
+       window.removeEventListener("keydown", handleKeyDown)
++      document.removeEventListener("visibilitychange", handleVisibilityChange)
+     }
+-  }, [emblaApi, onSelect, scrollPrev, scrollNext])
++  }, [emblaApi, onSelect, scrollPrev, scrollNext, isPlaying])
++
++  // Reduced motion preference
++  useEffect(() => {
++    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
++    if (mediaQuery.matches) {
++      const autoplay = emblaApi?.plugins()?.autoplay
++      autoplay?.stop()
++      setIsPlaying(false)
++    }
++  }, [emblaApi])
+ 
+   return (
+     <div
+-      className="relative w-full mx-auto"
++      className="relative w-full mx-auto group"
+       aria-roledescription="carousel"
+       aria-label="Destaques de Equipamentos Friggafrio"
+     >
+@@ -79,36 +123,52 @@ export function ProductShowcaseCarousel() {
+       <button
+         onClick={scrollPrev}
+         disabled={!canScrollPrev}
+-        className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-navy)] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
++        className="absolute left-6 top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:scale-105 hover:shadow-lg transition-all duration-180 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] active:scale-95"
+         aria-label="Ver slide anterior"
+       >
+-        <ChevronLeft className="w-6 h-6" />
++        <ChevronLeft className="w-7 h-7" />
+       </button>
+ 
+       <button
+         onClick={scrollNext}
+         disabled={!canScrollNext}
+-        className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-navy)] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
++        className="absolute right-6 top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-[var(--color-primary)] hover:bg-white hover:scale-105 hover:shadow-lg transition-all duration-180 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-40 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] active:scale-95"
+         aria-label="Ver próximo slide"
+       >
+-        <ChevronRight className="w-6 h-6" />
++        <ChevronRight className="w-7 h-7" />
+       </button>
+ 
+-      {/* Indicadores Dot */}
+-      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-40">
+-        {showcaseSlides.map((_, index) => (
+-          <button
+-            key={index}
+-            onClick={() => scrollTo(index)}
+-            className={`w-2.5 h-2.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] ${
+-              index === selectedIndex
+-                ? "bg-white w-8 shadow-sm"
+-                : "bg-white/50 hover:bg-white/80"
+-            }`}
+-            aria-label={`Ir para o slide ${index + 1}`}
+-            aria-current={index === selectedIndex ? "true" : "false"}
+-          />
+-        ))}
++      {/* Indicadores e Controles Inferiores */}
++      <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-40">
++        <button
++          onClick={toggleAutoplay}
++          className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors focus-visible:outline-2 focus-visible:outline-white"
++          aria-label={isPlaying ? "Pausar apresentação" : "Retomar apresentação"}
++        >
++          {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
++        </button>
++
++        <div className="flex gap-2">
++          {showcaseSlides.map((_, index) => {
++            const active = index === selectedIndex
++            return (
++              <button
++                key={index}
++                onClick={() => scrollTo(index)}
++                className={`carousel-indicator-bar relative h-2.5 rounded-full overflow-hidden focus-visible:outline-2 focus-visible:outline-white ${
++                  active ? "carousel-indicator-active w-12 bg-white/30" : "w-2.5 bg-white/50 hover:bg-white/80"
++                }`}
++                aria-label={`Ir para o slide ${index + 1}`}
++                aria-current={active ? "true" : "false"}
++                data-playing={isPlaying}
++              >
++                {active && (
++                  <div className="carousel-indicator-progress absolute inset-y-0 left-0 bg-white" />
++                )}
++              </button>
++            )
++          })}
++        </div>
+       </div>
+     </div>
+   )
+diff --git a/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseSlide.tsx b/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseSlide.tsx
+index e0ec5e8..9849520 100644
+--- a/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseSlide.tsx
++++ b/apps/storefront/src/components/home/product-showcase-carousel/ProductShowcaseSlide.tsx
+@@ -8,17 +8,23 @@ interface ProductShowcaseSlideProps {
+ 
+ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlideProps) {
+   return (
+-    <div className="flex-none w-full min-w-0" role="group" aria-roledescription="slide" aria-label={slide.title}>
+-      <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[2.3/1] max-h-[620px] rounded-[var(--radius-card-lg)] bg-[var(--color-surface)] overflow-hidden flex flex-col items-center justify-end group">
++    <div
++      className="carousel-slide flex-none w-full min-w-0"
++      role="group"
++      aria-roledescription="slide"
++      aria-label={slide.title}
++      data-active={isActive ? "true" : "false"}
++    >
++      <div className="relative w-full rounded-[var(--radius-card-lg)] bg-[var(--color-surface)] overflow-hidden flex flex-col items-start justify-end group h-[clamp(430px,100vw,520px)] sm:h-[clamp(420px,52vw,540px)] lg:h-[clamp(520px,40vw,700px)]">
+ 
+         {/* Placeholder / Image */}
+-        <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+-          <picture className="w-full h-full flex items-center justify-center bg-gray-50">
++        <div className="absolute inset-0 flex items-center justify-center">
++          <picture className="w-full h-full flex items-center justify-center bg-slate-900">
+             {/* Imagem real (fallback via object-error se não existir) */}
+             <img
+               src={`/images/carousel/${slide.imageFilename}`}
+               alt={slide.title}
+-              className="w-full h-full object-cover z-10"
++              className="carousel-slide-img w-full h-full object-cover z-10"
+               loading={isActive ? "eager" : "lazy"}
+               onError={(e) => {
+                 // Se a imagem não for encontrada, esconde a tag img e mostra o SVG via css
+@@ -40,21 +46,32 @@ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlidePr
+           </picture>
+         </div>
+ 
+-        {/* Content Gradient Overlay */}
+-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy)]/90 via-[var(--color-navy)]/40 to-transparent z-20 pointer-events-none"></div>
++        {/* Content Gradient Overlay - 90deg left to right fade */}
++        <div
++          className="absolute inset-0 z-20 pointer-events-none"
++          style={{
++            background: "linear-gradient(90deg, rgba(3, 32, 63, 0.92) 0%, rgba(3, 32, 63, 0.72) 35%, rgba(3, 32, 63, 0.18) 68%, transparent 100%)"
++          }}
++        ></div>
+ 
+         {/* Slide Content */}
+-        <div className="relative z-30 p-6 sm:p-10 text-left w-full translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+-          <h3 className="text-3xl font-bold text-white mb-2">{slide.title}</h3>
+-          <p className="text-white/90 text-base md:text-lg mb-6 line-clamp-2 max-w-xl">
++        <div className="relative z-30 p-6 sm:p-10 lg:p-16 text-left w-full max-w-[620px] mb-8 sm:mb-4 lg:mb-8">
++          <span className="carousel-category text-sm lg:text-base font-bold text-[var(--color-primary)] uppercase tracking-wider mb-2 lg:mb-4 block">
++            DESTAQUE
++          </span>
++          <h3 className="carousel-title text-2xl lg:text-[40px] leading-tight font-bold text-white mb-4">
++            {slide.title}
++          </h3>
++          <p className="carousel-desc text-white/90 text-sm sm:text-base lg:text-lg mb-8 line-clamp-2 lg:line-clamp-3">
+             {slide.description}
+           </p>
+           <Link
+             to={slide.ctaLink as any}
+-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm font-bold rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
++            tabIndex={isActive ? 0 : -1}
++            className="carousel-cta inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm lg:text-base font-bold rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+           >
+             {slide.ctaText}
+-            <svg xmlns="http://www.w3.org/w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
++            <svg xmlns="http://www.w3.org/w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+           </Link>
+         </div>
+ 
+diff --git a/apps/storefront/src/components/product-card.tsx b/apps/storefront/src/components/product-card.tsx
+index 6487ce0..9c40bec 100644
+--- a/apps/storefront/src/components/product-card.tsx
++++ b/apps/storefront/src/components/product-card.tsx
+@@ -12,11 +12,12 @@ import { DocumentText } from "@medusajs/icons"
+ 
+ interface ProductCardProps {
+   product: HttpTypes.StoreProduct
+-  ____regionId: string
++  regionId?: string
++  _countryCode?: string
+   countryCode: string
+ }
+ 
+-export function ProductCard({ product, regionId: _regionId, countryCode: _countryCode }: ProductCardProps) {
++export function ProductCard({ product, regionId: _regionId, countryCode }: ProductCardProps) {
+   const { cheapestPrice } = getProductPrice({ product })
+   const { isAuthenticated } = useAuth()
+   const navigate = useNavigate()
+diff --git a/apps/storefront/src/config/store-locations.ts b/apps/storefront/src/config/store-locations.ts
+index 9806e3b..c873e7d 100644
+--- a/apps/storefront/src/config/store-locations.ts
++++ b/apps/storefront/src/config/store-locations.ts
+@@ -47,30 +47,11 @@ export const storeLocations: StoreLocation[] = [
+     postalCode: "01215-001",
+     countryCode: "BR",
+     ownImageSrc: "/images/store/loja-1-fachada.webp",
+-    ownImageAlt: "Fachada FriggaFrio Loja 1",
++    ownImageAlt: "Fachada FriggaFrio Loja",
+     placeId: "ChIJIQ22k61ZzpQRIY809f-6mY0",
+     phone: "(11) 4580-1227",
+     whatsapp: "5511948777156",
+     active: true,
+     order: 1,
+-  },
+-  {
+-    id: "loja-2",
+-    name: "FriggaFrio — Loja 2",
+-    shortName: "Loja 2",
+-    addressLine: "Alameda Glete, 926",
+-    district: "Campos Elíseos",
+-    city: "São Paulo",
+-    stateCode: "SP",
+-    stateName: "São Paulo",
+-    postalCode: "01215-001", 
+-    countryCode: "BR",
+-    ownImageSrc: "/images/store/loja-2-fachada.webp",
+-    ownImageAlt: "Fachada FriggaFrio Loja 2",
+-    // placeId: "ChI...", //TODO: Obter do Google
+-    phone: "(11) 4580-1227",
+-    whatsapp: "5511948777156",
+-    active: true,
+-    order: 2,
+-  },
++  }
+ ]
+diff --git a/apps/storefront/src/lib/hooks/use-company-setup.ts b/apps/storefront/src/lib/hooks/use-company-setup.ts
+index 2d15404..815e108 100644
+--- a/apps/storefront/src/lib/hooks/use-company-setup.ts
++++ b/apps/storefront/src/lib/hooks/use-company-setup.ts
+@@ -20,7 +20,7 @@ export interface CompanySetupStatus {
+ }
+ 
+ export function useCompanySetupStatus() {
+-  const { isAuthenticated, _isAdmin } = useAuth()
++  const { isAuthenticated } = useAuth()
+ 
+   return useQuery({
+     queryKey: ["company-setup-status"],
+diff --git a/apps/storefront/src/pages/home.tsx b/apps/storefront/src/pages/home.tsx
+index a8a729e..febd8d3 100644
+--- a/apps/storefront/src/pages/home.tsx
++++ b/apps/storefront/src/pages/home.tsx
+@@ -3,7 +3,7 @@ import { PublicHomePage } from "@/pages/public-home"
+ import {  useParams } from "@tanstack/react-router"
+ 
+ export default function Home() {
+-  const { _isAuthenticated, isLoading: _authLoading } = useAuth()
++  const { isAuthenticated: _isAuthenticated, isLoading: _authLoading } = useAuth()
+   const params = useParams({ strict: false }) as { countryCode?: string }
+   const _countryCode = params.countryCode || "br"
+ 
+diff --git a/apps/storefront/src/pages/register.tsx b/apps/storefront/src/pages/register.tsx
+index 46b0c30..d733653 100644
+--- a/apps/storefront/src/pages/register.tsx
++++ b/apps/storefront/src/pages/register.tsx
+@@ -21,7 +21,7 @@ export default function RegisterPage() {
+   const navigate = useNavigate()
+   const params = useParams({ strict: false }) as { countryCode?: string }
+   const countryCode = params.countryCode || "br"
+-  const { loginWithGoogle } = useAuth()
++  const { loginWithGoogle, login } = useAuth()
+ 
+   const [registerType, setRegisterType] = useState<"PERSON" | "COMPANY">("PERSON")
+   const [showPassword, setShowPassword] = useState(false)

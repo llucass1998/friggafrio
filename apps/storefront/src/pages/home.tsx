@@ -3,7 +3,7 @@ import { PublicHomePage } from "@/pages/public-home"
 import {  useParams } from "@tanstack/react-router"
 
 export default function Home() {
-  const { _isAuthenticated, isLoading: _authLoading } = useAuth()
+  const { isAuthenticated: _isAuthenticated, isLoading: _authLoading } = useAuth()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const _countryCode = params.countryCode || "br"
 

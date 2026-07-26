@@ -12,11 +12,12 @@ import { DocumentText } from "@medusajs/icons"
 
 interface ProductCardProps {
   product: HttpTypes.StoreProduct
-  ____regionId: string
+  regionId?: string
+  _countryCode?: string
   countryCode: string
 }
 
-export function ProductCard({ product, regionId: _regionId, countryCode: _countryCode }: ProductCardProps) {
+export function ProductCard({ product, regionId: _regionId, countryCode }: ProductCardProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
