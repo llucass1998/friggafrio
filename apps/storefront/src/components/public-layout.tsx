@@ -1,8 +1,8 @@
-import { PublicHeader } from "./public-header"
-import { PublicFooter } from "./public-footer"
-import { FloatingActions } from "./FloatingActions"
-import { FloatingWhatsAppButton } from "./floating-whatsapp-button"
-import { CartDropdown } from "./cart"
+import { PublicHeader } from "@/components/public-header"
+import { PublicFooter } from "@/components/public-footer"
+import { FloatingActions } from "@/components/FloatingActions"
+import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button"
+import { CartDropdown } from "@/components/cart"
 import {
   AccessibilityProvider,
   AccessibilityTopBar,
@@ -12,7 +12,7 @@ import {
   ReadingGuide,
   VLibrasWidget,
   LiveRegion
-} from "./accessibility"
+} from "@/components/accessibility"
 
 interface PublicLayoutProps {
   children: React.ReactNode

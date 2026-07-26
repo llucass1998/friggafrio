@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
@@ -187,8 +187,7 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
 }
 
 function PaymentMethodsSection({ companyData }: { companyData: Company }) {
-  const queryClient = useQueryClient()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false)
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -395,8 +394,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
 }
 
 function AddressesSection({ companyData }: { companyData: Company }) {
-  const queryClient = useQueryClient()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<CompanyAddressData | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -924,7 +922,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
 }
 
 export default function SettingsPage() {
-  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee, isAuthenticated } = useAuth()
+  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee } = useAuth()
   const searchParams = useSearch({ strict: false }) as { tab?: string } | undefined
   const initialTab = (searchParams?.tab as "profile" | "company" | "addresses" | "payment_methods") || "profile"
   const [activeTab, setActiveTab] = useState<"profile" | "company" | "addresses" | "payment_methods">(initialTab)

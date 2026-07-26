@@ -1,4 +1,4 @@
-import { FullStoreHeader, StickyCommerceHeader } from "./header"
+import { FullStoreHeader, StickyCommerceHeader } from "@/components/header"
 
 export function PublicHeader() {
   // O Header novo lida com seu próprio estado sticky e desktop/mobile

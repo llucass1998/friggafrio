@@ -1,4 +1,4 @@
-import { ProductShowcaseCarousel } from "./product-showcase-carousel"
+import { ProductShowcaseCarousel } from "@/components/home/product-showcase-carousel"
 
 export function HeroSection() {
   return (

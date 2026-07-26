@@ -1,1 +1,1 @@
-export { FloatingWhatsAppButton } from "./FloatingWhatsAppButton"
+export { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button/FloatingWhatsAppButton"

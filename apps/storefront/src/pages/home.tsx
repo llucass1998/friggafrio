@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/hooks/use-auth"
-import { PublicHomePage } from "./public-home"
+import { PublicHomePage } from "@/pages/public-home"
 import { Link, useParams } from "@tanstack/react-router"
 
 export default function Home() {

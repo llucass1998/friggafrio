@@ -1,5 +1,5 @@
 import { Eye, MapPin } from "lucide-react"
-import { StoreLocation } from "../../config/store-locations"
+import { StoreLocation } from "@/config/store-locations"
 
 interface StoreStreetViewProps {
   location: StoreLocation

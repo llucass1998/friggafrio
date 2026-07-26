@@ -1,8 +1,8 @@
 import useEmblaCarousel from "embla-carousel-react"
 import { useCallback, useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { showcaseSlides } from "./carousel-data"
-import { ProductShowcaseSlide } from "./ProductShowcaseSlide"
+import { showcaseSlides } from "@/components/home/product-showcase-carousel/carousel-data"
+import { ProductShowcaseSlide } from "@/components/home/product-showcase-carousel/ProductShowcaseSlide"
 
 export function ProductShowcaseCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({

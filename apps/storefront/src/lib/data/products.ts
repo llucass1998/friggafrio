@@ -1,7 +1,7 @@
 import { sdk } from "@/lib/medusa"
 import { HttpTypes } from "@medusajs/types"
 import { cache } from "react"
-// import { getAuthHeaders } from "./cookies" // Unused and missing
+// import { getAuthHeaders } from "@/lib/data/cookies" // Unused and missing
 
 export const listProducts = cache(
   async ({

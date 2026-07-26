@@ -1,10 +1,10 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
-import { productCategories, applicationCategories, mainNavigation } from "./categories"
-import { HeaderSearch } from "./HeaderSearch"
-import { HeaderActions } from "./HeaderActions"
-import { HeaderLogo } from "./HeaderLogo"
+import { productCategories, applicationCategories, mainNavigation } from "@/components/header/categories"
+import { HeaderSearch } from "@/components/header/HeaderSearch"
+import { HeaderActions } from "@/components/header/HeaderActions"
+import { HeaderLogo } from "@/components/header/HeaderLogo"
 
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)

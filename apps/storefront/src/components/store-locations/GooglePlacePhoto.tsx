@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { StoreLocation } from "../../config/store-locations"
+import { StoreLocation } from "@/config/store-locations"
 import { Store } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 

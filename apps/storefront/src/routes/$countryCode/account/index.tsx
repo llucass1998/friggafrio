@@ -11,7 +11,7 @@ export const Route = createFileRoute("/$countryCode/account/")({
   beforeLoad: async ({ params }) => {
     try {
       await sdk.store.customer.retrieve()
-    } catch (error: any) {
+    } catch (_error: unknown) {
       // Not authenticated, redirect to login
       throw redirect({ to: "/$countryCode/account/login", params: { countryCode: params.countryCode || "br" } })
     }

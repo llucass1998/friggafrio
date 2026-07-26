@@ -1,4 +1,4 @@
-import { StoreLocation, storeLocations } from "./store-locations"
+import { StoreLocation, storeLocations } from "@/config/store-locations"
 
 export type StoreConfig = {
   name: string;
