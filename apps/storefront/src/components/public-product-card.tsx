@@ -146,6 +146,8 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
             src={thumbnail}
             alt={product.title}
             loading="lazy"
+            width="300"
+            height="300"
             className="w-full h-full object-contain mix-blend-multiply transition-transform duration-[var(--motion-duration-card,300ms)] ease-out group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
           />
         ) : (

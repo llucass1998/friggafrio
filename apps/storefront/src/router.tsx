@@ -25,7 +25,7 @@ export function createRouter() {
   const router = createTanStackRouter({
     routeTree,
     context: { queryClient },
-    defaultPreload: false, // SSR handles data fetching on the server
+    defaultPreload: "intent", // Puxa os chunks sob demanda quando o usuário foca ou passa o mouse no link
     defaultNotFoundComponent: NotFound,
     scrollRestoration: true,
   })

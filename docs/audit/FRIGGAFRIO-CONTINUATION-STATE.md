@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 27 (Storefront Performance)
+## Current Phase: Phase 28 (Produção)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -37,4 +37,7 @@
 - Build do frontend (`vite build`) executado com sucesso e compilado para produção.
 - Build do backend (`medusa build`) validado via CLI local.
 - Pipeline de CI/CD inspecionado (Deployment bloqueado por segurança até homologação final).
-- Start Phase 27 (Storefront Performance & Lazy Loading).
+- ~~Start Phase 27 (Storefront Performance & Lazy Loading).~~
+- Preload do Router ajustado para `intent`.
+- Explicit `width` e `height` aplicados nas imagens críticas de card para evitar Cumulative Layout Shift (CLS).
+- Start Phase 28 (Validação de Build de Produção em Nuvem / Vercel).
