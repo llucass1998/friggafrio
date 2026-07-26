@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 24 (Metadados e Manifests)
+## Current Phase: Phase 25 (Limpeza Final)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -28,4 +28,7 @@
 - Sanitização de console logs e esquema SEO concluídos (`products/$handle.tsx`, `products.ts`, `layout.tsx`).
 - ~~Start Phase 23 (Accessibility & A11y).~~
 - Injetados aria-labels e ajustes de i18n na Navbar base.
-- Start Phase 24 (Verificação Final de Metadados e Manifests).
+- ~~Start Phase 24 (Verificação Final de Metadados e Manifests).~~
+- Arquivos estáticos `robots.txt` e `manifest.json` adicionados à pasta public.
+- Injetado link de manifest no `__root.tsx`.
+- Start Phase 25 (Limpeza Final de Console e Warnings).

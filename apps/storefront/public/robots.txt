@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Disallow: /*/account/
+Disallow: /*/checkout/
+Disallow: /*/cart
+Disallow: /*/order/
+Disallow: /*/quotes/
+
+# Specific rules for Googlebot
+User-agent: Googlebot
+Allow: /
+Disallow: /*/account/
+Disallow: /*/checkout/
+Disallow: /*/cart
+Disallow: /*/order/
+Disallow: /*/quotes/
+
+Sitemap: https://friggafrio.com.br/sitemap.xml
