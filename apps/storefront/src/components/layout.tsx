@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/hooks/use-auth"
 export default function Layout() {
   const { isAuthenticated, isLoading } = useAuth()
 
-  console.log("[Layout] render - isAuthenticated:", isAuthenticated, "isLoading:", isLoading)
+  // Logging removido para produção
 
   // Em todos os estados renderizamos o layout público B2C
   return (

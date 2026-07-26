@@ -66,7 +66,7 @@ export const retrieveProduct = cache(
       }, { next: { tags: ["products"] } });
       
       if (!products || products.length === 0) {
-        console.log("NOT FOUND REGION ID:", params.region_id); throw new Error(`Product with handle ${params.handle} not found`);
+        throw new Error(`Product with handle ${params.handle} not found`);
       }
       return products[0];
     }
