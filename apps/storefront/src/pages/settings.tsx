@@ -81,11 +81,11 @@ interface SavedPaymentMethod {
 }
 
 const RESET_FREQUENCY_OPTIONS: { value: SpendLimitResetFrequency; label: string; description: string }[] = [
-  { value: "none", label: "Never", description: "Spending limits never reset" },
-  { value: "daily", label: "Daily", description: "Resets every day at midnight" },
-  { value: "weekly", label: "Weekly", description: "Resets every Monday" },
-  { value: "monthly", label: "Monthly", description: "Resets on the 1st of each month" },
-  { value: "yearly", label: "Yearly", description: "Resets on January 1st" },
+  { value: "none", label: "Nunca", description: "Spending limits never reset" },
+  { value: "daily", label: "Diariamente", description: "Resets every day at midnight" },
+  { value: "weekly", label: "Semanalmente", description: "Resets every Monday" },
+  { value: "monthly", label: "Mensalmente", description: "Resets on the 1st of each month" },
+  { value: "yearly", label: "Anualmente", description: "Resets on January 1st" },
 ]
 
 function CardSkeleton({ rows = 4 }: { rows?: number }) {
@@ -126,13 +126,13 @@ function cardBrandLabel(brand: string): string {
   return brands[brand] || brand.charAt(0).toUpperCase() + brand.slice(1)
 }
 
-function AddCardForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCancelar: () => void }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventPadrão()
     if (!stripe || !elements) return
 
     setIsSubmitting(true)
@@ -168,11 +168,11 @@ function AddCardForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel:
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={onCancelar}
           disabled={isSubmitting}
           className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
         >
-          Cancel
+          Cancelar
         </button>
         <button
           type="submit"
@@ -307,7 +307,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
           ) : !hasPaymentMethods ? (
             <div className="text-center py-8">
               <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm text-slate-500 mb-4">No payment methods saved yet.</p>
+              <p className="text-sm text-slate-500 mb-4">Nenhuma forma de pagamento salva ainda.</p>
               <button
                 onClick={() => createSetupIntentMutation.mutate()}
                 disabled={createSetupIntentMutation.isPending}
@@ -337,7 +337,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                       </p>
                       {card && (
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Expires {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
+                          Expira em {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
                         </p>
                       )}
                     </div>
@@ -381,7 +381,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                 },
               }}
             >
-              <AddCardForm onSuccess={handleAddCardSuccess} onCancel={handleModalClose} />
+              <AddCardForm onSuccess={handleAddCardSuccess} onCancelar={handleModalClose} />
             </Elements>
           ) : (
             <div className="flex items-center justify-center py-8">
@@ -554,7 +554,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventPadrão()
     if (editingAddress) {
       updateAddressMutation.mutate({ id: editingAddress.id, data: formData })
     } else {
@@ -657,12 +657,12 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                         <p className="text-sm font-medium text-slate-900">{address.name}</p>
                         {address.is_default_shipping && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Default Shipping
+                            Padrão Shipping
                           </span>
                         )}
                         {address.is_default_billing && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            Default Billing
+                            Padrão Billing
                           </span>
                         )}
                         {address.is_billing_only && (
@@ -764,7 +764,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Company Name</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Nome da Empresa</label>
               <input
                 type="text"
                 value={formData.company_name}
@@ -795,17 +795,17 @@ function AddressesSection({ companyData }: { companyData: Company }) {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">City</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Cidade</label>
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                  placeholder="City"
+                  placeholder="Cidade"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">State / Province</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Estado</label>
                 <input
                   type="text"
                   value={formData.province}
@@ -827,7 +827,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Country</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">País</label>
                 <select
                   value={formData.country_code}
                   onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
@@ -869,7 +869,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                   className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent/20"
                 />
                 <div>
-                  <span className="text-sm text-slate-900">Default shipping address</span>
+                  <span className="text-sm text-slate-900">Padrão shipping address</span>
                   <p className="text-xs text-slate-500">Use this as the default address for shipping</p>
                 </div>
               </label>
@@ -881,7 +881,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                   className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent/20"
                 />
                 <div>
-                  <span className="text-sm text-slate-900">Default billing address</span>
+                  <span className="text-sm text-slate-900">Padrão billing address</span>
                   <p className="text-xs text-slate-500">Use this as the default address for billing</p>
                 </div>
               </label>
@@ -906,7 +906,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                 disabled={isSubmitting}
                 className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 type="submit"
@@ -1100,11 +1100,11 @@ export default function SettingsPage() {
   }
 
   const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventPadrão()
     updateProfileMutation.mutate(profileFormData)
   }
 
-  const handleProfileCancel = () => {
+  const handleProfileCancelar = () => {
     setProfileFormData({
       first_name: customer?.first_name || "",
       last_name: customer?.last_name || "",
@@ -1114,11 +1114,11 @@ export default function SettingsPage() {
   }
 
   const handleCompanySubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventPadrão()
     updateCompanyMutation.mutate(companyFormData)
   }
 
-  const handleCompanyCancel = () => {
+  const handleCompanyCancelar = () => {
     if (companyData) {
       setCompanyFormData({
         name: companyData.name || "",
@@ -1136,11 +1136,11 @@ export default function SettingsPage() {
   }
 
   const tabs = [
-    { id: "profile" as const, label: "Profile" },
+    { id: "profile" as const, label: "Perfil" },
     ...(isAdmin ? [
-      { id: "company" as const, label: "Company" },
-      { id: "addresses" as const, label: "Addresses" },
-      ...(stripePublishableKey ? [{ id: "payment_methods" as const, label: "Payment Methods" }] : []),
+      { id: "company" as const, label: "Empresa" },
+      { id: "addresses" as const, label: "Endereços" },
+      ...(stripePublishableKey ? [{ id: "payment_methods" as const, label: "Formas de Pagamento" }] : []),
     ] : []),
   ]
 
@@ -1149,13 +1149,13 @@ export default function SettingsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-          <p className="text-slate-500 mt-1">Manage your account settings and preferences</p>
+          <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
+          <p className="text-slate-500 mt-1">Gerencie as configurações e preferências da sua conta</p>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-slate-200">
-          <nav className="flex gap-8" aria-label="Settings tabs">
+          <nav className="flex gap-8" aria-label="Abas de configuração">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -1180,15 +1180,15 @@ export default function SettingsPage() {
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Profile Information</h2>
-                  <p className="text-sm text-slate-500">Update your personal details</p>
+                  <h2 className="text-lg font-semibold text-slate-900">Informações do Perfil</h2>
+                  <p className="text-sm text-slate-500">Atualize seus dados pessoais</p>
                 </div>
                 {!isEditingProfile && (
                   <button
                     onClick={() => setIsEditingProfile(true)}
                     className="px-4 py-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                   >
-                    Edit
+                    Editar
                   </button>
                 )}
               </div>
@@ -1197,7 +1197,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Email Address
+                      Endereço de E-mail
                     </label>
                     <input
                       type="email"
@@ -1206,13 +1206,13 @@ export default function SettingsPage() {
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed"
                     />
                     <p className="mt-1.5 text-xs text-slate-400">
-                      Email cannot be changed
+                      O e-mail não pode ser alterado
                     </p>
                   </div>
 
                   <div>
                     <label htmlFor="first_name" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      First Name
+                      Nome
                     </label>
                     {isEditingProfile ? (
                       <input
@@ -1221,18 +1221,18 @@ export default function SettingsPage() {
                         value={profileFormData.first_name}
                         onChange={(e) => setProfileFormData({ ...profileFormData, first_name: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter first name"
+                        placeholder="Digite o nome"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
-                        {customer?.first_name || <span className="text-slate-400">Not set</span>}
+                        {customer?.first_name || <span className="text-slate-400">Não informado</span>}
                       </p>
                     )}
                   </div>
 
                   <div>
                     <label htmlFor="last_name" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Last Name
+                      Sobrenome
                     </label>
                     {isEditingProfile ? (
                       <input
@@ -1241,18 +1241,18 @@ export default function SettingsPage() {
                         value={profileFormData.last_name}
                         onChange={(e) => setProfileFormData({ ...profileFormData, last_name: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter last name"
+                        placeholder="Digite o sobrenome"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
-                        {customer?.last_name || <span className="text-slate-400">Not set</span>}
+                        {customer?.last_name || <span className="text-slate-400">Não informado</span>}
                       </p>
                     )}
                   </div>
 
                   <div className="md:col-span-2">
                     <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Phone Number
+                      Número de Telefone
                     </label>
                     {isEditingProfile ? (
                       <input
@@ -1261,11 +1261,11 @@ export default function SettingsPage() {
                         value={profileFormData.phone}
                         onChange={(e) => setProfileFormData({ ...profileFormData, phone: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter phone number"
+                        placeholder="Digite o número de telefone"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
-                        {customer?.phone || <span className="text-slate-400">Not set</span>}
+                        {customer?.phone || <span className="text-slate-400">Não informado</span>}
                       </p>
                     )}
                   </div>
@@ -1275,18 +1275,18 @@ export default function SettingsPage() {
                   <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                     <button
                       type="button"
-                      onClick={handleProfileCancel}
+                      onClick={handleProfileCancelar}
                       disabled={updateProfileMutation.isPending}
                       className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
                     >
-                      Cancel
+                      Cancelarar
                     </button>
                     <button
                       type="submit"
                       disabled={updateProfileMutation.isPending}
                       className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save Changes
+                      Salvar Alterações
                     </button>
                   </div>
                 )}
@@ -1303,15 +1303,15 @@ export default function SettingsPage() {
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Company Information</h2>
-                  <p className="text-sm text-slate-500">Update your company details</p>
+                  <h2 className="text-lg font-semibold text-slate-900">Informações da Empresa</h2>
+                  <p className="text-sm text-slate-500">Atualize os dados da sua empresa</p>
                 </div>
                 {!isEditingCompany && (
                   <button
                     onClick={() => setIsEditingCompany(true)}
                     className="px-4 py-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                   >
-                    Edit
+                    Editar
                   </button>
                 )}
               </div>
@@ -1319,7 +1319,7 @@ export default function SettingsPage() {
               <form onSubmit={handleCompanySubmit} className="p-6">
                 <div className="mb-8">
                   <label className="block text-sm font-medium text-slate-700 mb-3">
-                    Company Logo
+                    Logotipo da Empresa
                   </label>
                   <div className="flex items-center gap-6">
                     <div className="relative">
@@ -1351,10 +1351,10 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="text-sm text-slate-500">
-                      <p className="font-medium text-slate-700">Upload a logo</p>
-                      <p>JPG, PNG, GIF, WebP, or SVG. Max 5MB.</p>
+                      <p className="font-medium text-slate-700">Fazer upload de logotipo</p>
+                      <p>JPG, PNG, GIF, WebP ou SVG. Máximo de 5MB.</p>
                       {isUploadingLogo && (
-                        <p className="text-accent mt-1">Uploading...</p>
+                        <p className="text-accent mt-1">Enviando...</p>
                       )}
                     </div>
                   </div>
@@ -1363,7 +1363,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
                     <label htmlFor="company_name" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Company Name
+                      Nome da Empresa
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1372,7 +1372,7 @@ export default function SettingsPage() {
                         value={companyFormData.name}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, name: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter company name"
+                        placeholder="Digite o nome da empresa"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1383,7 +1383,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label htmlFor="company_email" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Company Email
+                      E-mail da Empresa
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1392,7 +1392,7 @@ export default function SettingsPage() {
                         value={companyFormData.email}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, email: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter company email"
+                        placeholder="Digite o e-mail da empresa"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1403,7 +1403,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label htmlFor="company_phone" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Company Phone
+                      Telefone da Empresa
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1412,7 +1412,7 @@ export default function SettingsPage() {
                         value={companyFormData.phone}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, phone: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter company phone"
+                        placeholder="Digite o telefone da empresa"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1423,7 +1423,7 @@ export default function SettingsPage() {
 
                   <div className="md:col-span-2">
                     <label htmlFor="address" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Street Address
+                      Endereço
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1432,7 +1432,7 @@ export default function SettingsPage() {
                         value={companyFormData.address}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, address: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter street address"
+                        placeholder="Digite o endereço"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1443,7 +1443,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label htmlFor="city" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      City
+                      Cidade
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1452,7 +1452,7 @@ export default function SettingsPage() {
                         value={companyFormData.city}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, city: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter city"
+                        placeholder="Digite a cidade"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1463,7 +1463,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label htmlFor="state" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      State / Province
+                      Estado
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1472,7 +1472,7 @@ export default function SettingsPage() {
                         value={companyFormData.state}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, state: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter state"
+                        placeholder="Digite o estado"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1492,7 +1492,7 @@ export default function SettingsPage() {
                         value={companyFormData.postal_code}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, postal_code: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="Enter postal code"
+                        placeholder="Digite o CEP"
                       />
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
@@ -1503,7 +1503,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label htmlFor="country_code" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Country Code
+                      País Code
                     </label>
                     {isEditingCompany ? (
                       <input
@@ -1527,18 +1527,18 @@ export default function SettingsPage() {
                   <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
                     <button
                       type="button"
-                      onClick={handleCompanyCancel}
+                      onClick={handleCompanyCancelar}
                       disabled={updateCompanyMutation.isPending}
                       className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
                     >
-                      Cancel
+                      Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={updateCompanyMutation.isPending}
                       className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save Changes
+                      Salvar Alterações
                     </button>
                   </div>
                 )}
@@ -1547,11 +1547,11 @@ export default function SettingsPage() {
           )
         )}
 
-        {/* Spending Limit Reset Frequency Section */}
+        {/* Spending Limit Frequência de Redefinição Section */}
         {activeTab === "company" && isAdmin && !isCompanyLoading && companyData && (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mt-6">
             <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Spending Limit Settings</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Configurações de Limite de Gastos</h2>
               <p className="text-sm text-slate-500">Configure how often employee spending limits reset</p>
             </div>
 
