@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { MapPin, Phone, MessageSquare, Navigation, Eye, Clock } from "lucide-react"
 import { StoreLocation } from "@/config/store-locations"
+import { COMPANY_INFORMATION } from "@/config/company"
 import { GoogleStoreMap } from "./GoogleStoreMap"
 import { StoreStreetView } from "./StoreStreetView"
 
@@ -47,7 +48,7 @@ export function StoreLocationSection({ location }: StoreLocationSectionProps) {
             <h2 className="text-[28px] md:text-[34px] font-extrabold text-[var(--color-navy)] leading-tight mb-4">
               {location.name}
             </h2>
-            
+
             <ul className="space-y-4 text-[15px] md:text-[16px] text-[#55677A] leading-relaxed">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
@@ -55,6 +56,9 @@ export function StoreLocationSection({ location }: StoreLocationSectionProps) {
                   <span className="block font-medium text-[var(--color-navy)]">{location.addressLine}</span>
                   <span className="block">{location.district} — {location.city}/{location.stateCode}</span>
                   <span className="block">CEP {location.postalCode}</span>
+                  <span className="block mt-1 text-xs text-gray-500">
+                    CNPJ: {COMPANY_INFORMATION.cnpj}
+                  </span>
                 </div>
               </li>
               

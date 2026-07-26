@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { storeConfig } from "@/config/store"
+import { COMPANY_INFORMATION } from "@/config/company"
 import { footerNavigation } from "@/config/footer-navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
@@ -238,7 +239,7 @@ export function PublicFooter() {
             <div className="text-xs text-gray-500 space-y-1">
               <p>&copy; {currentYear} {storeConfig.name}. Todos os direitos reservados.</p>
               <p>
-                {storeConfig.name} - CNPJ: 00.000.000/0000-00
+                {COMPANY_INFORMATION.legalName} - CNPJ: {COMPANY_INFORMATION.cnpj}
                 <span className="hidden md:inline"> | </span>
                 <span className="block md:inline mt-1 md:mt-0">
                   {primaryLocation?.addressLine} - {primaryLocation?.district} - {primaryLocation?.city} - {primaryLocation?.stateCode} - CEP: {primaryLocation?.postalCode}

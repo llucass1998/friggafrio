@@ -1,7 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
-import { productCategories, applicationCategories } from "@/components/header/categories"
+import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
@@ -110,25 +110,6 @@ export function HeaderMobileDrawer() {
                         ))}
                       </ul>
                     )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mb-2">
-              <h3 className="px-4 py-2 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                Aplicações
-              </h3>
-              <ul className="space-y-1">
-                {applicationCategories.map((app) => (
-                  <li key={app.id}>
-                    <Link
-                      to={app.href as any}
-                      onClick={closeDrawer}
-                      className="block px-4 py-3 text-sm font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
-                    >
-                      {app.label}
-                    </Link>
                   </li>
                 ))}
               </ul>

@@ -1,5 +1,6 @@
 import { storeLocations } from "@/config/store-locations"
 import { storeConfig } from "@/config/store"
+import { COMPANY_INFORMATION } from "@/config/company"
 import { StoreLocationSection } from "@/components/store-locations/StoreLocationSection"
 import { Link } from "@tanstack/react-router"
 import { MapPin, PhoneCall, Info, ImageIcon } from "lucide-react"
@@ -31,8 +32,10 @@ export function PublicStoresPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
-            name: activeLocation.name,
-            url: `https://www.friggafrio.com.br/nossa-loja?unidade=${activeLocation.id}`,
+            name: COMPANY_INFORMATION.tradeName,
+            legalName: COMPANY_INFORMATION.legalName,
+            taxID: COMPANY_INFORMATION.cnpj,
+            url: `https://www.friggafrio.com.br/nossa-loja`,
             telephone: storeConfig.phone,
             email: storeConfig.email,
             address: {
@@ -45,7 +48,6 @@ export function PublicStoresPage() {
             },
             sameAs: [storeConfig.instagramUrl],
             hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${activeLocation.name} ${activeLocation.addressLine} ${activeLocation.district} ${activeLocation.city} ${activeLocation.stateCode} ${activeLocation.postalCode}`)}`,
-            department: [],
           }),
         }}
       />
