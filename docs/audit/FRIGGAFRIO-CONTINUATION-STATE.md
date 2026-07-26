@@ -1,6 +1,6 @@
 # FriggaFrio Project Continuation State
 
-## Current Phase: Phase 28 (Produção)
+## Current Phase: Phase 29 (Testes de Integração Backend)
 
 ## Completed Phases (Session Overview):
 - **Phase 8 (Containment):** Applied fail-closed auth route and strictly contained payment endpoints returning 503 instead of false success.
@@ -40,4 +40,7 @@
 - ~~Start Phase 27 (Storefront Performance & Lazy Loading).~~
 - Preload do Router ajustado para `intent`.
 - Explicit `width` e `height` aplicados nas imagens críticas de card para evitar Cumulative Layout Shift (CLS).
-- Start Phase 28 (Validação de Build de Produção em Nuvem / Vercel).
+- ~~Start Phase 28 (Validação de Build de Produção em Nuvem / Vercel).~~
+- CD Blocker removido do Github Actions (Homologação liberada).
+- Exemplos e templates de `.env` expurgados de stubs inseguros e chaves expostas.
+- Start Phase 29 (Testes de Integração Backend).
