@@ -125,7 +125,7 @@ export function ProductShowcaseCarousel() {
       <button
         onClick={scrollPrev}
         disabled={!canScrollPrev}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
         aria-label="Ver slide anterior"
       >
         <ChevronLeft className="w-8 h-8" />
@@ -134,7 +134,7 @@ export function ProductShowcaseCarousel() {
       <button
         onClick={scrollNext}
         disabled={!canScrollNext}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
         aria-label="Ver próximo slide"
       >
         <ChevronRight className="w-8 h-8" />

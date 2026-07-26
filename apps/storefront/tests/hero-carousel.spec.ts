@@ -128,3 +128,79 @@ test("hero carousel dots click and select correctly", async ({ page }) => {
   
   expect(newActiveIndex).toBe(2)
 })
+
+function rectanglesIntersect(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number }
+) {
+  return !(
+    first.x + first.width <= second.x ||
+    second.x + second.width <= first.x ||
+    first.y + first.height <= second.y ||
+    second.y + second.height <= first.y
+  )
+}
+
+test.describe("Hero Carousel UI Overlap Avoidance", () => {
+  const overlapViewports = [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 1080 },
+  ]
+  
+  for (const vp of overlapViewports) {
+    test(`hero controls should not overlap content text boxes at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await page.setViewportSize(vp)
+      await page.goto("/br")
+      
+      // Wait for components to attach
+      await page.locator('.carousel-slide[data-active="true"]').waitFor({ state: 'attached' })
+      
+      const prevBtn = page.getByRole('button', { name: /Ver slide anterior/i })
+      const nextBtn = page.getByRole('button', { name: /Ver próximo slide/i })
+      
+      const activeTitle = page.locator('.carousel-slide[data-active="true"] .carousel-title')
+      const activeDesc = page.locator('.carousel-slide[data-active="true"] .carousel-description')
+      const activeCta = page.locator('.carousel-slide[data-active="true"] a').filter({ hasText: 'Ver categoria' })
+      
+      const prevRect = await prevBtn.boundingBox()
+      const nextRect = await nextBtn.boundingBox()
+      
+      const titleRect = await activeTitle.boundingBox()
+      const descRect = await activeDesc.boundingBox()
+      const ctaRect = await activeCta.boundingBox()
+      
+      expect(prevRect).not.toBeNull()
+      expect(nextRect).not.toBeNull()
+      expect(titleRect).not.toBeNull()
+      expect(descRect).not.toBeNull()
+      expect(ctaRect).not.toBeNull()
+      
+      const results = {
+        VIEWPORT: `${vp.width}x${vp.height}`,
+        PREVIOUS_BUTTON_RECT: prevRect,
+        NEXT_BUTTON_RECT: nextRect,
+        TITLE_RECT: titleRect,
+        DESCRIPTION_RECT: descRect,
+        CTA_RECT: ctaRect,
+        INTERSECTS_TITLE_PREV: rectanglesIntersect(prevRect!, titleRect!),
+        INTERSECTS_DESCRIPTION_PREV: rectanglesIntersect(prevRect!, descRect!),
+        INTERSECTS_CTA_PREV: rectanglesIntersect(prevRect!, ctaRect!),
+        INTERSECTS_TITLE_NEXT: rectanglesIntersect(nextRect!, titleRect!),
+        INTERSECTS_DESCRIPTION_NEXT: rectanglesIntersect(nextRect!, descRect!),
+        INTERSECTS_CTA_NEXT: rectanglesIntersect(nextRect!, ctaRect!)
+      }
+      
+      console.log(JSON.stringify(results, null, 2))
+      
+      expect(results.INTERSECTS_TITLE_PREV).toBe(false)
+      expect(results.INTERSECTS_DESCRIPTION_PREV).toBe(false)
+      expect(results.INTERSECTS_CTA_PREV).toBe(false)
+      
+      expect(results.INTERSECTS_TITLE_NEXT).toBe(false)
+      expect(results.INTERSECTS_DESCRIPTION_NEXT).toBe(false)
+      expect(results.INTERSECTS_CTA_NEXT).toBe(false)
+    })
+  }
+})
