@@ -3,13 +3,14 @@ import {
   WorkflowResponse,
 } from "@medusajs/framework/workflows-sdk";
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows";
-import { Modules } from "@medusajs/framework/utils";
+import { MedusaError, Modules } from "@medusajs/framework/utils";
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+import type { IAuthModuleService } from "@medusajs/types";
 
 export type SetupCustomerInput = {
   // Auth credentials
   email: string;
-  password?: string; // Optional if using OAuth
+  password: string;
   // Customer data
   first_name?: string;
   last_name?: string;
@@ -21,13 +22,11 @@ export type SetupCustomerInput = {
  * Step 1: Register auth identity with emailpass provider
  */
 const registerAuthIdentityStep = createStep(
-  "register-auth-identity",
-  async (input: { email: string; password?: string }, { container }) => {
-    if (!input.password) {
-      throw new Error("Password is required for emailpass provider");
-    }
-
-    const authModuleService = container.resolve(Modules.AUTH) as any;
+  "register-customer-auth-identity",
+  async (input: { email: string; password: string }, { container }) => {
+    const authModuleService = container.resolve<IAuthModuleService>(
+      Modules.AUTH,
+    );
 
     const { success, authIdentity, error } = await authModuleService.register(
       "emailpass",
@@ -36,11 +35,14 @@ const registerAuthIdentityStep = createStep(
           email: input.email,
           password: input.password,
         },
-      }
+      },
     );
 
     if (!success || error || !authIdentity) {
-      throw new Error(error || "Failed to register auth identity");
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        error || "Unable to register the customer.",
+      );
     }
 
     return new StepResponse(authIdentity, authIdentity.id);
@@ -48,9 +50,11 @@ const registerAuthIdentityStep = createStep(
   async (authIdentityId, { container }) => {
     if (!authIdentityId) return;
 
-    const authModuleService = container.resolve(Modules.AUTH) as any;
+    const authModuleService = container.resolve<IAuthModuleService>(
+      Modules.AUTH,
+    );
     await authModuleService.deleteAuthIdentities([authIdentityId]);
-  }
+  },
 );
 
 /**
@@ -83,5 +87,5 @@ export const setupCustomerWorkflow = createWorkflow(
       authIdentity,
       customer: customerResult,
     });
-  }
+  },
 );

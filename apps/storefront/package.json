@@ -7,7 +7,7 @@
     "build": "vite build",
     "lint": "eslint src",
     "test": "pnpm test:unit",
-    "test:unit": "tsx --test tests/unit/cart.test.mjs",
+    "test:unit": "tsx --test tests/unit/cart.test.mjs tests/unit/auth.test.mjs",
     "typecheck": "tsc --noEmit",
     "serve": "vite preview",
     "preview": "vite preview",

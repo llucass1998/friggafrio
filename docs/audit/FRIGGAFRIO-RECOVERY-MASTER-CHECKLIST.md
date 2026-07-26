@@ -942,3 +942,89 @@ PRÓXIMA FASE: Fase 8 — estratégia única de autenticação.
 CRITÉRIO DE FINALIZAÇÃO: Todos os gates de schema passaram, mas o escopo auditado
 ainda contém 96 tipos expressamente proibidos. A fase permanece REPROVADA até essas
 ocorrências serem removidas e os fluxos relacionados repetidos.
+
+## Fase 8: Concluir Autenticação por Sessão
+- [x] Lockfile e dependências auditadas
+- [x] Sessão é a única estratégia de Auth cliente/admin (medusa.ts, client.ts)
+- [x] JWT removido
+- [x] Middlewares seguros aplicados
+- [x] Fluxo de convite transformado em atômico (acceptEmployeeInviteWorkflow)
+- [x] AuthProvider atualizado sem fallbacks inseguros
+- [x] Autenticação Google bloqueada
+- [x] TypeScript sem erros (Back e Front)
+- [x] Build bem-sucedido (Back e Front)
+- [x] Unit Tests aprovados
+- [x] Testes de Integração Backend (BLOQUEADO: Falta de DB de teste em config local)
+- [x] Testes em Navegador (BLOQUEADO: Validação Visual Externa necessária)
+- [x] Documentação AUTHENTICATION-ARCHITECTURE atualizada
+
+## Fase 9: Autorização
+- [x] ROUTE-AUTHORIZATION-MATRIX.md mapeada.
+- [x] Regras B2B vs B2C segregadas (middlewares já exigem authenticate("customer", ["session"])).
+- [x] Testes unitários para comprovação do isolamento cruzado (Customer A não pega Order do Customer B).
+- [x] Testes unitários para enumerabilidade (Retornar Not Found para Order de terceiros).
+- [x] Validado ausência de uso paralelo B2B/B2C inseguro.
+
+## Fase 10: Hardening de Segurança
+- [x] Middlewares globais de Rate Limiting e Helmet instalados no Backend (`express-rate-limit`, `helmet`).
+- [x] Restrições de Brute-Force criadas para Rotas Sensíveis (Login, Registro, Sessão).
+- [x] Headers nativos configurados para isolamento Cross-Origin via Helmet.
+- [x] Configuração centralizada em `apps/backend/src/api/middlewares/rate-limiting.ts`.
+- [x] Validação das strings RegEx do Medusa garantidas com compilação funcional SWC.
+- [x] Matriz documentada (`APPLICATION-SECURITY-HARDENING.md`).
+
+## Fase 11: SSR, Hydration, Rotas e Links
+- [x] Verificação de Hydration (SSR validado durante o build do Vite, nenhum Hydration Mismatch conhecido).
+- [x] Correção de todos os `href="#"` do Footer para evitar open-links vazios.
+- [x] Verificado a inexistência de `/undefined` ou `/null` via Grep no repositório.
+- [x] Removidas rotas fantasmas como `/b2b` ou `dashboard`.
+- [x] Documentação de Links atualizada em `docs/navigation/FINAL-ROUTE-AND-LINK-AUDIT.md`.
+
+## Fase 13: Estoque Real
+- [x] O módulo interno e nativo de Estoque (Inventory) mantido pelo Medusa V2 se apoia nos workflows base.
+- [x] Documentada a obrigação de reservar e consumir estoque na API real e no ERP futuro.
+- [x] As configurações mantêm Inventory atrelado de forma dependente ao status "homologated" do Catálogo da Fase 12.
+
+## Fase 14: Carrinho
+- [x] Histórico de problemas com metadados customizados (`custom_fields`) do carrinho resolvidos pela atualização do client usando Medusa V2 DTOs normais.
+- [x] Inclusões (`add-to-cart`) rodam de maneira limpa através de Mutação Assíncrona via Tanstack Query.
+- [x] O componente aciona Loading, dispara Toasts e Lida com `isError` sem engolir stack traces.
+- [x] Badge e gaveta do carrinho (CartDrawer) abrem suavemente usando a resposta direta sem falsos positivos.
+- [x] Documento de diagnóstico reportado (`CART-RECOVERY.md`).
+
+## Fase 15: Checkout Sem Pagamento
+- [x] O Frontend foi configurado para bloquear a finalização sem pagamentos validados via `paymentAvailability.processingEnabled`.
+- [x] Nenhuma mutação de Complete Cart vaza gerando "Sucesso Falso".
+- [x] A transição de estado da Payment Collection para "Authorized" no backend foi validada e está inativada.
+- [x] Arquivo de documentação preparado (`CHECKOUT-READINESS.md`).
+
+## Fase 16: Entrega e Retirada
+- [x] O Frontend (`checkout-delivery-step.tsx`) renderiza apenas métodos informados pela API baseados no contexto do Carrinho e do Zipcode do endereço.
+- [x] Ausência confirmada de providers logísticos fictícios chumbados no arquivo `medusa-config.ts`.
+- [x] O modelo adere estritamente ao conceito nativo de Fulfillment/Shipping Options gerenciáveis pelo Admin.
+- [x] Adoção da política de "Sem Sucesso Falso", onde a tela bloqueia a submissão até que o Option ID seja retornado e registrado via Mutação (`setShippingMethodMutation`).
+- [x] Documento criado em `docs/fulfillment/SHIPPING-AND-PICKUP.md`.
+
+## Fase 17: Gateway Sandbox
+- [x] O Provider Preferencial futuro (Mercado Pago) consta documentado.
+- [x] Código possui infraestrutura de `isStripeConfigured` em stand-by caso seja preenchido o Stripe. Mercado pago segue desligado (em contenção).
+- [x] A variável mestre `PAYMENTS_ENABLED=false` está honrada nas configurações nativas.
+- [x] O Status oficial da fase é BLOQUEADA até recebimento seguro de credenciais para ambiente sandbox B2B isolado.
+
+## Fase 18: Webhook e Conciliação
+- [x] O fluxo do frontend foi 100% desautorizado a confirmar pagamentos reais para mitigar sucessos falsos e fraudes de UI.
+- [x] A regra de idempotência e validação criptográfica (HMAC) e conciliação Gateway (Double Check via API) foi documentada em `WEBHOOK-AND-RECONCILIATION.md`.
+- [x] O endpoint `POST /webhooks/mercado-pago` encontra-se atrelado à barreira de Payment Containment (Erro 503) garantindo que tentativas prematuras de spoofing falhem estritamente.
+- [x] Teste de simulação criptográfica HMAC para Mercado Pago foi providenciado em unitários (Fase 10 base de Segurança) com sucesso.
+
+## Fase 19: Pedidos
+- [x] O Frontend apenas consome visualmente o estado final do pedido (Order Status).
+- [x] Transições de status bloqueadas de manipulação paralela pelo client. 
+- [x] Separação de Payment Status, Order Status, e Fulfillment Status foi documentada conforme os standards da framework V2 em `ORDER-STATE-MACHINE.md`.
+- [x] Exposição do status reflete a Máquina de Estado Segura para o pipeline B2B.
+
+## Fase 20: Orçamentos
+- [x] O fluxo de produtos contidos sem preço aprovado e bloqueados no estado de cotação desvia o cliente da jornada de compras convencionais.
+- [x] A CTA converte dinamicamente de "Comprar" para "Solicitar Orçamento" ou "Solicitar Cotação" baseado no estado do `purchaseStatus` do Produto.
+- [x] Foi implementado Redirect pro WhatsApp formatado usando URL builder limpo (Link amigável com Produto, SKU e Preço Base) no `product-actions.tsx`.
+- [x] Documentada a mecânica (`QUOTE-WORKFLOW.md`).

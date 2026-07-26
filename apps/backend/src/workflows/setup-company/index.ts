@@ -6,9 +6,16 @@ import {
 } from "@medusajs/framework/workflows-sdk";
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
+import { MedusaError } from "@medusajs/framework/utils";
+import type { IAuthModuleService } from "@medusajs/types";
 import { COMPANY_MODULE } from "../../modules/company";
 import { CompanyStatus } from "../../modules/company/models/company";
 import CompanyModuleService from "../../modules/company/service";
+
+type RemoteLinkService = {
+  create(input: Record<string, Record<string, string>>): Promise<unknown>;
+  dismiss(input: Record<string, Record<string, string>>): Promise<void>;
+};
 
 export type SetupCompanyInput = {
   // Auth credentials
@@ -35,9 +42,11 @@ export type SetupCompanyInput = {
  * This handles password hashing internally
  */
 const registerAuthIdentityStep = createStep(
-  "register-auth-identity",
+  "register-company-auth-identity",
   async (input: { email: string; password: string }, { container }) => {
-    const authModuleService = container.resolve(Modules.AUTH) as any;
+    const authModuleService = container.resolve<IAuthModuleService>(
+      Modules.AUTH,
+    );
 
     const { success, authIdentity, error } = await authModuleService.register(
       "emailpass",
@@ -46,11 +55,14 @@ const registerAuthIdentityStep = createStep(
           email: input.email,
           password: input.password,
         },
-      }
+      },
     );
 
     if (!success || error || !authIdentity) {
-      throw new Error(error || "Failed to register auth identity");
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        error || "Unable to register the company administrator.",
+      );
     }
 
     return new StepResponse(authIdentity, authIdentity.id);
@@ -58,9 +70,11 @@ const registerAuthIdentityStep = createStep(
   async (authIdentityId, { container }) => {
     if (!authIdentityId) return;
 
-    const authModuleService = container.resolve(Modules.AUTH) as any;
+    const authModuleService = container.resolve<IAuthModuleService>(
+      Modules.AUTH,
+    );
     await authModuleService.deleteAuthIdentities([authIdentityId]);
-  }
+  },
 );
 
 /**
@@ -70,7 +84,7 @@ const createCompanyStep = createStep(
   "create-company",
   async (input: SetupCompanyInput, { container }) => {
     const companyService = container.resolve(
-      COMPANY_MODULE
+      COMPANY_MODULE,
     ) as CompanyModuleService;
 
     const company = await companyService.createCompanies({
@@ -92,10 +106,10 @@ const createCompanyStep = createStep(
     if (!companyId) return;
 
     const companyService = container.resolve(
-      COMPANY_MODULE
+      COMPANY_MODULE,
     ) as CompanyModuleService;
     await companyService.deleteCompanies(companyId);
-  }
+  },
 );
 
 /**
@@ -105,7 +119,7 @@ const createAdminEmployeeStep = createStep(
   "create-admin-employee",
   async (input: { company_id: string; customer_id: string }, { container }) => {
     const companyService = container.resolve(
-      COMPANY_MODULE
+      COMPANY_MODULE,
     ) as CompanyModuleService;
 
     const employee = await companyService.createEmployees({
@@ -120,10 +134,10 @@ const createAdminEmployeeStep = createStep(
     if (!employeeId) return;
 
     const companyService = container.resolve(
-      COMPANY_MODULE
+      COMPANY_MODULE,
     ) as CompanyModuleService;
     await companyService.deleteEmployees(employeeId);
-  }
+  },
 );
 
 /**
@@ -133,9 +147,11 @@ const linkEmployeeToCustomerStep = createStep(
   "link-employee-to-customer",
   async (
     input: { employee_id: string; customer_id: string },
-    { container }
+    { container },
   ) => {
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any;
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK,
+    );
 
     await link.create({
       [COMPANY_MODULE]: {
@@ -148,13 +164,15 @@ const linkEmployeeToCustomerStep = createStep(
 
     return new StepResponse(
       { employee_id: input.employee_id, customer_id: input.customer_id },
-      { employee_id: input.employee_id, customer_id: input.customer_id }
+      { employee_id: input.employee_id, customer_id: input.customer_id },
     );
   },
   async (linkData, { container }) => {
     if (!linkData) return;
 
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any;
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK,
+    );
 
     await link.dismiss({
       [COMPANY_MODULE]: {
@@ -164,7 +182,7 @@ const linkEmployeeToCustomerStep = createStep(
         customer_id: linkData.customer_id,
       },
     });
-  }
+  },
 );
 
 /**
@@ -202,30 +220,28 @@ export const setupCompanyWorkflow = createWorkflow(
       },
     });
 
-    const customer = customerResult as any;
-
     // Step 3: Create company
     const company = createCompanyStep(input);
 
     // Step 4: Create admin employee
     const employee = createAdminEmployeeStep({
       company_id: company.id,
-      customer_id: customer.id,
+      customer_id: customerResult.id,
     });
 
     // Step 5: Link employee to customer
     linkEmployeeToCustomerStep({
       employee_id: employee.id,
-      customer_id: customer.id,
+      customer_id: customerResult.id,
     });
 
     return new WorkflowResponse({
       authIdentity,
       company,
       employee,
-      customer,
+      customer: customerResult,
     });
-  }
+  },
 );
 
 export default setupCompanyWorkflow;
