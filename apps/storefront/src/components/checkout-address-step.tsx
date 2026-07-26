@@ -194,9 +194,9 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   // Auto-validate email on mount if it's already prefilled
   useEffect(() => {
     if (email) {
-      setEmailTouched(true);
+      setEmailTouched(true)
     }
-  }, []);
+  }, [])
 
   // Use an effect to auto-validate the component's state without requiring manual changes.
   useEffect(() => {

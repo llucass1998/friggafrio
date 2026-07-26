@@ -1,38 +1,38 @@
-import React from "react";
-import { useAccessibility } from "./AccessibilityProvider";
-import * as Dialog from "@radix-ui/react-dialog";
-import * as Switch from "@radix-ui/react-switch";
+import React from "react"
+import { useAccessibility } from "@/components/accessibility/AccessibilityProvider"
+import * as Dialog from "@radix-ui/react-dialog"
+import * as Switch from "@radix-ui/react-switch"
 import {
   X, Type, Palette, SunMoon, Link as LinkIcon,
   MoveHorizontal, Maximize2, Settings2, RotateCcw,
   Ear, AlignLeft, EyeOff
-} from "lucide-react";
-import { announceToScreenReader } from "./LiveRegion";
+} from "lucide-react"
+import { announceToScreenReader } from "@/components/accessibility/LiveRegion"
 
 export function AccessibilityPanel() {
-  const { preferences, updatePreference, resetPreferences, togglePanel } = useAccessibility();
+  const { preferences, updatePreference, resetPreferences, togglePanel } = useAccessibility()
 
   const handleFontScale = (direction: "up" | "down" | "reset") => {
-    const scales = [1, 1.125, 1.25, 1.375, 1.5];
-    const currentIndex = scales.indexOf(preferences.fontScale);
-    let newIndex = currentIndex;
-    if (direction === "up" && currentIndex < scales.length - 1) newIndex++;
-    if (direction === "down" && currentIndex > 0) newIndex--;
-    if (direction === "reset") newIndex = 0;
-    updatePreference("fontScale", scales[newIndex]);
-    announceToScreenReader(`Tamanho do texto alterado para ${scales[newIndex] * 100}%`);
-  };
+    const scales = [1, 1.125, 1.25, 1.375, 1.5]
+    const currentIndex = scales.indexOf(preferences.fontScale)
+    let newIndex = currentIndex
+    if (direction === "up" && currentIndex < scales.length - 1) newIndex++
+    if (direction === "down" && currentIndex > 0) newIndex--
+    if (direction === "reset") newIndex = 0
+    updatePreference("fontScale", scales[newIndex])
+    announceToScreenReader(`Tamanho do texto alterado para ${scales[newIndex] * 100}%`)
+  }
 
   const handleContrast = (mode: "default" | "high" | "inverted") => {
-    updatePreference("contrast", mode);
-    announceToScreenReader(`Contraste alterado para ${mode}`);
-  };
+    updatePreference("contrast", mode)
+    announceToScreenReader(`Contraste alterado para ${mode}`)
+  }
 
   const toggleBooleanPref = (key: keyof typeof preferences, label: string) => {
-    const val = !preferences[key];
-    updatePreference(key as any, val);
-    announceToScreenReader(`${label} ${val ? 'ativado' : 'desativado'}`);
-  };
+    const val = !preferences[key]
+    updatePreference(key as any, val)
+    announceToScreenReader(`${label} ${val ? "ativado" : "desativado"}`)
+  }
 
   return (
     <Dialog.Root open={preferences.panelEnabled} onOpenChange={togglePanel}>
@@ -165,7 +165,7 @@ export function AccessibilityPanel() {
           </div>
 
           <div className="p-5 border-t border-[var(--color-border)] bg-[var(--color-surface-soft)]">
-            <button onClick={() => { resetPreferences(); announceToScreenReader("Restaurado"); }} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-[var(--color-border)] rounded-md font-bold text-[var(--color-navy)] hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors">
+            <button onClick={() => { resetPreferences(); announceToScreenReader("Restaurado") }} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-[var(--color-border)] rounded-md font-bold text-[var(--color-navy)] hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors">
               <RotateCcw className="w-4 h-4" /> Restaurar Padroes
             </button>
           </div>
@@ -173,11 +173,11 @@ export function AccessibilityPanel() {
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  );
+  )
 }
 
 function ToggleRow({ label, checked, onChange, icon }: { label: string, checked: boolean, onChange: () => void, icon: React.ReactNode }) {
-  const id = React.useId();
+  const id = React.useId()
   return (
     <div className="flex items-center justify-between p-3 border border-[var(--color-border)] rounded-md bg-white">
       <label htmlFor={id} className="flex items-center gap-2 text-sm font-medium text-[var(--color-navy)] cursor-pointer select-none">
@@ -188,5 +188,5 @@ function ToggleRow({ label, checked, onChange, icon }: { label: string, checked:
         <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px] shadow-sm" />
       </Switch.Root>
     </div>
-  );
+  )
 }

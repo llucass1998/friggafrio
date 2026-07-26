@@ -22,8 +22,8 @@ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlidePr
               loading={isActive ? "eager" : "lazy"}
               onError={(e) => {
                 // Se a imagem não for encontrada, esconde a tag img e mostra o SVG via css
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement?.classList.add('show-placeholder');
+                e.currentTarget.style.display = "none"
+                e.currentTarget.parentElement?.classList.add("show-placeholder")
               }}
             />
 

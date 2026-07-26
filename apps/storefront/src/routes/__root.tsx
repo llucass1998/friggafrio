@@ -1,36 +1,36 @@
-import { DevBuildBadge } from '@/components/DevBuildBadge';
-import { ErrorBoundary } from "@/components/error-boundary";
-import Layout from "@/components/layout";
-import { listRegions } from "@/lib/data/regions";
-import { CartProvider } from "@/lib/context/cart";
-import { AuthProvider } from "@/lib/context/auth-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { DevBuildBadge } from "@/components/DevBuildBadge"
+import { ErrorBoundary } from "@/components/error-boundary"
+import Layout from "@/components/layout"
+import { listRegions } from "@/lib/data/regions"
+import { CartProvider } from "@/lib/context/cart"
+import { AuthProvider } from "@/lib/context/auth-context"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
-} from "@tanstack/react-router";
-import { lazy } from "react";
-import { Toaster } from "sonner";
-import appCss from "../styles/app.css?url";
+} from "@tanstack/react-router"
+import { lazy } from "react"
+import { Toaster } from "sonner"
+import appCss from "../styles/app.css?url"
 
-const NotFound = lazy(() => import("@/components/not-found"));
+const NotFound = lazy(() => import("@/components/not-found"))
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   loader: async ({ context }) => {
-    const { queryClient } = context;
+    const { queryClient } = context
 
     // Pre-populate regions cache
     await queryClient.ensureQueryData({
       queryKey: ["regions"],
       queryFn: () =>
         listRegions({ fields: "id, name, currency_code, *countries" }),
-    });
+    })
 
-    return {};
+    return {}
   },
   head: () => ({
     links: [
@@ -54,11 +54,11 @@ export const Route = createRootRouteWithContext<{
   }),
   notFoundComponent: NotFound,
   component: RootComponent,
-});
+})
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "test-client-id";
+  const { queryClient } = Route.useRouteContext()
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "test-client-id"
 
   return (
     <html lang="pt-BR">
@@ -82,5 +82,5 @@ function RootComponent() {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

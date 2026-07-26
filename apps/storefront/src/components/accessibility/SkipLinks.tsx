@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react"
 
 export function SkipLinks() {
   return (
@@ -22,5 +22,5 @@ export function SkipLinks() {
         Ir para o rodapé
       </a>
     </div>
-  );
+  )
 }

@@ -20,4 +20,4 @@ export const storeConfig: StoreConfig = {
   whatsappNumber: "5511948777156",
   instagramUrl: "https://www.instagram.com/frigga.frio/",
   locations: storeLocations,
-} as const;
+} as const

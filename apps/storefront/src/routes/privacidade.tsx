@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import PrivacidadePage from "@/pages/support/privacidade";
+import { createFileRoute } from "@tanstack/react-router"
+import PrivacidadePage from "@/pages/support/privacidade"
 
 export const Route = createFileRoute("/privacidade")({
   component: PrivacidadePage,
@@ -12,4 +12,4 @@ export const Route = createFileRoute("/privacidade")({
       },
     ],
   }),
-});
+})

@@ -23,7 +23,7 @@ export function HeaderActions({ compact = false }: { compact?: boolean }) {
     locale: "pt-BR"
   })
 
-  const customerName = customer?.first_name || customer?.email?.split('@')[0] || ""
+  const customerName = customer?.first_name || customer?.email?.split("@")[0] || ""
 
   return (
     <div className="flex items-center gap-4 md:gap-6">

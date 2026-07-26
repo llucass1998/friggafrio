@@ -43,8 +43,8 @@ export function ProductShowcaseCarousel() {
     // Suporte ao teclado acessível
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.closest('[aria-roledescription="carousel"]')) {
-        if (e.key === "ArrowLeft") scrollPrev();
-        if (e.key === "ArrowRight") scrollNext();
+        if (e.key === "ArrowLeft") scrollPrev()
+        if (e.key === "ArrowRight") scrollNext()
       }
     }
     window.addEventListener("keydown", handleKeyDown)

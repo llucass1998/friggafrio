@@ -22,7 +22,7 @@ export function FeaturedCategories() {
 
   // Mostrar apenas as categorias principais
   // Filtramos aquelas com "attachments", "forklift-parts", "material-handling", "operator-accessories", "safety-equipment", "warehouse-equipment"
-  const ignoredHandles = ['attachments', 'forklift-parts', 'material-handling', 'operator-accessories', 'safety-equipment', 'warehouse-equipment']
+  const ignoredHandles = ["attachments", "forklift-parts", "material-handling", "operator-accessories", "safety-equipment", "warehouse-equipment"]
   const mainCategories = categories
     .filter(cat => cat.handle && !cat.parent_category_id && !ignoredHandles.includes(cat.handle))
     .slice(0, 10)

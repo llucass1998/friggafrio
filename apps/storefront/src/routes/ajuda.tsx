@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import AjudaPage from "@/pages/support/ajuda";
+import { createFileRoute } from "@tanstack/react-router"
+import AjudaPage from "@/pages/support/ajuda"
 
 export const Route = createFileRoute("/ajuda")({
   component: AjudaPage,
@@ -12,4 +12,4 @@ export const Route = createFileRoute("/ajuda")({
       },
     ],
   }),
-});
+})

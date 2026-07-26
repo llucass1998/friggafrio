@@ -1,5 +1,5 @@
 export const formatCPF = (value: string) => {
-  const v = value.replace(/\D/g, '').slice(0, 11)
+  const v = value.replace(/\D/g, "").slice(0, 11)
   if (v.length <= 3) return v
   if (v.length <= 6) return `${v.slice(0, 3)}.${v.slice(3)}`
   if (v.length <= 9) return `${v.slice(0, 3)}.${v.slice(3, 6)}.${v.slice(6)}`
@@ -7,7 +7,7 @@ export const formatCPF = (value: string) => {
 }
 
 export const formatCNPJ = (value: string) => {
-  const v = value.replace(/\D/g, '').slice(0, 14)
+  const v = value.replace(/\D/g, "").slice(0, 14)
   if (v.length <= 2) return v
   if (v.length <= 5) return `${v.slice(0, 2)}.${v.slice(2)}`
   if (v.length <= 8) return `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5)}`
@@ -16,8 +16,8 @@ export const formatCNPJ = (value: string) => {
 }
 
 export const formatPhone = (value: string) => {
-  const v = value.replace(/\D/g, '').slice(0, 11)
-  if (v.length <= 2) return v ? `(${v}` : ''
+  const v = value.replace(/\D/g, "").slice(0, 11)
+  if (v.length <= 2) return v ? `(${v}` : ""
   if (v.length <= 6) return `(${v.slice(0, 2)}) ${v.slice(2)}`
   if (v.length <= 10) return `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`
   return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`

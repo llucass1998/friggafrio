@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { useAccessibility } from './AccessibilityProvider';
+import React, { useEffect, useState } from "react"
+import { useAccessibility } from "@/components/accessibility/AccessibilityProvider"
 
 export function ReadingGuide() {
-  const { preferences } = useAccessibility();
-  const [mouseY, setMouseY] = useState(-100);
+  const { preferences } = useAccessibility()
+  const [mouseY, setMouseY] = useState(-100)
 
   useEffect(() => {
-    if (!preferences.readingGuide) return;
+    if (!preferences.readingGuide) return
 
     const handleMouseMove = (e: MouseEvent) => {
-      setMouseY(e.clientY);
-    };
+      setMouseY(e.clientY)
+    }
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [preferences.readingGuide]);
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [preferences.readingGuide])
 
-  if (!preferences.readingGuide) return null;
+  if (!preferences.readingGuide) return null
 
   return (
     <div 
@@ -24,5 +24,5 @@ export function ReadingGuide() {
       style={{ top: `${mouseY}px` }}
       aria-hidden="true"
     />
-  );
+  )
 }
