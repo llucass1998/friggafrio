@@ -168,6 +168,7 @@ describe("updateCompanyWorkflow step unit tests", () => {
         addresses: [],
         metadata: { foo: "bar" }
       }
+      const originalInput = { ...validEntity }
 
       const snapshot = buildUpdateCompanyCompensationData(validEntity)
 
@@ -193,22 +194,48 @@ describe("updateCompanyWorkflow step unit tests", () => {
       expect(keys).not.toContain("employees")
       expect(keys).not.toContain("addresses")
       expect(keys).not.toContain("metadata")
+
+      // original object shouldn't be mutated
+      expect(validEntity).toStrictEqual(originalInput)
     })
 
     const invalidEntities = [
       { name: "empty object", value: {} },
-      { name: "missing id", value: { name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE } },
-      { name: "id spaces", value: { id: "   ", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE } },
-      { name: "invalid status", value: { id: "comp_123", name: "Test", email: "test@test.com", status: "invalid" } },
-      { name: "missing name", value: { id: "comp_123", email: "test@test.com", status: CompanyStatus.ACTIVE } },
+      { name: "missing id", value: { name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE } },
+      { name: "id spaces", value: { id: "   ", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE } },
+      { name: "invalid status", value: { id: "comp_123", name: "Test", email: "test@test.com", status: "invalid", spend_limit_reset_frequency: SpendLimitResetFrequency.NONE } },
+      { name: "missing name", value: { id: "comp_123", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE } },
       { name: "null", value: null },
       { name: "array", value: [] },
-      { name: "invalid nullable field", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, phone: 123 } },
-      { name: "invalid frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: "invalid" } }
+      { name: "invalid nullable field", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, phone: 123, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE } },
+      { name: "invalid frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: "invalid" } },
+      { name: "missing frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE } },
+      { name: "undefined frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: undefined } },
+      { name: "null frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: null } }
     ]
 
     it.each(invalidEntities)("should throw INVALID_DATA for $name", ({ value }) => {
       expect(() => buildUpdateCompanyCompensationData(value)).toThrow(MedusaError)
+    })
+
+    it("should accept SpendLimitResetFrequency.NONE", () => {
+      const valid = { id: "123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE }
+      expect(buildUpdateCompanyCompensationData(valid).spend_limit_reset_frequency).toBe(SpendLimitResetFrequency.NONE)
+    })
+
+    it("should accept SpendLimitResetFrequency.DAILY", () => {
+      const valid = { id: "123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.DAILY }
+      expect(buildUpdateCompanyCompensationData(valid).spend_limit_reset_frequency).toBe(SpendLimitResetFrequency.DAILY)
+    })
+
+    it("should accept SpendLimitResetFrequency.WEEKLY", () => {
+      const valid = { id: "123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.WEEKLY }
+      expect(buildUpdateCompanyCompensationData(valid).spend_limit_reset_frequency).toBe(SpendLimitResetFrequency.WEEKLY)
+    })
+
+    it("should accept SpendLimitResetFrequency.YEARLY", () => {
+      const valid = { id: "123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.YEARLY }
+      expect(buildUpdateCompanyCompensationData(valid).spend_limit_reset_frequency).toBe(SpendLimitResetFrequency.YEARLY)
     })
   })
 
@@ -229,6 +256,7 @@ describe("updateCompanyWorkflow step unit tests", () => {
         spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
         created_at: new Date()
       }
+      const originalInput = { ...validEntity }
 
       const result = buildUpdateCompanyStepResult(validEntity, CompanyStatus.PENDING)
 
@@ -249,12 +277,19 @@ describe("updateCompanyWorkflow step unit tests", () => {
       })
 
       expect(Object.keys(result)).not.toContain("created_at")
+
+      // original object shouldn't be mutated
+      expect(validEntity).toStrictEqual(originalInput)
     })
 
     const invalidEntities = [
-      { name: "missing status", value: { id: "comp_123", name: "Test", email: "test@test.com" }, prev: CompanyStatus.PENDING },
-      { name: "invalid previous status", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE }, prev: "invalid" as any },
+      { name: "missing status", value: { id: "comp_123", name: "Test", email: "test@test.com", spend_limit_reset_frequency: SpendLimitResetFrequency.NONE }, prev: CompanyStatus.PENDING },
+      { name: "invalid previous status", value: { id: "comp_123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: SpendLimitResetFrequency.NONE }, prev: "invalid" },
       { name: "partial object", value: { id: "comp_123", name: "Test" }, prev: CompanyStatus.PENDING },
+      { name: "missing frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE }, prev: CompanyStatus.PENDING },
+      { name: "undefined frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: undefined }, prev: CompanyStatus.PENDING },
+      { name: "null frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: null }, prev: CompanyStatus.PENDING },
+      { name: "invalid frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", phone: null, address: null, city: null, state: null, postal_code: null, country_code: null, logo_url: null, status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: "invalid" }, prev: CompanyStatus.PENDING }
     ]
 
     it.each(invalidEntities)("should throw INVALID_DATA for $name", ({ value, prev }) => {
@@ -321,6 +356,12 @@ describe("updateCompanyWorkflow step unit tests", () => {
       expect(mockUpdateCompanies).not.toHaveBeenCalled()
     })
 
+    it("should fail with INVALID_DATA if retrieve returns valid object but with null frequency", async () => {
+      mockRetrieveCompany.mockResolvedValueOnce({ ...validSnapshot, spend_limit_reset_frequency: null })
+      await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow(MedusaError)
+      expect(mockUpdateCompanies).not.toHaveBeenCalled()
+    })
+
     it("should propagate updateCompanies error and not return success", async () => {
       mockUpdateCompanies.mockRejectedValueOnce(new Error("Update failed"))
       await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow("Update failed")
@@ -328,6 +369,11 @@ describe("updateCompanyWorkflow step unit tests", () => {
 
     it("should fail with INVALID_DATA if update returns invalid object", async () => {
       mockUpdateCompanies.mockResolvedValueOnce({ id: "comp_123" }) // partial
+      await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow(MedusaError)
+    })
+
+    it("should fail with INVALID_DATA if update returns null frequency", async () => {
+      mockUpdateCompanies.mockResolvedValueOnce({ ...validSnapshot, spend_limit_reset_frequency: null })
       await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow(MedusaError)
     })
   })
@@ -357,13 +403,57 @@ describe("updateCompanyWorkflow step unit tests", () => {
         postal_code: null,
         country_code: null,
         logo_url: null,
-        spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.NONE,
       }
 
       await updateCompanyCompensationHandler(snapshot, context)
 
       expect(mockUpdateCompanies).toHaveBeenCalledTimes(1)
-      expect(mockUpdateCompanies).toHaveBeenCalledWith(snapshot)
+
+      const payloadReceived = mockUpdateCompanies.mock.calls[0][0]
+      expect(payloadReceived).toStrictEqual({
+        id: "comp_123",
+        name: "Old",
+        email: "old@test.com",
+        status: CompanyStatus.PENDING,
+        phone: null,
+        address: null,
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.NONE,
+      })
+
+      expect(Object.prototype.hasOwnProperty.call(payloadReceived, "spend_limit_reset_frequency")).toBe(true)
+      expect(Object.keys(payloadReceived)).toContain("spend_limit_reset_frequency")
+    })
+
+    it("should not resolve service if compensation snapshot lacks spend_limit_reset_frequency or null", async () => {
+      const invalidSnapshot = {
+        id: "comp_123",
+        name: "Old",
+        email: "old@test.com",
+        status: CompanyStatus.PENDING,
+        phone: null,
+        address: null,
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+      } // Missing spend_limit_reset_frequency
+
+      await updateCompanyCompensationHandler(invalidSnapshot, context)
+
+      const invalidSnapshot2 = { ...invalidSnapshot, spend_limit_reset_frequency: null }
+      await updateCompanyCompensationHandler(invalidSnapshot2, context)
+
+      const invalidSnapshot3 = { ...invalidSnapshot, spend_limit_reset_frequency: "invalid" }
+      await updateCompanyCompensationHandler(invalidSnapshot3, context)
+
+      expect(mockContainer.resolve).not.toHaveBeenCalled()
     })
 
     it("should propagate error if update fails during compensation", async () => {
