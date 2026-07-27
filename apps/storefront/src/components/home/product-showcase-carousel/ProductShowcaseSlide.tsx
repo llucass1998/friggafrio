@@ -57,7 +57,7 @@ export function ProductShowcaseSlide({ slide, isActive, direction = 'next' }: Pr
         ></div>
 
         {/* Slide Content */}
-        <div className="relative z-30 p-6 sm:p-10 lg:p-16 text-left w-full max-w-[620px] mb-6 sm:mb-4 lg:mb-6">
+        <div className="relative z-30 py-6 px-16 sm:py-10 sm:px-20 md:px-24 lg:py-16 lg:px-28 text-left w-full max-w-[800px] mb-6 sm:mb-4 lg:mb-6">
           <span className="carousel-category text-sm lg:text-base font-bold text-[var(--color-primary)] uppercase tracking-wider mb-2 lg:mb-4 block">
             DESTAQUE
           </span>
