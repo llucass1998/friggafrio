@@ -12,11 +12,11 @@ interface OrderWithPlacedBy {
   total?: number
   currency_code: string
   created_at?: string
-  items?: any[]
-  shipping_address?: any
-  billing_address?: any
-  shipping_methods?: any[]
-  payment_collections?: any[]
+  items?: unknown[]
+  shipping_address?: unknown
+  billing_address?: unknown
+  shipping_methods?: unknown[]
+  payment_collections?: unknown[]
   customer_id?: string
   placed_by?: {
     id: string
@@ -96,7 +96,7 @@ export const useUpdateOrderAddress = () => {
       shipping_address?: AddressInput
       billing_address?: AddressInput
     }) => {
-      const response = await sdk.client.fetch<{ order: any }>(
+      const response = await sdk.client.fetch<{ order: unknown}>(
         `/store/customers/me/orders/${orderId}/address`,
         {
           method: "POST",
@@ -115,7 +115,7 @@ export const useOrderShippingOptions = ({ orderId }: { orderId: string }) => {
   return useQuery({
     queryKey: ["order-shipping-options", orderId],
     queryFn: async () => {
-      const response = await sdk.client.fetch<{ shipping_options: any[] }>(
+      const response = await sdk.client.fetch<{ shipping_options: unknown[]}>(
         `/store/customers/me/orders/${orderId}/shipping-options`,
         { method: "GET" }
       )
@@ -136,7 +136,7 @@ export const useSetOrderShippingMethod = () => {
       orderId: string
       shipping_option_id: string
     }) => {
-      const response = await sdk.client.fetch<{ order: any }>(
+      const response = await sdk.client.fetch<{ order: unknown}>(
         `/store/customers/me/orders/${orderId}/shipping-method`,
         {
           method: "POST",
@@ -164,7 +164,7 @@ export const useInitOrderPaymentSession = () => {
     }) => {
       assertPaymentProcessingEnabled()
 
-      const response = await sdk.client.fetch<{ payment_collection: any }>(
+      const response = await sdk.client.fetch<{ payment_collection: unknown}>(
         `/store/customers/me/orders/${orderId}/payment-session`,
         {
           method: "POST",

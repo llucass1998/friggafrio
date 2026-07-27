@@ -14,11 +14,46 @@ import { Loader2, ShoppingCart, Check } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
+type StoreVariantWithCalculatedPrice = HttpTypes.StoreProductVariant & {
+  calculated_price?: {
+    calculated_amount?: number | null
+    currency_code?: string | null
+  } | null
+  inventory_quantity?: number | null
+  manage_inventory?: boolean | null
+}
+
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct;
   region: HttpTypes.StoreRegion;
   disabled?: boolean;
 };
+
+// Helper function to safely get variant prices without any cast
+function getVariantCalculatedPrice(variant?: StoreVariantWithCalculatedPrice | null): number | null {
+  if (!variant?.calculated_price?.calculated_amount) return null;
+  return variant.calculated_price.calculated_amount;
+}
+
+function getVariantCurrencyCode(variant?: StoreVariantWithCalculatedPrice | null, defaultCode = "BRL"): string {
+  if (variant?.calculated_price?.currency_code) {
+    return variant.calculated_price.currency_code;
+  }
+  return defaultCode;
+}
+
+function getVariantInventoryAvailability(variant?: StoreVariantWithCalculatedPrice | null): boolean {
+  if (!variant) return false;
+
+  if (variant.manage_inventory) {
+    if (variant.inventory_quantity === undefined || variant.inventory_quantity === null) {
+      return false; // Fail closed for unknown inventory
+    }
+    return variant.inventory_quantity > 0;
+  }
+
+  return true;
+}
 
 const ProductActions = memo(function ProductActions({
   product,
@@ -80,31 +115,23 @@ const ProductActions = memo(function ProductActions({
 
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
-    if (!selectedVariant) return false
-    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending") return false
+    if (!selectedVariant) return false;
+    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending") return false;
 
-    // Additional strict price validation for the chosen variant
-    const calcPrice = (selectedVariant as any).calculated_price
-    if (!calcPrice || calcPrice.calculated_amount === null || calcPrice.calculated_amount === undefined) return false
+    const price = getVariantCalculatedPrice(selectedVariant as StoreVariantWithCalculatedPrice);
+    if (price === null) return false;
 
-    return true // Ignorar checagem local isVariantInStock() para permitir itens "falsos" locais
+    // Check real inventory status
+    if (!getVariantInventoryAvailability(selectedVariant as StoreVariantWithCalculatedPrice)) return false;
+
+    return true;
   }, [selectedVariant, purchaseState])
 
   const displayPrice = selectedVariant
-    ? (selectedVariant as any).calculated_price?.calculated_amount ?? 0
+    ? getVariantCalculatedPrice(selectedVariant as StoreVariantWithCalculatedPrice) ?? 0
     : purchaseState.status === "purchasable"
       ? purchaseState.price
-      : (product.variants?.[0] as any)?.calculated_price?.calculated_amount ?? 0
-
-  
-  // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
-  // For Phase 20, we assume any B2B-flagged product or explicitly 'quote_only' metadata triggers this.
-  const _isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !(selectedVariant?.inventory_quantity ? selectedVariant.inventory_quantity > 0 : true)
-  
-  const _handleQuoteRequest = () => {
-    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || "N/A"})`)
-    window.open(`https://wa.me/5511999999999?text=${message}`, "_blank")
-  }
+      : getVariantCalculatedPrice(product.variants?.[0] as StoreVariantWithCalculatedPrice) ?? 0
 
   const handleAddToCart = async () => {
     if (!selectedVariant?.id || !canBuySelected) return null
@@ -127,7 +154,6 @@ const ProductActions = memo(function ProductActions({
           setTimeout(() => setIsSuccess(false), 2000)
         },
         onError: (_err) => {
-          // Error telemetry could go here
           toast.error("Não foi possível adicionar o produto ao carrinho")
         }
       }
@@ -150,6 +176,10 @@ const ProductActions = memo(function ProductActions({
     buttonDisabled = false
   }
 
+  const displayCurrencyCode = countryCode === "br" ? "BRL" : (
+     selectedVariant ? getVariantCurrencyCode(selectedVariant as StoreVariantWithCalculatedPrice) : getVariantCurrencyCode(product.variants?.[0] as StoreVariantWithCalculatedPrice)
+  )
+
   return (
     <div className="flex flex-col gap-y-4">
       {/* Dynamic Price Display */}
@@ -160,12 +190,12 @@ const ProductActions = memo(function ProductActions({
                Valor em configuração
              </span>
              <span className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
+               {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrencyCode })}
              </span>
            </>
          ) : displayPrice && purchaseState.status !== "price_pending" ? (
              <span className="text-3xl md:text-4xl font-bold text-[var(--color-navy)] tracking-tight">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
+               {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrencyCode })}
              </span>
          ) : (
             <span className="text-xl font-medium text-[var(--color-text-muted)] italic">Consulte o valor</span>
@@ -193,7 +223,7 @@ const ProductActions = memo(function ProductActions({
         onClick={handleAddToCart}
         disabled={buttonDisabled || !!disabled || addToCartMutation.isPending || isSuccess}
         aria-label={`${buttonText} ${product.title}`}
-        className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-all duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
+        className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-[background-color,color,border-color,transform,box-shadow] duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
           buttonDisabled
             ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"
             : isSuccess

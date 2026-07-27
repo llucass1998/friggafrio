@@ -75,7 +75,7 @@ export function ProductShowcaseCarousel() {
                     {slide.description}
                   </p>
                   <Link 
-                    to={slide.link as any} 
+                    to={slide.link as string} 
                     className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition-colors"
                     tabIndex={isActive ? 0 : -1}
                   >

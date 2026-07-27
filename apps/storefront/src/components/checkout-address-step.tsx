@@ -109,7 +109,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       applyCompanyAddress(defaultBilling, setBillingAddress)
       setIsBillingAddressValid(true)
     }
-  }, [hasCompanyAddresses, shippingAddresses, hasCompanyBillingAddresses, billingAddresses, sameAsBilling])
+  }, [hasCompanyAddresses, shippingAddresses, hasCompanyBillingAddresses, billingAddresses, sameAsBilling, selectedBillingAddressId, selectedShippingAddressId])
 
   function applyCompanyAddress(
     addr: CompanyAddressData,
@@ -168,8 +168,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       await setAddressesMutation.mutateAsync(submitData)
       setMutationError(null)
       onNext()
-    } catch (err: any) {
-      setMutationError(err.message || "Failed to submit address. Please check the fields and try again.")
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to submit address. Please check the fields and try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -196,7 +196,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     if (email) {
       setEmailTouched(true)
     }
-  }, [])
+  }, [email])
 
   // Use an effect to auto-validate the component's state without requiring manual changes.
   useEffect(() => {

@@ -45,26 +45,26 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     await queryClient.ensureQueryData({
       queryKey: queryKeys.products.related(product.id, region.id),
       queryFn: async () => {
-        const params: HttpTypes.StoreProductListParams = {
+        const queryParams: Record<string, unknown> = {
           fields: "title, handle, *thumbnail, *variants",
           is_giftcard: false,
           limit: 4,
         }
 
         if (product.collection_id) {
-          params.collection_id = [product.collection_id]
+          queryParams.collection_id = [product.collection_id]
         }
 
         if (product.tags && product.tags.length > 0) {
-          params.tag_id = product.tags.map((tag: any) => tag.id)
+          queryParams.tag_id = product.tags.map((tag: {id: string}) => tag.id)
         }
 
         const { products } = await listProducts({
-          query_params: params,
+          query_params: queryParams,
           region_id: region.id,
         })
 
-        return products.filter((p: any) => p.id !== product.id)
+        return products.filter((p: {id: string}) => p.id !== product.id)
       },
     })
 
@@ -93,7 +93,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       "@type": "Product",
       name: product.title,
       description: product.description,
-      image: (product.images as any)?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
+      image: (product.images as {url?: string}[])?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
       brand: {
         "@type": "Brand",
         name: "FriggaFrio",
@@ -102,14 +102,14 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         "@type": "Offer",
         availability: "https://schema.org/InStock",
         priceCurrency: region?.currency_code?.toUpperCase(),
-        price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== null && (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== undefined
-          ? ((product.variants as any)[0].calculated_price.calculated_amount / 100).toFixed(2)
+        price: (product.variants as {calculated_price?: {calculated_amount?: number; currency_code?: string}}[])?.[0]?.calculated_price?.calculated_amount !== null && (product.variants as {calculated_price?: {calculated_amount?: number; currency_code?: string}}[])?.[0]?.calculated_price?.calculated_amount !== undefined
+          ? (((product.variants as {calculated_price?: {calculated_amount?: number; currency_code?: string}}[])[0].calculated_price?.calculated_amount || 0) / 100).toFixed(2)
           : undefined,
       },
     }
 
     // Get first product image for preloading (critical for LCP)
-    const firstImageUrl = (product.images as any)?.[0]?.url || product.thumbnail
+    const firstImageUrl = (product.images as {url?: string}[])?.[0]?.url || product.thumbnail
 
     return {
       meta: [

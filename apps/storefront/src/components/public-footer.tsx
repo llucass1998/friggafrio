@@ -134,7 +134,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.products.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
                   </li>
@@ -152,7 +152,7 @@ export function PublicFooter() {
                         {item.label}
                       </a>
                     ) : (
-                      <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                      <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                         {item.label}
                       </Link>
                     )}
@@ -166,7 +166,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.support.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
                   </li>
@@ -182,7 +182,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.account.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={getAccountHref(item.href) as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    <Link to={getAccountHref(item.href) as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
                   </li>

@@ -68,7 +68,7 @@ export function ProductShowcaseSlide({ slide, isActive, direction = 'next' }: Pr
             {slide.description}
           </p>
           <Link
-            to={slide.ctaLink as any}
+            to={slide.ctaLink as string}
             tabIndex={isActive ? 0 : -1}
             className="carousel-cta inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm lg:text-base font-bold rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >

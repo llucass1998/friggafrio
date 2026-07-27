@@ -4,6 +4,7 @@ import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { getRegion } from "@/lib/data/regions"
 import { PublicProductCard } from "@/components/public-product-card"
+import { HttpTypes } from "@medusajs/types"
 
 export function FeaturedProducts() {
   const params = useParams({ strict: false }) as Record<string, string>
@@ -39,7 +40,7 @@ export function FeaturedProducts() {
             <p className="text-[var(--color-text-muted)] text-sm md:text-base">As soluções mais procuradas para o seu projeto</p>
           </div>
           <Link
-            to={"/" as any}
+            to={"/" as string}
 
             className="hidden md:inline-flex text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
           >
@@ -64,7 +65,7 @@ export function FeaturedProducts() {
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {products.map((product) => (
-              <PublicProductCard key={product.id} product={product as any} isNew />
+              <PublicProductCard key={product.id} product={product as unknown as HttpTypes.StoreProduct} isNew />
             ))}
           </div>
         ) : (

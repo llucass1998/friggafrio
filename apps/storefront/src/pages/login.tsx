@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LockClosedSolid } from "@medusajs/icons"
-import { GoogleLogin } from "@react-oauth/google"
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
       // Navigate without full page reload to preserve auth state
       navigate({ to: "/$countryCode", params: { countryCode } })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err)
       setError("Invalid email or password. Please try again.")
     } finally {
@@ -35,7 +35,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError("")
     setIsLoading(true)
 
@@ -47,9 +47,10 @@ export default function LoginPage() {
       } else {
         throw new Error("No credential received from Google")
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Google Login error:", err)
-      setError(err.message || "Falha na autenticação com Google. Tente novamente.")
+      const message = typeof err === "object" && err !== null && "message" in err ? (err as Record<string, unknown>).message : ""
+      setError(typeof message === "string" && message ? message : "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }

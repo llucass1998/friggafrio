@@ -57,7 +57,7 @@ const translateFulfillmentStatus = (status?: string) => {
 
 const OrderConfirmation = () => {
   const _params = routeApi.useParams()
-  const countryCode = (_params as any).countryCode || "br"
+  const countryCode = (_params as Record<string, string>).countryCode || "br"
 
   const { order } = routeApi.useLoaderData()
 

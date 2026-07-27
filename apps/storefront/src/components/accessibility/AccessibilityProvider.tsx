@@ -35,7 +35,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           const k = key as keyof AccessibilityPreferences
           if (parsed[k] !== undefined) {
             // Type assertions needed for dynamic assignment
-            (merged as any)[k] = parsed[k]
+            (merged as Record<string, unknown>)[k] = parsed[k]
           }
         })
         setPreferences(merged)
@@ -67,10 +67,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setPreferences((prev) => ({ ...prev, [key]: value }))
   }, [])
 
+  const cancelSpeech = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+  }, [])
+
   const resetPreferences = useCallback(() => {
     // Preserve the panel open state
     setPreferences({ ...DEFAULT_PREFERENCES, panelEnabled: preferences.panelEnabled })
-    cancelSpeech()
+    
   }, [preferences.panelEnabled])
 
   const togglePanel = useCallback(() => {
@@ -80,16 +87,14 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   // Web Speech API
   const speak = useCallback((text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return
-    
-    cancelSpeech()
-    
+
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = "pt-BR"
-    
+
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => setIsSpeaking(false)
-    
+
     window.speechSynthesis.speak(utterance)
   }, [])
 
@@ -107,12 +112,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
   }, [])
 
-  const cancelSpeech = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel()
-      setIsSpeaking(false)
-    }
-  }, [])
+  
 
   return (
     <AccessibilityContext.Provider
@@ -133,10 +133,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   )
 }
 
-export function useAccessibility() {
+function useAccessibilityContext() {
   const context = useContext(AccessibilityContext)
   if (context === undefined) {
     throw new Error("useAccessibility must be used within an AccessibilityProvider")
   }
   return context
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+export { useAccessibilityContext as useAccessibility }

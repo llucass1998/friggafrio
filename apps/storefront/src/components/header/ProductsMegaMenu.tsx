@@ -55,7 +55,7 @@ export function ProductsMegaMenu() {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-[var(--color-navy)]">{activeCategoryData.label}</h3>
             <Link
-              to={activeCategoryData.href as any}
+              to={activeCategoryData.href as string}
               className="text-[var(--color-text-muted)] text-sm hover:text-[var(--color-primary)] hover:underline inline-block mt-1"
             >
               Explorar departamento completo &rarr;
@@ -66,7 +66,7 @@ export function ProductsMegaMenu() {
             {activeCategoryData.children?.filter(child => !child.id.endsWith("-all")).map((child) => (
               <Link
                 key={child.id}
-                to={child.href as any}
+                to={child.href as string}
                 className="text-[var(--color-text)] hover:text-[var(--color-primary)] hover:translate-x-1 transition-all text-sm font-medium py-1"
               >
                 {child.label}

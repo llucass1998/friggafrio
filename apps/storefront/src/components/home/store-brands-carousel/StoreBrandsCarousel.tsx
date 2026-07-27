@@ -56,7 +56,7 @@ export function StoreBrandsCarousel() {
                     name={brand.name}
                     logoSrc={brand.logoSrc}
                     logoAlt={brand.logoAlt}
-                    websiteUrl={(brand as any).websiteUrl}
+                    websiteUrl={(brand as {websiteUrl?: string}).websiteUrl}
                   />
                 </div>
               ))}
