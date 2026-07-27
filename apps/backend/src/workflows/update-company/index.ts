@@ -35,8 +35,8 @@ export type UpdateCompanyStepResult = {
   id: string
   name: string
   email: string
-  status: string
-  previous_status: string
+  status: CompanyStatus
+  previous_status: CompanyStatus
   phone: string | null
   address: string | null
   city: string | null
@@ -66,68 +66,75 @@ export type WorkflowHandlerContext = {
   container: MedusaContainer
 }
 
+export function isCompanyStatus(value: unknown): value is CompanyStatus {
+  return (
+    value === CompanyStatus.ACTIVE ||
+    value === CompanyStatus.INACTIVE ||
+    value === CompanyStatus.PENDING ||
+    value === CompanyStatus.SUSPENDED
+  )
+}
+
+export function isSpendLimitResetFrequency(value: unknown): value is SpendLimitResetFrequency {
+  return (
+    value === SpendLimitResetFrequency.NONE ||
+    value === SpendLimitResetFrequency.DAILY ||
+    value === SpendLimitResetFrequency.WEEKLY ||
+    value === SpendLimitResetFrequency.MONTHLY ||
+    value === SpendLimitResetFrequency.YEARLY
+  )
+}
+
+export function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0
+}
+
+export function isNullableString(value: unknown): value is string | null {
+  return typeof value === "string" || value === null
+}
+
+function isUnknownObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
 export function isUpdateCompanyInput(value: unknown): value is UpdateCompanyInput {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false
-  }
+  if (!isUnknownObject(value)) return false
 
-  const record = value as Record<string, unknown>
+  if (!isNonEmptyString(value.id)) return false
 
-  if (typeof record.id !== "string" || record.id.trim().length === 0) {
-    return false
-  }
+  if (value.name !== undefined && typeof value.name !== "string") return false
+  if (value.email !== undefined && typeof value.email !== "string") return false
+  if (value.phone !== undefined && !isNullableString(value.phone)) return false
+  if (value.address !== undefined && !isNullableString(value.address)) return false
+  if (value.city !== undefined && !isNullableString(value.city)) return false
+  if (value.state !== undefined && !isNullableString(value.state)) return false
+  if (value.postal_code !== undefined && !isNullableString(value.postal_code)) return false
+  if (value.country_code !== undefined && !isNullableString(value.country_code)) return false
+  if (value.logo_url !== undefined && !isNullableString(value.logo_url)) return false
 
-  const validateOptionalString = (val: unknown) => typeof val === "string" || val === undefined
-  const validateNullableString = (val: unknown) => typeof val === "string" || val === null || val === undefined
-
-  if (!validateOptionalString(record.name)) return false
-  if (!validateOptionalString(record.email)) return false
-  if (!validateNullableString(record.phone)) return false
-  if (!validateNullableString(record.address)) return false
-  if (!validateNullableString(record.city)) return false
-  if (!validateNullableString(record.state)) return false
-  if (!validateNullableString(record.postal_code)) return false
-  if (!validateNullableString(record.country_code)) return false
-  if (!validateNullableString(record.logo_url)) return false
-
-  if (
-    record.status !== undefined &&
-    record.status !== CompanyStatus.ACTIVE &&
-    record.status !== CompanyStatus.INACTIVE &&
-    record.status !== CompanyStatus.PENDING &&
-    record.status !== CompanyStatus.SUSPENDED
-  ) {
-    return false
-  }
-
-  if (
-    record.spend_limit_reset_frequency !== undefined &&
-    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.NONE &&
-    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.DAILY &&
-    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.WEEKLY &&
-    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.MONTHLY &&
-    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.YEARLY
-  ) {
-    return false
-  }
+  if (value.status !== undefined && !isCompanyStatus(value.status)) return false
+  if (value.spend_limit_reset_frequency !== undefined && !isSpendLimitResetFrequency(value.spend_limit_reset_frequency)) return false
 
   return true
 }
 
 export function isUpdateCompanyCompensationData(value: unknown): value is UpdateCompanyCompensationData {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return false
-  const r = value as Record<string, unknown>
+  if (!isUnknownObject(value)) return false
 
-  if (typeof r.id !== "string") return false
-  if (typeof r.name !== "string") return false
-  if (typeof r.email !== "string") return false
+  if (!isNonEmptyString(value.id)) return false
+  if (typeof value.name !== "string") return false
+  if (typeof value.email !== "string") return false
 
-  if (
-    r.status !== CompanyStatus.ACTIVE &&
-    r.status !== CompanyStatus.INACTIVE &&
-    r.status !== CompanyStatus.PENDING &&
-    r.status !== CompanyStatus.SUSPENDED
-  ) return false
+  if (!isNullableString(value.phone)) return false
+  if (!isNullableString(value.address)) return false
+  if (!isNullableString(value.city)) return false
+  if (!isNullableString(value.state)) return false
+  if (!isNullableString(value.postal_code)) return false
+  if (!isNullableString(value.country_code)) return false
+  if (!isNullableString(value.logo_url)) return false
+
+  if (!isCompanyStatus(value.status)) return false
+  if (value.spend_limit_reset_frequency !== undefined && !isSpendLimitResetFrequency(value.spend_limit_reset_frequency)) return false
 
   return true
 }
@@ -152,38 +159,73 @@ export function buildUpdateCompanyPayload(input: UpdateCompanyInput): UpdateComp
   return payload
 }
 
-export function buildUpdateCompanyCompensationData(company: Record<string, unknown>): UpdateCompanyCompensationData {
+export function buildUpdateCompanyCompensationData(value: unknown): UpdateCompanyCompensationData {
+  // We use the strict guard to ensure ALL required properties are present with the correct typing
+  // No silent default fallbacks, the service MUST return valid data.
+  // We map `undefined` out of spend_limit_reset_frequency if null is provided (database vs TS definition compatibility)
+
+  if (!isUnknownObject(value)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data")
+  }
+
+  const mapped = {
+    ...value,
+    spend_limit_reset_frequency: value.spend_limit_reset_frequency === null ? undefined : value.spend_limit_reset_frequency
+  }
+
+  if (!isUpdateCompanyCompensationData(mapped)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data for snapshot")
+  }
+
   return {
-    id: typeof company.id === "string" ? company.id : "",
-    name: typeof company.name === "string" ? company.name : "",
-    email: typeof company.email === "string" ? company.email : "",
-    phone: typeof company.phone === "string" ? company.phone : null,
-    address: typeof company.address === "string" ? company.address : null,
-    city: typeof company.city === "string" ? company.city : null,
-    state: typeof company.state === "string" ? company.state : null,
-    postal_code: typeof company.postal_code === "string" ? company.postal_code : null,
-    country_code: typeof company.country_code === "string" ? company.country_code : null,
-    logo_url: typeof company.logo_url === "string" ? company.logo_url : null,
-    status: company.status as CompanyStatus,
-    spend_limit_reset_frequency: company.spend_limit_reset_frequency as SpendLimitResetFrequency | undefined,
+    id: mapped.id,
+    name: mapped.name,
+    email: mapped.email,
+    phone: mapped.phone,
+    address: mapped.address,
+    city: mapped.city,
+    state: mapped.state,
+    postal_code: mapped.postal_code,
+    country_code: mapped.country_code,
+    logo_url: mapped.logo_url,
+    status: mapped.status,
+    spend_limit_reset_frequency: mapped.spend_limit_reset_frequency,
   }
 }
 
-export function buildUpdateCompanyStepResult(company: Record<string, unknown>, previousStatus: string): UpdateCompanyStepResult {
+export function buildUpdateCompanyStepResult(value: unknown, previousStatus: CompanyStatus): UpdateCompanyStepResult {
+  if (!isUnknownObject(value)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data")
+  }
+
+  const mapped = {
+    ...value,
+    spend_limit_reset_frequency: value.spend_limit_reset_frequency === null ? undefined : value.spend_limit_reset_frequency
+  }
+
+  // A StepResult contains the same fields as the CompensationData plus the previous_status
+  if (!isUpdateCompanyCompensationData(mapped)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data for step result")
+  }
+
+  if (!isCompanyStatus(previousStatus)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid previous status")
+  }
+
   return {
-    id: typeof company.id === "string" ? company.id : "",
-    name: typeof company.name === "string" ? company.name : "",
-    email: typeof company.email === "string" ? company.email : "",
-    status: typeof company.status === "string" ? company.status : "",
+    id: mapped.id,
+    name: mapped.name,
+    email: mapped.email,
+    status: mapped.status,
     previous_status: previousStatus,
-    phone: typeof company.phone === "string" ? company.phone : null,
-    address: typeof company.address === "string" ? company.address : null,
-    city: typeof company.city === "string" ? company.city : null,
-    state: typeof company.state === "string" ? company.state : null,
-    postal_code: typeof company.postal_code === "string" ? company.postal_code : null,
-    country_code: typeof company.country_code === "string" ? company.country_code : null,
-    logo_url: typeof company.logo_url === "string" ? company.logo_url : null,
-    spend_limit_reset_frequency: company.spend_limit_reset_frequency as SpendLimitResetFrequency | undefined,
+    phone: mapped.phone,
+    address: mapped.address,
+    city: mapped.city,
+    state: mapped.state,
+    postal_code: mapped.postal_code,
+    country_code: mapped.country_code,
+    logo_url: mapped.logo_url,
+    spend_limit_reset_frequency: mapped.spend_limit_reset_frequency,
   }
 }
 
@@ -203,11 +245,11 @@ export async function updateCompanyStepHandler(
   const payload = buildUpdateCompanyPayload(input)
   const previousCompanyRaw = await companyModuleService.retrieveCompany(payload.id)
 
-  const compensationData = buildUpdateCompanyCompensationData(previousCompanyRaw as Record<string, unknown>)
-  const previousStatus = typeof previousCompanyRaw.status === "string" ? previousCompanyRaw.status : ""
+  const compensationData = buildUpdateCompanyCompensationData(previousCompanyRaw)
+  const previousStatus = compensationData.status
 
   const companyRaw = await companyModuleService.updateCompanies(payload)
-  const stepResult = buildUpdateCompanyStepResult(companyRaw as Record<string, unknown>, previousStatus)
+  const stepResult = buildUpdateCompanyStepResult(companyRaw, previousStatus)
 
   return new StepResponse(stepResult, compensationData)
 }
@@ -309,8 +351,8 @@ export const updateCompanyWorkflow = createWorkflow(
       company_id: company.id,
       company_email: company.email,
       was_activated:
-        company.status === "active" &&
-        company.previous_status !== "active",
+        company.status === CompanyStatus.ACTIVE &&
+        company.previous_status !== CompanyStatus.ACTIVE,
     }))
 
     when(activationData, ({ was_activated }) => was_activated).then(() => {
