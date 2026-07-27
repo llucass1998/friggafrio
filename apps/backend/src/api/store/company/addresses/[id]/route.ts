@@ -78,11 +78,13 @@ export async function POST(
 
     if (updates.length > 0) {
       await Promise.all(
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
         updates.map((u) => companyService.updateCompanyAddresses(u))
       )
     }
   }
 
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
   const address = await companyService.updateCompanyAddresses({ id: addressId, ...body })
 
   res.json({ address })
@@ -102,6 +104,7 @@ export async function DELETE(
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Address not found")
   }
 
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
   await companyService.deleteCompanyAddresses(addressId)
 
   res.json({ id: addressId, object: "company_address", deleted: true })

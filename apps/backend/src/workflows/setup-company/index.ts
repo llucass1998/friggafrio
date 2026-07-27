@@ -7,7 +7,7 @@ import {
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import { MedusaError } from "@medusajs/framework/utils";
-import type { IAuthModuleService } from "@medusajs/types";
+import type { IAuthModuleService } from "@medusajs/framework/types";
 import { COMPANY_MODULE } from "../../modules/company";
 import { CompanyStatus } from "../../modules/company/models/company";
 import CompanyModuleService from "../../modules/company/service";
@@ -42,7 +42,7 @@ export type SetupCompanyInput = {
  * This handles password hashing internally
  */
 const registerAuthIdentityStep = createStep(
-  "register-company-auth-identity",
+  "register-auth-identity",
   async (input: { email: string; password: string }, { container }) => {
     const authModuleService = container.resolve<IAuthModuleService>(
       Modules.AUTH,

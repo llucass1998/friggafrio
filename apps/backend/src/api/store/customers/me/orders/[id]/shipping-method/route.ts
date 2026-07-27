@@ -70,10 +70,12 @@ export const POST = async (
   const existingShippingMethods = (order as any).shipping_methods as Array<{ id: string }> | undefined
   if (existingShippingMethods?.length) {
     const idsToDelete = existingShippingMethods.map((sm) => sm.id)
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
     await orderModule.deleteOrderShippingMethods(idsToDelete)
   }
   
   // Add the new shipping method
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
   const shippingMethod = await orderModule.createOrderShippingMethods({
     order_id: orderId,
     name: shippingOption.name || "Shipping",

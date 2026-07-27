@@ -5,7 +5,7 @@ import {
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows";
 import { MedusaError, Modules } from "@medusajs/framework/utils";
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
-import type { IAuthModuleService } from "@medusajs/types";
+import type { IAuthModuleService } from "@medusajs/framework/types";
 
 export type SetupCustomerInput = {
   // Auth credentials
@@ -22,7 +22,7 @@ export type SetupCustomerInput = {
  * Step 1: Register auth identity with emailpass provider
  */
 const registerAuthIdentityStep = createStep(
-  "register-customer-auth-identity",
+  "register-auth-identity",
   async (input: { email: string; password: string }, { container }) => {
     const authModuleService = container.resolve<IAuthModuleService>(
       Modules.AUTH,

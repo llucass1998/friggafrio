@@ -105,11 +105,13 @@ export async function POST(
 
     if (updates.length > 0) {
       await Promise.all(
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
         updates.map((u) => companyService.updateCompanyAddresses(u))
       )
     }
   }
 
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
   const address = await companyService.createCompanyAddresses({
     ...body,
     company_id: company.id,

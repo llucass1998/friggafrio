@@ -1,3 +1,4 @@
+import { MedusaError } from "@medusajs/framework/utils"
 import {
   createStep,
   StepResponse,
@@ -28,7 +29,7 @@ const validateCompanyStep = createStep(
     })
 
     if (!companies.length) {
-      throw new Error(`Company ${input.company_id} not found`)
+      throw new MedusaError(MedusaError.Types.NOT_FOUND, `Company ${input.company_id} not found`)
     }
 
     return new StepResponse(companies[0])
