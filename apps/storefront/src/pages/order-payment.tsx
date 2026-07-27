@@ -35,6 +35,8 @@ import {
   paymentAvailability,
 } from "@/lib/config/payment-availability"
 
+import { HttpTypes } from "@medusajs/types"
+
 type OrderPaymentStep = "address" | "shipping" | "payment" | "review"
 
 interface CompanyAddressData {
@@ -148,7 +150,7 @@ export default function OrderPaymentPage() {
 
   const { data: availablePaymentMethods = [] } = useCartPaymentMethods({
     region_id: order?.region_id ?? undefined,
-  })
+  }) as { data: HttpTypes.StorePaymentProvider[] }
 
   const { data: shippingOptions = [] } = useOrderShippingOptions({ orderId })
 
@@ -156,11 +158,17 @@ export default function OrderPaymentPage() {
   const { data: companyAddresses = [] } = useQuery({
     queryKey: ["company-addresses"],
     queryFn: async () => {
-      const response = await sdk.client.fetch<{ addresses: CompanyAddressData[] }>(
-        "/store/company/addresses",
-        { method: "GET" }
-      )
-      return response.addresses
+      try {
+        const response = await sdk.client.fetch<{ addresses: CompanyAddressData[] }>(
+          "/store/company/addresses",
+          { method: "GET" }
+        )
+        return response.addresses
+      } catch (err: unknown) {
+        const e = err as Record<string, unknown>
+        console.error("Failed to fetch company addresses", e)
+        return []
+      }
     },
     enabled: paymentAvailability.processingEnabled && !!employee,
   })
@@ -169,11 +177,17 @@ export default function OrderPaymentPage() {
   const { data: savedPaymentMethods = [] } = useQuery({
     queryKey: ["company-checkout-payment-methods"],
     queryFn: async () => {
-      const response = await sdk.client.fetch<{ payment_methods: SavedPaymentMethod[] }>(
-        "/store/company/checkout-payment-methods",
-        { method: "GET" }
-      )
-      return response.payment_methods
+      try {
+        const response = await sdk.client.fetch<{ payment_methods: SavedPaymentMethod[] }>(
+          "/store/company/checkout-payment-methods",
+          { method: "GET" }
+        )
+        return response.payment_methods
+      } catch (err: unknown) {
+        const e = err as Record<string, unknown>
+        console.error("Failed to fetch company payment methods", e)
+        return []
+      }
     },
     enabled: !!employee,
   })
@@ -268,14 +282,14 @@ export default function OrderPaymentPage() {
     })
   }
 
-  const handleSelectShippingAddress = (addr: CompanyAddressData) => {
+  const handleSelectShippingAddress = useCallback((addr: CompanyAddressData) => {
     setSelectedShippingAddressId(addr.id)
     applyCompanyAddress(addr, setShippingAddress)
     setIsShippingAddressValid(true)
     if (sameAsBilling) {
       setSelectedBillingAddressId(addr.id)
     }
-  }
+  }, [sameAsBilling])
 
   const handleSelectBillingAddress = (addr: CompanyAddressData) => {
     setSelectedBillingAddressId(addr.id)
@@ -289,7 +303,7 @@ export default function OrderPaymentPage() {
       const first = companyAddresses[0]
       handleSelectShippingAddress(first)
     }
-  }, [hasCompanyAddresses, companyAddresses])
+  }, [hasCompanyAddresses, companyAddresses, handleSelectShippingAddress, selectedShippingAddressId])
 
   // Initialize form with order data (for non-B2B or fallback)
   useEffect(() => {
@@ -348,15 +362,15 @@ export default function OrderPaymentPage() {
   // Auto-select first shipping option
   useEffect(() => {
     if (!selectedShippingOption && shippingOptions.length > 0) {
-      setSelectedShippingOption(shippingOptions[0].id)
+      setSelectedShippingOption((shippingOptions[0] as Record<string, unknown>).id as string)
     }
   }, [shippingOptions, selectedShippingOption])
 
   // Auto-select first saved payment method or first available
   useEffect(() => {
     if (hasSavedPaymentMethods && !selectedSavedPaymentId) {
-      setSelectedSavedPaymentId(savedPaymentMethods[0].data.id)
-      const stripeProvider = availablePaymentMethods.find((m) => m.id.includes("stripe"))
+      setSelectedSavedPaymentId((savedPaymentMethods[0].data as Record<string, unknown>).id as string)
+      const stripeProvider = availablePaymentMethods.find((m: HttpTypes.StorePaymentProvider) => m.id.includes("stripe"))
       if (stripeProvider) {
         setSelectedPaymentMethod(stripeProvider.id)
       }
@@ -394,8 +408,8 @@ export default function OrderPaymentPage() {
       })
       await refetchOrder()
       setCurrentStep("shipping")
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to update address")
+    } catch (error: unknown) {
+      toast.error((error as Error)?.message || "Failed to update address")
     }
   }
 
@@ -411,8 +425,8 @@ export default function OrderPaymentPage() {
       })
       await refetchOrder()
       setCurrentStep("payment")
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to set shipping method")
+    } catch (error: unknown) {
+      toast.error((error as Error)?.message || "Failed to set shipping method")
     }
   }
 
@@ -433,14 +447,14 @@ export default function OrderPaymentPage() {
       })
       await refetchOrder()
       setCurrentStep("review")
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to initialize payment")
+    } catch (error: unknown) {
+      toast.error((error as Error)?.message || "Failed to initialize payment")
     }
   }
 
   const handleSavedPaymentSelect = (method: SavedPaymentMethod) => {
-    setSelectedSavedPaymentId(method.data.id)
-    const stripeProvider = availablePaymentMethods.find((m) => m.id.includes("stripe"))
+    setSelectedSavedPaymentId((method.data as Record<string, unknown>).id as string)
+    const stripeProvider = availablePaymentMethods.find((m: HttpTypes.StorePaymentProvider) => m.id.includes("stripe"))
     if (stripeProvider) {
       setSelectedPaymentMethod(stripeProvider.id)
     }
@@ -703,9 +717,9 @@ export default function OrderPaymentPage() {
                 <div className="space-y-3">
                   {shippingOptions.map((option) => (
                     <label
-                      key={option.id}
+                      key={(option as Record<string, unknown>).id as string}
                       className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedShippingOption === option.id
+                        selectedShippingOption === (option as Record<string, unknown>).id as string
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
@@ -714,21 +728,21 @@ export default function OrderPaymentPage() {
                         <input
                           type="radio"
                           name="shipping-option"
-                          value={option.id}
-                          checked={selectedShippingOption === option.id}
-                          onChange={() => setSelectedShippingOption(option.id)}
+                          value={(option as Record<string, unknown>).id as string}
+                          checked={selectedShippingOption === (option as Record<string, unknown>).id as string}
+                          onChange={() => setSelectedShippingOption((option as Record<string, unknown>).id as string)}
                           className="text-blue-600"
                         />
                         <div>
-                          <p className="font-medium text-gray-900">{option.name}</p>
+                          <p className="font-medium text-gray-900">{(option as Record<string, unknown>).name as string}</p>
                           <p className="text-sm text-gray-500">
-                            {option.price_type === "flat" ? "Flat rate" : "Calculated"}
+                            {((option as Record<string, unknown>).price_type as string === "flat" ? "Flat rate" : "Calculated")}
                           </p>
                         </div>
                       </div>
-                      {option.amount !== undefined && (
+                      {(option as Record<string, unknown>).amount as number !== undefined && (
                         <Price
-                          price={option.amount}
+                          price={(option as Record<string, unknown>).amount as number}
                           currencyCode={order.currency_code}
                           className="font-medium"
                         />
@@ -774,10 +788,10 @@ export default function OrderPaymentPage() {
                   <p className="text-sm font-medium text-gray-700">Select a company payment method</p>
                   {savedPaymentMethods.map((method) => {
                     const card = method.data?.card
-                    const isSelected = selectedSavedPaymentId === method.data.id
+                    const isSelected = selectedSavedPaymentId === (method.data as Record<string, unknown>).id as string
                     return (
                       <button
-                        key={method.data.id ?? method.id}
+                        key={(method.data as Record<string, unknown>).id as string ?? method.id}
                         type="button"
                         onClick={() => handleSavedPaymentSelect(method)}
                         className={`w-full flex items-center gap-4 p-4 border rounded-lg transition-colors text-left ${
@@ -816,7 +830,7 @@ export default function OrderPaymentPage() {
                     <p className="text-gray-500">No payment methods available.</p>
                   ) : (
                     <div className="space-y-3">
-                      {availablePaymentMethods.map((method) => (
+                      {availablePaymentMethods.map((method: HttpTypes.StorePaymentProvider) => (
                         <PaymentContainer
                           key={method.id}
                           paymentProviderId={method.id}

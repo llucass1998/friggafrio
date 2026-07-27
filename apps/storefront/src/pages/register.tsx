@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { BuildingsSolid, User } from "@medusajs/icons"
 import { Eye, EyeOff } from "lucide-react"
-import { GoogleLogin } from "@react-oauth/google"
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 import {
   personRegistrationSchema,
   companyRegistrationSchema,
@@ -93,9 +93,11 @@ export default function RegisterPage() {
       await login(data.email, data.password)
       navigate({ to: "/$countryCode" as string, params: { countryCode } })
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Person registration error:", err)
-      if (err.message?.includes("already exists") || err.message?.includes("duplicate")) {
+      const e = err as Record<string, unknown>
+      const message = typeof e?.message === "string" ? e.message : ""
+      if (message.includes("already exists") || message.includes("duplicate")) {
         setServerError("Este e-mail já pode estar associado a uma conta.")
       } else {
         setServerError("Não foi possível concluir o cadastro. Revise os dados e tente novamente.")
@@ -156,9 +158,11 @@ export default function RegisterPage() {
 
       navigate({ to: "/$countryCode" as string, params: { countryCode } })
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Company registration error:", err)
-      if (err.message?.includes("already exists") || err.message?.includes("duplicate")) {
+      const e = err as Record<string, unknown>
+      const message = typeof e?.message === "string" ? e.message : ""
+      if (message.includes("already exists") || message.includes("duplicate")) {
         setServerError("Este e-mail já pode estar associado a uma conta.")
       } else {
         setServerError("Não foi possível concluir o cadastro. Revise os dados e tente novamente.")
@@ -168,7 +172,7 @@ export default function RegisterPage() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setServerError("")
     setIsLoading(true)
 
@@ -184,9 +188,11 @@ export default function RegisterPage() {
       } else {
         throw new Error("No credential received from Google")
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Google Login error:", err)
-      setServerError(err.message || "Falha na autenticação com Google. Tente novamente.")
+      const e = err as Record<string, unknown>
+      const message = typeof e?.message === "string" ? e.message : ""
+      setServerError(message || "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -201,7 +207,7 @@ export default function RegisterPage() {
     label: string,
     show: boolean,
     toggleShow: () => void,
-    registerReturn: any,
+    registerReturn: Record<string, unknown>,
     error?: string
   ) => (
     <div>
@@ -426,7 +432,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <span className="text-sm text-[var(--color-text)]">
-                      Li e aceito os <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
+                      Li e aceito os <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
                     </span>
                   </label>
                   {personForm.formState.errors.acceptTerms && <p className="text-xs text-red-600 font-medium pl-8" role="alert">{personForm.formState.errors.acceptTerms.message}</p>}
@@ -603,7 +609,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <span className="text-sm text-[var(--color-text)]">
-                      Li e aceito os <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
+                      Li e aceito os <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
                     </span>
                   </label>
                   {companyForm.formState.errors.acceptTerms && <p className="text-xs text-red-600 font-medium pl-8" role="alert">{companyForm.formState.errors.acceptTerms.message}</p>}

@@ -1,3 +1,4 @@
+import { AccessibilityPreferences } from "@/components/accessibility/accessibility.types"
 import React from "react"
 import { useAccessibility } from "@/components/accessibility/AccessibilityProvider"
 import * as Dialog from "@radix-ui/react-dialog"
@@ -30,7 +31,7 @@ export function AccessibilityPanel() {
 
   const toggleBooleanPref = (key: keyof typeof preferences, label: string) => {
     const val = !preferences[key]
-    updatePreference(key as any, val)
+    updatePreference(key as keyof AccessibilityPreferences, val)
     announceToScreenReader(`${label} ${val ? "ativado" : "desativado"}`)
   }
 

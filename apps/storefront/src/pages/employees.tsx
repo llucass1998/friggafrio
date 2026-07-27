@@ -525,8 +525,10 @@ export default function EmployeesPage() {
       queryClient.invalidateQueries({ queryKey: ["employee-invites-count"] })
       toast.success("Invite sent successfully")
     },
-    onError: (error: any) => {
-      setInviteError(error?.message || "Failed to send invite. Please try again.")
+    onError: (error: unknown) => {
+      const e = error as Record<string, unknown>
+      const message = typeof e?.message === "string" ? e.message : ""
+      setInviteError(message || "Failed to send invite. Please try again.")
     },
   })
 

@@ -23,8 +23,7 @@ export const getActivePaymentSession = (cart: HttpTypes.StoreCart): HttpTypes.St
 // ============ GIFT CARD CHECK ============
 
 export const isPaidWithGiftCard = (cartOrOrder: HttpTypes.StoreCart | HttpTypes.StoreOrder): boolean => {
-  return (cartOrOrder as any)?.gift_cards &&
-  (cartOrOrder as any)?.gift_cards?.length > 0 &&
+  return !!(cartOrOrder as {gift_cards?: unknown[]})?.gift_cards?.length &&
   cartOrOrder?.total === 0
 }
 

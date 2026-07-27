@@ -13,19 +13,19 @@ export const listProducts = cache(
     region_id, // For compatibility
   }: {
     pageParam?: number
-    queryParams?: any
-    query_params?: any
+    queryParams?: Record<string, unknown>
+    query_params?: Record<string, unknown>
     countryCode?: string
     regionId?: string
     region_id?: string
   }) => {
     const qParams = queryParams || query_params || {}
     const rId = regionId || region_id
-    
-    const limit = qParams.limit || 12
+
+    const limit = typeof qParams.limit === "number" ? qParams.limit : 12
     const offset = (pageParam - 1) * limit
     
-    const storeParams: any = {
+    const storeParams: Record<string, unknown> = {
       limit,
       offset,
       region_id: rId,
@@ -51,34 +51,34 @@ export const listProducts = cache(
 )
 
 export const retrieveProduct = cache(
-  async (params: any, additionalArgs?: any) => {
+  async (params: Record<string, unknown> | string, additionalArgs?: Record<string, unknown>) => {
     // If it's a string, it's an ID
     if (typeof params === "string") {
-      return sdk.store.product.retrieve(params, { region_id: additionalArgs }, { next: { tags: ["products"] } })
+      return sdk.store.product.retrieve(params, { region_id: additionalArgs?.region_id as string }, { next: { tags: ["products"] } })
     }
-    
+
     // If it's an object with a handle, we need to list by handle
-    if (params && params.handle) {
+    if (params && typeof params === "object" && "handle" in params && params.handle) {
       const { products } = await sdk.store.product.list({
-        handle: params.handle,
-        region_id: params.region_id,
-        fields: params.fields,
+        handle: params.handle as string,
+        region_id: params.region_id as string,
+        fields: params.fields as string,
       }, { next: { tags: ["products"] } })
-      
+
       if (!products || products.length === 0) {
         throw new Error(`Product with handle ${params.handle} not found`)
       }
       return products[0]
     }
-    
+
     // If it's an object with an ID
-    if (params && params.id) {
-      return sdk.store.product.retrieve(params.id, { 
-        region_id: params.region_id,
-        fields: params.fields 
+    if (params && typeof params === "object" && "id" in params && params.id) {
+      return sdk.store.product.retrieve(params.id as string, {
+        region_id: params.region_id as string,
+        fields: params.fields as string
       }, { next: { tags: ["products"] } })
     }
-    
+
     throw new Error("Invalid parameters for retrieveProduct")
   }
 )

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react"
 // Export a singleton function to announce messages from anywhere
 let announceFn: (message: string) => void = () => {}
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function announceToScreenReader(message: string) {
   announceFn(message)
 }

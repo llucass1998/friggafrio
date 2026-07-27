@@ -54,7 +54,7 @@ export const Route = createFileRoute("/$countryCode/store")({
       countryCode,
       region,
       products: products as HttpTypes.StoreProduct[],
-      optionValueIds: optionValueIds as any,
+      optionValueIds: optionValueIds as string[],
     })
   },
   head: ({ loaderData }) => {

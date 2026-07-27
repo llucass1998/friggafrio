@@ -16,8 +16,8 @@ export function VLibrasWidget() {
     script.src = "https://vlibras.gov.br/app/vlibras-plugin.js"
     script.async = true
     script.onload = () => {
-      if (typeof window !== "undefined" && (window as any).VLibras) {
-        new (window as any).VLibras.Widget("https://vlibras.gov.br/app")
+      if (typeof window !== "undefined" && (window as unknown as { VLibras: { Widget: new (url: string) => void } }).VLibras) {
+        new (window as unknown as { VLibras: { Widget: new (url: string) => void } }).VLibras.Widget("https://vlibras.gov.br/app")
       }
     }
     document.body.appendChild(script)
@@ -30,9 +30,9 @@ export function VLibrasWidget() {
   if (!preferences.vlibrasEnabled) return null
 
   return (
-    <div {...{ vw: "true" } as any} className="enabled">
-      <div {...{ "vw-access-button": "true" } as any} className="active"></div>
-      <div {...{ "vw-plugin-wrapper": "true" } as any}>
+    <div {...{ "vw": "true" } as React.HTMLAttributes<HTMLDivElement>} className="enabled">
+      <div {...{ "vw-access-button": "true" } as React.HTMLAttributes<HTMLDivElement>} className="active"></div>
+      <div {...{ "vw-plugin-wrapper": "true" } as React.HTMLAttributes<HTMLDivElement>}>
         <div className="vw-plugin-top-wrapper"></div>
       </div>
     </div>

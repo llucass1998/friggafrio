@@ -1,3 +1,4 @@
+import { CheckoutStepKey } from "@/lib/types/global"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -523,7 +524,7 @@ export const CartDropdown = () => {
                     Ver carrinho
                   </Button>
                 </Link>
-                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
+                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: CheckoutStepKey.ADDRESSES }} onClick={closeCart} className="w-full">
                   <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={sortedItems?.some(item => !item.variant_id || item.quantity <= 0)}>
                     Finalizar compra
                   </Button>

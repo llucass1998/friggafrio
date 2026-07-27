@@ -93,15 +93,17 @@ export default function AcceptInvitePage() {
 
       // Navigate to the dashboard
       navigate({ to: "/$countryCode", params: { countryCode } })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Accept invite error:", error)
+      const err = error as Record<string, unknown>
+      const message = typeof err?.message === "string" ? err.message : ""
       let errorMessage: string
-      if (error.message?.includes("already exists") || error.message?.includes("Identity with email already exists")) {
+      if (message.includes("already exists") || message.includes("Identity with email already exists")) {
         errorMessage = "An account with this email already exists. Please sign in instead."
-      } else if (error.message?.includes("expired") || error.message?.includes("Invalid")) {
+      } else if (message.includes("expired") || message.includes("Invalid")) {
         errorMessage = "This invite link is invalid or has expired. Please request a new invite."
       } else {
-        errorMessage = error.message || "Failed to create account. Please try again."
+        errorMessage = message || "Failed to create account. Please try again."
       }
       setSubmitError(errorMessage)
       toast.error(errorMessage)

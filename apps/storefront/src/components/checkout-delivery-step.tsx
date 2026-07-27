@@ -48,8 +48,8 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
         onSettled: () => {
           setIsSubmitting(false)
         },
-        onError: (err: any) => {
-          setMutationError(err.message || "Failed to select shipping method. Please try again.")
+        onError: (err) => {
+          setMutationError(err instanceof Error ? err.message : "Failed to select shipping method. Please try again.")
         },
       }
     )

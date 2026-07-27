@@ -100,7 +100,7 @@ export function HeaderMobileDrawer() {
                         {cat.children.map((child) => (
                           <li key={child.id}>
                             <Link
-                              to={child.href as any}
+                              to={child.href as string}
                               onClick={closeDrawer}
                               className="block px-8 py-2 text-sm text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors"
                             >

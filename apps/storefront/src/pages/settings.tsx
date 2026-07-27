@@ -88,6 +88,13 @@ const RESET_FREQUENCY_OPTIONS: { value: SpendLimitResetFrequency; label: string;
   { value: "yearly", label: "Anualmente", description: "Resets on January 1st" },
 ]
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === "string") return error
+  if (error && typeof error === "object" && "message" in error) return String(error.message)
+  return fallback
+}
+
 function CardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden animate-pulse">
@@ -146,13 +153,13 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
       })
 
       if (error) {
-        toast.error(error.message || "Failed to save card")
+        toast.error(error.message || "Falha ao salvar cartão")
       } else {
-        toast.success("Card saved successfully")
+        toast.success("Cartão salvo com sucesso")
         onSuccess()
       }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to save card")
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Falha ao salvar cartão"))
     } finally {
       setIsSubmitting(false)
     }
@@ -179,7 +186,7 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
           disabled={isSubmitting || !stripe || !elements}
           className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Saving..." : "Save Card"}
+          {isSubmitting ? "Salvando..." : "Salvar Cartão"}
         </button>
       </div>
     </form>
@@ -255,14 +262,14 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Payment Methods</h2>
-          <p className="text-sm text-slate-500">Manage saved payment methods for your company</p>
+          <h2 className="text-lg font-semibold text-slate-900">Formas de Pagamento</h2>
+          <p className="text-sm text-slate-500">Gerencie as formas de pagamento salvas da sua empresa</p>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
             <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500">
-              Payment methods are available once your company is activated.
+              As formas de pagamento estarão disponíveis quando sua empresa for ativada.
             </p>
           </div>
         </div>
@@ -275,8 +282,8 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Payment Methods</h2>
-            <p className="text-sm text-slate-500">Manage saved payment methods for your company</p>
+            <h2 className="text-lg font-semibold text-slate-900">Formas de Pagamento</h2>
+            <p className="text-sm text-slate-500">Gerencie as formas de pagamento salvas da sua empresa</p>
           </div>
           {hasPaymentMethods && (
             <button
@@ -285,7 +292,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
-              {createSetupIntentMutation.isPending ? "Setting up..." : "Add Card"}
+              {createSetupIntentMutation.isPending ? "Configurando..." : "Adicionar Cartão"}
             </button>
           )}
         </div>
@@ -312,7 +319,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                 disabled={createSetupIntentMutation.isPending}
                 className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50"
               >
-                {createSetupIntentMutation.isPending ? "Setting up..." : "Add Your First Card"}
+                {createSetupIntentMutation.isPending ? "Configurando..." : "Adicionar Seu Primeiro Cartão"}
               </button>
             </div>
           ) : (
@@ -332,7 +339,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900">
-                        {card ? cardBrandLabel(card.brand) : "Card"} ending in {card?.last4 || "****"}
+                        {card ? cardBrandLabel(card.brand) : "Cartão"} final {card?.last4 || "****"}
                       </p>
                       {card && (
                         <p className="text-xs text-slate-500 mt-0.5">
@@ -362,9 +369,9 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleModalClose() }}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Add Payment Method</DialogTitle>
+            <DialogTitle className="text-slate-900">Adicionar Forma de Pagamento</DialogTitle>
             <DialogDescription>
-              Enter your card details below. Your card will be securely saved for future purchases.
+              Insira os detalhes do seu cartão abaixo. Seu cartão será salvo de forma segura para compras futuras.
             </DialogDescription>
           </DialogHeader>
           {setupClientSecret && stripePromise ? (
