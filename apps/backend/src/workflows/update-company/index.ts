@@ -141,6 +141,131 @@ export function isUpdateCompanyCompensationData(value: unknown): value is Update
   return true
 }
 
+
+export type CreateAccountHolderInput = {
+  company_id: string
+  company_email: string
+}
+
+export type CreateAccountHolderStepResult =
+  | { skipped: true }
+  | { skipped: false; account_holder_id: string }
+
+export type CreateAccountHolderCompensationData = {
+  company_id: string
+  account_holder_id: string
+}
+
+export function isCreateAccountHolderInput(value: unknown): value is CreateAccountHolderInput {
+  if (!isUnknownObject(value)) return false
+  if (!isNonEmptyString(value.company_id)) return false
+  if (!isNonEmptyString(value.company_email)) return false
+
+  const trimmedEmail = value.company_email.trim()
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(trimmedEmail)) return false
+
+  return true
+}
+
+export function buildCreateAccountHolderInput(value: unknown): CreateAccountHolderInput {
+  if (!isCreateAccountHolderInput(value)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid input for createAccountHolderStep")
+  }
+  return {
+    company_id: value.company_id.trim(),
+    company_email: value.company_email.trim().toLowerCase(),
+  }
+}
+
+export function isCreateAccountHolderCompensationData(value: unknown): value is CreateAccountHolderCompensationData {
+  if (!isUnknownObject(value)) return false
+  if (!isNonEmptyString(value.company_id)) return false
+  if (!isNonEmptyString(value.account_holder_id)) return false
+  return true
+}
+
+export function buildCreateAccountHolderCompensationData(value: unknown): CreateAccountHolderCompensationData {
+  if (!isCreateAccountHolderCompensationData(value)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid compensation data for createAccountHolderStep")
+  }
+  return {
+    company_id: value.company_id.trim(),
+    account_holder_id: value.account_holder_id.trim(),
+  }
+}
+
+export async function createAccountHolderStepHandler(
+  input: unknown,
+  { container }: WorkflowHandlerContext
+) {
+  const payload = buildCreateAccountHolderInput(input)
+
+  if (!isStripeConfigured()) {
+    return new StepResponse<CreateAccountHolderStepResult, null>({ skipped: true }, null)
+  }
+
+  const paymentModuleService: IPaymentModuleService = container.resolve(Modules.PAYMENT)
+  const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
+
+  const { data: existingLinks } = await query.graph({
+    entity: "company",
+    fields: ["account_holder.*"],
+    filters: { id: payload.company_id },
+  })
+
+  const existingAccountHolder = (existingLinks[0] as any)?.account_holder
+  if (existingAccountHolder) {
+    return new StepResponse<CreateAccountHolderStepResult, null>({ skipped: true }, null)
+  }
+
+  const accountHolder = await paymentModuleService.createAccountHolder({
+    provider_id: "pp_stripe_stripe",
+    context: {
+      customer: {
+        id: payload.company_id,
+        email: payload.company_email,
+      },
+    },
+  })
+
+  const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+  await link.create({
+    [COMPANY_MODULE]: { company_id: payload.company_id },
+    [Modules.PAYMENT]: { account_holder_id: accountHolder.id },
+  })
+
+  const compensateInput = buildCreateAccountHolderCompensationData({
+    company_id: payload.company_id,
+    account_holder_id: accountHolder.id
+  })
+
+  return new StepResponse<CreateAccountHolderStepResult, CreateAccountHolderCompensationData>({ skipped: false, account_holder_id: accountHolder.id }, compensateInput)
+}
+
+export async function createAccountHolderCompensationHandler(
+  compensationData: unknown,
+  { container }: WorkflowHandlerContext
+) {
+  if (!isCreateAccountHolderCompensationData(compensationData)) {
+    return
+  }
+  const payload = buildCreateAccountHolderCompensationData(compensationData)
+
+  const paymentModuleService: IPaymentModuleService = container.resolve(Modules.PAYMENT)
+  const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+
+  await link.dismiss({
+    [COMPANY_MODULE]: { company_id: payload.company_id },
+    [Modules.PAYMENT]: {
+      account_holder_id: payload.account_holder_id,
+    },
+  })
+
+  await paymentModuleService.deleteAccountHolder(payload.account_holder_id)
+}
+
+
 export function buildUpdateCompanyPayload(input: UpdateCompanyInput): UpdateCompanyInput {
   const payload: UpdateCompanyInput = {
     id: input.id.trim(),
@@ -258,68 +383,18 @@ const updateCompanyStep = createStep<UpdateCompanyInput, UpdateCompanyStepResult
   updateCompanyCompensationHandler
 )
 
-const createAccountHolderStep = createStep(
+async function createAccountHolderStepWrapper(input: CreateAccountHolderInput, context: WorkflowHandlerContext) {
+  return await createAccountHolderStepHandler(input, context)
+}
+
+const createAccountHolderStep = createStep<
+  CreateAccountHolderInput,
+  CreateAccountHolderStepResult,
+  CreateAccountHolderCompensationData | null
+>(
   "create-account-holder",
-  async (
-    input: { company_id: string; company_email: string },
-    { container }
-  ) => {
-    if (!isStripeConfigured()) {
-      return new StepResponse({ skipped: true }, null)
-    }
-
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT)
-    const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
-
-    const { data: existingLinks } = await query.graph({
-      entity: "company",
-      fields: ["account_holder.*"],
-      filters: { id: input.company_id },
-    })
-
-    const existingAccountHolder = (existingLinks[0] as any)?.account_holder
-    if (existingAccountHolder) {
-      return new StepResponse({ skipped: true }, null)
-    }
-
-    const accountHolder = await paymentModuleService.createAccountHolder({
-      provider_id: "pp_stripe_stripe",
-      context: {
-        customer: {
-          id: input.company_id,
-          email: input.company_email,
-        },
-      },
-    })
-
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
-    await link.create({
-      [COMPANY_MODULE]: { company_id: input.company_id },
-      [Modules.PAYMENT]: { account_holder_id: accountHolder.id },
-    })
-
-    return new StepResponse(
-      { skipped: false, account_holder_id: accountHolder.id },
-      { company_id: input.company_id, account_holder_id: accountHolder.id }
-    )
-  },
-  async (compensationData: any, { container }) => {
-    if (!compensationData) return
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT)
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
-
-    await link.dismiss({
-      [COMPANY_MODULE]: { company_id: compensationData.company_id },
-      [Modules.PAYMENT]: {
-        account_holder_id: compensationData.account_holder_id,
-      },
-    })
-    await paymentModuleService.deleteAccountHolder(
-      compensationData.account_holder_id
-    )
-  }
+  createAccountHolderStepWrapper,
+  createAccountHolderCompensationHandler
 )
 
 export const updateCompanyWorkflow = createWorkflow(
