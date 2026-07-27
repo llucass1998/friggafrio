@@ -9,7 +9,7 @@ interface ProductShowcaseSlideProps {
 export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlideProps) {
   return (
     <div className="flex-none w-full min-w-0" role="group" aria-roledescription="slide" aria-label={slide.title}>
-      <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[2.3/1] max-h-[620px] rounded-[var(--radius-card-lg)] bg-[var(--color-surface)] overflow-hidden flex flex-col items-center justify-end group">
+      <div className="relative w-full aspect-video md:aspect-[21/9] lg:aspect-[2.3/1] max-h-[620px] rounded-[var(--radius-card-lg)] bg-[var(--color-surface)] overflow-hidden flex items-end group">
 
         {/* Placeholder / Image */}
         <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
@@ -44,7 +44,7 @@ export function ProductShowcaseSlide({ slide, isActive }: ProductShowcaseSlidePr
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy)]/90 via-[var(--color-navy)]/40 to-transparent z-20 pointer-events-none"></div>
 
         {/* Slide Content */}
-        <div className="relative z-30 p-6 sm:p-10 text-left w-full translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+        <div className="relative z-30 p-6 sm:p-10 text-left w-full sm:w-2/3 lg:w-1/2">
           <h3 className="text-3xl font-bold text-white mb-2">{slide.title}</h3>
           <p className="text-white/90 text-base md:text-lg mb-6 line-clamp-2 max-w-xl">
             {slide.description}

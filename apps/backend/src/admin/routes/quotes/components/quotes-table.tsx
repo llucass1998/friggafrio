@@ -75,7 +75,7 @@ export const QuotesTable = () => {
               <Table.Cell>
                 <Text className="txt-compact-small">
                   // @ts-expect-error
-                  {quote.draft_order?.customer?.employee?.company?.name || "-"}
+                  {(quote.draft_order?.customer as unknown as { employee?: { company?: { name?: string } } })?.employee?.company?.name || "-"}
                 </Text>
               </Table.Cell>
               <Table.Cell>
