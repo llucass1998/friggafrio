@@ -10,6 +10,7 @@ import {
 import { isStripeConfigured } from "../../../../utils/is-stripe-configured"
 import { createCompanyAccountHolderWorkflow } from "../../../../workflows/create-company-account-holder"
 
+// Interfaces for Medusa Graph Query results
 interface QueryCompany {
   id: string
   name: string
@@ -18,7 +19,7 @@ interface QueryCompany {
 
 interface QueryEmployee {
   is_admin: boolean
-  company: QueryCompany
+  company?: QueryCompany
 }
 
 interface QueryCustomer {
@@ -39,6 +40,28 @@ interface QueryCompanyWithHolder {
   account_holder?: QueryAccountHolder
 }
 
+// Type Guards to safely replace 'as unknown as' assertions
+function isQueryCustomer(data: unknown): data is QueryCustomer {
+  return typeof data === "object" && data !== null && "id" in data
+}
+
+function isQueryCompanyWithHolder(data: unknown): data is QueryCompanyWithHolder {
+  return typeof data === "object" && data !== null && "id" in data
+}
+
+function isWorkflowResultWithDataId(data: unknown): data is QueryAccountHolder {
+  if (typeof data !== "object" || data === null) return false
+  const holder = data as Record<string, unknown>
+  return typeof holder.id === "string"
+}
+
+// Adapter para o PaymentModuleService.
+// Como @medusajs não exporta IPaymentModuleService globalmente no contexto atual de rotas de loja,
+// usamos este adapter local mínimo validado pelo ecossistema para interagir com o container.
+interface PaymentModuleServiceAdapter {
+  listPaymentMethods: (filter: { provider_id?: string; context?: Record<string, unknown> }) => Promise<unknown[]>
+}
+
 async function getCompanyAccountHolder(
   req: AuthenticatedMedusaRequest
 ): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: QueryAccountHolder | null }> {
@@ -55,13 +78,16 @@ async function getCompanyAccountHolder(
     filters: { id: customerId },
   })
 
-  if (!customers || customers.length === 0) {
+  if (!Array.isArray(customers) || customers.length === 0) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Customer not found")
   }
 
-  const customer = customers[0] as unknown as QueryCustomer
-  const employee = customer.employee
+  const customerRecord = customers[0]
+  if (!isQueryCustomer(customerRecord)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid customer data structure")
+  }
 
+  const employee = customerRecord.employee
   if (!employee?.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -80,13 +106,16 @@ async function getCompanyAccountHolder(
     filters: { id: company.id },
   })
 
-  if (!companies || companies.length === 0) {
+  if (!Array.isArray(companies) || companies.length === 0) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Company not found in graph")
   }
 
-  const companyRecord = companies[0] as unknown as QueryCompanyWithHolder
-  const accountHolder = companyRecord.account_holder
+  const companyRecord = companies[0]
+  if (!isQueryCompanyWithHolder(companyRecord)) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid company data structure")
+  }
 
+  const accountHolder = companyRecord.account_holder
   const companyInfo = { company_id: company.id, company_name: company.name, company_email: company.email }
 
   if (!accountHolder) {
@@ -108,31 +137,21 @@ export async function GET(
   }
 
   const accountHolderId = account_holder.data?.id
-  if (!accountHolderId) {
+  const providerId = account_holder.provider_id
+
+  // Enforce fail-closed if the account holder doesn't have a configured provider_id
+  if (!accountHolderId || !providerId) {
     res.json({ payment_methods: [] })
     return
   }
 
-  const queryProvider = (req.query as Record<string, unknown>)?.provider_id as string | undefined
+  // A leitura arbitrária de req.query.provider_id foi completamente removida.
+  // O sistema utiliza unicamente o provider validado atrelado ao account_holder no banco.
 
-  // Validate provider_id
-  // 1. Rejeitar provider desconhecido/arbitrário
-  // 2. Garantir que bate com o configurado (ex: pp_stripe_stripe) ou o vinculado ao account_holder
-  const allowedProvider = account_holder.provider_id || "pp_stripe_stripe"
-
-  if (queryProvider && queryProvider !== allowedProvider) {
-    throw new MedusaError(
-      MedusaError.Types.INVALID_DATA,
-      "Invalid provider_id requested or mismatch with account holder"
-    )
-  }
-
-  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as unknown as {
-    listPaymentMethods: (filter: { provider_id?: string; context?: Record<string, unknown> }) => Promise<unknown[]>
-  }
+  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as unknown as PaymentModuleServiceAdapter
 
   const paymentMethods = await paymentModuleService.listPaymentMethods({
-    provider_id: allowedProvider,
+    provider_id: providerId,
     context: {
       account_holder: {
         data: { id: accountHolderId },
@@ -167,7 +186,11 @@ export async function POST(
       },
     })
 
-    account_holder = result as unknown as QueryAccountHolder
+    if (!isWorkflowResultWithDataId(result)) {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, "Workflow returned an invalid account holder structure")
+    }
+
+    account_holder = result
   }
 
   const stripeCustomerId = account_holder.data?.id
