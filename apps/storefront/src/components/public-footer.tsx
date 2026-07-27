@@ -88,7 +88,7 @@ export function PublicFooter() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm uppercase">Nossa Loja Física</h4>
-                <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">Venha nos visitar</Link>
+                <Link to={`/${countryCode}/nossa-loja`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">Venha nos visitar</Link>
               </div>
             </div>
 
@@ -134,7 +134,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.products.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    <Link to={`/${countryCode}${item.href}`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
                   </li>
@@ -152,7 +152,7 @@ export function PublicFooter() {
                         {item.label}
                       </a>
                     ) : (
-                      <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                      <Link to={`/${countryCode}${item.href}`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                         {item.label}
                       </Link>
                     )}
@@ -166,7 +166,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.support.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    <Link to={`/${countryCode}${item.href}`} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
                   </li>
