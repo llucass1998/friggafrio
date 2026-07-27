@@ -121,3 +121,10 @@ Nenhum bloqueio técnico. O workflow carece de tipagens estritas mas todos os m�
 - **Payment não alterado:** Manteve o formato do CreateAccountHolder inalterado até próxima subfase.
 - **Rollback completo não testado:** Validado como "NÃO" no relatório principal.
 - **Idempotência não comprovada:** Mantida incerta até aprovação do fluxo final.
+
+## 22. Subfase 2.1-C.2-C-B.1.1 — Correção dos Falsos Positivos do updateCompanyStep (Finalizado)
+- **Object Spread Bug (`...data`) Solucionado:** Comprovou-se via script de diagnóstico que chaves `undefined` em objetos não eram removidas pelo V8 durante destructuring e object-spread (ex: `{ id, ...data }`). Isso corrompia o ORM (salvava null/undefined onde não deveria atuar). O bug foi corrigido mediante criação de funções Builder puras (`buildUpdateCompanyPayload` e afins) encarregadas de iterar, validar e gerar um objeto seguro.
+- **Validação Snapshot e Testes (Jest):** Alterou-se a asserção no mock Jest de forma explícita. O teste que verificava a passagem de campos undefined agora valida sua total ausência via `Object.keys(payloadReceived).not.toContain("name")`, assegurando proteção total contra false positives.
+- **Isolamento presencial de Type-guards (Casts = 0):** Suprimiu-se de modo assertivo a tentativa de mascarar o object via Cast, as funções Builder agora garantem propriedades rígidas aos domínios requeridos. Todo o TypeCheck e Lint validado no Medusa v2.
+- **Fase de Frontend:** Não acessada; Worktree intocado sob bloqueio restrito.
+- **Status da Tarefa**: 100% Concluído. Próximo passo é seguir conforme cronograma na refatoração da Payment logic (Account Holder) e a finalização de idempotência em subfases posteriores.
