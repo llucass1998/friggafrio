@@ -1,14 +1,20 @@
 import {
   createWorkflow,
   WorkflowResponse,
+  createStep,
+  StepResponse
 } from "@medusajs/framework/workflows-sdk"
-import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { COMPANY_MODULE } from "../../modules/company"
-import CompanyModuleService from "../../modules/company/service"
+import type CompanyModuleService from "../../modules/company/service"
 import { MedusaError } from "@medusajs/framework/utils"
+import type { MedusaContainer } from "@medusajs/framework/types"
 
 export type DeleteCompanyInput = {
   id: string
+}
+
+type WorkflowHandlerContext = {
+  container: MedusaContainer
 }
 
 export function isDeleteCompanyInput(value: unknown): value is DeleteCompanyInput {
@@ -21,7 +27,10 @@ export function isDeleteCompanyInput(value: unknown): value is DeleteCompanyInpu
   return typeof record.id === "string" && record.id.trim().length > 0
 }
 
-export async function deleteCompanyStepHandler(input: DeleteCompanyInput, { container }: { container: any }) {
+export async function deleteCompanyStepHandler(
+  input: unknown,
+  { container }: WorkflowHandlerContext
+) {
   if (!isDeleteCompanyInput(input)) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
@@ -29,26 +38,39 @@ export async function deleteCompanyStepHandler(input: DeleteCompanyInput, { cont
     )
   }
 
-  const companyModuleService: CompanyModuleService =
-    container.resolve(COMPANY_MODULE)
+  const id = input.id.trim()
 
-  await companyModuleService.softDeleteCompanies(input.id)
+  const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
 
-  return new StepResponse(undefined, input.id)
+  await companyModuleService.softDeleteCompanies(id)
+
+  return new StepResponse(undefined, id)
 }
 
-export async function deleteCompanyCompensationHandler(id: unknown, { container }: { container: any }) {
-  if (!id || typeof id !== "string" || id.trim().length === 0) return
+export async function deleteCompanyCompensationHandler(
+  id: unknown,
+  { container }: WorkflowHandlerContext
+) {
+  if (typeof id !== "string" || id.trim().length === 0) {
+    return
+  }
 
-  const companyModuleService: CompanyModuleService =
-    container.resolve(COMPANY_MODULE)
+  const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
 
-  await companyModuleService.restoreCompanies(id)
+  await companyModuleService.restoreCompanies(id.trim())
+}
+
+// Wrapper to satisfy SDK signature while avoiding "any" or casts.
+async function deleteCompanyStepWrapper(
+  input: DeleteCompanyInput,
+  context: WorkflowHandlerContext
+) {
+  return await deleteCompanyStepHandler(input, context)
 }
 
 const deleteCompanyStep = createStep<DeleteCompanyInput, undefined, unknown>(
   "delete-company",
-  deleteCompanyStepHandler,
+  deleteCompanyStepWrapper,
   deleteCompanyCompensationHandler
 )
 

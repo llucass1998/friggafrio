@@ -49,7 +49,14 @@
 - **Motivo da seleção:** É o workflow mais isolado e simples disponível. Contém apenas 1 step, possui compensação nativa clara (soft delete / restore), não toca no domínio financeiro, sem chamadas externas a provedores, não possui `any` no código, sendo o ponto de partida ideal para fixar o padrão de testes unitários e validações estritas exigidos sem estilhaçar a base de código.
 - **Testes necessários:** Teste unitário para execução de sucesso e execução da compensação em caso de falha. Teste validando input vazio.
 
-
-## Update: deleteCompanyWorkflow
-- Testes implementados (`__tests__/delete-company.unit.spec.ts`).
-- Cobertura validada para runtime validations, softDelete execution e compensação (restore).
+## Update: deleteCompanyWorkflow (Subfase 2.1-C.2-B Finalizada)
+- **Quantidade real de casos unitários**: 37.
+- **Input runtime validado**: Sim (através de `isDeleteCompanyInput`).
+- **Handler principal testado**: Sim.
+- **Compensation handler testado diretamente**: Sim (isoladamente).
+- **Falhas dos services propagadas**: Sim.
+- **Casts inseguros (any/unknown)**: 0.
+- **Gates executados**: typecheck, lint, test:unit, build executados com sucesso.
+- **Idempotência**: Não comprovada / dependente do CompanyModuleService.
+- **Rollback completo do workflow testado**: Não (não foi executado em runner com engine real).
+- **Frontend alterado**: Não.
