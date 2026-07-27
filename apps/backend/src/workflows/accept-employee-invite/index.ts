@@ -12,7 +12,7 @@ import {
   deleteInvitesWorkflow,
 } from "@medusajs/medusa/core-flows";
 import { MedusaError, Modules } from "@medusajs/framework/utils";
-import type { IAuthModuleService } from "@medusajs/types";
+import type { IAuthModuleService } from "@medusajs/framework/types";
 import { COMPANY_MODULE } from "../../modules/company";
 import CompanyModuleService from "../../modules/company/service";
 

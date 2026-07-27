@@ -1,10 +1,11 @@
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework"
 
 export default async function paymentWebhookReceivedHandler({
   event: { data },
   container,
-}: SubscriberArgs<{ payload: any }>) {
-  const logger = container.resolve("logger")
+}: SubscriberArgs<{ payload: unknown }>) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
 
   logger.info(`[Payment] Webhook Received asynchronously for payload processing`)
 

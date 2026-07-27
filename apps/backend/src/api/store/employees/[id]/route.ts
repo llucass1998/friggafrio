@@ -80,6 +80,7 @@ export async function POST(
   const { spending_limit } = req.body as { spending_limit: number | null }
 
   const companyModuleService = req.scope.resolve(COMPANY_MODULE)
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
   const updatedEmployee = await companyModuleService.updateEmployees({
     id: employeeId,
     spending_limit,

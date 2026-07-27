@@ -12,7 +12,7 @@ import { createCompanyAccountHolderWorkflow } from "../../../../workflows/create
 
 async function getCompanyAccountHolder(
   req: AuthenticatedMedusaRequest
-): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: any }> {
+): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: unknown }> {
   const customerId = req.auth_context?.actor_id
   if (!customerId) {
     throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized")
@@ -69,10 +69,10 @@ export async function GET(
   const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
 
   const paymentMethods = await paymentModuleService.listPaymentMethods({
-    provider_id: account_holder.provider_id,
+    provider_id: (req.body as any).provider_id,
     context: {
       account_holder: {
-        data: { id: account_holder.data?.id },
+        data: { id: (account_holder as any).data?.id },
       },
     },
   })
@@ -107,7 +107,7 @@ export async function POST(
     account_holder = result
   }
 
-  const stripeCustomerId = account_holder.data?.id as string
+  const stripeCustomerId = (account_holder as any).data?.id as string
   if (!stripeCustomerId) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,

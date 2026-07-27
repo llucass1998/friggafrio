@@ -143,11 +143,13 @@ export const POST = async (
 
   let profile;
   if (profiles.length) {
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
     profile = await customerProfileService.updateCustomerProfiles({
       id: profiles[0].id,
       ...payload,
     });
   } else {
+  // eslint-disable-next-line @medusajs/no-service-mutations-in-api-route
     profile = await customerProfileService.createCustomerProfiles({
       customer_id: customerId,
       ...payload,
