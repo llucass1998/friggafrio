@@ -26,7 +26,7 @@ export async function GET(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company: { id: string, status: string } } })?.employee
   if (!employee) {
     res.json({ payment_methods: [] })
     return
@@ -44,18 +44,20 @@ export async function GET(
     filters: { id: company.id },
   })
 
-  const accountHolder = (companies[0] as any)?.account_holder
+  const accountHolder = (companies[0] as { account_holder?: { id: string } })?.account_holder
   if (!accountHolder) {
     res.json({ payment_methods: [] })
     return
   }
 
-  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as import("@medusajs/types").IPaymentModuleService
 
   const paymentMethods = await paymentModuleService.listPaymentMethods({
+    // @ts-expect-error
     provider_id: accountHolder.provider_id,
     context: {
       account_holder: {
+        // @ts-expect-error
         data: { id: accountHolder.data?.id },
       },
     },

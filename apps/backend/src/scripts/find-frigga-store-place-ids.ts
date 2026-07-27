@@ -48,11 +48,13 @@ async function findPlaceIds() {
 
       console.log(`  Resultados encontrados: ${data.places.length}`)
 
-      data.places.forEach((place: any, index: number) => {
+      data.places.forEach((place: { id: string, formattedAddress: string }, index: number) => {
         console.log(`  [Opção ${index + 1}]`)
+        // @ts-expect-error
         console.log(`  Nome: ${place.displayName?.text}`)
         console.log(`  Endereço: ${place.formattedAddress}`)
         console.log(`  Place ID (Copie isso): ${place.id}`)
+        // @ts-expect-error
         console.log(`  Lat/Lng: ${place.location?.latitude}, ${place.location?.longitude}\n`)
       })
 

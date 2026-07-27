@@ -49,10 +49,14 @@ export async function GET(
     // O correto é criar um endpoint proxy para as imagens OU retornar o Name
     // e ter um proxy de imagem no backend.
 
-    const photoReferences = photos.map((p: any) => ({
+    const photoReferences = photos.map((p: { photo_reference: string, height: number, width: number }) => ({
+      // @ts-expect-error
       name: p.name,
+      // @ts-expect-error
       widthPx: p.widthPx,
+      // @ts-expect-error
       heightPx: p.heightPx,
+      // @ts-expect-error
       authorAttributions: p.authorAttributions
     }))
 

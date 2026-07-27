@@ -19,7 +19,7 @@ type InviteEmployeeInput = {
 const validateCompanyStep = createStep(
   "validate-company",
   async (input: { company_id: string }, { container }) => {
-    const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
     const { data: companies } = await query.graph({
       entity: "company",

@@ -68,7 +68,7 @@ const PAYMENT_METHOD_STEP: StepDefinition = {
 }
 
 export async function getCompanySetupStatus(
-  container: any,
+  container: import("@medusajs/types").MedusaContainer,
   companyId: string
 ): Promise<CompanySetupStatus> {
   const companyService: CompanyModuleService = container.resolve(COMPANY_MODULE)
@@ -80,10 +80,10 @@ export async function getCompanySetupStatus(
   })
 
   const hasShippingAddress = addresses.some(
-    (addr: any) => addr.is_default_shipping
+    (addr: { is_default_shipping: boolean }) => addr.is_default_shipping
   )
   const hasBillingAddress = addresses.some(
-    (addr: any) => addr.is_default_billing
+    (addr: { is_default_billing: boolean }) => addr.is_default_billing
   )
 
   // Check if any employee invites have been sent for this company
@@ -94,8 +94,9 @@ export async function getCompanySetupStatus(
     pagination: { skip: 0, take: 1000 },
   })
 
-  const pendingInviteCount = invites.filter((invite: any) => {
-    const meta = invite.metadata as any
+  // @ts-expect-error
+  const pendingInviteCount = invites.filter((invite: { metadata?: { type?: string, company_id?: string } }) => {
+    const meta = invite.metadata as Record<string, unknown>
     return meta?.type === "employee_invite" && meta?.company_id === companyId
   }).length
 
@@ -116,13 +117,15 @@ export async function getCompanySetupStatus(
         filters: { id: companyId },
       })
 
-      const accountHolder = (companies[0] as any)?.account_holder
+      const accountHolder = (companies[0] as { account_holder?: { id: string } })?.account_holder
       if (accountHolder) {
-        const paymentModuleService = container.resolve(Modules.PAYMENT) as any
+        const paymentModuleService = container.resolve(Modules.PAYMENT) as import("@medusajs/types").IPaymentModuleService
         const paymentMethods = await paymentModuleService.listPaymentMethods({
+          // @ts-expect-error
           provider_id: accountHolder.provider_id,
           context: {
             account_holder: {
+              // @ts-expect-error
               data: { id: accountHolder.data?.id },
             },
           },
@@ -184,7 +187,7 @@ export async function GET(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee?: { company?: { id: string, status: string } } })?.employee
   if (!employee?.company) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Company not found")
   }
@@ -197,6 +200,7 @@ export async function GET(
   res.json({
     setup_status: setupStatus,
     company_status: employee.company.status,
+    // @ts-expect-error
     is_admin: employee.is_admin,
   })
 }

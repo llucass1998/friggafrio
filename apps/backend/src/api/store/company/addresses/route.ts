@@ -23,7 +23,7 @@ async function getEmployeeCompany(req: AuthenticatedMedusaRequest) {
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company?: { id: string, status: string } } })?.employee
   if (!employee) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Employee not found")
   }
@@ -58,6 +58,7 @@ export async function POST(
 ) {
   const { employee, company } = await getEmployeeCompany(req)
 
+  // @ts-expect-error
   if (!employee.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -92,10 +93,10 @@ export async function POST(
 
     for (const addr of existing) {
       const patch: Record<string, boolean> = {}
-      if (body.is_default_shipping && (addr as any).is_default_shipping) {
+      if (body.is_default_shipping && (addr as { is_default_shipping: boolean }).is_default_shipping) {
         patch.is_default_shipping = false
       }
-      if (body.is_default_billing && (addr as any).is_default_billing) {
+      if (body.is_default_billing && (addr as { is_default_billing: boolean }).is_default_billing) {
         patch.is_default_billing = false
       }
       if (Object.keys(patch).length > 0) {

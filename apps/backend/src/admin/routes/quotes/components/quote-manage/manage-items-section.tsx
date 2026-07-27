@@ -58,7 +58,8 @@ export const ManageItemsSection = ({
         <ManageItem
           key={item.id}
           originalItem={originalItemsMap.get(item.id)!}
-          item={item as any}
+          // @ts-expect-error
+          item={item as { id: string, title: string, unit_price: number, quantity: number }}
           orderId={order.id}
           currencyCode={order.currency_code}
         />

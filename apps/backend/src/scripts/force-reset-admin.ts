@@ -1,6 +1,6 @@
 import { Modules } from "@medusajs/framework/utils"
 import { ExecArgs } from "@medusajs/framework/types"
-import { createUsersWorkflow } from "@medusajs/core-flows"
+import { createUsersWorkflow } from "@medusajs/medusa/core-flows"
 
 export default async function forceResetAdmin({ container }: ExecArgs) {
   console.log("Forcing a new admin account creation with linked identity...");
@@ -14,13 +14,14 @@ export default async function forceResetAdmin({ container }: ExecArgs) {
   
   try {
     console.log("1. Creating auth identity...");
-    const { authIdentity } = await authModuleService.register("emailpass", {
+    const authResult = await authModuleService.register("emailpass", {
       body: {
         email: newEmail,
         password: newPass
       }
-    });
-    console.log("-> Auth identity created:", authIdentity.id);
+    }) as Record<string, unknown>;
+    const authIdentity = authResult.authIdentity as { id: string } | undefined;
+    console.log("-> Auth identity created:", authIdentity?.id);
     
     console.log("2. Creating user...");
     const newUser = await userModuleService.createUsers({

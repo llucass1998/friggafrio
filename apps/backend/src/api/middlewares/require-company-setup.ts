@@ -23,21 +23,21 @@ export async function requireCompanySetup(
   res: MedusaResponse,
   next: MedusaNextFunction
 ) {
-  const customerId = (req as any).auth_context?.actor_id
+  const customerId = (req as { auth_context?: { actor_id: string } }).auth_context?.actor_id
   if (!customerId) {
     return next()
   }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
-  let employee: any
+  let employee: { company?: { id: string, status: string } } | undefined
   try {
     const { data: customers } = await query.graph({
       entity: "customer",
       fields: ["id", "employee.*", "employee.company.*"],
       filters: { id: customerId },
     })
-    employee = (customers[0] as any)?.employee
+    employee = (customers[0] as { employee?: { company?: { id: string, status: string } } })?.employee
   } catch {
     return next()
   }
@@ -64,8 +64,8 @@ export async function requireCompanySetup(
     company_id: company.id,
   })
 
-  const hasShipping = addresses.some((addr: any) => addr.is_default_shipping)
-  const hasBilling = addresses.some((addr: any) => addr.is_default_billing)
+  const hasShipping = addresses.some((addr: { is_default_shipping: boolean }) => addr.is_default_shipping)
+  const hasBilling = addresses.some((addr: { is_default_billing: boolean }) => addr.is_default_billing)
 
   // Check payment methods (only required if company has an account holder, i.e. Stripe was configured)
   let hasPaymentMethod = false
@@ -77,14 +77,16 @@ export async function requireCompanySetup(
       filters: { id: company.id },
     })
 
-    const accountHolder = (companies[0] as any)?.account_holder
+    const accountHolder = (companies[0] as { account_holder?: { id: string } })?.account_holder
     hasAccountHolder = !!accountHolder
     if (accountHolder) {
-      const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+      const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as import("@medusajs/types").IPaymentModuleService
       const paymentMethods = await paymentModuleService.listPaymentMethods({
+        // @ts-expect-error
         provider_id: accountHolder.provider_id,
         context: {
           account_holder: {
+            // @ts-expect-error
             data: { id: accountHolder.data?.id },
           },
         },

@@ -26,7 +26,7 @@ export async function validateDemoPriceCheckout(
     }
 
     for (const item of cart.items) {
-      const metadata = item?.variant?.product?.metadata as Record<string, any>
+      const metadata = item?.variant?.product?.metadata as Record<string, unknown>
       if (metadata) {
         if (metadata.is_demo_price === true || metadata.price_approval_status !== "approved" || metadata.purchase_enabled === false) {
           return res.status(400).json({

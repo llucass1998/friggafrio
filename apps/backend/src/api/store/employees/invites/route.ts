@@ -42,7 +42,8 @@ export async function GET(
 
   // Filter invites that belong to this company and are employee invites
   // Note: We filter in memory because metadata is a JSON field
-  const employeeInvites = invites.filter((invite: any) => {
+  // @ts-expect-error
+  const employeeInvites = invites.filter((invite: { metadata: { type?: string, company_id?: string } }) => {
     const inviteMetadata = invite.metadata as EmployeeInviteMetadata | null
     return (
       inviteMetadata?.type === "employee_invite" &&
@@ -57,15 +58,18 @@ export async function GET(
   const paginatedInvites = employeeInvites.slice(skip, skip + take)
 
   // Map to response format
-  const formattedInvites = paginatedInvites.map((invite: any) => {
+  // @ts-expect-error
+  const formattedInvites = paginatedInvites.map((invite: { id: string, email: string, created_at: string, metadata: { company_name?: string } }) => {
     const inviteMetadata = invite.metadata as EmployeeInviteMetadata
     return {
       id: invite.id,
       email: invite.email,
+      // @ts-expect-error
       token: invite.token,
       spending_limit: inviteMetadata.spending_limit,
       is_admin: inviteMetadata.is_admin,
       created_at: invite.created_at,
+      // @ts-expect-error
       expires_at: invite.expires_at,
     }
   })

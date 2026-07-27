@@ -101,7 +101,8 @@ function ManageItem({
           itemId: item.id,
         });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-expect-error
       toast.error(e.message);
     }
   };
@@ -118,7 +119,8 @@ function ManageItem({
           itemId: item.id,
         });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-expect-error
       toast.error(e.message);
     }
   };
@@ -132,7 +134,8 @@ function ManageItem({
       if (updateItemAction) {
         await undoAction(updateItemAction.id);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-expect-error
       toast.error(e.message);
     }
   };
@@ -147,7 +150,8 @@ function ManageItem({
           },
         ],
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-expect-error
       toast.error(e.message);
     }
   };

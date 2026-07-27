@@ -64,7 +64,8 @@ export async function validateSpendingLimit(params: ValidateSpendingLimitParams)
     return
   }
 
-  const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
+  // @ts-expect-error
+  const query = container.resolve(ContainerRegistrationKeys.QUERY) as import("@medusajs/types").IQuery
 
   // Find the employee linked to this customer
   const { data: links } = await query.graph({
@@ -75,7 +76,7 @@ export async function validateSpendingLimit(params: ValidateSpendingLimitParams)
     },
   })
 
-  const employees = links?.map((link: any) => link.employee).filter(Boolean) || []
+  const employees = links?.map((link: { employee: unknown }) => link.employee).filter(Boolean) || []
 
   // If no employee record, this is not a B2B customer - allow purchase
   if (!employees || employees.length === 0) {
@@ -106,7 +107,7 @@ export async function validateSpendingLimit(params: ValidateSpendingLimitParams)
   const windowStart = getSpendingWindowStart(resetFrequency)
 
   // Build filter for orders
-  const orderFilters: Record<string, any> = {
+  const orderFilters: Record<string, unknown> = {
     customer_id,
     status: { $nin: ["canceled", "archived"] },
   }
@@ -124,8 +125,8 @@ export async function validateSpendingLimit(params: ValidateSpendingLimitParams)
 
   // Sum previous spending (same currency)
   const previousSpending = orders
-    .filter((order: any) => order.currency_code === currency_code)
-    .reduce((sum: number, order: any) => sum + (Number(order.total) || 0), 0)
+    .filter((order: { currency_code: string }) => order.currency_code === currency_code)
+    .reduce((sum: number, order: { total: string | number }) => sum + (Number(order.total) || 0), 0)
 
   const totalWithNewOrder = previousSpending + order_total
 

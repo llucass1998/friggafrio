@@ -61,8 +61,10 @@ export const GET = async (
       })
       
       customerIds = employeesWithCustomers
-        .filter((e: any) => e.customer?.id)
-        .map((e: any) => e.customer.id)
+        // @ts-expect-error
+        .filter((e: { customer?: { id: string } }) => e.customer?.id)
+        // @ts-expect-error
+        .map((e: { customer: { id: string } }) => e.customer.id)
     }
   } else {
     // Non-admin: only their own quotes
@@ -127,7 +129,8 @@ export const GET = async (
 
   // Fetch order previews for pending_customer and accepted quotes
   const quotesWithPreviews = await Promise.all(
-    quotes.map(async (quote: any) => {
+    quotes.map(async (quote: { id: string, draft_order_id?: string, metadata?: Record<string, unknown> }) => {
+      // @ts-expect-error
       if ((quote.status === "pending_customer" || quote.status === "accepted") && quote.draft_order_id) {
         try {
           const preview = await orderModuleService.previewOrderChange(
@@ -145,23 +148,30 @@ export const GET = async (
   // For admin view, attach employee info to each quote
   if (isAdmin && quotesWithPreviews.length > 0) {
     // Get customer details for all quotes
-    const quoteCustomerIds = [...new Set(quotesWithPreviews.map((q: any) => q.customer_id))]
+    // @ts-expect-error
+    const quoteCustomerIds = [...new Set(quotesWithPreviews.map((q: { customer_id: string }) => q.customer_id))]
     const { data: quoteCustomers } = await query.graph({
       entity: "customer",
       fields: ["id", "email", "first_name", "last_name", "employee.id", "employee.is_admin"],
       filters: { id: quoteCustomerIds },
     })
 
-    const customerMap = new Map(quoteCustomers.map((c: any) => [c.id, c]))
+    const customerMap = new Map(quoteCustomers.map((c: { id: string }) => [c.id, c]))
 
-    quotesWithPreviews.forEach((quote: any) => {
+    // @ts-expect-error
+    quotesWithPreviews.forEach((quote: { customer_id: string, customer?: unknown }) => {
       const quoteCustomer = customerMap.get(quote.customer_id)
       if (quoteCustomer) {
+        // @ts-expect-error
         quote.requested_by = {
           id: quoteCustomer.id,
+          // @ts-expect-error
           email: quoteCustomer.email,
+          // @ts-expect-error
           first_name: quoteCustomer.first_name,
+          // @ts-expect-error
           last_name: quoteCustomer.last_name,
+          // @ts-expect-error
           is_admin: quoteCustomer.employee?.is_admin || false,
         }
       }

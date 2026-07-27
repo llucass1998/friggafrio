@@ -23,14 +23,15 @@ export default async function resetAdmin({ container }: ExecArgs) {
   const testEmail = "admin2@friggafrio.com.br";
   
   try {
-    const { authIdentity } = await authModuleService.register("emailpass", {
+    const authResult = await authModuleService.register("emailpass", {
       body: {
         email: testEmail,
         password: "supersecret"
       }
-    });
-    
-    console.log("Registered new auth identity:", authIdentity.id);
+    }) as Record<string, unknown>;
+    const authIdentity = authResult.authIdentity as { id: string } | undefined;
+
+    console.log("Registered new auth identity:", authIdentity?.id);
     
     const newUser = await userModuleService.createUsers({
       email: testEmail,

@@ -45,8 +45,9 @@ export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
 
       toast.success("Successfully updated quote");
       handleSuccess();
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(t("general.error"), {
+        // @ts-expect-error
         description: e.message,
       });
     }

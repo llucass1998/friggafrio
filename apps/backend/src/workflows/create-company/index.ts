@@ -99,7 +99,7 @@ const linkEmployeeToCustomerStep = createStep(
     input: { employee_id: string; customer_id: string },
     { container }
   ) => {
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any;
+    const link = container.resolve(ContainerRegistrationKeys.LINK);
 
     await link.create({
       [COMPANY_MODULE]: {
@@ -118,7 +118,7 @@ const linkEmployeeToCustomerStep = createStep(
   async (linkData, { container }) => {
     if (!linkData) return;
 
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any;
+    const link = container.resolve(ContainerRegistrationKeys.LINK);
 
     await link.dismiss({
       [COMPANY_MODULE]: {
@@ -148,7 +148,7 @@ export const createCompanyWorkflow = createWorkflow(
       },
     });
 
-    const customer = customerResult as any;
+    const customer = customerResult as unknown as { id: string };
 
     // Step 2: Create the company
     const company = createCompanyStep(input);

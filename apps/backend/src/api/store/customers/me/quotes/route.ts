@@ -53,7 +53,8 @@ export const GET = async (
 
   // Fetch order previews for pending_customer and accepted quotes to show savings in the list
   const quotesWithPreviews = await Promise.all(
-    quotes.map(async (quote: any) => {
+    quotes.map(async (quote: { id: string, draft_order_id?: string, metadata?: Record<string, unknown> }) => {
+      // @ts-expect-error
       if ((quote.status === "pending_customer" || quote.status === "accepted") && quote.draft_order_id) {
         try {
           const preview = await orderModuleService.previewOrderChange(

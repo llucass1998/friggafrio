@@ -126,7 +126,7 @@ const QuoteDetails = () => {
 console.log("draft order", quote.draft_order)
 console.log("preview", preview)
 
-  const customer = quote.draft_order?.customer as any;
+  const customer = quote.draft_order?.customer as unknown as { first_name?: string, last_name?: string, email?: string, phone?: string, employee?: { company?: { id: string, name: string }, spending_limit?: number } };
 
   return (
     <div className="flex flex-col gap-y-3">
