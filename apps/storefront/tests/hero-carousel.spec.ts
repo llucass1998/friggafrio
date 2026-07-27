@@ -46,7 +46,7 @@ test.describe("Hero Carousel Display and Animations", () => {
     await slides.first().waitFor({ state: 'attached' })
 
     // Obter index do ativo atual (esperado ser o 0 no load inicial)
-    let activeIndex = await page.evaluate(() => {
+    const activeIndex = await page.evaluate(() => {
       const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
       return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
     })
