@@ -132,6 +132,61 @@ export function isUpdateCompanyCompensationData(value: unknown): value is Update
   return true
 }
 
+export function buildUpdateCompanyPayload(input: UpdateCompanyInput): UpdateCompanyInput {
+  const payload: UpdateCompanyInput = {
+    id: input.id.trim(),
+  }
+
+  if (input.name !== undefined) payload.name = input.name
+  if (input.email !== undefined) payload.email = input.email
+  if (input.phone !== undefined) payload.phone = input.phone
+  if (input.address !== undefined) payload.address = input.address
+  if (input.city !== undefined) payload.city = input.city
+  if (input.state !== undefined) payload.state = input.state
+  if (input.postal_code !== undefined) payload.postal_code = input.postal_code
+  if (input.country_code !== undefined) payload.country_code = input.country_code
+  if (input.logo_url !== undefined) payload.logo_url = input.logo_url
+  if (input.status !== undefined) payload.status = input.status
+  if (input.spend_limit_reset_frequency !== undefined) payload.spend_limit_reset_frequency = input.spend_limit_reset_frequency
+
+  return payload
+}
+
+export function buildUpdateCompanyCompensationData(company: Record<string, unknown>): UpdateCompanyCompensationData {
+  return {
+    id: typeof company.id === "string" ? company.id : "",
+    name: typeof company.name === "string" ? company.name : "",
+    email: typeof company.email === "string" ? company.email : "",
+    phone: typeof company.phone === "string" ? company.phone : null,
+    address: typeof company.address === "string" ? company.address : null,
+    city: typeof company.city === "string" ? company.city : null,
+    state: typeof company.state === "string" ? company.state : null,
+    postal_code: typeof company.postal_code === "string" ? company.postal_code : null,
+    country_code: typeof company.country_code === "string" ? company.country_code : null,
+    logo_url: typeof company.logo_url === "string" ? company.logo_url : null,
+    status: company.status as CompanyStatus,
+    spend_limit_reset_frequency: company.spend_limit_reset_frequency as SpendLimitResetFrequency | undefined,
+  }
+}
+
+export function buildUpdateCompanyStepResult(company: Record<string, unknown>, previousStatus: string): UpdateCompanyStepResult {
+  return {
+    id: typeof company.id === "string" ? company.id : "",
+    name: typeof company.name === "string" ? company.name : "",
+    email: typeof company.email === "string" ? company.email : "",
+    status: typeof company.status === "string" ? company.status : "",
+    previous_status: previousStatus,
+    phone: typeof company.phone === "string" ? company.phone : null,
+    address: typeof company.address === "string" ? company.address : null,
+    city: typeof company.city === "string" ? company.city : null,
+    state: typeof company.state === "string" ? company.state : null,
+    postal_code: typeof company.postal_code === "string" ? company.postal_code : null,
+    country_code: typeof company.country_code === "string" ? company.country_code : null,
+    logo_url: typeof company.logo_url === "string" ? company.logo_url : null,
+    spend_limit_reset_frequency: company.spend_limit_reset_frequency as SpendLimitResetFrequency | undefined,
+  }
+}
+
 export async function updateCompanyStepHandler(
   input: unknown,
   { container }: WorkflowHandlerContext
@@ -145,46 +200,14 @@ export async function updateCompanyStepHandler(
 
   const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
 
-  const { id, ...data } = input
-  const normalizedId = id.trim()
+  const payload = buildUpdateCompanyPayload(input)
+  const previousCompanyRaw = await companyModuleService.retrieveCompany(payload.id)
 
-  const previousCompany = await companyModuleService.retrieveCompany(normalizedId)
+  const compensationData = buildUpdateCompanyCompensationData(previousCompanyRaw as Record<string, unknown>)
+  const previousStatus = typeof previousCompanyRaw.status === "string" ? previousCompanyRaw.status : ""
 
-  const compensationData: UpdateCompanyCompensationData = {
-    id: previousCompany.id,
-    name: previousCompany.name,
-    email: previousCompany.email,
-    phone: previousCompany.phone,
-    address: previousCompany.address,
-    city: previousCompany.city,
-    state: previousCompany.state,
-    postal_code: previousCompany.postal_code,
-    country_code: previousCompany.country_code,
-    logo_url: previousCompany.logo_url,
-    status: previousCompany.status as CompanyStatus,
-    spend_limit_reset_frequency: (previousCompany.spend_limit_reset_frequency ?? undefined) as SpendLimitResetFrequency | undefined,
-  }
-
-  const company = await companyModuleService.updateCompanies({
-    id: normalizedId,
-    ...data,
-  })
-
-  const stepResult: UpdateCompanyStepResult = {
-    id: company.id,
-    name: company.name,
-    email: company.email,
-    status: company.status as string,
-    previous_status: previousCompany.status as string,
-    phone: company.phone,
-    address: company.address,
-    city: company.city,
-    state: company.state,
-    postal_code: company.postal_code,
-    country_code: company.country_code,
-    logo_url: company.logo_url,
-    spend_limit_reset_frequency: (company.spend_limit_reset_frequency ?? undefined) as SpendLimitResetFrequency | undefined,
-  }
+  const companyRaw = await companyModuleService.updateCompanies(payload)
+  const stepResult = buildUpdateCompanyStepResult(companyRaw as Record<string, unknown>, previousStatus)
 
   return new StepResponse(stepResult, compensationData)
 }
@@ -198,21 +221,9 @@ export async function updateCompanyCompensationHandler(
   }
 
   const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
+  const payload = buildUpdateCompanyPayload(compensationData)
 
-  await companyModuleService.updateCompanies({
-    id: compensationData.id,
-    name: compensationData.name,
-    email: compensationData.email,
-    phone: compensationData.phone,
-    address: compensationData.address,
-    city: compensationData.city,
-    state: compensationData.state,
-    postal_code: compensationData.postal_code,
-    country_code: compensationData.country_code,
-    logo_url: compensationData.logo_url,
-    status: compensationData.status,
-    spend_limit_reset_frequency: compensationData.spend_limit_reset_frequency,
-  })
+  await companyModuleService.updateCompanies(payload)
 }
 
 async function updateCompanyStepWrapper(input: UpdateCompanyInput, context: WorkflowHandlerContext) {
