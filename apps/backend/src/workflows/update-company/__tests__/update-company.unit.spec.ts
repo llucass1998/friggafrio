@@ -154,11 +154,24 @@ describe("updateCompanyWorkflow step unit tests", () => {
       expect(response).toBeInstanceOf(StepResponse)
     })
 
-    it("should preserve explicit nulls and not send undefined properties to update", async () => {
-      const input = { id: "comp_123", city: null, name: undefined }
+    it("should preserve explicit nulls and explicitly strip undefined properties from payload", async () => {
+      // Pass both null and undefined values to verify correct handling
+      const input = { id: "comp_123", city: null, name: undefined, email: undefined }
       await updateCompanyStepHandler(input, context)
 
-      expect(mockUpdateCompanies).toHaveBeenCalledWith({
+      expect(mockUpdateCompanies).toHaveBeenCalledTimes(1)
+
+      const payloadReceived = mockUpdateCompanies.mock.calls[0][0]
+
+      // The payload MUST contain explicitly passed nulls
+      expect(payloadReceived).toHaveProperty("city", null)
+
+      // The payload MUST NOT contain keys that were set to undefined in the input
+      expect(Object.keys(payloadReceived)).not.toContain("name")
+      expect(Object.keys(payloadReceived)).not.toContain("email")
+
+      // Exact check of the payload structure
+      expect(payloadReceived).toStrictEqual({
         id: "comp_123",
         city: null,
       })
