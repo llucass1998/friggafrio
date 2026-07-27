@@ -120,7 +120,15 @@ export function HeaderMobileDrawer() {
                 Institucional
               </h3>
               <ul className="space-y-1">
-                {/* Nossa Loja removido do menu mobile */}
+                <li>
+                  <Link
+                    to="/nossa-loja"
+                    onClick={closeDrawer}
+                    className="block px-4 py-4 text-[15px] font-medium text-[var(--color-navy)] hover:bg-[var(--color-surface-soft)] rounded-md transition-colors"
+                  >
+                    Nossa Loja
+                  </Link>
+                </li>
               </ul>
             </div>
           </nav>

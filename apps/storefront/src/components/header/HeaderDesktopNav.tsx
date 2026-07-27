@@ -9,6 +9,13 @@ export function HeaderDesktopNav() {
       <ProductsMegaMenu />
 
       {/* 2. Links Diretos */}
+      <Link
+        to="/nossa-loja"
+        className="text-[var(--color-navy)] font-medium hover:text-[var(--color-primary)] transition-colors py-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md px-2"
+      >
+        Nossa Loja
+      </Link>
+
       {mainNavigation.filter(nav => nav.id !== "nav-gases" && nav.id !== "nav-compressores" && nav.id !== "nav-camara" && nav.id !== "nav-ferramentas").map((nav) => (
         <Link
           key={nav.id}
