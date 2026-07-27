@@ -10,9 +10,38 @@ import {
 import { isStripeConfigured } from "../../../../utils/is-stripe-configured"
 import { createCompanyAccountHolderWorkflow } from "../../../../workflows/create-company-account-holder"
 
+interface QueryCompany {
+  id: string
+  name: string
+  email: string
+}
+
+interface QueryEmployee {
+  is_admin: boolean
+  company: QueryCompany
+}
+
+interface QueryCustomer {
+  id: string
+  employee?: QueryEmployee
+}
+
+interface QueryAccountHolder {
+  id: string
+  provider_id?: string
+  data?: {
+    id?: string
+  }
+}
+
+interface QueryCompanyWithHolder {
+  id: string
+  account_holder?: QueryAccountHolder
+}
+
 async function getCompanyAccountHolder(
   req: AuthenticatedMedusaRequest
-): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: unknown }> {
+): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: QueryAccountHolder | null }> {
   const customerId = req.auth_context?.actor_id
   if (!customerId) {
     throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized")
@@ -26,7 +55,13 @@ async function getCompanyAccountHolder(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  if (!customers || customers.length === 0) {
+    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Customer not found")
+  }
+
+  const customer = customers[0] as unknown as QueryCustomer
+  const employee = customer.employee
+
   if (!employee?.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -45,7 +80,13 @@ async function getCompanyAccountHolder(
     filters: { id: company.id },
   })
 
-  const accountHolder = (companies[0] as any)?.account_holder
+  if (!companies || companies.length === 0) {
+    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Company not found in graph")
+  }
+
+  const companyRecord = companies[0] as unknown as QueryCompanyWithHolder
+  const accountHolder = companyRecord.account_holder
+
   const companyInfo = { company_id: company.id, company_name: company.name, company_email: company.email }
 
   if (!accountHolder) {
@@ -66,13 +107,35 @@ export async function GET(
     return
   }
 
-  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+  const accountHolderId = account_holder.data?.id
+  if (!accountHolderId) {
+    res.json({ payment_methods: [] })
+    return
+  }
+
+  const queryProvider = (req.query as Record<string, unknown>)?.provider_id as string | undefined
+
+  // Validate provider_id
+  // 1. Rejeitar provider desconhecido/arbitrário
+  // 2. Garantir que bate com o configurado (ex: pp_stripe_stripe) ou o vinculado ao account_holder
+  const allowedProvider = account_holder.provider_id || "pp_stripe_stripe"
+
+  if (queryProvider && queryProvider !== allowedProvider) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Invalid provider_id requested or mismatch with account holder"
+    )
+  }
+
+  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as unknown as {
+    listPaymentMethods: (filter: { provider_id?: string; context?: Record<string, unknown> }) => Promise<unknown[]>
+  }
 
   const paymentMethods = await paymentModuleService.listPaymentMethods({
-    provider_id: (req.body as any).provider_id,
+    provider_id: allowedProvider,
     context: {
       account_holder: {
-        data: { id: (account_holder as any).data?.id },
+        data: { id: accountHolderId },
       },
     },
   })
@@ -104,10 +167,10 @@ export async function POST(
       },
     })
 
-    account_holder = result
+    account_holder = result as unknown as QueryAccountHolder
   }
 
-  const stripeCustomerId = (account_holder as any).data?.id as string
+  const stripeCustomerId = account_holder.data?.id
   if (!stripeCustomerId) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
