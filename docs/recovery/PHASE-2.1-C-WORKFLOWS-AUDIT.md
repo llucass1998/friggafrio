@@ -2,9 +2,9 @@
 
 ## 1. Inventário de Arquivos
 - **Quantidade total de arquivos:** 21 arquivos em `apps/backend/src/workflows`
-- **Workflows encontrados:** 12
-- **Steps isolados/Helpers:** 8 arquivos em `steps/` e `hooks/`, além do index de `audit`
-- **Workflows órfãos:** Nenhum classificado isoladamente (a maioria é usada por endpoints/eventos).
+- **Workflows encontrados:** 14 (Corrigido após re-auditoria)
+- **Steps individuais:** 23 execuções de `createStep` (incluindo isolados em `steps/` e `hooks/`, além de in-line)
+- **Workflows órfãos:** 0 (Todos atendem endpoints ou scripts)
 - **Testes existentes:** 0 arquivos de teste dedicados `*.spec.ts` dentro de `src/workflows`.
 
 ## 2. Mapa de Workflows
@@ -36,7 +36,10 @@
 
 ## 4. Classificação de Risco e Idempotência
 - A maioria dos workflows opera sem chaves de idempotência transacionais declaradas no banco de dados. Compensações dependem da disponibilidade dos módulos em caso de falha.
-- **Risco Crítico:** Workflows envolvendo provedores de Pagamento (ex: `createCompanyAccountHolderWorkflow`) e aprovação de Orçamentos (Quotes).
+- **Risco Crítico (2):** `createCompanyAccountHolderWorkflow`, `customerAcceptQuoteWorkflow`
+- **Risco Alto (10):** Restante que muta ou aprova entidades secundárias complexas
+- **Risco Médio (2):** `updateCompanyWorkflow`, `deleteCompanyWorkflow`
+- **Risco Baixo (0):** Nenhum
 - Nenhum dado sensível em Log foi detectado (tokens e senhas são mapeados direto para os módulos `AUTH` sem passar por loggers).
 
 ## 5. Primeiro Workflow Selecionado
