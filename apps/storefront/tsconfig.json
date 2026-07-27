@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "strict": true,
+    "useUnknownInCatchVariables": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "module": "esnext",
