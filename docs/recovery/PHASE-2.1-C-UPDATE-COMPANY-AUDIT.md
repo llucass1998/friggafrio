@@ -25,13 +25,10 @@ Auditoria isolada de leitura para o `updateCompanyWorkflow`. O workflow processa
    - *Compensação:* Deleta o link com `dismiss` e deleta o account holder via provider.
 
 ## 6. Ocorrências inseguras (Casts e Any)
-- `...(company as any)`: Código executável (retorno transform).
-- `previousCompany as any`: Código executável (passando compensation data).
-- `previousCompany: any`: Compensação (input da compensação).
-- `query as any`: Código executável (Container resolve QUERY).
-- `(existingLinks[0] as any)?.account_holder`: Código executável (Query graph result).
-- `link as any`: Código executável (Container resolve LINK na criação).
-- `link as any`: Compensação (Container resolve LINK na compensação).
+Corrigindo o inventário inicial:
+- `: any`: 1 ocorrência (`previousCompany: any` em compensation data).
+- `as any`: 6 ocorrências (`company as any`, `previousCompany as any`, `query as any`, `existingLinks[0] as any`, `link as any` (criação), `link as any` (compensação)).
+- Total Inseguro: 7 ocorrências confirmadas.
 
 ## 7. Validação runtime
 - **Validado pela rota:** Normalmente regras do `validator` da rota da API (Zod classes), que filtram payloads de rede.
@@ -53,10 +50,10 @@ Auditoria isolada de leitura para o `updateCompanyWorkflow`. O workflow processa
 
 ## 10. Stripe e provider
 - **Origem provider:** Hardcoded como `"pp_stripe_stripe"`.
-- **Stripe desabilitado:** O step retorna `{ skipped: true }` de modo inofensivo.
+- **Stripe desabilitado:** O step retorna `{ skipped: true }` sem interromper a ativação da empresa, significando que a empresa pode ficar ativa SEM account holder (classificado como decisão de negócio pendente; "desabilitado" não é intrinsecamente "seguro").
 - **Dados enviados:** Apenas customer_id (company.id) e email (company.email).
 - **Dados sensíveis:** Apenas PII básica, sem chaves trafegadas.
-- **Risco de Orfanato:** Se a criação do link no Medusa falhar após o Stripe gerar o Customer, o account holder fica órfão no Stripe porque a compensação não cobrirá se ela mesma não foi salva pelo step engine. Na compensação atual, se `link.dismiss` falhar (joga throw), o `deleteAccountHolder` nunca é chamado. 
+- **Risco de Orfanato:** Se a criação do link no Medusa falhar após o Stripe gerar o Customer, o account holder fica órfão no Stripe porque a compensação não cobrirá se ela mesma não foi salva pelo step engine. Na compensação atual, se `link.dismiss` falhar (joga throw), o `deleteAccountHolder` nunca é chamado. Inverter a ordem não é a única correção: é necessário desenhar e testar uma estratégia real de try/catch ou sagas em subfase separada.
 
 ## 11. Query e Link
 - **Tipos Oficiais Disponíveis:** `ILinkModule` e `RemoteQueryFunction`.
@@ -66,7 +63,7 @@ Auditoria isolada de leitura para o `updateCompanyWorkflow`. O workflow processa
 
 ## 12. Idempotência
 - `updateCompanyStep`: DEPENDENTE DO SERVICE (a API update no medusa é geralmente idempotente mas envia evento todo call).
-- `ativação`: VULNERÁVEL A CONCORRência.
+- `ativação`: VULNERÁVEL A CONCORRÊNCIA.
 - `criação do account holder` no Stripe: NÃO IDEMPOTENTE (sem idempotency_key do provider na payload).
 - `link.create`: PROVÁVEL.
 - `Workflow Completo`: VULNERÁVEL A CONCORRÊNCIA e parcialmente não idempotente.
@@ -93,14 +90,14 @@ I. Fluxo testando as falhas da criação de link (desfazendo customer Stripe).
 J. Falhas de compensation handler propagadas ou suprimidas conforme SDK.
 
 ## 17. Classificação de risco
-- **Classificação Final:** ALTO (Reclassificado de MÉDIO)
+- **Classificação Final:** ALTO
 - **Justificativa:** Transaciona com provedores externos de pagamento (Stripe), onde os Account Holders (clientes criados) podem ficar órfãos causando inconsistências financeiras graves, vazamento de instâncias não vinculadas e compensação que falha silenciosamente deixando lixo em dependências distribuídas. O `previous_status` lido é propício a race-condition.
 
 ## 18. Escopo recomendado para correção
 - Implantar type guard `isUpdateCompanyInput`.
 - Remover todos os casts de runtime (`as any`).
 - Injetar `RemoteQueryFunction` e `ILinkModule` corretamente do Types do framework.
-- Corrigir a compensação invertendo a ordem no rollback de `account-holder` (deleteAccountHolder primeiro, e link dismiss depois, ou garantindo try/catch no dismiss).
+- Corrigir a compensação desenhando uma estratégia real de try/catch no dismiss.
 - Passar o payload integral (ou o DTO exato de volta) no snapshot do update em vez de pick de atributos hardcoded.
 - Implementar suíte unitária para certificar segurança de tipos.
 
@@ -111,3 +108,16 @@ J. Falhas de compensation handler propagadas ou suprimidas conforme SDK.
 
 ## 20. Bloqueios
 Nenhum bloqueio técnico. O workflow carece de tipagens estritas mas todos os módulos e objetos exportados necessários de `@medusajs/framework/types` foram mapeados.
+
+## 21. Subfase 2.1-C.2-C-B.1 — Resultado
+- **Correção da contagem de `any`:** Finalizada.
+- **Handlers isolados:** Funções separadas para passo (`updateCompanyStepHandler`), wrapper nativo, type-guards em `isUpdateCompanyInput` e compensação de erro testáveis separadamente (`updateCompanyCompensationHandler`).
+- **Validação runtime:** Forte proteção com array guards e record casting. Previne inputs malformados chegando aos módulos internos do banco e service layer.
+- **Snapshot tipado:** Snapshots agora são definidos rigidamente em tipos `UpdateCompanyCompensationData`, com mapeamentos de campos primitivos suportados.
+- **Compensação unitária:** Validada na suíte Jest sem invocar serviços para instâncias que falham tipagem. 
+- **Testes criados:** Suíte de 28 casos garantindo comportamento do service. Cobertura explícita a nulls e propriedades vazias.
+- **Gates:** Passou integralmente (Linter, Unit Tests, TypeScript Compiler, Webpack Builder).
+- **`any` restantes no payment:** 4 usos (`query as any`, `existingLinks as any`, e os acessos aos LinkModules injetados).
+- **Payment não alterado:** Manteve o formato do CreateAccountHolder inalterado até próxima subfase.
+- **Rollback completo não testado:** Validado como "NÃO" no relatório principal.
+- **Idempotência não comprovada:** Mantida incerta até aprovação do fluxo final.
