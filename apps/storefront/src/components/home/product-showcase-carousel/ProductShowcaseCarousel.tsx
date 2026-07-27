@@ -36,6 +36,13 @@ export function ProductShowcaseCarousel() {
     }
   }, [emblaApi])
 
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    setSelectedIndex(emblaApi.selectedScrollSnap())
+    setCanScrollPrev(emblaApi.canScrollPrev())
+    setCanScrollNext(emblaApi.canScrollNext())
+  }, [emblaApi])
+
   const scrollTo = useCallback((index: number) => {
     if (emblaApi) {
       setDirection(index > selectedIndex ? 'next' : 'prev')
@@ -43,12 +50,16 @@ export function ProductShowcaseCarousel() {
     }
   }, [emblaApi, selectedIndex])
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-    setCanScrollPrev(emblaApi.canScrollPrev())
-    setCanScrollNext(emblaApi.canScrollNext())
-  }, [emblaApi])
+  const handleDotClick = useCallback((index: number) => {
+    if (emblaApi) {
+      const autoplay = emblaApi.plugins()?.autoplay
+      if (autoplay) {
+        autoplay.stop()
+        setIsPlaying(false)
+      }
+      scrollTo(index)
+    }
+  }, [emblaApi, scrollTo])
 
   useEffect(() => {
     if (!emblaApi) return
@@ -148,7 +159,7 @@ export function ProductShowcaseCarousel() {
             return (
               <button
                 key={index}
-                onClick={() => scrollTo(index)}
+                onClick={() => handleDotClick(index)}
                 className={`carousel-indicator-bar relative h-2.5 rounded-full overflow-hidden focus-visible:outline-2 focus-visible:outline-white ${
                   active ? "carousel-indicator-active w-12 bg-white/30" : "w-2.5 bg-white/50 hover:bg-white/80"
                 }`}
