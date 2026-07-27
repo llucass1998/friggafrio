@@ -10,7 +10,10 @@ import {
   updateCompanyStepHandler,
   updateCompanyCompensationHandler,
   updateCompanyWorkflow,
-  UpdateCompanyCompensationData
+  UpdateCompanyCompensationData,
+  buildUpdateCompanyPayload,
+  buildUpdateCompanyCompensationData,
+  buildUpdateCompanyStepResult
 } from "../index"
 
 type SingleUpdateCompanyType = {
@@ -107,6 +110,158 @@ describe("updateCompanyWorkflow step unit tests", () => {
     })
   })
 
+  describe("buildUpdateCompanyPayload", () => {
+    it("should extract valid properties and leave undefined out", () => {
+      const originalCopy = {
+        id: "comp_123",
+        name: "Test",
+        city: undefined,
+        address: null,
+        status: CompanyStatus.ACTIVE
+      }
+
+      const originalInput = { ...originalCopy }
+
+      const payload = buildUpdateCompanyPayload(originalInput)
+
+      expect(payload).toStrictEqual({
+        id: "comp_123",
+        name: "Test",
+        address: null,
+        status: CompanyStatus.ACTIVE
+      })
+
+      expect(Object.keys(payload)).not.toContain("city")
+
+      expect(Object.prototype.hasOwnProperty.call(payload, "address")).toBe(true)
+
+      expect(originalInput).toStrictEqual(originalCopy)
+    })
+
+    it("should normalize ID and only include it if it is the only field", () => {
+      const payload = buildUpdateCompanyPayload({ id: "  comp_123  " })
+
+      expect(payload).toStrictEqual({ id: "comp_123" })
+      expect(Object.keys(payload).length).toBe(1)
+    })
+  })
+
+  describe("buildUpdateCompanyCompensationData", () => {
+    it("should correctly build a compensation snapshot from a valid entity", () => {
+      const validEntity = {
+        id: "comp_123",
+        name: "Old Name",
+        email: "old@test.com",
+        phone: null,
+        address: "Address",
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+        status: CompanyStatus.PENDING,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+        employees: ["emp_1"],
+        addresses: [],
+        metadata: { foo: "bar" }
+      }
+
+      const snapshot = buildUpdateCompanyCompensationData(validEntity)
+
+      expect(snapshot).toStrictEqual({
+        id: "comp_123",
+        name: "Old Name",
+        email: "old@test.com",
+        phone: null,
+        address: "Address",
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+        status: CompanyStatus.PENDING,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
+      })
+
+      const keys = Object.keys(snapshot)
+      expect(keys).not.toContain("created_at")
+      expect(keys).not.toContain("updated_at")
+      expect(keys).not.toContain("deleted_at")
+      expect(keys).not.toContain("employees")
+      expect(keys).not.toContain("addresses")
+      expect(keys).not.toContain("metadata")
+    })
+
+    const invalidEntities = [
+      { name: "empty object", value: {} },
+      { name: "missing id", value: { name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE } },
+      { name: "id spaces", value: { id: "   ", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE } },
+      { name: "invalid status", value: { id: "comp_123", name: "Test", email: "test@test.com", status: "invalid" } },
+      { name: "missing name", value: { id: "comp_123", email: "test@test.com", status: CompanyStatus.ACTIVE } },
+      { name: "null", value: null },
+      { name: "array", value: [] },
+      { name: "invalid nullable field", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, phone: 123 } },
+      { name: "invalid frequency", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE, spend_limit_reset_frequency: "invalid" } }
+    ]
+
+    it.each(invalidEntities)("should throw INVALID_DATA for $name", ({ value }) => {
+      expect(() => buildUpdateCompanyCompensationData(value)).toThrow(MedusaError)
+    })
+  })
+
+  describe("buildUpdateCompanyStepResult", () => {
+    it("should correctly build a step result from a valid entity and previous status", () => {
+      const validEntity = {
+        id: "comp_123",
+        name: "New Name",
+        email: "new@test.com",
+        phone: null,
+        address: null,
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+        status: CompanyStatus.ACTIVE,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
+        created_at: new Date()
+      }
+
+      const result = buildUpdateCompanyStepResult(validEntity, CompanyStatus.PENDING)
+
+      expect(result).toStrictEqual({
+        id: "comp_123",
+        name: "New Name",
+        email: "new@test.com",
+        phone: null,
+        address: null,
+        city: null,
+        state: null,
+        postal_code: null,
+        country_code: null,
+        logo_url: null,
+        status: CompanyStatus.ACTIVE,
+        spend_limit_reset_frequency: SpendLimitResetFrequency.MONTHLY,
+        previous_status: CompanyStatus.PENDING
+      })
+
+      expect(Object.keys(result)).not.toContain("created_at")
+    })
+
+    const invalidEntities = [
+      { name: "missing status", value: { id: "comp_123", name: "Test", email: "test@test.com" }, prev: CompanyStatus.PENDING },
+      { name: "invalid previous status", value: { id: "comp_123", name: "Test", email: "test@test.com", status: CompanyStatus.ACTIVE }, prev: "invalid" as any },
+      { name: "partial object", value: { id: "comp_123", name: "Test" }, prev: CompanyStatus.PENDING },
+    ]
+
+    it.each(invalidEntities)("should throw INVALID_DATA for $name", ({ value, prev }) => {
+      expect(() => buildUpdateCompanyStepResult(value, prev)).toThrow(MedusaError)
+    })
+  })
+
   describe("updateCompanyStepHandler", () => {
     const validSnapshot: SingleUpdateCompanyType = {
       id: "comp_123",
@@ -154,32 +309,15 @@ describe("updateCompanyWorkflow step unit tests", () => {
       expect(response).toBeInstanceOf(StepResponse)
     })
 
-    it("should preserve explicit nulls and explicitly strip undefined properties from payload", async () => {
-      // Pass both null and undefined values to verify correct handling
-      const input = { id: "comp_123", city: null, name: undefined, email: undefined }
-      await updateCompanyStepHandler(input, context)
-
-      expect(mockUpdateCompanies).toHaveBeenCalledTimes(1)
-
-      const payloadReceived = mockUpdateCompanies.mock.calls[0][0]
-
-      // The payload MUST contain explicitly passed nulls
-      expect(payloadReceived).toHaveProperty("city", null)
-
-      // The payload MUST NOT contain keys that were set to undefined in the input
-      expect(Object.keys(payloadReceived)).not.toContain("name")
-      expect(Object.keys(payloadReceived)).not.toContain("email")
-
-      // Exact check of the payload structure
-      expect(payloadReceived).toStrictEqual({
-        id: "comp_123",
-        city: null,
-      })
-    })
-
     it("should propagate retrieveCompany error and not execute update", async () => {
       mockRetrieveCompany.mockRejectedValueOnce(new Error("Not found"))
       await expect(updateCompanyStepHandler({ id: "comp_123" }, context)).rejects.toThrow("Not found")
+      expect(mockUpdateCompanies).not.toHaveBeenCalled()
+    })
+
+    it("should fail with INVALID_DATA if retrieve returns invalid object", async () => {
+      mockRetrieveCompany.mockResolvedValueOnce({ id: "comp_123" }) // partial
+      await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow(MedusaError)
       expect(mockUpdateCompanies).not.toHaveBeenCalled()
     })
 
@@ -188,10 +326,9 @@ describe("updateCompanyWorkflow step unit tests", () => {
       await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow("Update failed")
     })
 
-    it("should generate proper compensation data excluding unneeded relations and preserving null", async () => {
-      const input = { id: "comp_123", name: "New Name" }
-      const response = await updateCompanyStepHandler(input, context)
-      expect(response).toBeInstanceOf(StepResponse)
+    it("should fail with INVALID_DATA if update returns invalid object", async () => {
+      mockUpdateCompanies.mockResolvedValueOnce({ id: "comp_123" }) // partial
+      await expect(updateCompanyStepHandler({ id: "comp_123", name: "Fail" }, context)).rejects.toThrow(MedusaError)
     })
   })
 
@@ -199,8 +336,10 @@ describe("updateCompanyWorkflow step unit tests", () => {
     it("should not resolve service for undefined, null or invalid objects", async () => {
       await updateCompanyCompensationHandler(undefined, context)
       await updateCompanyCompensationHandler(null, context)
+      await updateCompanyCompensationHandler([], context)
       await updateCompanyCompensationHandler({}, context)
       await updateCompanyCompensationHandler({ id: "123" }, context)
+      await updateCompanyCompensationHandler({ id: "  " }, context) // spaces
 
       expect(mockContainer.resolve).not.toHaveBeenCalled()
     })
