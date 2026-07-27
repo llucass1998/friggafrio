@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "dev:e2e": "vite dev --host 127.0.0.1 --port 5173 --strictPort",
     "build": "vite build",
     "lint": "eslint src",
     "test": "pnpm test:unit",
