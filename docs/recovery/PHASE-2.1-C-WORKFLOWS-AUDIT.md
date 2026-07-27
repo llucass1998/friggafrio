@@ -17,7 +17,7 @@
 | `createRequestForQuoteWorkflow` | `create-request-for-quote.ts` | `cart_id`, `customer_id` | `Quote` | 4 | Parcial | `core-flows` | API Quote | Não | ALTO |
 | `customerAcceptQuoteWorkflow` | `customer-accept-quote.ts` | Input | `Order` | Vários | ? | `core-flows` | API Quote | Não | CRÍTICO |
 | `customerRejectQuoteWorkflow` | `customer-reject-quote.ts` | Input | `Order` | Vários | ? | `core-flows` | API Quote | Não | ALTO |
-| `deleteCompanyWorkflow` | `delete-company/index.ts` | `{id}` | `undefined` | 1 | Sim | `COMPANY` | API Admin | Não | MÉDIO |
+| `deleteCompanyWorkflow` | `delete-company/index.ts` | `{id}` | `undefined` | 1 | Sim | `COMPANY` | API Admin | Sim | MÉDIO |
 | `inviteEmployeeWorkflow` | `invite-employee/index.ts` | Input | Result | 3 | Sim | `COMPANY`, `AUTH` | API Admin | Não | ALTO |
 | `merchantRejectQuoteWorkflow` | `merchant-reject-quote.ts` | Input | `Order` | Vários | ? | `core-flows` | API Admin | Não | ALTO |
 | `merchantSendQuoteWorkflow` | `merchant-send-quote.ts` | Input | `Order` | Vários | ? | `core-flows` | API Admin | Não | ALTO |
@@ -48,3 +48,8 @@
 - **Domínio:** Empresas (Company)
 - **Motivo da seleção:** É o workflow mais isolado e simples disponível. Contém apenas 1 step, possui compensação nativa clara (soft delete / restore), não toca no domínio financeiro, sem chamadas externas a provedores, não possui `any` no código, sendo o ponto de partida ideal para fixar o padrão de testes unitários e validações estritas exigidos sem estilhaçar a base de código.
 - **Testes necessários:** Teste unitário para execução de sucesso e execução da compensação em caso de falha. Teste validando input vazio.
+
+
+## Update: deleteCompanyWorkflow
+- Testes implementados (`__tests__/delete-company.unit.spec.ts`).
+- Cobertura validada para runtime validations, softDelete execution e compensação (restore).
