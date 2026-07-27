@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
 
   return {
+    server: {
+      port: 5173,
+      strictPort: true,
+    },
+    preview: {
+      port: 4173,
+      strictPort: true,
+    },
     
     define: {
       __APP_GIT_SHA__: JSON.stringify("8cc018d"),
