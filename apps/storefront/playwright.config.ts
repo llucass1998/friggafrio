@@ -13,7 +13,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
   },
   projects: [
@@ -27,8 +27,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm run dev',
-    url: 'http://localhost:5173',
+    command: 'pnpm run dev:e2e',
+    url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
   },
 });
