@@ -12,8 +12,9 @@ import {
   CompanyStatus,
   SpendLimitResetFrequency,
 } from "../../modules/company/models"
-import type { IPaymentModuleService } from "@medusajs/framework/types"
+import type { IPaymentModuleService, MedusaContainer } from "@medusajs/framework/types"
 import { isStripeConfigured } from "../../utils/is-stripe-configured"
+import { MedusaError } from "@medusajs/framework/utils"
 
 export type UpdateCompanyInput = {
   id: string
@@ -30,60 +31,198 @@ export type UpdateCompanyInput = {
   spend_limit_reset_frequency?: SpendLimitResetFrequency
 }
 
-type UpdateCompanyStepResult = {
+export type UpdateCompanyStepResult = {
   id: string
   name: string
   email: string
   status: string
   previous_status: string
-  [key: string]: unknown
+  phone: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  country_code: string | null
+  logo_url: string | null
+  spend_limit_reset_frequency: SpendLimitResetFrequency | undefined
 }
 
-const updateCompanyStep = createStep(
-  "update-company",
-  async (input: UpdateCompanyInput, { container }) => {
-    const companyModuleService: CompanyModuleService =
-      container.resolve(COMPANY_MODULE)
+export type UpdateCompanyCompensationData = {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  country_code: string | null
+  logo_url: string | null
+  status: CompanyStatus
+  spend_limit_reset_frequency: SpendLimitResetFrequency | undefined
+}
 
-    const { id, ...data } = input
+export type WorkflowHandlerContext = {
+  container: MedusaContainer
+}
 
-    const previousCompany = await companyModuleService.retrieveCompany(id)
-
-    const company = await companyModuleService.updateCompanies({
-      id,
-      ...data,
-    })
-
-    return new StepResponse(
-      {
-        ...(company as any),
-        previous_status: previousCompany.status,
-      } as UpdateCompanyStepResult,
-      previousCompany as any
-    )
-  },
-  async (previousCompany: any, { container }) => {
-    if (!previousCompany) return
-
-    const companyModuleService: CompanyModuleService =
-      container.resolve(COMPANY_MODULE)
-
-    await companyModuleService.updateCompanies({
-      id: previousCompany.id,
-      name: previousCompany.name,
-      email: previousCompany.email,
-      phone: previousCompany.phone,
-      address: previousCompany.address,
-      city: previousCompany.city,
-      state: previousCompany.state,
-      postal_code: previousCompany.postal_code,
-      country_code: previousCompany.country_code,
-      logo_url: previousCompany.logo_url,
-      status: previousCompany.status,
-      spend_limit_reset_frequency:
-        previousCompany.spend_limit_reset_frequency,
-    })
+export function isUpdateCompanyInput(value: unknown): value is UpdateCompanyInput {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false
   }
+
+  const record = value as Record<string, unknown>
+
+  if (typeof record.id !== "string" || record.id.trim().length === 0) {
+    return false
+  }
+
+  const validateOptionalString = (val: unknown) => typeof val === "string" || val === undefined
+  const validateNullableString = (val: unknown) => typeof val === "string" || val === null || val === undefined
+
+  if (!validateOptionalString(record.name)) return false
+  if (!validateOptionalString(record.email)) return false
+  if (!validateNullableString(record.phone)) return false
+  if (!validateNullableString(record.address)) return false
+  if (!validateNullableString(record.city)) return false
+  if (!validateNullableString(record.state)) return false
+  if (!validateNullableString(record.postal_code)) return false
+  if (!validateNullableString(record.country_code)) return false
+  if (!validateNullableString(record.logo_url)) return false
+
+  if (
+    record.status !== undefined &&
+    record.status !== CompanyStatus.ACTIVE &&
+    record.status !== CompanyStatus.INACTIVE &&
+    record.status !== CompanyStatus.PENDING &&
+    record.status !== CompanyStatus.SUSPENDED
+  ) {
+    return false
+  }
+
+  if (
+    record.spend_limit_reset_frequency !== undefined &&
+    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.NONE &&
+    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.DAILY &&
+    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.WEEKLY &&
+    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.MONTHLY &&
+    record.spend_limit_reset_frequency !== SpendLimitResetFrequency.YEARLY
+  ) {
+    return false
+  }
+
+  return true
+}
+
+export function isUpdateCompanyCompensationData(value: unknown): value is UpdateCompanyCompensationData {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false
+  const r = value as Record<string, unknown>
+
+  if (typeof r.id !== "string") return false
+  if (typeof r.name !== "string") return false
+  if (typeof r.email !== "string") return false
+
+  if (
+    r.status !== CompanyStatus.ACTIVE &&
+    r.status !== CompanyStatus.INACTIVE &&
+    r.status !== CompanyStatus.PENDING &&
+    r.status !== CompanyStatus.SUSPENDED
+  ) return false
+
+  return true
+}
+
+export async function updateCompanyStepHandler(
+  input: unknown,
+  { container }: WorkflowHandlerContext
+) {
+  if (!isUpdateCompanyInput(input)) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Invalid input for updateCompanyStep"
+    )
+  }
+
+  const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
+
+  const { id, ...data } = input
+  const normalizedId = id.trim()
+
+  const previousCompany = await companyModuleService.retrieveCompany(normalizedId)
+
+  const compensationData: UpdateCompanyCompensationData = {
+    id: previousCompany.id,
+    name: previousCompany.name,
+    email: previousCompany.email,
+    phone: previousCompany.phone,
+    address: previousCompany.address,
+    city: previousCompany.city,
+    state: previousCompany.state,
+    postal_code: previousCompany.postal_code,
+    country_code: previousCompany.country_code,
+    logo_url: previousCompany.logo_url,
+    status: previousCompany.status as CompanyStatus,
+    spend_limit_reset_frequency: (previousCompany.spend_limit_reset_frequency ?? undefined) as SpendLimitResetFrequency | undefined,
+  }
+
+  const company = await companyModuleService.updateCompanies({
+    id: normalizedId,
+    ...data,
+  })
+
+  const stepResult: UpdateCompanyStepResult = {
+    id: company.id,
+    name: company.name,
+    email: company.email,
+    status: company.status as string,
+    previous_status: previousCompany.status as string,
+    phone: company.phone,
+    address: company.address,
+    city: company.city,
+    state: company.state,
+    postal_code: company.postal_code,
+    country_code: company.country_code,
+    logo_url: company.logo_url,
+    spend_limit_reset_frequency: (company.spend_limit_reset_frequency ?? undefined) as SpendLimitResetFrequency | undefined,
+  }
+
+  return new StepResponse(stepResult, compensationData)
+}
+
+export async function updateCompanyCompensationHandler(
+  compensationData: unknown,
+  { container }: WorkflowHandlerContext
+) {
+  if (!isUpdateCompanyCompensationData(compensationData)) {
+    return
+  }
+
+  const companyModuleService = container.resolve<CompanyModuleService>(COMPANY_MODULE)
+
+  await companyModuleService.updateCompanies({
+    id: compensationData.id,
+    name: compensationData.name,
+    email: compensationData.email,
+    phone: compensationData.phone,
+    address: compensationData.address,
+    city: compensationData.city,
+    state: compensationData.state,
+    postal_code: compensationData.postal_code,
+    country_code: compensationData.country_code,
+    logo_url: compensationData.logo_url,
+    status: compensationData.status,
+    spend_limit_reset_frequency: compensationData.spend_limit_reset_frequency,
+  })
+}
+
+async function updateCompanyStepWrapper(input: UpdateCompanyInput, context: WorkflowHandlerContext) {
+  return await updateCompanyStepHandler(input, context)
+}
+
+const updateCompanyStep = createStep<UpdateCompanyInput, UpdateCompanyStepResult, unknown>(
+  "update-company",
+  updateCompanyStepWrapper,
+  updateCompanyCompensationHandler
 )
 
 const createAccountHolderStep = createStep(
@@ -132,7 +271,7 @@ const createAccountHolderStep = createStep(
       { company_id: input.company_id, account_holder_id: accountHolder.id }
     )
   },
-  async (compensationData, { container }) => {
+  async (compensationData: any, { container }) => {
     if (!compensationData) return
     const paymentModuleService: IPaymentModuleService =
       container.resolve(Modules.PAYMENT)
