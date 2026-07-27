@@ -8,6 +8,7 @@ import { z } from "zod"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
 
 const storeSearchSchema = z.object({
+  q: z.string().optional(),
   category: z.string().optional(),
   [OPTION_VALUE_QUERY_KEY]: z
     .union([z.string(), z.array(z.string())])
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/$countryCode/store")({
   validateSearch: storeSearchSchema,
   loaderDeps: ({ search }) => ({
     optionValueIds: search[OPTION_VALUE_QUERY_KEY],
+    q: search.q,
   }),
   loader: async ({ params, context, deps }) => {
     const { countryCode } = params
@@ -39,12 +41,13 @@ export const Route = createFileRoute("/$countryCode/store")({
     }
 
     const { products } = await queryClient.ensureQueryData({
-      queryKey: ["products", { region_id: region.id, optionValueIds }],
+      queryKey: ["products", { region_id: region.id, optionValueIds, q: deps.q }],
       queryFn: () => listProducts({
         query_params: {
           limit: 100,
           order: "-created_at",
-          fields: "*variants.calculated_price,*categories,*variants.options"
+          fields: "*variants.calculated_price,*categories,*variants.options",
+          q: deps.q,
         },
         region_id: region.id,
       }),
