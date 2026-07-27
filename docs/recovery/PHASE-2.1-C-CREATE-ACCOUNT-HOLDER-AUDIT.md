@@ -195,3 +195,21 @@ Nenhum. A busca via the regex em `apps/backend/**/*.spec.ts` não detectou ocorr
 - `medusa build`: PASS. Projeto empacotado.
 
 *(Nenhuma alteração nos arquivos base foi gerada, preservando a imutabilidade demandada da auditoria e do branch de verificação)*
+
+## Subfase B.2-B — Tipagem, contratos e guards
+- **Tipos criados:** `CreateAccountHolderInput`, `CreateAccountHolderStepResult`, `CreateAccountHolderCompensationData`.
+- **Guards criados:** `isCreateAccountHolderInput`, `isCreateAccountHolderCompensationData`.
+- **Builders criados:** `buildCreateAccountHolderInput`, `buildCreateAccountHolderCompensationData`.
+- **Handlers extraídos:** `createAccountHolderStepHandler`, `createAccountHolderCompensationHandler`.
+- **Comportamento preservado:** Todos fluxos felizes e returns antecipados (`skipped: true`) preservados intactos, com ordem igual de dismiss e deleção no Payment, com falhas passadas para o engine.
+- **Quantidade de `any` antes:** 5 usos na Payment integration local do workflow.
+- **Quantidade de `any` depois:** 4 (uma assinatura de compensationData any eliminada).
+- **Ocorrências temporárias restantes:**
+  - 1x `query as any`
+  - 1x `existingLinks[0] as any`
+  - 1x `link as any` (criação)
+  - 1x `link as any` (dismiss)
+- **Divergência das flags pendente:** Mantido preservado `isStripeConfigured`, sem injetar `PAYMENTS_ENABLED` ainda.
+- **Pendências listadas:** Query e Link não corrigidos. Idempotência e concorrência não protegidos. permanentFailure não implementado. Compensação do account holder ainda vulnerável a falhas abruptas dependendo da order.
+- **Testes realizados:** Suíte pura criada com 19 testes em `create-account-holder-contracts.unit.spec.ts` cobrindo builders puros com tipagem rigorosa estática.
+- **Gates Reais do repósitorio:** Linter passou sem erros, unitários somaram 172 aprovados em 15 suítes na infra real via script cross-env, compilador validou todos os tipos exportados com 0 warnings, e build finalizado.
