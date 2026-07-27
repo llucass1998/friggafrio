@@ -44,7 +44,7 @@ export type UpdateCompanyStepResult = {
   postal_code: string | null
   country_code: string | null
   logo_url: string | null
-  spend_limit_reset_frequency: SpendLimitResetFrequency | undefined
+  spend_limit_reset_frequency: SpendLimitResetFrequency
 }
 
 export type UpdateCompanyCompensationData = {
@@ -59,7 +59,7 @@ export type UpdateCompanyCompensationData = {
   country_code: string | null
   logo_url: string | null
   status: CompanyStatus
-  spend_limit_reset_frequency: SpendLimitResetFrequency | undefined
+  spend_limit_reset_frequency: SpendLimitResetFrequency
 }
 
 export type WorkflowHandlerContext = {
@@ -134,7 +134,9 @@ export function isUpdateCompanyCompensationData(value: unknown): value is Update
   if (!isNullableString(value.logo_url)) return false
 
   if (!isCompanyStatus(value.status)) return false
-  if (value.spend_limit_reset_frequency !== undefined && !isSpendLimitResetFrequency(value.spend_limit_reset_frequency)) return false
+
+  if (!Object.prototype.hasOwnProperty.call(value, "spend_limit_reset_frequency")) return false
+  if (!isSpendLimitResetFrequency(value.spend_limit_reset_frequency)) return false
 
   return true
 }
@@ -160,51 +162,29 @@ export function buildUpdateCompanyPayload(input: UpdateCompanyInput): UpdateComp
 }
 
 export function buildUpdateCompanyCompensationData(value: unknown): UpdateCompanyCompensationData {
-  // We use the strict guard to ensure ALL required properties are present with the correct typing
-  // No silent default fallbacks, the service MUST return valid data.
-  // We map `undefined` out of spend_limit_reset_frequency if null is provided (database vs TS definition compatibility)
-
-  if (!isUnknownObject(value)) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data")
-  }
-
-  const mapped = {
-    ...value,
-    spend_limit_reset_frequency: value.spend_limit_reset_frequency === null ? undefined : value.spend_limit_reset_frequency
-  }
-
-  if (!isUpdateCompanyCompensationData(mapped)) {
+  if (!isUpdateCompanyCompensationData(value)) {
     throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data for snapshot")
   }
 
   return {
-    id: mapped.id,
-    name: mapped.name,
-    email: mapped.email,
-    phone: mapped.phone,
-    address: mapped.address,
-    city: mapped.city,
-    state: mapped.state,
-    postal_code: mapped.postal_code,
-    country_code: mapped.country_code,
-    logo_url: mapped.logo_url,
-    status: mapped.status,
-    spend_limit_reset_frequency: mapped.spend_limit_reset_frequency,
+    id: value.id,
+    name: value.name,
+    email: value.email,
+    phone: value.phone,
+    address: value.address,
+    city: value.city,
+    state: value.state,
+    postal_code: value.postal_code,
+    country_code: value.country_code,
+    logo_url: value.logo_url,
+    status: value.status,
+    spend_limit_reset_frequency: value.spend_limit_reset_frequency,
   }
 }
 
-export function buildUpdateCompanyStepResult(value: unknown, previousStatus: CompanyStatus): UpdateCompanyStepResult {
-  if (!isUnknownObject(value)) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data")
-  }
-
-  const mapped = {
-    ...value,
-    spend_limit_reset_frequency: value.spend_limit_reset_frequency === null ? undefined : value.spend_limit_reset_frequency
-  }
-
+export function buildUpdateCompanyStepResult(value: unknown, previousStatus: unknown): UpdateCompanyStepResult {
   // A StepResult contains the same fields as the CompensationData plus the previous_status
-  if (!isUpdateCompanyCompensationData(mapped)) {
+  if (!isUpdateCompanyCompensationData(value)) {
     throw new MedusaError(MedusaError.Types.INVALID_DATA, "Service returned invalid company data for step result")
   }
 
@@ -213,19 +193,19 @@ export function buildUpdateCompanyStepResult(value: unknown, previousStatus: Com
   }
 
   return {
-    id: mapped.id,
-    name: mapped.name,
-    email: mapped.email,
-    status: mapped.status,
+    id: value.id,
+    name: value.name,
+    email: value.email,
+    status: value.status,
     previous_status: previousStatus,
-    phone: mapped.phone,
-    address: mapped.address,
-    city: mapped.city,
-    state: mapped.state,
-    postal_code: mapped.postal_code,
-    country_code: mapped.country_code,
-    logo_url: mapped.logo_url,
-    spend_limit_reset_frequency: mapped.spend_limit_reset_frequency,
+    phone: value.phone,
+    address: value.address,
+    city: value.city,
+    state: value.state,
+    postal_code: value.postal_code,
+    country_code: value.country_code,
+    logo_url: value.logo_url,
+    spend_limit_reset_frequency: value.spend_limit_reset_frequency,
   }
 }
 
