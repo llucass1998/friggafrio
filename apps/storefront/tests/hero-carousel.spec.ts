@@ -114,12 +114,11 @@ test("hero carousel dots click and select correctly", async ({ page }) => {
   expect(activeIndex).toBe(0)
 
   // Click on the 3rd dot (index 2)
-  await page.waitForTimeout(2000);
   const dot3 = page.locator('button[aria-label="Ir para o destaque 3 de 5"]')
-  await dot3.click({ force: true })
+  await dot3.click()
 
   // Wait for the slide to become active (Playwright will auto-retry)
-  await expect(slides.nth(2)).toHaveAttribute('data-active', 'true', { timeout: 5000 })
+  await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
 })
 
 function rectanglesIntersect(
@@ -187,17 +186,13 @@ test.describe("Hero Carousel UI Overlap Avoidance", () => {
       
       console.log(JSON.stringify(results, null, 2))
 
-      // In smaller viewports, it's acceptable for controls to overlap text
-      // due to space constraints and the dark gradient overlay providing contrast
-      if (vp.width >= 1440) {
-        expect(results.INTERSECTS_TITLE_PREV).toBe(false)
-        expect(results.INTERSECTS_DESCRIPTION_PREV).toBe(false)
-        expect(results.INTERSECTS_CTA_PREV).toBe(false)
+      expect(results.INTERSECTS_TITLE_PREV).toBe(false)
+      expect(results.INTERSECTS_DESCRIPTION_PREV).toBe(false)
+      expect(results.INTERSECTS_CTA_PREV).toBe(false)
 
-        expect(results.INTERSECTS_TITLE_NEXT).toBe(false)
-        expect(results.INTERSECTS_DESCRIPTION_NEXT).toBe(false)
-        expect(results.INTERSECTS_CTA_NEXT).toBe(false)
-      }
+      expect(results.INTERSECTS_TITLE_NEXT).toBe(false)
+      expect(results.INTERSECTS_DESCRIPTION_NEXT).toBe(false)
+      expect(results.INTERSECTS_CTA_NEXT).toBe(false)
     })
   }
 })
