@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "@medusajs/framework/utils";
+import { defineConfig, loadEnv, MedusaError } from "@medusajs/framework/utils";
 import { getPaymentAvailability } from "./src/utils/payment-availability";
 import { getSessionCookieName } from "./src/lib/auth/session-security";
 
@@ -9,13 +9,11 @@ const isSecureSessionEnvironment = ["production", "staging"].includes(nodeEnv);
 const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 10 * 60 * 60 * 1000);
 
 if (!Number.isSafeInteger(sessionTtlMs) || sessionTtlMs <= 0) {
-  throw new Error("SESSION_TTL_MS must be a positive integer.");
+  throw new MedusaError(MedusaError.Types.INVALID_DATA, "SESSION_TTL_MS must be a positive integer.");
 }
 
 if (isSecureSessionEnvironment && !process.env.REDIS_URL) {
-  throw new Error(
-    "REDIS_URL is required in production and staging to persist authenticated sessions.",
-  );
+  throw new MedusaError(MedusaError.Types.INVALID_DATA, "REDIS_URL is required in production and staging to persist authenticated sessions.");
 }
 
 const stripeApiKey = process.env.STRIPE_API_KEY;
