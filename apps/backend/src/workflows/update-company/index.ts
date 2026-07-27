@@ -56,19 +56,20 @@ const updateCompanyStep = createStep(
 
     return new StepResponse(
       {
-        ...(company as any),
+        ...(company as Record<string, unknown>),
         previous_status: previousCompany.status,
       } as UpdateCompanyStepResult,
-      previousCompany as any
+      previousCompany as unknown as Record<string, unknown> | undefined
     )
   },
-  async (previousCompany: any, { container }) => {
+  async (previousCompany: Record<string, unknown> | undefined, { container }) => {
     if (!previousCompany) return
 
     const companyModuleService: CompanyModuleService =
       container.resolve(COMPANY_MODULE)
 
     await companyModuleService.updateCompanies({
+      // @ts-expect-error
       id: previousCompany.id,
       name: previousCompany.name,
       email: previousCompany.email,
@@ -98,7 +99,7 @@ const createAccountHolderStep = createStep(
 
     const paymentModuleService: IPaymentModuleService =
       container.resolve(Modules.PAYMENT)
-    const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
     const { data: existingLinks } = await query.graph({
       entity: "company",
@@ -106,7 +107,7 @@ const createAccountHolderStep = createStep(
       filters: { id: input.company_id },
     })
 
-    const existingAccountHolder = (existingLinks[0] as any)?.account_holder
+    const existingAccountHolder = (existingLinks[0] as { account_holder?: { id: string } })?.account_holder
     if (existingAccountHolder) {
       return new StepResponse({ skipped: true }, null)
     }
@@ -121,7 +122,7 @@ const createAccountHolderStep = createStep(
       },
     })
 
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+    const link = container.resolve(ContainerRegistrationKeys.LINK)
     await link.create({
       [COMPANY_MODULE]: { company_id: input.company_id },
       [Modules.PAYMENT]: { account_holder_id: accountHolder.id },
@@ -136,7 +137,7 @@ const createAccountHolderStep = createStep(
     if (!compensationData) return
     const paymentModuleService: IPaymentModuleService =
       container.resolve(Modules.PAYMENT)
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+    const link = container.resolve(ContainerRegistrationKeys.LINK)
 
     await link.dismiss({
       [COMPANY_MODULE]: { company_id: compensationData.company_id },

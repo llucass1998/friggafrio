@@ -1,4 +1,4 @@
-export type TQueryKey<TKey, TListQuery = any, TDetailQuery = string> = {
+export type TQueryKey<TKey, TListQuery = unknown, TDetailQuery = string> = {
   all: readonly [TKey];
   lists: () => readonly [...TQueryKey<TKey>["all"], "list"];
   list: (
@@ -20,7 +20,7 @@ export type TQueryKey<TKey, TListQuery = any, TDetailQuery = string> = {
 
 export const queryKeysFactory = <
   T,
-  TListQueryType = any,
+  TListQueryType = unknown,
   TDetailQueryType = string
 >(
   globalKey: T

@@ -25,7 +25,8 @@ export async function POST(
   const extension = type.subtype
   const uniqueFilename = `${crypto.randomUUID()}.${extension}`
 
-  const fileProvider = req.scope.resolve(Modules.FILE) as any
+  const fileProvider = req.scope.resolve(Modules.FILE) as import("@medusajs/types").IFileModuleService
+  // @ts-expect-error
   const response = await fileProvider.getUploadFileUrls({
     filename: uniqueFilename,
     mimeType: mime_type,

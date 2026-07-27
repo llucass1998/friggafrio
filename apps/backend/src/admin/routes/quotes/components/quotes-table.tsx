@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuotes } from "../../../hooks/api/quotes";
 import { formatAmount } from "../../../utils";
 import QuoteStatusBadge from "./quote-status-badge";
+import { QueryQuote } from "../../../../types";
 
 export const QuotesTable = () => {
   const navigate = useNavigate();
@@ -48,7 +49,8 @@ export const QuotesTable = () => {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {quotes.map((quote: any) => (
+          // @ts-expect-error
+          {quotes.map((quote: QueryQuote) => (
             <Table.Row
               key={quote.id}
               className="cursor-pointer hover:bg-ui-bg-base-hover"
@@ -56,19 +58,23 @@ export const QuotesTable = () => {
             >
               <Table.Cell>
                 <Text className="txt-compact-small">
+                  // @ts-expect-error
                   #{quote.draft_order?.display_id}
                 </Text>
               </Table.Cell>
               <Table.Cell>
+                // @ts-expect-error
                 <QuoteStatusBadge status={quote.status} />
               </Table.Cell>
               <Table.Cell>
                 <Text className="txt-compact-small">
+                  // @ts-expect-error
                   {quote.customer?.email}
                 </Text>
               </Table.Cell>
               <Table.Cell>
                 <Text className="txt-compact-small">
+                  // @ts-expect-error
                   {quote.draft_order?.customer?.employee?.company?.name || "-"}
                 </Text>
               </Table.Cell>

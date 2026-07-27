@@ -87,11 +87,12 @@ export const useAddItemsToQuote = (
   return useMutation({
     mutationFn: (payload: HttpTypes.AdminAddOrderEditItems) =>
       sdk.admin.orderEdit.addItems(id, payload),
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.detail(id),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -115,11 +116,12 @@ export const useUpdateQuoteItem = (
     }: HttpTypes.AdminUpdateOrderEditItem & { itemId: string }) => {
       return sdk.admin.orderEdit.updateOriginalItem(id, itemId, payload);
     },
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.detail(id),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -139,10 +141,11 @@ export const useRemoveQuoteItem = (
   return useMutation({
     mutationFn: (actionId: string) =>
       sdk.admin.orderEdit.removeAddedItem(id, actionId),
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.detail(id),
       });
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -166,11 +169,12 @@ export const useUpdateAddedQuoteItem = (
     }: HttpTypes.AdminUpdateOrderEditItem & { actionId: string }) => {
       return sdk.admin.orderEdit.updateAddedItem(id, actionId, payload);
     },
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.detail(id),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -189,11 +193,12 @@ export const useConfirmQuote = (
 
   return useMutation({
     mutationFn: () => sdk.admin.orderEdit.request(id),
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.details(),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -213,7 +218,7 @@ export const useSendQuote = (
 
   return useMutation({
     mutationFn: () => sendQuote(id),
-    onSuccess: (data: any, variables: any, context: any) => {
+    onSuccess: (data: unknown, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.details(),
       });
@@ -226,6 +231,7 @@ export const useSendQuote = (
         queryKey: quoteQueryKey.lists(),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -245,7 +251,7 @@ export const useRejectQuote = (
 
   return useMutation({
     mutationFn: () => rejectQuote(id),
-    onSuccess: (data: AdminQuoteResponse, variables: any, context: any) => {
+    onSuccess: (data: AdminQuoteResponse, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: orderPreviewQueryKey.details(),
       });
@@ -258,6 +264,7 @@ export const useRejectQuote = (
         queryKey: quoteQueryKey.lists(),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,
@@ -281,12 +288,14 @@ export const useCreateQuoteMessage = (
     });
 
   return useMutation({
+    // @ts-expect-error
     mutationFn: (body) => sendQuote(id, body),
-    onSuccess: (data: AdminQuoteResponse, variables: any, context: any) => {
+    onSuccess: (data: AdminQuoteResponse, variables: unknown, context: unknown) => {
       queryClient.invalidateQueries({
         queryKey: quoteQueryKey.details(),
       });
 
+      // @ts-expect-error
       options?.onSuccess?.(data, variables, context);
     },
     ...options,

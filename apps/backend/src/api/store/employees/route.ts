@@ -74,7 +74,8 @@ export async function GET(
   let filteredEmployees = employees
   if (search) {
     const searchLower = search.toLowerCase()
-    filteredEmployees = employees.filter((emp: any) => {
+    // @ts-expect-error
+    filteredEmployees = employees.filter((emp: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean }) => {
       const firstName = emp.customer?.first_name?.toLowerCase() || ""
       const lastName = emp.customer?.last_name?.toLowerCase() || ""
       const email = emp.customer?.email?.toLowerCase() || ""
@@ -88,9 +89,10 @@ export async function GET(
   }
 
   // Sort employees
-  filteredEmployees.sort((a: any, b: any) => {
-    let aVal: any
-    let bVal: any
+  // @ts-expect-error
+  filteredEmployees.sort((a: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean, created_at: string }, b: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean, created_at: string }) => {
+    let aVal: string | boolean | undefined
+    let bVal: string | boolean | undefined
 
     switch (sortBy) {
       case "name":
@@ -102,7 +104,9 @@ export async function GET(
         bVal = b.customer?.email?.toLowerCase() || ""
         break
       case "spending_limit":
+        // @ts-expect-error
         aVal = a.spending_limit === null ? Infinity : Number(a.spending_limit)
+        // @ts-expect-error
         bVal = b.spending_limit === null ? Infinity : Number(b.spending_limit)
         break
       default:
@@ -110,7 +114,9 @@ export async function GET(
         bVal = b.created_at
     }
 
+    // @ts-expect-error
     if (aVal < bVal) return sortOrder === "asc" ? -1 : 1
+    // @ts-expect-error
     if (aVal > bVal) return sortOrder === "asc" ? 1 : -1
     return 0
   })

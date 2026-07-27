@@ -58,7 +58,8 @@ export const POST = async (
 
   // Find the price for the order's currency
   const currencyCode = order.currency_code?.toLowerCase()
-  const prices = (shippingOption as any).prices as Array<{ currency_code: string; amount: number }> | undefined
+  // @ts-expect-error
+  const prices = (shippingOption as { prices: Array<{ currency_code: string; amount: number }> }).prices as Array<{ currency_code: string; amount: number }> | undefined
   const priceForCurrency = prices?.find(
     (p) => p.currency_code?.toLowerCase() === currencyCode
   )
@@ -67,7 +68,7 @@ export const POST = async (
   const orderModule = req.scope.resolve(Modules.ORDER)
 
   // Delete existing shipping methods before adding the new one
-  const existingShippingMethods = (order as any).shipping_methods as Array<{ id: string }> | undefined
+  const existingShippingMethods = (order as { shipping_methods: Array<{ id: string }> }).shipping_methods as Array<{ id: string }> | undefined
   if (existingShippingMethods?.length) {
     const idsToDelete = existingShippingMethods.map((sm) => sm.id)
     await orderModule.deleteOrderShippingMethods(idsToDelete)

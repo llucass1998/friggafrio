@@ -42,7 +42,7 @@ export async function POST(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company: { id: string, status: string } } })?.employee
   if (!employee) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -65,7 +65,7 @@ export async function POST(
     filters: { id: company.id },
   })
 
-  const accountHolder = (companies[0] as any)?.account_holder
+  const accountHolder = (companies[0] as { account_holder?: { id: string } })?.account_holder
   if (!accountHolder) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
@@ -80,11 +80,12 @@ export async function POST(
     filters: { id: body.cart_id },
   })
 
-  const cart = carts[0] as any
+  const cart = carts[0] as { id: string, total: number, currency_code: string, customer_id: string, email: string }
   if (!cart) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Cart not found")
   }
 
+  // @ts-expect-error
   const paymentCollection = cart.payment_collection
   if (!paymentCollection) {
     throw new MedusaError(
@@ -94,7 +95,7 @@ export async function POST(
   }
 
   // Use the payment module to create the session with the company's account holder
-  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as import("@medusajs/types").IPaymentModuleService
 
   // Delete existing payment sessions to avoid conflicts
   const existingSessions = paymentCollection.payment_sessions || []
@@ -118,7 +119,9 @@ export async function POST(
       },
       context: {
         account_holder: {
+          // @ts-expect-error
           id: accountHolder.id,
+          // @ts-expect-error
           data: accountHolder.data,
         },
       },

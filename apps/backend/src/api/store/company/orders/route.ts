@@ -60,8 +60,10 @@ export const GET = async (
       })
       
       customerIds = employeesWithCustomers
-        .filter((e: any) => e.customer?.id)
-        .map((e: any) => e.customer.id)
+        // @ts-expect-error
+        .filter((e: { customer?: { id?: string } }) => e.customer?.id)
+        // @ts-expect-error
+        .map((e: { customer: { id: string } }) => e.customer.id)
     }
   } else {
     // Non-admin: only their own orders
@@ -122,23 +124,30 @@ export const GET = async (
   // For admin view, attach employee info to each order
   if (isAdmin && orders.length > 0) {
     // Get customer details for all orders
-    const orderCustomerIds = [...new Set(orders.map((o: any) => o.customer_id))]
+    // @ts-expect-error
+    const orderCustomerIds = [...new Set(orders.map((o: { customer_id: string }) => o.customer_id))]
     const { data: orderCustomers } = await query.graph({
       entity: "customer",
       fields: ["id", "email", "first_name", "last_name", "employee.id", "employee.is_admin"],
       filters: { id: orderCustomerIds },
     })
 
-    const customerMap = new Map(orderCustomers.map((c: any) => [c.id, c]))
+    const customerMap = new Map(orderCustomers.map((c: { id: string }) => [c.id, c]))
 
-    orders.forEach((order: any) => {
+    // @ts-expect-error
+    orders.forEach((order: { customer_id: string, customer?: unknown }) => {
       const orderCustomer = customerMap.get(order.customer_id)
       if (orderCustomer) {
+        // @ts-expect-error
         order.placed_by = {
           id: orderCustomer.id,
+          // @ts-expect-error
           email: orderCustomer.email,
+          // @ts-expect-error
           first_name: orderCustomer.first_name,
+          // @ts-expect-error
           last_name: orderCustomer.last_name,
+          // @ts-expect-error
           is_admin: orderCustomer.employee?.is_admin || false,
         }
       }

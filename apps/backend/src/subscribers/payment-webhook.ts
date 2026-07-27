@@ -3,7 +3,7 @@ import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework"
 export default async function paymentWebhookReceivedHandler({
   event: { data },
   container,
-}: SubscriberArgs<{ payload: any }>) {
+}: SubscriberArgs<{ payload: Record<string, unknown> }>) {
   const logger = container.resolve("logger")
 
   logger.info(`[Payment] Webhook Received asynchronously for payload processing`)

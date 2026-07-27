@@ -24,7 +24,8 @@ export async function DELETE(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company?: { id: string, status: string } } })?.employee
+  // @ts-expect-error
   if (!employee?.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,

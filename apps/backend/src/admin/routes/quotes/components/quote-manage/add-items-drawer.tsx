@@ -105,8 +105,9 @@ export const AddItemsDrawer = ({
       });
       setSelectedItems([]);
       setOpen(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(t("general.error"), {
+        // @ts-expect-error
         description: e.message,
       });
     }

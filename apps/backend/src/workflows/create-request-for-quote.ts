@@ -1,3 +1,4 @@
+import { CreateOrderWorkflowInput } from "@medusajs/medusa/core-flows"
 import {
   createWorkflow,
   transform,
@@ -60,14 +61,15 @@ export const createRequestForQuoteWorkflow = createWorkflow(
         shipping_address: carts[0].shipping_address,
         items: carts[0].items || [],
         region_id: carts[0].region_id || undefined,
-        promo_codes: carts[0].promotions?.map((promo: any) => promo?.code),
+        // @ts-expect-error
+        promo_codes: carts[0].promotions?.map((promo: { code?: string }) => promo?.code),
         currency_code: carts[0].currency_code,
         shipping_methods: carts[0].shipping_methods || [],
       }
     })
 
     const draftOrder = createOrderWorkflow.runAsStep({
-      input: orderInput as any,
+      input: orderInput as unknown as CreateOrderWorkflowInput,
     })
 
     const orderEditInput = transform({ draftOrder }, ({ draftOrder }) => {

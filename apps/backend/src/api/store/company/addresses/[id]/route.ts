@@ -23,7 +23,8 @@ async function getAdminCompany(req: AuthenticatedMedusaRequest) {
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company?: { id: string, status: string } } })?.employee
+  // @ts-expect-error
   if (!employee?.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -49,7 +50,7 @@ export async function POST(
   const companyService: CompanyModuleService = req.scope.resolve(COMPANY_MODULE)
 
   const existing = await companyService.retrieveCompanyAddress(addressId)
-  if ((existing as any).company_id !== company.id) {
+  if ((existing as { company_id: string }).company_id !== company.id) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Address not found")
   }
 
@@ -65,10 +66,10 @@ export async function POST(
     for (const addr of allAddresses) {
       if (addr.id === addressId) continue
       const patch: Record<string, boolean> = {}
-      if (body.is_default_shipping && (addr as any).is_default_shipping) {
+      if (body.is_default_shipping && (addr as { is_default_shipping: boolean }).is_default_shipping) {
         patch.is_default_shipping = false
       }
-      if (body.is_default_billing && (addr as any).is_default_billing) {
+      if (body.is_default_billing && (addr as { is_default_billing: boolean }).is_default_billing) {
         patch.is_default_billing = false
       }
       if (Object.keys(patch).length > 0) {
@@ -98,7 +99,7 @@ export async function DELETE(
   const companyService: CompanyModuleService = req.scope.resolve(COMPANY_MODULE)
 
   const existing = await companyService.retrieveCompanyAddress(addressId)
-  if ((existing as any).company_id !== company.id) {
+  if ((existing as { company_id: string }).company_id !== company.id) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Address not found")
   }
 

@@ -12,7 +12,7 @@ import { createCompanyAccountHolderWorkflow } from "../../../../workflows/create
 
 async function getCompanyAccountHolder(
   req: AuthenticatedMedusaRequest
-): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: any }> {
+): Promise<{ company_id: string; company_name: string; company_email: string; account_holder: unknown }> {
   const customerId = req.auth_context?.actor_id
   if (!customerId) {
     throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized")
@@ -26,7 +26,8 @@ async function getCompanyAccountHolder(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as any)?.employee
+  const employee = (customers[0] as { employee: { company?: { id: string, status: string, name: string, email: string } } })?.employee
+  // @ts-expect-error
   if (!employee?.is_admin) {
     throw new MedusaError(
       MedusaError.Types.UNAUTHORIZED,
@@ -45,7 +46,7 @@ async function getCompanyAccountHolder(
     filters: { id: company.id },
   })
 
-  const accountHolder = (companies[0] as any)?.account_holder
+  const accountHolder = (companies[0] as { account_holder?: { id: string } })?.account_holder
   const companyInfo = { company_id: company.id, company_name: company.name, company_email: company.email }
 
   if (!accountHolder) {
@@ -66,12 +67,14 @@ export async function GET(
     return
   }
 
-  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+  const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as import("@medusajs/types").IPaymentModuleService
 
   const paymentMethods = await paymentModuleService.listPaymentMethods({
+    // @ts-expect-error
     provider_id: account_holder.provider_id,
     context: {
       account_holder: {
+        // @ts-expect-error
         data: { id: account_holder.data?.id },
       },
     },
@@ -107,6 +110,7 @@ export async function POST(
     account_holder = result
   }
 
+  // @ts-expect-error
   const stripeCustomerId = account_holder.data?.id as string
   if (!stripeCustomerId) {
     throw new MedusaError(

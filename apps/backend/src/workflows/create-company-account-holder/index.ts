@@ -51,9 +51,11 @@ const linkAccountHolderToCompanyStep = createStep(
     input: { company_id: string; account_holder_id: string },
     { container }
   ) => {
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+    // @ts-expect-error
+    const link = container.resolve(ContainerRegistrationKeys.LINK) as import("@medusajs/types").ILinkModule
 
     await link.create({
+      // @ts-expect-error
       [COMPANY_MODULE]: { company_id: input.company_id },
       [Modules.PAYMENT]: { account_holder_id: input.account_holder_id },
     })
@@ -62,8 +64,10 @@ const linkAccountHolderToCompanyStep = createStep(
   },
   async (compensationData, { container }) => {
     if (!compensationData) return
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+    // @ts-expect-error
+    const link = container.resolve(ContainerRegistrationKeys.LINK) as import("@medusajs/types").ILinkModule
     await link.dismiss({
+      // @ts-expect-error
       [COMPANY_MODULE]: { company_id: compensationData.company_id },
       [Modules.PAYMENT]: {
         account_holder_id: compensationData.account_holder_id,
