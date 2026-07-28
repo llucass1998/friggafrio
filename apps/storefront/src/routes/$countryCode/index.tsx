@@ -2,6 +2,7 @@ import Home from "@/pages/home"
 import { createFileRoute } from "@tanstack/react-router"
 import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
+import { listCategories } from "@/lib/data/categories"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { storeConfig } from "@/config/store"
 
@@ -42,6 +43,12 @@ export const Route = createFileRoute("/$countryCode/")({
           },
           region_id: region!.id,
         }),
+    })
+
+    // Prefetch categories for SSR (non-blocking)
+    queryClient.prefetchQuery({
+      queryKey: ["categories"],
+      queryFn: () => listCategories(),
     })
 
     return {

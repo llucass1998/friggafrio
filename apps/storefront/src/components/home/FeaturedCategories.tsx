@@ -1,19 +1,15 @@
 import { useQuery } from "@tanstack/react-query"
 import { listCategories } from "@/lib/data/categories"
-import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { FeaturedCategoriesCarousel } from "./featured-categories-carousel/FeaturedCategoriesCarousel"
 
 export function FeaturedCategories() {
-  const hydrated = useHydrated()
-
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
     queryFn: () => listCategories(),
-    enabled: hydrated,
     retry: 1,
   })
 
-  const isLoading = !hydrated || categoriesQuery.isPending
+  const isLoading = categoriesQuery.isPending
   const isError = categoriesQuery.isError
   const categories = categoriesQuery.data || []
 
