@@ -212,4 +212,24 @@ Nenhum. A busca via the regex em `apps/backend/**/*.spec.ts` não detectou ocorr
 - **Divergência das flags pendente:** Mantido preservado `isStripeConfigured`, sem injetar `PAYMENTS_ENABLED` ainda.
 - **Pendências listadas:** Query e Link não corrigidos. Idempotência e concorrência não protegidos. permanentFailure não implementado. Compensação do account holder ainda vulnerável a falhas abruptas dependendo da order.
 - **Testes realizados:** Suíte pura criada com 19 testes em `create-account-holder-contracts.unit.spec.ts` cobrindo builders puros com tipagem rigorosa estática.
+
+## Subfase B.2-C — Tipagem segura da Query e do Link
+
+- **Commits:** `0dadf29` (refactor) e `8e71266` (test).
+- **Tipos importados:** `RemoteQueryFunction` e `LinkDefinition` de `@medusajs/framework/types` — ambos tipos oficiais do framework, sem `import type` fictício.
+- **Interface declarada:** `RemoteLinkService { create(payload: LinkDefinition | LinkDefinition[]): Promise<unknown>; dismiss(...): Promise<unknown> }` — interface estrutural que descreve o objeto RemoteLink registrado em `ContainerRegistrationKeys.LINK`. Exportada para testabilidade.
+- **Tipo declarado:** `CompanyAccountHolderGraphRecord { id?: string; account_holder?: { id: string } }` — tipo estrutural do registro retornado por `query.graph` para entidade `"company"` com fields `["account_holder.*"]`.
+- **Adapter criado:** `getExistingAccountHolderId(data: unknown): string | null` — valida em runtime que `data` é array não-vazio, que `data[0]` é objeto, que `account_holder` é objeto, que `account_holder.id` é string não-vazia. Retorna o id ou null. Sem casts, sem any.
+- **Builders criados:** `buildCompanyAccountHolderLinkPayload(companyId, accountHolderId): LinkDefinition` e `buildCompanyAccountHolderDismissPayload(companyId, accountHolderId): LinkDefinition` — retornam `LinkDefinition` tipada usando `COMPANY_MODULE` e `Modules.PAYMENT` como chaves.
+- **Substituições realizadas:**
+  - `container.resolve(ContainerRegistrationKeys.QUERY) as any` → `container.resolve<RemoteQueryFunction>(ContainerRegistrationKeys.QUERY)`
+  - `(existingLinks[0] as any)?.account_holder` → `getExistingAccountHolderId(existingLinks)` com checagem `!== null`
+  - `container.resolve(ContainerRegistrationKeys.LINK) as any` (criação) → `container.resolve<RemoteLinkService>(ContainerRegistrationKeys.LINK)`; payload via `buildCompanyAccountHolderLinkPayload`
+  - `container.resolve(ContainerRegistrationKeys.LINK) as any` (dismiss) → `container.resolve<RemoteLinkService>(ContainerRegistrationKeys.LINK)`; payload via `buildCompanyAccountHolderDismissPayload`
+- **Quantidade de `any` depois:** 0 em todo o bloco `createAccountHolderStep`.
+- **Lógica preservada:** Nenhuma mudança de comportamento runtime. A checagem de `existingAccountHolder` (truthy) foi convertida para `existingAccountHolderId !== null` — semanticamente idêntica porque `getExistingAccountHolderId` retorna string não-vazia ou null.
+- **Testes adicionados:** 19 novos testes em `create-account-holder-contracts.unit.spec.ts` cobrindo `getExistingAccountHolderId` (9 casos), `buildCompanyAccountHolderLinkPayload` (3 casos), `buildCompanyAccountHolderDismissPayload` (3 casos), integração dos handlers com payloads tipados (4 casos). Total da suíte: 38 testes.
+- **Gates:** TypeScript `--noEmit` exit 0, ESLint exit 0, Jest 191 unit tests aprovados em 15 suítes (health.spec.ts excluído por requer `TEST_DATABASE_URL`), build completo via `medusa build`.
+- **Pendências mapeadas:** Idempotência e concorrência não protegidas. `permanentFailure` não implementado. Compensação ainda vulnerável a falha entre `link.dismiss` e `deleteAccountHolder`. Provider ID hardcoded. Divergência entre `isStripeConfigured` e flags de habilitação de payment.
+
 - **Gates Reais do repósitorio:** Linter passou sem erros, unitários somaram 172 aprovados em 15 suítes na infra real via script cross-env, compilador validou todos os tipos exportados com 0 warnings, e build finalizado.
