@@ -3,6 +3,9 @@ version: "3.8"
 services:
   backend:
     image: frigga-backend:latest
+    build:
+      context: ../
+      dockerfile: apps/backend/Dockerfile
     restart: always
     environment:
       - NODE_ENV=production
@@ -31,6 +34,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  storefront:
+    image: frigga-storefront:latest
+    build:
+      context: ../
+      dockerfile: apps/storefront/Dockerfile
+    restart: always
+    environment:
+      - VITE_MEDUSA_BACKEND_URL=${VITE_MEDUSA_BACKEND_URL:-https://api.friggafrio.com.br}
+    # Porta 80 exposta internamente para o NGINX reverso (que cuida do tráfego público)
+    expose:
+      - 80
+    depends_on:
+      - backend
 
   postgres:
     image: postgres:16-alpine
@@ -76,6 +93,7 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
+      - storefront
 
   certbot:
     image: certbot/certbot
