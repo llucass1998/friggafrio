@@ -49,15 +49,6 @@ export function HeaderMobileDrawer() {
         <Menu className="w-6 h-6" aria-hidden="true" />
       </button>
 
-      {isOpen && (
-        <div
-          data-testid="drawer-overlay"
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden transition-opacity"
-          onClick={closeDrawer}
-          aria-hidden="true"
-        />
-      )}
-
       <div
         id="mobile-menu-drawer"
         className={`fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[var(--color-background)] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col lg:hidden ${
@@ -159,6 +150,15 @@ export function HeaderMobileDrawer() {
           </div>
         </div>
       </div>
+
+      {isOpen && (
+        <div
+          data-testid="mobile-menu-overlay"
+          className="fixed inset-y-0 right-0 w-[15%] bg-black/50 z-50 lg:hidden transition-opacity"
+          onClick={closeDrawer}
+          aria-hidden="true"
+        />
+      )}
     </>
   )
 }
