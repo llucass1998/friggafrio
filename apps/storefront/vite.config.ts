@@ -3,7 +3,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import Terminal from "vite-plugin-terminal";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 import { execSync } from "child_process";
 
@@ -38,7 +37,6 @@ export default defineConfig(({ mode }) => {
       __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString())
     },
     plugins: [
-      Terminal({ console: "terminal", output: ["terminal"] }),
       viteTsConfigPaths({ projects: ["./tsconfig.json"] }),
       tailwindcss(),
 
