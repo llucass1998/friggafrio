@@ -22,12 +22,20 @@ export const Route = createFileRoute("/$countryCode")({
     const { queryClient } = context
 
     // Validate that the backend actually supports the 'br' region
-    const regions = await queryClient.ensureQueryData({
-      queryKey: ["regions"],
-      queryFn: () => listRegions({ fields: "currency_code, *countries" }),
-    })
+    // If backend is unavailable, fallback gracefully instead of throwing a 404
+    let regions: Awaited<ReturnType<typeof listRegions>> = []
+    try {
+      regions = await queryClient.ensureQueryData({
+        queryKey: ["regions"],
+        queryFn: () => listRegions({ fields: "currency_code, *countries" }),
+      })
+    } catch (_err) {
+      // Backend unavailable — allow the route to render so the user sees the page
+      // (components will handle their own loading/error states individually)
+      return { countryCode: "br" }
+    }
 
-    const isValidCountry = regions.some(
+    const isValidCountry = regions.length === 0 || regions.some(
       region => region.countries?.some(
         country => country.iso_2 === "br"
       )

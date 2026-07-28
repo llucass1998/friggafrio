@@ -11,10 +11,18 @@ export const Route = createFileRoute("/$countryCode/")({
     const { queryClient } = context
 
     // Fetch region for the country code
-    const region = await queryClient.ensureQueryData({
-      queryKey: ["region", countryCode],
-      queryFn: () => getRegion({ country_code: countryCode }),
-    })
+    // If backend is unavailable, fallback gracefully so the page still renders
+    let region: Awaited<ReturnType<typeof getRegion>> | null = null
+    try {
+      region = await queryClient.ensureQueryData({
+        queryKey: ["region", countryCode],
+        queryFn: () => getRegion({ country_code: countryCode }),
+      })
+    } catch (_err) {
+      // Backend unavailable — render the page without region data
+      // Components handle their own loading/error states
+      return { countryCode, region: null }
+    }
 
     if (!region) {
       throw notFound()
@@ -29,7 +37,7 @@ export const Route = createFileRoute("/$countryCode/")({
             limit: 4,
             order: "-created_at",
           },
-          region_id: region.id,
+          region_id: region!.id,
         }),
     })
 

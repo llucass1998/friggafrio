@@ -22,12 +22,17 @@ export const Route = createRootRouteWithContext<{
   loader: async ({ context }) => {
     const { queryClient } = context
 
-    // Pre-populate regions cache
-    await queryClient.ensureQueryData({
-      queryKey: ["regions"],
-      queryFn: () =>
-        listRegions({ fields: "id, name, currency_code, *countries" }),
-    })
+    // Pre-populate regions cache — if backend is down, fail silently so the
+    // app still renders (individual components handle their own error states)
+    try {
+      await queryClient.ensureQueryData({
+        queryKey: ["regions"],
+        queryFn: () =>
+          listRegions({ fields: "id, name, currency_code, *countries" }),
+      })
+    } catch (_err) {
+      // Backend unavailable — continue without region data
+    }
 
     return {}
   },
