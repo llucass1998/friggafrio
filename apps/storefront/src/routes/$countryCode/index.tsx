@@ -1,5 +1,5 @@
 import Home from "@/pages/home"
-import { createFileRoute, notFound } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
@@ -25,7 +25,10 @@ export const Route = createFileRoute("/$countryCode/")({
     }
 
     if (!region) {
-      throw notFound()
+      // Backend unavailable or region not configured yet — render the page
+      // without region data so users still see the storefront (same graceful
+      // degradation pattern used in $countryCode.tsx parent loader)
+      return { countryCode, region: null }
     }
 
     // Prefetch latest products for SSR (non-blocking)
