@@ -1,13 +1,34 @@
-export type RawRow = {
-  CODIGO?: string | number | null
-  DESCRIÇAO?: string | null
-  UNIDADE?: string | null
-  QUANTIDADE?: string | number | null
-  VALOR?: string | number | null
+import { AllowedSheetName } from "./config"
+
+export type NormalizedInventoryUnit = "unit" | "can" | "kg"
+
+export type InventoryProductClassification =
+  | "VALID"
+  | "NEGATIVE_STOCK"
+  | "MISSING_COST"
+  | "ZERO_COST"
+  | "SUSPICIOUS_COST"
+  | "POSSIBLE_DUPLICATE"
+  | "KG_STRATEGY_PENDING"
+
+export type InventoryProductIssue =
+  | "UNKNOWN_SHEET"
+  | "MISSING_MANDATORY_COLUMN"
+  | "DUPLICATE_MANDATORY_COLUMN"
+  | "MISSING_SKU"
+  | "DUPLICATE_SKU"
+  | "EMPTY_TITLE"
+  | "EMPTY_UNIT"
+  | "INVALID_QUANTITY"
+  | "AMBIGUOUS_HEADER"
+
+export type RawSheetRow = {
+  [key: string]: any
 }
 
-export type ParsedRow = {
-  sheetName: string
+export type ValidatedSheetRow = {
+  sheetName: AllowedSheetName
+  rowNumber: number
   codigo: string
   descricao: string
   unidade: string
@@ -15,41 +36,74 @@ export type ParsedRow = {
   valor: string | number | null
 }
 
-export type CostStatus = "VALID" | "MISSING" | "INVALID" | "ZERO" | "SUSPICIOUS"
-
-export type NormalizedRow = {
-  sheetName: string
+export type CanonicalInventoryProduct = {
+  sourceSheet: AllowedSheetName
+  sourceRow: number
   sku: string
   title: string
   originalUnit: string
-  unitType: "unit" | "can" | "kg" | "unknown"
-  quantity: number
-  cost: number | null
-  costStatus: CostStatus
+  normalizedUnit: NormalizedInventoryUnit
+  sourceQuantity: string
+  normalizedQuantity: string
+  sourceCost: string | null
+  calculatedSalePrice: string | null
+  collectionTitle: string
+  checksum: string
+  classification: InventoryProductClassification
+  issues: InventoryProductIssue[]
 }
 
-export type PricedRow = NormalizedRow & {
-  suggestedPrice: number | null
-}
+export type MedusaSyncOperationType =
+  | "CREATE_PRODUCT"
+  | "UPDATE_PRODUCT"
+  | "UPDATE_PRICE"
+  | "UPDATE_INVENTORY"
+  | "PUBLISH_PRODUCT"
+  | "DRAFT_PRODUCT"
+  | "ARCHIVE_PRODUCT"
+  | "NO_CHANGE"
+  | "ERROR"
 
-export type PlanAction =
-  | "CREATE"
-  | "UPDATE"
-  | "DEACTIVATE"
-  | "ARCHIVE_REQUIRED"
-  | "REMOVE_CANDIDATE"
-  | "CONFLICT"
-  | "UNKNOWN_REFERENCE"
-  | "BLOCKED_DUPLICATE_SKU"
-  | "BLOCKED_INVALID_ROW"
-
-export type PlanItem = {
+export type MedusaSyncOperation = {
   sku: string
-  action: PlanAction
-  pricedRow?: PricedRow
-  existingProduct?: any
-  reasons: string[]
+  sourceRow?: number
+  sheetName?: AllowedSheetName
+  currentState?: any
+  desiredState?: Partial<CanonicalInventoryProduct>
+  action: MedusaSyncOperationType
+  reason: string
+  previousChecksum?: string
+  newChecksum?: string
+  changedFields?: string[]
 }
+
+export type InventorySyncJournal = {
+  syncId: string
+  mode: "dry-run" | "apply"
+  sourceSha: string
+  startedAt: string
+  finishedAt: string
+  status: "success" | "failed" | "blocked"
+  sourceRows: number
+  created: number
+  updated: number
+  published: number
+  drafted: number
+  archived: number
+  unchanged: number
+  errors: number
+  warnings: number
+}
+
+export type InventorySheetSource =
+  | {
+      type: "public-xlsx"
+      spreadsheetId: string
+    }
+  | {
+      type: "google-service-account"
+      spreadsheetId: string
+    }
 
 export type BackupData = {
   timestamp: string
