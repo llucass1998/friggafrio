@@ -108,6 +108,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/product-sales-policy",
     },
     {
+      resolve: "./src/modules/contact-request",
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       options: {
         // Mercado Pago remains quarantined until its provider and webhook are
