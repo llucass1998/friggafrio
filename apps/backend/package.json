@@ -55,9 +55,11 @@
     "react-hook-form": "^7.71.1",
     "react-i18next": "13.5.0",
     "react-router-dom": "6.30.4",
+    "xlsx": "^0.18.5",
     "zod": "4.2.0"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
     "@medusajs/test-utils": "2.18.0",
     "@swc/core": "1.15.46",
     "@swc/jest": "^0.2.36",

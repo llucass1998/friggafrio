@@ -1,68 +1,136 @@
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { parseSpreadsheet } from "./parser"
-import { normalizeRow } from "./normalizer"
-import { applyPrice } from "./price"
+import { downloadGoogleSheetWorkbook } from "./download-google-sheet"
+import { parseWorkbook } from "./parse-workbook"
+import { validateWorkbook } from "./validate-workbook"
+import { normalizeRow } from "./normalize-row"
 import { readMedusaState, saveLogicalBackup } from "./medusa-reader"
-import { generatePlan } from "./plan"
-import { generatePrivateManifest, generatePublicReport } from "./report"
-import crypto from "crypto"
-import fs from "fs"
+import { buildSyncPlan } from "./build-sync-plan"
+import { SPREADSHEET_EXPORT_URL } from "./config"
+import { generateSyncJournal, generatePublicReport } from "./report"
 
-export default async function runDryRun({ container }: { container: MedusaContainer }) {
+export default async function runInventorySync({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-
-  logger.info("Iniciando FASE INVENTÁRIO 0-A (DRY-RUN)")
-
-  if (process.env.NODE_ENV) logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
-  logger.info(`DATABASE_URL presence: ${!!process.env.DATABASE_URL}`)
-  logger.info("DRY_RUN: true")
-
   const args = process.argv.slice(2)
-  if (args.includes("--apply") || args.includes("--purge") || args.includes("--delete") || args.includes("--replace")) {
-    logger.error("Modo de aplicação ainda não autorizado. Execute apenas o dry-run.")
+  const isApply = args.includes("--apply")
+
+  logger.info(`Iniciando FASE INVENTÁRIO 0-B (${isApply ? "APPLY" : "DRY-RUN"})`)
+
+  let expectedSha: string | null = null
+  if (isApply) {
+    if (!args.includes("--confirm=APLICAR_ESTOQUE_FRIGGAFRIO")) {
+      logger.error("Modo apply exige flag --confirm=APLICAR_ESTOQUE_FRIGGAFRIO")
+      process.exit(1)
+    }
+
+    const shaFlag = args.find(a => a.startsWith("--source-sha="))
+    if (!shaFlag) {
+      logger.error("Modo apply exige flag --source-sha=<SHA_DO_DRY_RUN>")
+      process.exit(1)
+    }
+    expectedSha = shaFlag.split("=")[1]
+  }
+
+  logger.info("Baixando planilha original dinamicamente...")
+  const downloaded = await downloadGoogleSheetWorkbook(SPREADSHEET_EXPORT_URL)
+  logger.info(`Planilha SHA-256: ${downloaded.sha256}`)
+  logger.info(`Tamanho: ${downloaded.size} bytes`)
+
+  if (isApply && expectedSha !== downloaded.sha256) {
+    logger.error(`O SHA-256 da planilha mudou! Esperado: ${expectedSha}, Atual: ${downloaded.sha256}`)
+    logger.error("Execute o dry-run novamente para aprovar a nova versão.")
     process.exit(1)
   }
 
-  const spreadsheetPath = "C:/Users/lluca/Documents/Codex/friggafrio-inventory-data/ESTOQUE.xlsx"
-  if (!fs.existsSync(spreadsheetPath)) {
-    logger.error("Planilha não encontrada no caminho isolado.")
-    process.exit(1)
+  logger.info("Analisando workbook...")
+  const workbook = parseWorkbook(downloaded.buffer)
+
+  if (workbook.unknownSheets.length > 0) {
+    logger.warn(`Abas desconhecidas encontradas (ignoradas): ${workbook.unknownSheets.join(", ")}`)
+    if (isApply) {
+      logger.error("Bloqueando apply devido a abas desconhecidas (UNKNOWN_SHEET). Configure-as antes.")
+      process.exit(1)
+    }
   }
 
-  const fileBuffer = fs.readFileSync(spreadsheetPath)
-  const sha256 = crypto.createHash("sha256").update(fileBuffer).digest("hex").toUpperCase()
-  logger.info(`Planilha SHA-256: ${sha256}`)
+  logger.info("Validando formato...")
+  const validation = validateWorkbook(workbook.parsedSheets)
 
-  const parsedRows = parseSpreadsheet(spreadsheetPath)
-  const normalizedRows = parsedRows.map(normalizeRow)
-  const pricedRows = normalizedRows.map(applyPrice)
+  if (validation.errors.length > 0) {
+    logger.warn(`Encontrados ${validation.errors.length} erros de validação:`)
+    validation.errors.slice(0, 10).forEach(e => logger.warn(` - ${e}`))
+    if (validation.errors.length > 10) logger.warn(`   ...e mais ${validation.errors.length - 10} erros.`)
+  }
 
+  logger.info("Normalizando registros e aplicando regras de negócio...")
+  const canonicalProducts = validation.validRows.map(normalizeRow)
+
+  logger.info("Lendo estado do Medusa (somente leitura)...")
   const medusaState = await readMedusaState(container)
 
-  if (medusaState.stockLocations) {
-    logger.info(`Stock Locations encontradas: ${medusaState.stockLocations.map(l => l.name).join(", ")}`)
+  // Validate single stock location / sales channel mapping
+  if (!medusaState.stockLocations || medusaState.stockLocations.length === 0) {
+    logger.error("Nenhuma Stock Location encontrada no Medusa.")
+    process.exit(1)
+  }
+  if (!medusaState.salesChannels || medusaState.salesChannels.length === 0) {
+    logger.error("Nenhum Sales Channel encontrado no Medusa.")
+    process.exit(1)
   }
 
-  const backupPath = saveLogicalBackup(medusaState)
-  logger.info(`Backup lógico criado: ${backupPath}`)
+  const stockLocationId = process.env.INVENTORY_SYNC_STOCK_LOCATION_ID || medusaState.stockLocations[0].id
+  const salesChannelId = process.env.INVENTORY_SYNC_SALES_CHANNEL_ID || medusaState.salesChannels[0].id
 
-  const plan = generatePlan(pricedRows, medusaState)
+  if (medusaState.stockLocations.length > 1 && !process.env.INVENTORY_SYNC_STOCK_LOCATION_ID) {
+    logger.warn(`Múltiplas Stock Locations. Usando a primeira (${stockLocationId}). Configure INVENTORY_SYNC_STOCK_LOCATION_ID para travar.`)
+    if (isApply) {
+       logger.error("Múltiplas localizações exigem configuração explícita no modo apply.")
+       process.exit(1)
+    }
+  }
 
-  generatePrivateManifest(plan, backupPath, sha256)
+  logger.info(`Stock Location Alvo: ${stockLocationId}`)
+  logger.info(`Sales Channel Alvo: ${salesChannelId}`)
 
-  // Hardcoded commit base expectations to match the context
+  let backupPathStr: string | null = null
+  if (isApply) {
+    logger.info("Criando backup lógico...")
+    backupPathStr = saveLogicalBackup(medusaState)
+    logger.info(`Backup salvo em: ${backupPathStr}`)
+  }
+
+  logger.info("Gerando plano determinístico...")
+  const plan = buildSyncPlan(canonicalProducts, medusaState)
+
+  const journal = generateSyncJournal(plan, isApply ? "apply" : "dry-run", downloaded.sha256, backupPathStr)
+
+  logger.info("=".repeat(50))
+  logger.info(`PLAN SUMMARY (${isApply ? "APPLY" : "DRY-RUN"})`)
+  logger.info("=".repeat(50))
+  logger.info(`CREATE:    ${journal.created}`)
+  logger.info(`UPDATE:    ${journal.updated}`)
+  logger.info(`PUBLISH:   ${journal.published}`)
+  logger.info(`DRAFT:     ${journal.drafted}`)
+  logger.info(`ARCHIVE:   ${journal.archived}`)
+  logger.info(`NO CHANGE: ${journal.unchanged}`)
+  logger.info(`ERROR:     ${journal.errors}`)
+  logger.info("=".repeat(50))
+
   const baseCommit = "48c785288ff139b08e2cc367e6c6bb8fe8e8dc03"
   const realCommit = "9e1fadf8157a455cd9d9569c9c73598bf0b1ebdf"
 
-  generatePublicReport(plan, medusaState, sha256, backupPath, baseCommit, realCommit)
+  generatePublicReport(journal, plan, medusaState, downloaded.sha256, backupPathStr, baseCommit, realCommit)
 
-  logger.info("WRITE OPERATIONS: 0")
-  logger.info("PRODUCTS CREATED: 0")
-  logger.info("PRODUCTS UPDATED: 0")
-  logger.info("PRODUCTS DELETED: 0")
-  logger.info("INVENTORY LEVELS UPDATED: 0")
-  logger.info("PRICES UPDATED: 0")
+  if (!isApply) {
+    logger.info(`DRY-RUN concluído. Zero writes executados.`)
+    logger.info(`Para aplicar, execute novamente com:`)
+    logger.info(`--apply --confirm=APLICAR_ESTOQUE_FRIGGAFRIO --source-sha=${downloaded.sha256}`)
+    process.exit(0)
+  }
 
-  logger.info("DRY-RUN concluído com sucesso. Relatório salvo.")
+  // TODO: Lock implementation (omitted until needed to verify dry run)
+  logger.info("Modo de aplicação ativado. No entanto, por segurança, os métodos de mutação não estão implementados nesta fase.")
+  logger.info("Zero writes executados. Relatório gerado em memória.")
+
+  process.exit(0)
 }

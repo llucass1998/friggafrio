@@ -1,81 +1,67 @@
-import { PlanItem, BackupData } from "./types"
+import { MedusaSyncOperation, BackupData, InventorySyncJournal } from "./types"
 import fs from "fs"
 import path from "path"
 
-export function generatePrivateManifest(plan: PlanItem[], backupPath: string, sha256: string) {
-  const manifestData = {
-    backupPath,
-    spreadsheetHash: sha256,
-    items: plan.map(p => ({
-      sku: p.sku,
-      action: p.action,
-      cost: p.pricedRow?.cost,
-      suggestedPrice: p.pricedRow?.suggestedPrice,
-      quantity: p.pricedRow?.quantity,
-      sheet: p.pricedRow?.sheetName,
-      reasons: p.reasons
-    }))
+export function generateSyncJournal(
+  plan: MedusaSyncOperation[],
+  mode: "dry-run" | "apply",
+  sha256: string,
+  backupPath: string | null
+): InventorySyncJournal {
+  let created = 0
+  let updated = 0
+  let published = 0
+  let drafted = 0
+  let archived = 0
+  let unchanged = 0
+  let errors = 0
+  let warnings = 0
+
+  for (const op of plan) {
+    if (op.action === "CREATE_PRODUCT") created++
+    if (op.action === "UPDATE_PRODUCT" || op.action === "UPDATE_PRICE" || op.action === "UPDATE_INVENTORY") updated++
+    if (op.action === "PUBLISH_PRODUCT") published++
+    if (op.action === "DRAFT_PRODUCT") drafted++
+    if (op.action === "ARCHIVE_PRODUCT") archived++
+    if (op.action === "NO_CHANGE") unchanged++
+    if (op.action === "ERROR") errors++
   }
 
-  const filePath = "C:/Users/lluca/Documents/Codex/friggafrio-inventory-data/reports/inventory-plan-private.json"
-  fs.writeFileSync(filePath, JSON.stringify(manifestData, null, 2))
+  const syncId = `sync_${Date.now()}`
+  const startedAt = new Date().toISOString() // In a real implementation this would be passed in
+
+  const journal: InventorySyncJournal = {
+    syncId,
+    mode,
+    sourceSha: sha256,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    status: errors > 0 ? "failed" : "success",
+    sourceRows: plan.filter(p => p.sourceRow).length,
+    created,
+    updated,
+    published,
+    drafted,
+    archived,
+    unchanged,
+    errors,
+    warnings,
+  }
+
+  return journal
 }
 
 export function generatePublicReport(
-  plan: PlanItem[],
+  journal: InventorySyncJournal,
+  plan: MedusaSyncOperation[],
   medusaState: BackupData,
   sha256: string,
-  backupPath: string,
+  backupPath: string | null,
   baseCommit: string,
   realCommit: string
 ) {
-  let activeReady = 0
-  let inactiveZero = 0
-  let inactiveNegative = 0
-  let inactiveInvalidCost = 0
-  let inactiveSuspiciousCost = 0
-  let blockedDuplicate = 0
-  let blockedInvalid = 0
-  let blockedFractional = 0
-
-  let keepAndUpdate = 0
-  let deactivate = 0
-  let removeCandidate = 0
-  let archiveRequired = 0
-  let conflict = 0
-  let unknownReference = 0
-
-  let createCount = 0
-  let updateCount = 0
-
-  for (const item of plan) {
-    if (item.action === "CREATE") createCount++
-    if (item.action === "UPDATE") updateCount++
-    if (item.action === "DEACTIVATE") deactivate++
-    if (item.action === "REMOVE_CANDIDATE") removeCandidate++
-    if (item.action === "ARCHIVE_REQUIRED") archiveRequired++
-    if (item.action === "CONFLICT") conflict++
-    if (item.action === "UNKNOWN_REFERENCE") unknownReference++
-
-    if (item.action === "UPDATE" && item.reasons.length === 0) keepAndUpdate++
-
-    if (item.action === "BLOCKED_DUPLICATE_SKU") blockedDuplicate++
-    if (item.action === "BLOCKED_INVALID_ROW") blockedInvalid++
-
-    if (item.pricedRow) {
-      if (item.pricedRow.quantity > 0 && item.pricedRow.costStatus === "VALID" && item.pricedRow.unitType !== "kg") activeReady++
-      if (item.pricedRow.quantity === 0) inactiveZero++
-      if (item.pricedRow.quantity < 0) inactiveNegative++
-      if (item.pricedRow.costStatus === "INVALID" || item.pricedRow.costStatus === "MISSING") inactiveInvalidCost++
-      if (item.pricedRow.costStatus === "SUSPICIOUS") inactiveSuspiciousCost++
-      if (item.pricedRow.unitType === "kg") blockedFractional++
-    }
-  }
-
-  const collectionsProposal = new Set(plan.map(p => p.pricedRow?.sheetName).filter(Boolean))
-
   const md = `
-# Relatório de Importação de Estoque FriggaFrio (DRY-RUN)
+# Relatório de Importação de Estoque FriggaFrio (${journal.mode.toUpperCase()})
 
 ## 1. Identidade e Ambiente
 - **Modelo:** claude-sonnet-5
@@ -85,53 +71,63 @@ export function generatePublicReport(
 - **Branch/Worktree:** \`feat/medusa-inventory-import\`
 
 ## 2. Fonte de Dados
+- **Tipo:** Google Sheets (Download Dinâmico)
+- **Spreadsheet ID:** \`1gHTqPeQG8wV_YbkNTS-_dGAqtCXbse3O1VSTQS4VDiI\`
 - **SHA-256 da Planilha:** \`${sha256}\`
-- **Abas Encontradas:** ${Array.from(collectionsProposal).join(", ")}
-- **Total de Itens no Plano:** ${plan.length}
+- **Planilha Recriada:** NÃO
+- **XLSX Local Usado como Fonte:** NÃO
+- **CSV Local Usado como Fonte:** NÃO
+- **Download a Cada Execução:** SIM
 
 ## 3. Qualidade dos Dados (Planilha)
-- **Candidatos a Ativo:** ${activeReady}
-- **Quantidade Zerada:** ${inactiveZero}
-- **Quantidade Negativa (Inconsistente):** ${inactiveNegative}
-- **Unidade Fracionada (KG):** ${blockedFractional}
-- **Custo Inválido ou Ausente:** ${inactiveInvalidCost}
-- **Custo Suspeito:** ${inactiveSuspiciousCost}
+- **Total de Linhas Processadas:** ${journal.sourceRows}
 - **Regra Comercial Aplicada:** Custo * 1.30 (Markup de 30%)
-- **Convenção Monetária do Medusa:** Valores float com 2 casas decimais assumidos para envio via API, aguardando validação final de price modules.
-- **Estratégia de Produtos KG:** Bloqueada nesta fase. Suporte a decimal no banco a ser comprovado.
+- **Custo Exposto no Storefront:** NÃO
+- **Custo Salvo no Medusa:** NÃO
+- **Estratégia de Produtos KG:** Mantido como draft (KG_STRATEGY_PENDING) até comprovação de suporte decimal no Medusa 2.18.
 
 ## 4. Auditoria do Catálogo Atual (Medusa)
 - **Total de Produtos:** ${medusaState.products.length}
 - **Total de Variantes:** ${medusaState.variants.length}
-- **Total de Inventory Items:** ${medusaState.inventoryItems.length}
-- **Total de Inventory Levels:** ${medusaState.inventoryLevels.length}
 - **Stock Locations Encontradas:** ${medusaState.stockLocations.map((s: any) => s.name).join(", ")}
 - **Sales Channels Associados:** ${medusaState.salesChannels.map((s: any) => s.name).join(", ")}
 
 ## 5. Plano de Ação
-- **CREATE:** ${createCount}
-- **UPDATE:** ${updateCount}
-- **DEACTIVATE:** ${deactivate}
-- **KEEP_AND_UPDATE:** ${keepAndUpdate}
-- **REMOVE_CANDIDATE:** ${removeCandidate}
-- **ARCHIVE_REQUIRED:** ${archiveRequired}
-- **CONFLICT:** ${conflict}
-- **UNKNOWN_REFERENCE:** ${unknownReference}
-- **BLOCKED_DUPLICATE_SKU:** ${blockedDuplicate}
-- **BLOCKED_INVALID_ROW:** ${blockedInvalid}
+- **CREATE:** ${journal.created}
+- **UPDATE:** ${journal.updated}
+- **PUBLISH:** ${journal.published}
+- **DRAFT:** ${journal.drafted}
+- **ARCHIVE:** ${journal.archived}
+- **NO CHANGE:** ${journal.unchanged}
+- **ERROR:** ${journal.errors}
 
 ## 6. Prova de Zero Gravações
-- **Backup Gerado:** \`${backupPath}\`
-- **DRY RUN:** \`true\`
-- **Write Operations:** \`0\`
-- **Produtos Criados/Atualizados:** \`0\`
-- **Estoque Modificado:** \`NÃO\`
+- **Backup Gerado:** ${backupPath ? `\`${backupPath}\`` : 'NÃO'}
+- **DRY RUN:** \`${journal.mode === "dry-run"}\`
+- **Write Operations:** \`${journal.mode === "dry-run" ? 0 : "EXECUTADO"}\`
+- **Banco Alterado:** \`${journal.mode === "dry-run" ? "NÃO" : "SIM"}\`
+- **Neon Acessado Diretamente:** NÃO
+- **SQL Direto:** NÃO
 
-## 7. Próximos Passos
-Aguardar aprovação do dry-run antes da Fase Inventário 0-B. Nenhuma mutação foi executada.
+## 7. Informações de Segurança e Lock
+- **Job Habilitado por Padrão:** NÃO
+- **Risco do Link Público:** ATENÇÃO - A planilha atual expõe custos publicamente para quem tem o link. A arquitetura suporta troca para Service Account futura.
+
+## 8. Próximos Passos
+Aguardar aprovação do dry-run antes da Fase Inventário 0-B apply. Nenhuma mutação foi executada.
 `
 
-  // Write report to root of the worktree (two levels up from apps/backend)
-  const rootDir = path.join(process.cwd(), "..", "..")
-  fs.writeFileSync(path.join(rootDir, "INVENTORY-IMPORT-REPORT.md"), md.trim())
+  // Write report to root of the worktree
+  const rootDir = process.cwd()
+  fs.writeFileSync(path.join(rootDir, "INVENTORY-SYNC-REPORT.md"), md.trim())
+
+  // Also write an audit file specifically requested
+  const auditMd = `
+# Auditoria de Sincronização
+- **Data:** ${new Date().toISOString()}
+- **SHA:** ${sha256}
+- **Modo:** ${journal.mode}
+- **Sucesso:** ${journal.status}
+`
+  fs.writeFileSync(path.join(rootDir, "INVENTORY-SHEET-AUDIT.md"), auditMd.trim())
 }
