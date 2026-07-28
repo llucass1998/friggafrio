@@ -1,9 +1,9 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { CreateContactRequestSchema } from "./validators";
 import { CONTACT_REQUEST_MODULE } from "../../../modules/contact-request";
-import ContactRequestService from "../../../modules/contact-request/services/contact-request";
+import ContactRequestService from "../../../modules/contact-request/service";
 import { INotificationModuleService } from "@medusajs/framework/types";
-import { Modules } from "@medusajs/framework/utils";
+import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils";
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
@@ -65,7 +65,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     } catch (notificationError) {
       // If notification fails, we log it but don't fail the request
       // since the data is safely persisted
-      req.scope.resolve("logger").warn(
+      req.scope.resolve(ContainerRegistrationKeys.LOGGER).warn(
         `Failed to send contact request notification for ${contactRequest.id}: ${
           notificationError instanceof Error ? notificationError.message : String(notificationError)
         }`
@@ -90,7 +90,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       });
     }
 
-    req.scope.resolve("logger").error(
+    req.scope.resolve(ContainerRegistrationKeys.LOGGER).error(
       `Error processing contact request: ${error.message}`,
       error
     );

@@ -49,7 +49,7 @@ export const GET = async (
     return;
   }
 
-  const customerProfileService = req.scope.resolve(CUSTOMER_PROFILE_MODULE);
+  const customerProfileService = req.scope.resolve<any>(CUSTOMER_PROFILE_MODULE);
   const profiles = await customerProfileService.listCustomerProfiles({
     customer_id: customerId,
   });
@@ -93,7 +93,7 @@ export const POST = async (
     ? normalizeDocument(data.document)
     : undefined;
 
-  const customerProfileService = req.scope.resolve(CUSTOMER_PROFILE_MODULE);
+  const customerProfileService = req.scope.resolve<any>(CUSTOMER_PROFILE_MODULE);
   const profiles = await customerProfileService.listCustomerProfiles({
     customer_id: customerId,
   });

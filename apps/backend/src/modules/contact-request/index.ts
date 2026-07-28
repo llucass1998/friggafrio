@@ -1,5 +1,5 @@
 import { Module } from "@medusajs/framework/utils";
-import ContactRequestService from "./services/contact-request";
+import ContactRequestService from "./service";
 
 export const CONTACT_REQUEST_MODULE = "contactRequest";
 
