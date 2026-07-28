@@ -40,11 +40,8 @@ test.describe("Phase 3-B.1.1: Canonical Route Navigation and Redirection", () =>
   for (const { path, expectedStatus: _expectedStatus } of validRoutes) {
     test(`Valid route '${path}' resolves correctly with HTTP 200`, async ({ page }) => {
       const response = await page.goto(path)
-      // Playwright may return null if the navigation was blocked, but we expect a valid response here
-      expect(response).not.toBeNull()
-
-      // For cart/checkout they might have redirects or soft 200 with logic, but they shouldn't 404
-      expect(response?.status()).toBeLessThan(400)
+      if (response === null) throw new Error(`Navigation to '${path}' returned null response`)
+      expect(response.status()).toBeLessThan(400)
     })
   }
 
@@ -70,8 +67,8 @@ test.describe("Phase 3-B.1.1: Canonical Route Navigation and Redirection", () =>
   for (const path of notFoundRoutes) {
     test(`Invalid route '${path}' explicitly returns HTTP 404`, async ({ page }) => {
       const response = await page.goto(path)
-      expect(response).not.toBeNull()
-      expect(response?.status()).toBe(404)
+      if (response === null) throw new Error(`Navigation to '${path}' returned null response`)
+      expect(response.status()).toBe(404)
 
       // Also ensure UI displays not found
       await expect(page.locator("h1").filter({ hasText: /404|Não encontrado/i })).toBeVisible()
@@ -159,10 +156,10 @@ test.describe("Phase 3-B.1.1: Visual and Component Render Assertions", () => {
         await expect(drawer.getByRole("link", { name: "Nossa Loja" })).toHaveCount(0)
 
         // Overlay fecha o drawer
-        const overlay = page.getByTestId("drawer-overlay")
+        const overlay = page.getByTestId("mobile-menu-overlay")
         await expect(overlay).toBeVisible()
 
-        await overlay.click({ position: { x: 380, y: 5 } }) // Click clearly on the right side overlay, away from the drawer
+        await overlay.click()
         await expect(drawer).toHaveClass(/-translate-x-full/)
         await expect(openBtn).toHaveAttribute("aria-expanded", "false")
       }
