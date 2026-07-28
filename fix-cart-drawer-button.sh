@@ -1,3 +1,0 @@
-#!/bin/bash
-cat apps/storefront/src/components/cart.tsx | sed 's/<Button className="w-full bg-\[var(--color-primary)\] hover:bg-\[var(--color-primary-hover)\] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-\[var(--color-accent)\]">/<Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={sortedItems?.some(item => !item.variant_id || item.quantity <= 0)}>/g' > temp_cart_drawer.tsx
-mv temp_cart_drawer.tsx apps/storefront/src/components/cart.tsx

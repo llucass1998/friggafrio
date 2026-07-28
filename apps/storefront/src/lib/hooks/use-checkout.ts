@@ -77,7 +77,7 @@ export const useShippingOptions = ({ cart_id }: { cart_id?: string } = {}) => {
       return shipping_options
     },
     enabled: !!cart_id || !!getStoredCart(),
-    staleTime: 0
+    staleTime: 1000 * 60  // 1 min — shipping options rarely change mid-session
   })
 }
 
@@ -126,7 +126,7 @@ export const useCartPaymentMethods = ({
       return payment_providers
     },
     enabled: paymentAvailability.processingEnabled && !!region_id,
-    staleTime: 0,
+    staleTime: 1000 * 60,  // 1 min — payment providers rarely change mid-session
   })
 }
 

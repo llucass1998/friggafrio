@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useCart } from "@/lib/hooks/use-cart"
 import { ShoppingCart } from "lucide-react"
@@ -7,6 +7,7 @@ import { getCartItemCount } from "@/lib/utils/cart"
 
 export function FloatingActions() {
   const [showScroll, setShowScroll] = useState(false)
+  const showScrollRef = useRef(false)
 
   // Cart logic
   const { openCart } = useCartDrawer()
@@ -19,17 +20,26 @@ export function FloatingActions() {
   const displayCount = itemCount > 99 ? "99+" : itemCount
 
   useEffect(() => {
+    let rafId: number | null = null
+
     const checkScrollTop = () => {
-      if (!showScroll && window.scrollY > 500) {
-        setShowScroll(true)
-      } else if (showScroll && window.scrollY <= 500) {
-        setShowScroll(false)
-      }
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        const shouldShow = window.scrollY > 500
+        if (shouldShow !== showScrollRef.current) {
+          showScrollRef.current = shouldShow
+          setShowScroll(shouldShow)
+        }
+        rafId = null
+      })
     }
 
-    window.addEventListener("scroll", checkScrollTop)
-    return () => window.removeEventListener("scroll", checkScrollTop)
-  }, [showScroll])
+    window.addEventListener("scroll", checkScrollTop, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", checkScrollTop)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" })

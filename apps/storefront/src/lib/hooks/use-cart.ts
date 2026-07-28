@@ -27,7 +27,7 @@ export const useCart = ({ fields }: { fields?: string } = {}) => {
       })
       return cart
     },
-    staleTime: 0
+    staleTime: 1000 * 30  // 30s — mutations already invalidate the cache
   })
 }
 
