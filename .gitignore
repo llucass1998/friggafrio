@@ -55,3 +55,6 @@ temp_*.html
 
 # Local Netlify folder
 .netlify/
+
+# Inventory Data
+apps/backend/data/
