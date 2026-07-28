@@ -80,6 +80,29 @@ export function StorePage({
   const [sortOrder, setSortOrder] = useState("-created_at")
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategory(categoryId)
+    navigate({
+      to: ".",
+      search: (prev: StoreSearch | undefined) => {
+        const next: StoreSearch = { ...(prev ?? {}) }
+        if (categoryId) {
+          next.category = categoryId
+        } else {
+          delete next.category
+        }
+        delete (next as unknown as { page?: unknown }).page
+        return next
+      },
+      replace: false,
+    })
+  }
+
+  // Update selectedCategory when URL search param changes
+  useEffect(() => {
+    setSelectedCategory(searchParams?.category ?? null)
+  }, [searchParams?.category])
+
   // Debounce search input for server-side queries
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -212,7 +235,7 @@ export function StorePage({
                   <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Categorias</h3>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => setSelectedCategory(null)}
+                      onClick={() => handleCategorySelect(null)}
                       className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                         !selectedCategory
                           ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
@@ -224,7 +247,7 @@ export function StorePage({
                     {categories.map(category => (
                       <button
                         key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => handleCategorySelect(category.id)}
                         className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                           selectedCategory === category.id
                             ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
@@ -251,7 +274,7 @@ export function StorePage({
                 <div className="mt-8 lg:hidden">
                   <button
                     onClick={() => {
-                      setSelectedCategory(null)
+                      handleCategorySelect(null)
                       updateOptionValueIds([])
                       setMobileFiltersOpen(false)
                     }}
@@ -364,7 +387,7 @@ export function StorePage({
                   onClick={() => {
                     setSearchInput("")
                     setDebouncedSearch("")
-                    setSelectedCategory(null)
+                    handleCategorySelect(null)
                     updateOptionValueIds([])
                   }}
                   className="px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm font-semibold rounded-[var(--radius-button)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
