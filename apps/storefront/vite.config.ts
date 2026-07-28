@@ -13,7 +13,7 @@ function getGitData() {
     const sha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || execSync("git rev-parse --short HEAD").toString().trim();
     const branch = process.env.VERCEL_GIT_COMMIT_REF || process.env.GITHUB_REF_NAME || execSync("git branch --show-current").toString().trim();
     return { sha, branch };
-  } catch (e) {
+  } catch (_e) {
     return { sha: "local", branch: "local" };
   }
 }

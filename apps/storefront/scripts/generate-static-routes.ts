@@ -153,7 +153,7 @@ function discoverRoutesFromFilesystem(): DiscoveredRoute[] {
               const routePath = routeMatch[1];
               
               // Convert TanStack Router paths to actual paths
-              let actualPath = routePath
+              const actualPath = routePath
                 .replace('/$countryCode', '') // Remove country code placeholder
                 .replace(/\$[^/]+/g, '') // Remove dynamic segments for static generation
                 .replace(/\/+/g, '/') // Normalize slashes
@@ -186,7 +186,7 @@ function discoverRoutesFromFilesystem(): DiscoveredRoute[] {
     console.log(`Discovered ${uniqueRoutes.length} routes from filesystem`);
     return uniqueRoutes;
     
-  } catch (error) {
+  } catch (_error) {
     console.warn('Could not discover routes from filesystem.');
     return []
   }

@@ -1,17 +1,14 @@
-import { Link, useParams } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 interface HeaderLogoProps {
   compact?: boolean
 }
 
 export function HeaderLogo({ compact = false }: HeaderLogoProps) {
-  const params = useParams({ strict: false }) as Record<string, string>
-  const _countryCode = params.countryCode || "br"
-
   return (
     <Link
       to="/$countryCode"
-      params={{ countryCode: _countryCode }}
+      params={{ countryCode: "br" }}
       className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
       aria-label="Ir para a página inicial da FriggaFrio"
     >

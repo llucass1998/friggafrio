@@ -109,11 +109,19 @@ test("hero carousel dots click and select correctly", async ({ page }) => {
   // Verify first slide is active
   await expect(slides.nth(0)).toHaveAttribute('data-active', 'true', { timeout: 15000 })
 
+  // Wait for the Carousel Embla API and React to be fully hydrated by checking the readiness of the Next button
+  const nextButton = page.getByRole("button", { name: /Ver próximo slide/i })
+  await expect(nextButton).toBeEnabled({ timeout: 15000 })
+
   // Click on the 3rd dot (index 2)
   const dot3 = page.locator('button[aria-label="Ir para o destaque 3 de 5"]')
+  await expect(dot3).toBeVisible()
+  await expect(dot3).toBeEnabled()
+  await expect(dot3).toHaveAttribute("aria-current", "false")
   await dot3.click()
 
   // Wait for the slide to become active (Playwright will auto-retry)
+  await expect(dot3).toHaveAttribute("aria-current", "true")
   await expect(slides.nth(2)).toHaveAttribute('data-active', 'true', { timeout: 15000 })
 })
 
