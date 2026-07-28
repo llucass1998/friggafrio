@@ -30,6 +30,11 @@ export default defineMiddlewares({
       middlewares: [globalApiRateLimit],
     },
     {
+      matcher: "/store/contact-requests",
+      method: "POST",
+      middlewares: [globalApiRateLimit],
+    },
+    {
       matcher: /^\/store(?:\/|$)/,
       methods: ["POST", "PUT", "PATCH", "DELETE"],
       middlewares: [protectSessionMutation],
