@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 // Skip UI tests for registration until form selectors match exactly 
 // We verified backend E2E so we know it works conceptually

@@ -1,9 +1,9 @@
-import { Link, useParams } from "@tanstack/react-router"
-import { storeConfig } from "@/config/store"
-import { COMPANY_INFORMATION } from "@/config/company"
-import { footerNavigation } from "@/config/footer-navigation"
-import { useAuth } from "@/lib/hooks/use-auth"
-import { useState } from "react"
+import { Link } from '@tanstack/react-router'
+import { storeConfig } from '@/config/store'
+import { COMPANY_INFORMATION } from '@/config/company'
+import { footerNavigation } from '@/config/footer-navigation'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { useState } from 'react'
 
 function Accordion({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -30,22 +30,50 @@ function Accordion({ title, children, defaultOpen = false }: { title: string, ch
   )
 }
 
-export function PublicFooter() {
-  const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
-  const currentYear = new Date().getFullYear()
-  const { customer } = useAuth()
+function ProductLink({ item }: { item: { id: string, label: string } }) {
+  if (item.id === "catalog") return <Link to="/$countryCode/store" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "cart") return <Link to="/$countryCode/cart" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  return <Link to="/$countryCode/store" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+}
 
-  const getAccountHref = (baseHref: string) => {
-    if (baseHref.startsWith("/account") && !customer && baseHref !== "/account/login" && baseHref !== "/account/register") {
-      return `/${countryCode}/account/login?returnTo=${encodeURIComponent(`/${countryCode}${baseHref}`)}`
-    }
-    
-    return baseHref.startsWith("/account") 
-      ? `/${countryCode}${baseHref}`
-      : baseHref.startsWith("/") ? `/${countryCode}${baseHref}` : baseHref
+function InstitutionalLink({ item }: { item: { id: string, label: string } }) {
+  if (item.id === "nossa-loja") return <Link to="/$countryCode/nossa-loja" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "quem-somos") return <Link to="/$countryCode/quem-somos" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "fale-conosco") {
+    return (
+      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
+        {item.label}
+      </a>
+    )
+  }
+  return null
+}
+
+function SupportLink({ item }: { item: { id: string, label: string } }) {
+  if (item.id === "help") return <Link to="/$countryCode/ajuda" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "terms") return <Link to="/$countryCode/termos" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "privacy") return <Link to="/$countryCode/privacidade" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "returns") return <Link to="/$countryCode/trocas" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  return null
+}
+
+function AccountLink({ item, customer }: { item: { id: string, label: string }, customer: unknown }) {
+  // If not logged in, force login for protected routes
+  if (!customer && item.id !== "login" && item.id !== "register") {
+    return <Link to="/$countryCode/account/login" params={{ countryCode: "br" }} search={{ returnTo: "/br/account" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
   }
 
+  if (item.id === "login") return <Link to="/$countryCode/account/login" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "register") return <Link to="/$countryCode/account/register" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "orders") return <Link to="/$countryCode/account/orders" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+  if (item.id === "my-account") return <Link to="/$countryCode/account" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+
+  return <Link to="/$countryCode/account" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">{item.label}</Link>
+}
+
+export function PublicFooter() {
+  const currentYear = new Date().getFullYear()
+  const { customer } = useAuth()
   const primaryLocation = storeConfig.locations[0]
 
   return (
@@ -88,7 +116,7 @@ export function PublicFooter() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm uppercase">Nossa Loja Física</h4>
-                <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">Venha nos visitar</Link>
+                <Link to="/$countryCode/nossa-loja" params={{ countryCode: "br" }} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">Venha nos visitar</Link>
               </div>
             </div>
 
@@ -112,7 +140,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand & Sobre */}
           <div className="lg:col-span-1 mb-6 md:mb-0">
-            <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-4">
+            <Link to="/$countryCode" params={{ countryCode: "br" }} className="inline-block mb-4">
               <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-12 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="text-sm text-[var(--color-surface-soft)] leading-relaxed mb-6">
@@ -128,15 +156,13 @@ export function PublicFooter() {
             </div>
           </div>
 
-                    <div className="md:col-span-4 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+          <div className="md:col-span-4 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {/* Produtos */}
             <Accordion title="Produtos" defaultOpen={true}>
               <ul className="space-y-3">
                 {footerNavigation.products.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                      {item.label}
-                    </Link>
+                    <ProductLink item={item} />
                   </li>
                 ))}
               </ul>
@@ -147,15 +173,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.institutional.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    {item.id === "fale-conosco" ? (
-                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
-                        {item.label}
-                      </a>
-                    ) : (
-                      <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                        {item.label}
-                      </Link>
-                    )}
+                    <InstitutionalLink item={item} />
                   </li>
                 ))}
               </ul>
@@ -166,9 +184,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.support.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                      {item.label}
-                    </Link>
+                    <SupportLink item={item} />
                   </li>
                 ))}
                 {footerNavigation.support.filter(item => item.active).length === 0 && (
@@ -182,9 +198,7 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.account.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={getAccountHref(item.href) as string} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                      {item.label}
-                    </Link>
+                    <AccountLink item={item} customer={customer} />
                   </li>
                 ))}
               </ul>
@@ -214,7 +228,7 @@ export function PublicFooter() {
               <div className="flex gap-4 justify-center">
                 <div className="flex items-center gap-2 text-gray-400">
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <span className="text-xs">SSL<br/>Blindado</span>
                 </div>
@@ -249,8 +263,6 @@ export function PublicFooter() {
                 Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
               </p>
             </div>
-
-            
 
           </div>
         </div>
