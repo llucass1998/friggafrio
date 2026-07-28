@@ -5,7 +5,7 @@ if ! [ -x "$(command -v docker-compose)" ]; then
   exit 1
 fi
 
-domains=(api.friggafrio.com.br)
+domains=(friggafrio.com.br www.friggafrio.com.br api.friggafrio.com.br admin.friggafrio.com.br)
 rsa_key_size=4096
 data_path="./certbot"
 email="contato@friggafrio.com.br" # Substitua pelo seu email real
