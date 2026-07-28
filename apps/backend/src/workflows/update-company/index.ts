@@ -12,9 +12,86 @@ import {
   CompanyStatus,
   SpendLimitResetFrequency,
 } from "../../modules/company/models"
-import type { IPaymentModuleService, MedusaContainer } from "@medusajs/framework/types"
+import type {
+  IPaymentModuleService,
+  LinkDefinition,
+  MedusaContainer,
+  RemoteQueryFunction,
+} from "@medusajs/framework/types"
 import { isStripeConfigured } from "../../utils/is-stripe-configured"
 import { MedusaError } from "@medusajs/framework/utils"
+
+/**
+ * Structural interface for the RemoteLink service resolved from
+ * ContainerRegistrationKeys.LINK. Medusa V2 registers a RemoteLink object
+ * (not ILinkModule directly) that accepts LinkDefinition payloads.
+ */
+export interface RemoteLinkService {
+  create(payload: LinkDefinition | LinkDefinition[]): Promise<unknown>
+  dismiss(payload: LinkDefinition | LinkDefinition[]): Promise<unknown>
+}
+
+/**
+ * Structural type for a single company graph record returned by query.graph
+ * when entity is "company" and fields include "account_holder.*".
+ * The relation is optional because it may not exist yet.
+ */
+export type CompanyAccountHolderGraphRecord = {
+  id?: string
+  account_holder?: {
+    id: string
+  }
+}
+
+/**
+ * Extracts the existing account_holder id from the raw graph result array.
+ * Returns the id string if a valid account_holder is found on the first record,
+ * or null otherwise. Performs full runtime validation without any casts.
+ */
+export function getExistingAccountHolderId(data: unknown): string | null {
+  if (!Array.isArray(data) || data.length === 0) {
+    return null
+  }
+  const first: unknown = data[0]
+  if (!isUnknownObject(first)) {
+    return null
+  }
+  const holder: unknown = first["account_holder"]
+  if (!isUnknownObject(holder)) {
+    return null
+  }
+  const id: unknown = holder["id"]
+  if (!isNonEmptyString(id)) {
+    return null
+  }
+  return id
+}
+
+/**
+ * Builds the LinkDefinition payload for creating the company ↔ account_holder link.
+ */
+export function buildCompanyAccountHolderLinkPayload(
+  companyId: string,
+  accountHolderId: string
+): LinkDefinition {
+  return {
+    [COMPANY_MODULE]: { company_id: companyId },
+    [Modules.PAYMENT]: { account_holder_id: accountHolderId },
+  }
+}
+
+/**
+ * Builds the LinkDefinition payload for dismissing the company ↔ account_holder link.
+ */
+export function buildCompanyAccountHolderDismissPayload(
+  companyId: string,
+  accountHolderId: string
+): LinkDefinition {
+  return {
+    [COMPANY_MODULE]: { company_id: companyId },
+    [Modules.PAYMENT]: { account_holder_id: accountHolderId },
+  }
+}
 
 export type UpdateCompanyInput = {
   id: string
@@ -206,7 +283,7 @@ export async function createAccountHolderStepHandler(
   }
 
   const paymentModuleService: IPaymentModuleService = container.resolve(Modules.PAYMENT)
-  const query = container.resolve(ContainerRegistrationKeys.QUERY) as any
+  const query = container.resolve<RemoteQueryFunction>(ContainerRegistrationKeys.QUERY)
 
   const { data: existingLinks } = await query.graph({
     entity: "company",
@@ -214,8 +291,8 @@ export async function createAccountHolderStepHandler(
     filters: { id: payload.company_id },
   })
 
-  const existingAccountHolder = (existingLinks[0] as any)?.account_holder
-  if (existingAccountHolder) {
+  const existingAccountHolderId = getExistingAccountHolderId(existingLinks)
+  if (existingAccountHolderId !== null) {
     return new StepResponse<CreateAccountHolderStepResult, null>({ skipped: true }, null)
   }
 
@@ -229,11 +306,8 @@ export async function createAccountHolderStepHandler(
     },
   })
 
-  const link = container.resolve(ContainerRegistrationKeys.LINK) as any
-  await link.create({
-    [COMPANY_MODULE]: { company_id: payload.company_id },
-    [Modules.PAYMENT]: { account_holder_id: accountHolder.id },
-  })
+  const link = container.resolve<RemoteLinkService>(ContainerRegistrationKeys.LINK)
+  await link.create(buildCompanyAccountHolderLinkPayload(payload.company_id, accountHolder.id))
 
   const compensateInput = buildCreateAccountHolderCompensationData({
     company_id: payload.company_id,
@@ -253,14 +327,9 @@ export async function createAccountHolderCompensationHandler(
   const payload = buildCreateAccountHolderCompensationData(compensationData)
 
   const paymentModuleService: IPaymentModuleService = container.resolve(Modules.PAYMENT)
-  const link = container.resolve(ContainerRegistrationKeys.LINK) as any
+  const link = container.resolve<RemoteLinkService>(ContainerRegistrationKeys.LINK)
 
-  await link.dismiss({
-    [COMPANY_MODULE]: { company_id: payload.company_id },
-    [Modules.PAYMENT]: {
-      account_holder_id: payload.account_holder_id,
-    },
-  })
+  await link.dismiss(buildCompanyAccountHolderDismissPayload(payload.company_id, payload.account_holder_id))
 
   await paymentModuleService.deleteAccountHolder(payload.account_holder_id)
 }
