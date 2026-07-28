@@ -20,6 +20,7 @@ export const Route = createFileRoute("/$countryCode/store")({
   loaderDeps: ({ search }) => ({
     optionValueIds: search[OPTION_VALUE_QUERY_KEY],
     q: search.q,
+    category: search.category,
   }),
   loader: async ({ params, context, deps }) => {
     const { countryCode } = params
@@ -41,13 +42,14 @@ export const Route = createFileRoute("/$countryCode/store")({
     }
 
     const { products } = await queryClient.ensureQueryData({
-      queryKey: ["products", { region_id: region.id, optionValueIds, q: deps.q }],
+      queryKey: ["products", { region_id: region.id, optionValueIds, q: deps.q, category: deps.category }],
       queryFn: () => listProducts({
         query_params: {
           limit: 100,
           order: "-created_at",
           fields: "*variants.calculated_price,*categories,*variants.options",
           q: deps.q,
+          category_id: deps.category ? [deps.category] : undefined,
         },
         region_id: region.id,
       }),
