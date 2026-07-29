@@ -133,6 +133,16 @@ const ProductActions = memo(function ProductActions({
       ? purchaseState.price
       : getVariantCalculatedPrice(product.variants?.[0] as StoreVariantWithCalculatedPrice) ?? 0
 
+  
+  // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
+  // For Phase 20, we assume any B2B-flagged product or explicitly 'quote_only' metadata triggers this.
+  const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !isValidVariant;
+
+  const handleQuoteRequest = () => {
+    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${(selectedVariant as any)?.sku || 'N/A'})`);
+    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
+  };
+
   const handleAddToCart = async () => {
     if (!selectedVariant?.id || !canBuySelected) return null
 

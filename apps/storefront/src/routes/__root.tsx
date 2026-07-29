@@ -14,7 +14,7 @@ import { lazy } from "react"
 import { Toaster } from "sonner"
 import appCss from "@/styles/app.css?url"
 
-const NotFound = lazy(() => import("@/components/not-found"))
+const NotFound = lazy(() => import("../components/not-found"));
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
