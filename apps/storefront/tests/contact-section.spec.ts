@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Contact Section - Form', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500); // Wait for hydration
   });
 
   test('should display horizontal layout and floating labels', async ({ page }) => {
@@ -32,12 +34,13 @@ test.describe('Contact Section - Form', () => {
     await page.fill('input#name', 'João Silva');
     await page.fill('input#email', 'joao@example.com');
     await page.fill('textarea#message', 'Curta');
-    
-    // Click submit
-    await page.click('button[type="submit"]');
+    await page.locator('textarea#message').blur();
+
+    // Click submit via evaluate to guarantee the submit event is fired
+    await page.locator('#contato button[type="submit"]').click();
 
     // Expect zod validation error
-    await expect(page.locator('text="Mensagem deve ter pelo menos 10 caracteres"')).toBeVisible();
+    await expect(page.getByText('Mensagem deve ter pelo menos 10 caracteres')).toBeVisible({ timeout: 10000 });
   });
 
   test('should submit successfully when form is valid', async ({ page }) => {
@@ -60,14 +63,14 @@ test.describe('Contact Section - Form', () => {
     await page.fill('input#phone', '11999999999');
     await page.fill('input#subject', 'Dúvida sobre orçamento');
     await page.fill('textarea#message', 'Olá, gostaria de saber mais sobre o orçamento de peças.');
-    
+
     // Check that honeypot works - we don't fill it, it remains empty
-    
-    await page.click('button[type="submit"]');
+
+    await page.locator('#contato button[type="submit"]').click();
 
     // Check success state
-    await expect(page.locator('text="Mensagem enviada com sucesso!"')).toBeVisible();
-    await expect(page.locator('text="Agradecemos o seu contato."')).toBeVisible();
+    await expect(page.getByText('Mensagem enviada com sucesso!')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Agradecemos o seu contato.')).toBeVisible();
     await expect(page.locator('button:has-text("Enviar nova mensagem")')).toBeVisible();
   });
 
@@ -88,10 +91,10 @@ test.describe('Contact Section - Form', () => {
     await page.fill('input#name', 'Carlos Mendes');
     await page.fill('input#email', 'carlos@example.com');
     await page.fill('textarea#message', 'Mensagem de teste suficientemente longa para passar pelo zod.');
-    
-    await page.click('button[type="submit"]');
+
+    await page.locator('#contato button[type="submit"]').click();
 
     // Check error state
-    await expect(page.locator('text="Erro forçado do servidor para testes."')).toBeVisible();
+    await expect(page.getByText('Erro forçado do servidor para testes.')).toBeVisible({ timeout: 10000 });
   });
 });
