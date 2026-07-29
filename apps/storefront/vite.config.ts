@@ -25,10 +25,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
+      allowedHosts: true,
     },
     preview: {
       port: 4173,
       strictPort: true,
+      allowedHosts: true,
     },
 
     define: {

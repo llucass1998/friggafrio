@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, AlertCircle, Loader2, Send } from "lucide-react";
@@ -28,6 +27,38 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
+const customResolver = (data: any) => {
+  try {
+    const validData = contactSchema.parse(data);
+    return { values: validData, errors: {} };
+  } catch (error: any) {
+    let formErrors: Record<string, any> = {};
+    try {
+      // ZodError.errors is sometimes inaccessible or the error object is weird in this environment.
+      // But error.message is ALWAYS the JSON array.
+      const parsed = JSON.parse(error.message);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((err: any) => {
+          if (err.path && err.path[0]) {
+            formErrors[err.path[0]] = {
+              type: err.code || "validation",
+              message: err.message
+            };
+          }
+        });
+      }
+    } catch (e) {
+      console.log("Could not parse ZodError message", e);
+    }
+    
+    return {
+      values: {},
+      errors: formErrors
+    };
+  }
+};
+
+
 export function ContactSection() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -38,7 +69,8 @@ export function ContactSection() {
     reset,
     formState: { errors },
   } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
+    resolver: customResolver,
+    mode: "onChange",
     defaultValues: {
       name: "",
       email: "",
@@ -301,6 +333,11 @@ export function ContactSection() {
                     tabIndex={-1}
                     autoComplete="off"
                   />
+                  {errors.website && (
+                    <p className="text-xs text-red-600 mt-1" role="alert">
+                      {errors.website.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Footer and Submit */}
