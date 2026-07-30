@@ -102,8 +102,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
 
       await setCartAddressesMutation.mutateAsync(payload)
       onNext()
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error: unknown) {
+    } catch {
       setMutationError("Não foi possível salvar o endereço. Verifique os dados e tente novamente.")
     } finally {
       setIsSubmitting(false)
