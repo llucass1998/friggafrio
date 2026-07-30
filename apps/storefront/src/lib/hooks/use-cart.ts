@@ -94,12 +94,30 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
 
       let cartId = getStoredCart()
 
+      const { regions } = await sdk.store.region.list({})
+      const region = regions.find(r =>
+        r.countries?.some(c => c.iso_2 === country_code.toLowerCase())
+      )
+      if (!region) throw new Error(`Region not found for country code: ${country_code}`)
+
+      if (cartId) {
+        try {
+          const { cart: currentCart } = await sdk.store.cart.retrieve(cartId, { fields: "id,region_id,currency_code" });
+          if (currentCart.region_id !== region.id || currentCart.currency_code !== region.currency_code) {
+            removeStoredCart();
+            cartId = undefined;
+          }
+        } catch (err: unknown) {
+          if (isRecoverableStaleCartError(err)) {
+            removeStoredCart();
+            cartId = undefined;
+          } else {
+            throw err;
+          }
+        }
+      }
+
       if (!cartId) {
-        const { regions } = await sdk.store.region.list({})
-        const region = regions.find(r =>
-          r.countries?.some(c => c.iso_2 === country_code.toLowerCase())
-        )
-        if (!region) throw new Error(`Region not found for country code: ${country_code}`)
         const { cart } = await sdk.store.cart.create({ region_id: region.id }, {
           fields: requestFields || fields || DEFAULT_CART_FIELDS,
         })
@@ -107,36 +125,12 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
         cartId = cart.id
       }
 
-      try {
-        const response = await sdk.store.cart.createLineItem(
-          cartId,
-          { variant_id, quantity },
-          { fields: requestFields || fields || DEFAULT_CART_FIELDS }
-        )
-        return response.cart
-      } catch (err: unknown) {
-        if (isRecoverableStaleCartError(err)) {
-          // Removes corrupted/old cart ID
-          removeStoredCart()
-          
-          // Recreate the cart transparently
-          const { regions } = await sdk.store.region.list({})
-          const region = regions.find(r => r.countries?.some(c => c.iso_2 === country_code.toLowerCase()))
-          if (region) {
-            const { cart } = await sdk.store.cart.create({ region_id: region.id }, {
-              fields: requestFields || fields || DEFAULT_CART_FIELDS,
-            })
-            setStoredCart(cart.id)
-            const response = await sdk.store.cart.createLineItem(
-              cart.id,
-              { variant_id, quantity },
-              { fields: requestFields || fields || DEFAULT_CART_FIELDS }
-            )
-            return response.cart
-          }
-        }
-        throw err;
-      }
+      const response = await sdk.store.cart.createLineItem(
+        cartId,
+        { variant_id, quantity },
+        { fields: requestFields || fields || DEFAULT_CART_FIELDS }
+      )
+      return response.cart
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ predicate: queryKeys.cart.predicate })
