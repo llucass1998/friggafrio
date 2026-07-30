@@ -1,8 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { HttpTypes } from "@medusajs/types"
-import { queryKeys } from "@/lib/utils/query-keys"
-import { sdk } from "@/lib/medusa"
 import {
+useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+HttpTypes } from "@medusajs/types"
+import {
+queryKeys } from "@/lib/utils/query-keys"
+import {
+sdk } from "@/lib/medusa"
+import {
+
   getStoredCart,
   removeStoredCart,
   setStoredCart,
@@ -14,6 +19,7 @@ import {
   removeLineItemOptimistically,
   createOptimisticCart,
 } from "@/lib/utils/cart"
+import { isRecoverableStaleCartError } from "@/lib/utils/is-recoverable-cart-error"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name, +subtotal, +item_subtotal, +shipping_total, +discount_total, +tax_total, +total"
 
@@ -108,8 +114,8 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
           { fields: requestFields || fields || DEFAULT_CART_FIELDS }
         )
         return response.cart
-      } catch (err: any) {
-        if (err?.message?.includes("not found") || err?.status === 404 || err?.status === 400 || err?.type === "not_found") {
+      } catch (err: unknown) {
+        if (isRecoverableStaleCartError(err)) {
           // Removes corrupted/old cart ID
           removeStoredCart()
           
