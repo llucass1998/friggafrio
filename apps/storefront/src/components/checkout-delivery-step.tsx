@@ -59,6 +59,11 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="shipping-options-title">
         <h3 id="shipping-options-title" className="sr-only">Opções de frete</h3>
+        {(!shippingOptions || shippingOptions.length === 0) && (
+          <div className="text-sm text-text-secondary italic">
+            Nenhuma opção de entrega encontrada para este carrinho. As configurações de entrega para São Paulo podem estar sendo atualizadas.
+          </div>
+        )}
         {shippingOptions?.map((option) => (
           <ShippingItemSelector
             key={option.id}
