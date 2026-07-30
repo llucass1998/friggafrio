@@ -2,6 +2,7 @@ import { getStoredCart, removeStoredCart} from "@/lib/utils/cart"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { HttpTypes } from "@medusajs/types"
 import {
   assertPaymentProcessingEnabled,
   paymentAvailability,
@@ -15,44 +16,14 @@ export const useSetCartAddresses = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async (payload: { email: string, shipping_address: HttpTypes.StoreUpdateCart["shipping_address"], billing_address?: HttpTypes.StoreUpdateCart["billing_address"] }) => {
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
 
-      const data = Object.fromEntries(formData.entries())
-
-      const shippingAddress = {
-        first_name: data["shipping_address.first_name"] as string,
-        last_name: data["shipping_address.last_name"] as string,
-        address_1: data["shipping_address.address_1"] as string,
-        address_2: (data["shipping_address.address_2"] as string) || "",
-        company: (data["shipping_address.company"] as string) || "",
-        postal_code: data["shipping_address.postal_code"] as string,
-        city: data["shipping_address.city"] as string,
-        country_code: data["shipping_address.country_code"] as string,
-        province: (data["shipping_address.province"] as string) || "",
-        phone: (data["shipping_address.phone"] as string) || "",
-      }
-
-      const billingAddress = {
-        first_name: data["billing_address.first_name"] as string,
-        last_name: data["billing_address.last_name"] as string,
-        address_1: data["billing_address.address_1"] as string,
-        address_2: (data["billing_address.address_2"] as string) || "",
-        company: (data["billing_address.company"] as string) || "",
-        postal_code: data["billing_address.postal_code"] as string,
-        city: data["billing_address.city"] as string,
-        country_code: data["billing_address.country_code"] as string,
-        province: (data["billing_address.province"] as string) || "",
-        phone: (data["billing_address.phone"] as string) || "",
-      }
-
-      const email = data.email as string
-
       const { cart } = await sdk.store.cart.update(cartId, {
-        shipping_address: shippingAddress,
-        billing_address: billingAddress,
-        email,
+        shipping_address: payload.shipping_address,
+        billing_address: payload.billing_address || payload.shipping_address,
+        email: payload.email,
       }, { fields: DEFAULT_CART_FIELDS })
 
       return cart
