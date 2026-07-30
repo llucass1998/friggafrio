@@ -161,21 +161,7 @@ const AddressForm = ({
         </div>
       </div>
 
-      {/* Company */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="company" className="block text-sm font-medium">
-          Empresa
-        </label>
-        <Input
-          name="company"
-          id="company"
-          type="text"
-          autoComplete="organization"
-          value={addressFormData.company ?? ""}
-          onChange={(e) => handleChange("company", e.target.value)}
-          placeholder="Nome da empresa (opcional)"
-        />
-      </div>
+      {/* Company (Removido por ser B2B, reaproveitado field para Bairro no map do medusa se for preciso) */}
 
       {/* CEP */}
       <div className="flex flex-col gap-2">
@@ -203,7 +189,7 @@ const AddressForm = ({
       {/* Address fields */}
       <div className="flex flex-col gap-2">
         <label htmlFor="address_1" className="block text-sm font-medium">
-          Endereço e Número
+          Logradouro
         </label>
         <Input
           name="address_1"
@@ -212,7 +198,7 @@ const AddressForm = ({
           autoComplete="street-address"
           value={addressFormData.address_1 ?? ""}
           onChange={(e) => handleChange("address_1", e.target.value)}
-          placeholder="Ex: Rua das Flores, 123"
+          placeholder="Ex: Rua das Flores"
           aria-invalid={!!(errors.address_1 && touchedFields.address_1)}
           aria-describedby={errors.address_1 && touchedFields.address_1 ? "address_1-error" : undefined}
         />
@@ -221,22 +207,50 @@ const AddressForm = ({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="address_2" className="block text-sm font-medium">
-          Complemento / Bairro
-        </label>
-        <Input
-          name="address_2"
-          id="address_2"
-          type="text"
-          value={addressFormData.address_2 ?? ""}
-          onChange={(e) => handleChange("address_2", e.target.value)}
-          placeholder="Ex: Apto 42, Centro"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="address_2" className="block text-sm font-medium">
+            Número
+          </label>
+          <Input
+            name="address_2"
+            id="address_2"
+            type="text"
+            value={addressFormData.address_2 ?? ""}
+            onChange={(e) => handleChange("address_2", e.target.value)}
+            placeholder="Ex: 123"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="province" className="block text-sm font-medium">
+            Complemento
+          </label>
+          <Input
+            name="province"
+            id="province"
+            type="text"
+            value={addressFormData.province ?? ""}
+            onChange={(e) => handleChange("province", e.target.value)}
+            placeholder="Ex: Apto 42"
+          />
+        </div>
       </div>
 
-      {/* City, Province */}
+      {/* City, Bairro */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="company" className="block text-sm font-medium">
+            Bairro
+          </label>
+          <Input
+            name="company"
+            id="company"
+            type="text"
+            value={addressFormData.company ?? ""}
+            onChange={(e) => handleChange("company", e.target.value)}
+            placeholder="Ex: Centro"
+          />
+        </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="city" className="block text-sm font-medium">
             Cidade
@@ -255,20 +269,6 @@ const AddressForm = ({
           {errors.city && touchedFields.city && (
             <div id="city-error" className="text-rose-900 text-sm mt-1" aria-live="polite">{errors.city}</div>
           )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="province" className="block text-sm font-medium">
-            Estado
-          </label>
-          <Input
-            name="province"
-            id="province"
-            type="text"
-            autoComplete="address-level1"
-            value={addressFormData.province ?? ""}
-            onChange={(e) => handleChange("province", e.target.value)}
-            placeholder="Ex: SP"
-          />
         </div>
       </div>
 
