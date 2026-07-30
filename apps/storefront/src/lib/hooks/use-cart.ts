@@ -223,7 +223,12 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
     mutationFn: async (variables: { line_id: string }) => {
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
-      await sdk.store.cart.deleteLineItem(cartId, variables.line_id)
+      const { parent } = await sdk.store.cart.deleteLineItem(
+        cartId, 
+        variables.line_id,
+        { fields: fields || DEFAULT_CART_FIELDS }
+      )
+      return parent as HttpTypes.StoreCart
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
