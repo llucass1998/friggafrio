@@ -66,7 +66,16 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     if (!form.numero.trim()) newErrors.numero = "Obrigatório"
     if (!form.bairro.trim()) newErrors.bairro = "Obrigatório"
     if (!form.city.trim()) newErrors.city = "Obrigatória"
-    if (!form.province.trim()) newErrors.province = "Obrigatório"
+
+    if (!form.province.trim()) {
+      newErrors.province = "Obrigatório"
+    } else {
+      const p = form.province.trim().toLowerCase()
+      const allowedStates = ["sp", "são paulo", "sao paulo", "sãopaulo", "saopaulo"]
+      if (!allowedStates.includes(p)) {
+        newErrors.province = "No momento, realizamos entregas somente no estado de São Paulo."
+      }
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -95,7 +104,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
           address_1,
           address_2,
           city: form.city,
-          province: form.province,
+          province: "SP", // Normalizando a province para sempre SP
           country_code: "br"
         }
       }
@@ -185,6 +194,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Estado *</label>
             <Input name="province" value={form.province} onChange={handleChange} placeholder="Ex: SP" />
+            <span className="text-xs text-zinc-500">Entregamos em todo o estado de São Paulo.</span>
             {errors.province && <span className="text-xs text-red-500">{errors.province}</span>}
           </div>
         </div>
