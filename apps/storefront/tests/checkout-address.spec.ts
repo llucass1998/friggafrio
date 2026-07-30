@@ -2,6 +2,7 @@ import { test, expect, request as playwrightRequest } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { HttpTypes } from "@medusajs/types"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,8 +18,8 @@ if (!PUBLISHABLE_KEY) {
 }
 
 let BR_REGION_ID = '';
-let TEST_PRODUCT: any = null;
-let TEST_VARIANT: any = null;
+let TEST_PRODUCT: HttpTypes.StoreProduct | null = null;
+let TEST_VARIANT: HttpTypes.StoreProductVariant | null = null;
 let CART_ID = '';
 
 test.beforeAll(async () => {
@@ -27,25 +28,25 @@ test.beforeAll(async () => {
   const regionsRes = await reqContext.get(`${BACKEND_URL}/store/regions`, {
     headers: { 'x-publishable-api-key': PUBLISHABLE_KEY }
   });
-  const regionsData = await regionsRes.json();
+  const regionsData = (await regionsRes.json()) as { regions: HttpTypes.StoreRegion[] };
   const regions = regionsData.regions || [];
 
-  const brRegion = regions.find((r: any) => r.currency_code === 'brl' && r.countries?.some((c: any) => c.iso_2 === 'br'));
+  const brRegion = regions.find((r) => r.currency_code === 'brl' && r.countries?.some((c) => c.iso_2 === 'br'));
   if (!brRegion) throw new Error('Região Brasil não encontrada');
   BR_REGION_ID = brRegion.id;
 
   const productsRes = await reqContext.get(`${BACKEND_URL}/store/products?region_id=${BR_REGION_ID}&fields=*variants.calculated_price,*variants.options,*options,*options.values`, {
     headers: { 'x-publishable-api-key': PUBLISHABLE_KEY }
   });
-  const productsData = await productsRes.json();
+  const productsData = (await productsRes.json()) as { products: HttpTypes.StoreProduct[] };
   const products = productsData.products || [];
 
   for (const p of products) {
     if (p.variants && p.variants.length > 0) {
-      const validVariant = p.variants.find((v: any) =>
+      const validVariant = p.variants.find((v) =>
         v.calculated_price &&
         v.calculated_price.currency_code === 'brl' &&
-        v.calculated_price.calculated_amount > 0 &&
+        v.calculated_price.calculated_amount && v.calculated_price.calculated_amount > 0 &&
         v.manage_inventory === true
       );
       if (validVariant && p.options) {
@@ -174,10 +175,11 @@ test.describe('Checkout Address B2C e2e', () => {
 
     const submitBtn = page.getByRole('button', { name: 'Continuar para Entrega' });
     await submitBtn.click();
-    await page.waitForTimeout(1000); // Give time for UI re-render
 
-    await expect(page.locator('input[name="first_name"]')).toHaveValue('Maria');
+    // UI state assertion without arbitrary timeout
+    await expect(submitBtn).toBeEnabled();
     await expect(page.getByText('Não foi possível salvar o endereço')).toBeVisible();
+    await expect(page.locator('input[name="first_name"]')).toHaveValue('Maria');
 
     const cartIdAfter = await page.evaluate(() => window.localStorage.getItem('medusa_cart'));
     expect(cartIdAfter).toBe(CART_ID);
