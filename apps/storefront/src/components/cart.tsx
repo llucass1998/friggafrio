@@ -71,6 +71,7 @@ export const CartDeleteItem = ({ item, fields }: CartDeleteItemProps) => {
       onClick={() => deleteLineItemMutation.mutate({ line_id: item.id })}
       disabled={deleteLineItemMutation.isPending}
       className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+      aria-label="Remover item"
     >
       <Trash className="w-4 h-4" />
     </button>
@@ -115,6 +116,7 @@ export const CartItemQuantitySelector = ({
             ? "w-7 h-7 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             : "w-9 h-9 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
+        aria-label="Diminuir quantidade"
       >
         <Minus className="w-4 h-4" />
       </button>
@@ -137,6 +139,7 @@ export const CartItemQuantitySelector = ({
             ? "w-7 h-7 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             : "w-9 h-9 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
+        aria-label="Aumentar quantidade"
       >
         <Plus className="w-4 h-4" />
       </button>
@@ -256,7 +259,7 @@ export const CartLineItem = ({
             <LineItemPrice item={item} currencyCode={cart.currency_code} className="text-lg font-semibold" />
             {item.quantity > 1 && (
               <p className="text-xs text-text-muted mt-1">
-                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> each
+                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> cada
               </p>
             )}
           </div>
@@ -288,7 +291,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
         </div>
 
         <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">Shipping</span>
+          <span className="text-text-secondary">Frete</span>
           {cart.shipping_total !== null && cart.shipping_total !== undefined ? (
             <Price
               price={cart.shipping_total}
@@ -313,7 +316,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
         ) : null}
 
         <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">Tax</span>
+          <span className="text-text-secondary">Impostos</span>
           {cart.tax_total !== null && cart.tax_total !== undefined ? (
             <Price
               price={cart.tax_total}
@@ -392,36 +395,39 @@ export const CartPromo = ({ cart }: CartPromoProps) => {
         <button
           onClick={() => setShowInput(true)}
           className="text-sm text-accent hover:text-accent-hover font-medium transition-colors"
+          aria-label="Adicionar cupom de desconto"
         >
-          + Add promo code
+          + Adicionar cupom
         </button>
       ) : (
         <div className="space-y-2">
           <div className="flex gap-2">
             <Input
-              placeholder="Enter code"
+              placeholder="Digite o cupom"
               name="promoCode"
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
               className="flex-1"
             />
-            <Button 
-              onClick={handleApply} 
-              variant="primary" 
+            <Button
+              onClick={handleApply}
+              variant="primary"
               size="sm"
               disabled={!promoCode.trim()}
+              aria-label="Aplicar"
             >
-              Apply
+              Aplicar
             </Button>
           </div>
-          <button 
+          <button
             onClick={() => {
               setShowInput(false)
               setPromoCode("")
-            }} 
+            }}
             className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+            aria-label="Cancelar"
           >
-            Cancel
+            Cancelar
           </button>
         </div>
       )}
