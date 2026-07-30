@@ -1,6 +1,7 @@
 import { sdk } from "@/lib/medusa"
 import { getRegion } from "@/lib/data/regions"
-import { getStoredCart, setStoredCart } from "@/lib/utils/cart"
+import { getStoredCart, setStoredCart, removeStoredCart } from "@/lib/utils/cart"
+import { isRecoverableStaleCartError } from "@/lib/utils/is-recoverable-cart-error"
 import { HttpTypes } from "@medusajs/types"
 import { 
   sendPostRequest, 
@@ -177,19 +178,28 @@ export const addToCart = async ({
       if (cart) {
         // Verifica se a region_id e currency_code batem
         if (cart.region_id !== region.id || cart.currency_code !== region.currency_code) {
+          removeStoredCart();
           cartId = undefined; // Invalida o carrinho incompatível
         }
       } else {
+        removeStoredCart();
         cartId = undefined;
       }
     } catch (_e) {
-      cartId = undefined;
+      if (isRecoverableStaleCartError(_e)) {
+        removeStoredCart();
+        cartId = undefined;
+      } else {
+        throw _e;
+      }
     }
   }
 
   if (!cartId) {
     // Create new cart sem country_code solto, apenas region_id
-    cartId = (await createCart({ region_id: region.id })).id
+    const newCart = await createCart({ region_id: region.id })
+    cartId = newCart.id
+    setStoredCart(cartId)
   }
 
   if (!cartId) {
