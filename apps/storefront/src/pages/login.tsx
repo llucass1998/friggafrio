@@ -1,13 +1,15 @@
 import { useState } from "react"
-import { useNavigate, useParams, Link } from "@tanstack/react-router"
+import { useNavigate, useParams, Link, useSearch } from "@tanstack/react-router"
+import { getSafeReturnTo } from "@/lib/utils/return-to"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LockClosedSolid } from "@medusajs/icons"
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { returnTo?: string }
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || "br"
   const { login, loginWithGoogle } = useAuth()
 
   const [email, setEmail] = useState("")
@@ -26,7 +28,7 @@ export default function LoginPage() {
       console.log("[LoginPage] login successful, navigating to home")
 
       // Navigate without full page reload to preserve auth state
-      navigate({ to: "/$countryCode", params: { countryCode } })
+      window.location.href = getSafeReturnTo(search.returnTo, countryCode)
     } catch (err: unknown) {
       console.error("Login error:", err)
       setError("Invalid email or password. Please try again.")
@@ -43,7 +45,7 @@ export default function LoginPage() {
       if (credentialResponse.credential) {
         await loginWithGoogle(credentialResponse.credential)
         console.log("[LoginPage] Google login successful, navigating to home")
-        navigate({ to: "/$countryCode", params: { countryCode } })
+        window.location.href = getSafeReturnTo(search.returnTo, countryCode)
       } else {
         throw new Error("No credential received from Google")
       }

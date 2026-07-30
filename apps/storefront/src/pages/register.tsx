@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { useNavigate, useParams, Link } from "@tanstack/react-router"
+import { useNavigate, useParams, Link, useSearch } from "@tanstack/react-router"
+import { getSafeReturnTo } from "@/lib/utils/return-to"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/lib/hooks/use-auth"
@@ -19,6 +20,7 @@ import { registerCustomer } from "@/lib/data/customer"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { returnTo?: string }
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
   const { loginWithGoogle, login } = useAuth()
@@ -184,7 +186,7 @@ export default function RegisterPage() {
         // a gente usa ele lá em cima.
         await loginWithGoogle(credentialResponse.credential)
         console.log("[RegisterPage] Google login/register successful, navigating to home")
-        navigate({ to: "/$countryCode", params: { countryCode } })
+        window.location.href = getSafeReturnTo(search.returnTo, countryCode)
       } else {
         throw new Error("No credential received from Google")
       }
