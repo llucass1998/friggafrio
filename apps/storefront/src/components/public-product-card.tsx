@@ -99,8 +99,12 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   let buttonText = "Comprar"
   let buttonDisabled = true
 
+  // Verificação de Quote
+  const isQuoteOnly = product.metadata?.quote_only === true || product.tags?.some((t: any) => t.value === "b2b");
+
   if (purchaseState.status === "purchasable") {
     buttonDisabled = false
+    buttonText = isQuoteOnly ? "Orçar" : "Comprar"
   } else if (purchaseState.status === "select_variant") {
     buttonText = "Escolher opções"
     buttonDisabled = true // Navega pra página do produto no clique geral

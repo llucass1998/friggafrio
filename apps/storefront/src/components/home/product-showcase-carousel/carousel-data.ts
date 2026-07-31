@@ -7,7 +7,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     description: "Materiais para instalações e manutenção de sistemas frigoríficos.",
     ctaText: "Ver categoria",
     ctaLink: "/br/store?category=instalacao-isolamento",
-    imageFilename: "carrosel1.png",
+    imageFilename: "carousel1.png",
   },
   {
     id: "ferramentas",
@@ -15,7 +15,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     description: "Bombas de vácuo, manifolds e ferramentas para instalação e manutenção.",
     ctaText: "Ver categoria",
     ctaLink: "/br/store?category=ferramentas-equipamentos",
-    imageFilename: "carrosel2.png",
+    imageFilename: "carousel2.png",
   },
   {
     id: "isolamentos",
@@ -23,7 +23,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     description: "Materiais para proteção térmica e instalação de sistemas de refrigeração.",
     ctaText: "Ver categoria",
     ctaLink: "/br/store?category=instalacao-isolamento",
-    imageFilename: "carrosel3.png",
+    imageFilename: "carousel3.png",
   },
   {
     id: "cilindros",
@@ -31,7 +31,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     description: "Equipamentos para recolhimento e armazenamento técnico de fluidos refrigerantes.",
     ctaText: "Ver categoria",
     ctaLink: "/br/store?category=cilindros-recolhimento",
-    imageFilename: "carrosel4.png",
+    imageFilename: "carousel4.png",
   },
   {
     id: "gases",
@@ -39,6 +39,6 @@ export const showcaseSlides: ShowcaseSlide[] = [
     description: "Soluções para diferentes aplicações de refrigeração comercial, industrial e doméstica.",
     ctaText: "Ver categoria",
     ctaLink: "/br/store?category=gases-refrigerantes",
-    imageFilename: "carrosel5.png",
+    imageFilename: "carousel5.png",
   }
 ]
