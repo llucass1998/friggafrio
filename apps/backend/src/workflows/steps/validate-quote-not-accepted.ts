@@ -13,7 +13,7 @@ export const validateQuoteNotAccepted = createStep(
     if (quote.status === QuoteStatus.ACCEPTED) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        `Quote is already accepted by customer`
+        `Quote is already accepted by customer and cannot be modified or re-sent.`
       )
     }
   }
