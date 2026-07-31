@@ -86,7 +86,7 @@ export default function AcceptInvitePage() {
         },
       })
 
-      toast.success("Account created successfully! Logging you in...")
+      toast.success("Conta criada com sucesso! Fazendo login...")
 
       // Log in the user (refresh the session)
       await login(email!, formData.password)
@@ -127,7 +127,7 @@ export default function AcceptInvitePage() {
               </svg>
             </div>
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-text-primary mb-2">Invalid Invite</h1>
+              <h1 className="text-2xl font-semibold text-text-primary mb-2">Convite Inválido</h1>
               <p className="text-text-secondary">
                 {!token ? "No invite token provided" : "This invite link appears to be invalid"}
               </p>
@@ -213,7 +213,7 @@ export default function AcceptInvitePage() {
                   onChange={(e) => updateFormData("first_name", e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="John"
+                  placeholder="João"
                 />
               </div>
 
@@ -229,7 +229,7 @@ export default function AcceptInvitePage() {
                   onChange={(e) => updateFormData("last_name", e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="Doe"
+                  placeholder="Silva"
                 />
               </div>
 
