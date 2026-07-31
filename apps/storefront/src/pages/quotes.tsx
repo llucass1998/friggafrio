@@ -35,31 +35,31 @@ function getStatusConfig(status: string) {
   switch (status) {
     case "pending_merchant":
       return {
-        label: "Pending Review",
+        label: "Aguardando Análise",
         icon: Clock,
         bgClass: "bg-amber-100 text-amber-700",
       }
     case "pending_customer":
       return {
-        label: "Awaiting Your Response",
+        label: "Aguardando Sua Resposta",
         icon: Clock,
         bgClass: "bg-blue-100 text-blue-700",
       }
     case "accepted":
       return {
-        label: "Accepted",
+        label: "Aprovado",
         icon: CheckCircleSolid,
         bgClass: "bg-green-100 text-green-700",
       }
     case "customer_rejected":
       return {
-        label: "Declined by You",
+        label: "Recusado por Você",
         icon: XCircleSolid,
         bgClass: "bg-red-100 text-red-700",
       }
     case "merchant_rejected":
       return {
-        label: "Declined by Merchant",
+        label: "Recusado pela Loja",
         icon: XCircleSolid,
         bgClass: "bg-gray-100 text-gray-700",
       }
@@ -532,7 +532,7 @@ export default function QuotesPage() {
               params={{ countryCode }}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
             >
-              Browse Products
+              Navegar nos Produtos
             </Link>
           </div>
         ) : (
@@ -585,7 +585,7 @@ export default function QuotesPage() {
 
                   const actionItems: ActionMenuItem[] = [
                     {
-                      label: "View Details",
+                      label: "Ver Detalhes",
                       icon: Eye,
                       onClick: () => setSelectedQuote(quote),
                     },
@@ -593,7 +593,7 @@ export default function QuotesPage() {
 
                   if (quote.status === "accepted" && quote.draft_order_id) {
                     actionItems.push({
-                      label: "View Order",
+                      label: "Ver Pedido",
                       icon: ShoppingBag,
                       onClick: () => handleViewOrder(quote.draft_order_id),
                       variant: "primary",

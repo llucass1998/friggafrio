@@ -171,7 +171,7 @@ const ProductActions = memo(function ProductActions({
   }
 
   // Generate Button Text
-  let buttonText = "Comprar"
+  let buttonText = isQuoteOnly ? "Adicionar para Orçamento" : "Comprar"
   let buttonDisabled = true
 
   if (purchaseState.status === "unavailable") {
@@ -193,6 +193,28 @@ const ProductActions = memo(function ProductActions({
   return (
     <div className="flex flex-col gap-y-4">
       {/* Dynamic Price Display */}
+      {/* Inventory Status Banner */}
+      {selectedVariant && selectedVariant.manage_inventory && selectedVariant.inventory_quantity !== null && selectedVariant.inventory_quantity !== undefined && (
+        <div className="mb-4">
+          {selectedVariant.inventory_quantity <= 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+              Sem estoque
+            </span>
+          ) : selectedVariant.inventory_quantity <= 5 ? (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+              Últimas {selectedVariant.inventory_quantity} unidades
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Em estoque
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col gap-1 mb-2">
          {displayPrice && purchaseState.status === "price_pending" ? (
            <>
