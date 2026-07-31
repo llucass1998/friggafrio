@@ -12,6 +12,10 @@ export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default") || providerId === "manual"
 }
 
+export const isMercadopago = (providerId?: string) => {
+  return providerId?.startsWith("mercadopago") || providerId === "mp" || providerId === "mercadopago" || providerId === "pp_mercadopago"
+}
+
 // ============ ACTIVE PAYMENT SESSION ============
 
 export const getActivePaymentSession = (cart: HttpTypes.StoreCart): HttpTypes.StorePaymentSession | undefined => {

@@ -292,7 +292,7 @@ export const updateLineItem = async ({
  */
 export const deleteLineItem = async ({
   line_id,
-  // fields = DEFAULT_CART_FIELDS,
+  fields = DEFAULT_CART_FIELDS,
 }: {
   line_id: string;
   fields?: string;
@@ -303,8 +303,11 @@ export const deleteLineItem = async ({
     throw new Error("No cart found")
   }
 
-  // TODO pass fields when supported
-  await sdk.store.cart.deleteLineItem(cartId, line_id)
+  // fields pass using Medusa v2.18 Client standard arguments
+  await sdk.client.fetch(`/store/carts/${cartId}/line-items/${line_id}`, {
+    method: "DELETE",
+    query: { fields },
+  })
 }
 
 /**
