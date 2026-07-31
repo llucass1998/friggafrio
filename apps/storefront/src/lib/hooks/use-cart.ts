@@ -218,7 +218,7 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
       const { parent } = await sdk.store.cart.deleteLineItem(
-        cartId, 
+        cartId,
         variables.line_id,
         { fields: fields || DEFAULT_CART_FIELDS }
       )

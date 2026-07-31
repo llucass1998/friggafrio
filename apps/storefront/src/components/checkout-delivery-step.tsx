@@ -13,8 +13,10 @@ interface DeliveryStepProps {
   onBack: () => void;
 }
 
+import { Loader2 } from "lucide-react"
+
 const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
-  const { data: shippingOptions } = useShippingOptions({ cart_id: cart.id })
+  const { data: shippingOptions, isLoading: isOptionsLoading } = useShippingOptions({ cart_id: cart.id })
   const setShippingMethodMutation = useSetCartShippingMethod()
   const [selectedOptionId, setSelectedOptionId] = useState<string>(
     cart.shipping_methods?.[0]?.shipping_option_id || ""
@@ -59,20 +61,26 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="shipping-options-title">
         <h3 id="shipping-options-title" className="sr-only">Opções de frete</h3>
-        {(!shippingOptions || shippingOptions.length === 0) && (
-          <div className="text-sm text-text-secondary italic">
-            Nenhuma opção de entrega encontrada para este carrinho. As configurações de entrega para São Paulo podem estar sendo atualizadas.
+        {isOptionsLoading ? (
+           <div className="flex flex-col items-center justify-center py-8 text-zinc-500 gap-3">
+             <Loader2 className="w-6 h-6 animate-spin text-[var(--color-primary)]" />
+             <p className="text-sm">Buscando cotações de frete para o CEP {cart.shipping_address?.postal_code}...</p>
+           </div>
+        ) : (!shippingOptions || shippingOptions.length === 0) ? (
+          <div className="text-sm text-text-secondary italic p-4 bg-zinc-50 border border-zinc-200 rounded-md">
+            Nenhuma opção de entrega encontrada para este carrinho. Verifique se o CEP informado ({cart.shipping_address?.postal_code}) está correto ou entre em contato com o suporte.
           </div>
+        ) : (
+          shippingOptions.map((option) => (
+            <ShippingItemSelector
+              key={option.id}
+              shippingOption={option}
+              isSelected={selectedOptionId === option.id}
+              handleSelect={setSelectedOptionId}
+              cart={cart}
+            />
+          ))
         )}
-        {shippingOptions?.map((option) => (
-          <ShippingItemSelector
-            key={option.id}
-            shippingOption={option}
-            isSelected={selectedOptionId === option.id}
-            handleSelect={setSelectedOptionId}
-            cart={cart}
-          />
-        ))}
       </div>
 
       {mutationError && (
