@@ -4,6 +4,8 @@ import { useSetCartAddresses } from "@/lib/hooks/use-checkout"
 import { HttpTypes } from "@medusajs/types"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { checkoutAddressSchema } from "@/lib/schemas/checkout-address"
+import { formatCPF, formatCNPJ, formatCEP } from "@/lib/utils/formatters"
 
 interface AddressStepProps {
   cart: HttpTypes.StoreCart
@@ -41,71 +43,62 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     bairro: exBairro,
     city: cart.shipping_address?.city || "",
     province: cart.shipping_address?.province || "",
+    cpf_cnpj: (cart.shipping_address?.metadata?.cpf_cnpj as string) || "",
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
-    if (mutationError) setMutationError(null)
-  }
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {}
-    if (!form.first_name.trim()) newErrors.first_name = "Obrigatório"
-    if (!form.last_name.trim()) newErrors.last_name = "Obrigatório"
-    if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) newErrors.email = "E-mail inválido"
-    if (!form.phone.trim()) newErrors.phone = "Obrigatório"
-
-    const cepNumber = form.postal_code.replace(/\D/g, '')
-    if (cepNumber.length !== 8) newErrors.postal_code = "CEP inválido (8 dígitos)"
-
-    if (!form.logradouro.trim()) newErrors.logradouro = "Obrigatório"
-    if (!form.numero.trim()) newErrors.numero = "Obrigatório"
-    if (!form.bairro.trim()) newErrors.bairro = "Obrigatório"
-    if (!form.city.trim()) newErrors.city = "Obrigatória"
-
-    if (!form.province.trim()) {
-      newErrors.province = "Obrigatório"
-    } else {
-      const p = form.province.trim().toLowerCase()
-      const allowedStates = ["sp", "são paulo", "sao paulo", "sãopaulo", "saopaulo"]
-      if (!allowedStates.includes(p)) {
-        newErrors.province = "No momento, realizamos entregas somente no estado de São Paulo."
-      }
+    let parsedValue = value
+    if (name === "cpf_cnpj") {
+      const numbers = value.replace(/\D/g, "")
+      parsedValue = numbers.length > 11 ? formatCNPJ(value) : formatCPF(value)
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setForm(prev => ({ ...prev, [name]: parsedValue }))
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
+    if (mutationError) setMutationError(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isSubmitting) return
-    if (!validate()) return
 
+    const parseResult = checkoutAddressSchema.safeParse(form)
+
+    if (!parseResult.success) {
+      const newErrors: Record<string, string> = {}
+      parseResult.error.issues.forEach((err: any) => {
+        if (err.path[0]) newErrors[err.path[0].toString()] = err.message
+      })
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
     setIsSubmitting(true)
     setMutationError(null)
 
     try {
-      const cepNormalized = form.postal_code.replace(/\D/g, '')
-      const address_1 = `${form.logradouro}, ${form.numero} - ${form.bairro}`
-      const address_2 = form.complemento
+      const validated = parseResult.data
+      const address_1 = `${validated.logradouro}, ${validated.numero} - ${validated.bairro}`
+      const address_2 = validated.complemento || ""
 
       const payload = {
-        email: form.email,
+        email: validated.email,
         shipping_address: {
-          first_name: form.first_name,
-          last_name: form.last_name,
-          phone: form.phone,
-          postal_code: cepNormalized,
+          first_name: validated.first_name,
+          last_name: validated.last_name,
+          phone: validated.phone,
+          postal_code: validated.postal_code,
           address_1,
           address_2,
-          city: form.city,
-          province: "SP", // Normalizando a province para sempre SP
-          country_code: "br"
+          city: validated.city,
+          province: "sp", // Ensure lowercase 'sp' as requested
+          country_code: "br",
+          metadata: validated.cpf_cnpj ? { cpf_cnpj: validated.cpf_cnpj } : undefined
         }
       }
 
@@ -149,23 +142,32 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
             {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
           </div>
           <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">CPF / CNPJ (Opcional)</label>
+            <Input name="cpf_cnpj" value={form.cpf_cnpj} onChange={handleChange} placeholder="000.000.000-00" />
+            {errors.cpf_cnpj && <span className="text-xs text-red-500">{errors.cpf_cnpj}</span>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Telefone *</label>
             <Input name="phone" type="tel" value={form.phone} onChange={handleChange} />
             {errors.phone && <span className="text-xs text-red-500">{errors.phone}</span>}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">CEP *</label>
-            <Input name="postal_code" value={form.postal_code} onChange={handleChange} placeholder="00000-000" />
+            <div className="relative">
+              <Input name="postal_code" value={form.postal_code} onChange={handleChange} placeholder="00000-000" disabled={false} />
+              {false && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-zinc-400" />}
+            </div>
             {errors.postal_code && <span className="text-xs text-red-500">{errors.postal_code}</span>}
           </div>
-          <div className="flex flex-col gap-1 md:col-span-2">
-            <label className="text-sm font-medium">Logradouro *</label>
-            <Input name="logradouro" value={form.logradouro} onChange={handleChange} />
-            {errors.logradouro && <span className="text-xs text-red-500">{errors.logradouro}</span>}
-          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Logradouro *</label>
+          <Input name="logradouro" value={form.logradouro} onChange={handleChange} />
+          {errors.logradouro && <span className="text-xs text-red-500">{errors.logradouro}</span>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
