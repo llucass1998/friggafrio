@@ -24,6 +24,11 @@ const UpdateCompanySchema = z.object({
     .optional(),
 })
 
+// Validation parameter for setup-status ID
+const SetupStatusParamsSchema = z.object({
+  id: z.string().min(1, "O ID da empresa é obrigatório"),
+})
+
 export const adminCompaniesMiddlewares: MiddlewareRoute[] = [
   {
     matcher: "/admin/companies",
@@ -49,5 +54,24 @@ export const adminCompaniesMiddlewares: MiddlewareRoute[] = [
     matcher: "/admin/companies/:id",
     methods: ["POST"],
     middlewares: [validateAndTransformBody(UpdateCompanySchema)],
+  },
+  {
+    matcher: "/admin/companies/:id/setup-status",
+    methods: ["GET"],
+    middlewares: [
+      // Check parameters explicitly
+      (req, res, next) => {
+        try {
+          SetupStatusParamsSchema.parse(req.params)
+          return next()
+        } catch (error: any) {
+          return res.status(400).json({
+            type: "invalid_data",
+            message: "Parâmetros inválidos fornecidos para obter o status de setup.",
+            errors: error.errors
+          })
+        }
+      }
+    ],
   },
 ]

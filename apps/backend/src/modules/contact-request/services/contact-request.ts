@@ -12,7 +12,7 @@ class ContactRequestService extends MedusaService({
    * registered key. We use baseRepository_ directly instead.
    */
   @InjectManager()
-  async createContactRequests(
+  async createContactRequestsCustom(
     data: {
       name: string;
       email: string;
@@ -40,7 +40,7 @@ class ContactRequestService extends MedusaService({
   }
 
   @InjectManager()
-  async updateContactRequests(
+  async updateContactRequestsCustom(
     data: { id: string; notification_sent?: boolean; status?: string },
     @MedusaContext() sharedContext: Context = {}
   ): Promise<any> {
