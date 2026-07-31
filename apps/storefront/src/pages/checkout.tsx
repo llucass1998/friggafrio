@@ -53,7 +53,7 @@ function CheckoutSetupBlocker({
           </svg>
         </div>
         <h2 className="text-xl font-bold text-gray-900 mb-3">
-          Company Setup Required
+          Configuração da Empresa Necessária
         </h2>
         <p className="text-gray-600 mb-6">
           Before your team can place orders, a company admin needs to configure:{" "}
@@ -64,7 +64,7 @@ function CheckoutSetupBlocker({
             href={`/${countryCode}/settings?tab=addresses`}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
           >
-            Go to Settings
+            Ir para Configurações
           </a>
           <a
             href={`/${countryCode}/store`}

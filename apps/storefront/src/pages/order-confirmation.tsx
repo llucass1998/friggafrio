@@ -30,11 +30,14 @@ const translatePaymentStatus = (status?: string) => {
   switch (status) {
     case "not_paid": return "Não pago"
     case "awaiting": return "Aguardando"
+    case "authorized": return "Aprovado" // Adicionado para lidar com as operadoras que usam "authorized" ao invés de "captured" no momento inicial
     case "captured": return "Aprovado"
     case "partially_refunded": return "Parcialmente estornado"
     case "refunded": return "Estornado"
     case "canceled": return "Cancelado"
     case "requires_action": return "Ação Necessária"
+    case "failed": return "Recusado" // Adicionado feedback claro para pagamentos recusados
+    case "rejected": return "Recusado" 
     default: return status || "Aguardando"
   }
 }
