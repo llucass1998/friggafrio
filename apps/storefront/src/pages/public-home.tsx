@@ -1,9 +1,9 @@
-import { HeroSection } from "@/components/home/HeroSection"
-import { BenefitsSection } from "@/components/home/BenefitsSection"
-import { FeaturedCategories } from "@/components/home/FeaturedCategories"
-import { FeaturedProducts } from "@/components/home/FeaturedProducts"
-import { StoreBrandsCarousel } from "@/components/home/store-brands-carousel"
-import { ContactSection } from "@/components/home/contact-section/ContactSection"
+import { HeroSection } from "../components/home/HeroSection"
+import { BenefitsSection } from "../components/home/BenefitsSection"
+import { FeaturedCategories } from "../components/home/FeaturedCategories"
+import { FeaturedProducts } from "../components/home/FeaturedProducts"
+import { StoreBrandsCarousel } from "../components/home/store-brands-carousel"
+
 
 export function PublicHomePage() {
   return (
@@ -11,9 +11,8 @@ export function PublicHomePage() {
       <HeroSection />
       <BenefitsSection />
       <FeaturedCategories />
-      <FeaturedProducts />
       <StoreBrandsCarousel />
-      <ContactSection />
+      <FeaturedProducts />
     </div>
   )
 }

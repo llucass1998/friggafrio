@@ -2,8 +2,8 @@ import { useCallback } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { storeBrands } from "@/config/brands"
-import { BrandLogoCard } from "@/components/home/store-brands-carousel/BrandLogoCard"
+import { storeBrands } from "../../../config/brands"
+import { BrandLogoCard } from "./BrandLogoCard"
 
 export function StoreBrandsCarousel() {
   const activeBrands = storeBrands.filter((brand) => brand.active).sort((a, b) => a.order - b.order)
@@ -46,7 +46,7 @@ export function StoreBrandsCarousel() {
 
         <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className={`flex ${isFewBrands ? "md:justify-center" : ""} -ml-4`}>
+            <div className={`flex ${isFewBrands ? 'md:justify-center' : ''} -ml-4`}>
               {activeBrands.map((brand) => (
                 <div
                   key={brand.id}
@@ -56,7 +56,7 @@ export function StoreBrandsCarousel() {
                     name={brand.name}
                     logoSrc={brand.logoSrc}
                     logoAlt={brand.logoAlt}
-                    websiteUrl={(brand as {websiteUrl?: string}).websiteUrl}
+                    websiteUrl={(brand as any).websiteUrl}
                   />
                 </div>
               ))}

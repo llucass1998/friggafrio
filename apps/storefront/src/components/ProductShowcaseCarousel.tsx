@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { Link } from "@tanstack/react-router"
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from "lucide-react"
-import clsx from "clsx"
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import clsx from 'clsx';
 
 const slides = [
   {
@@ -34,13 +34,13 @@ const slides = [
     image: "/images/carousel/carousel-ferramentas.webp",
     link: "/produtos"
   }
-]
+];
 
 export function ProductShowcaseCarousel() {
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(0);
 
-  const prev = () => setCurrent(c => (c === 0 ? slides.length - 1 : c - 1))
-  const next = () => setCurrent(c => (c === slides.length - 1 ? 0 : c + 1))
+  const prev = () => setCurrent(c => (c === 0 ? slides.length - 1 : c - 1));
+  const next = () => setCurrent(c => (c === slides.length - 1 ? 0 : c + 1));
 
   return (
     <div 
@@ -53,7 +53,7 @@ export function ProductShowcaseCarousel() {
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {slides.map((slide, index) => {
-          const isActive = index === current
+          const isActive = index === current;
           return (
             <div 
               key={index} 
@@ -75,7 +75,7 @@ export function ProductShowcaseCarousel() {
                     {slide.description}
                   </p>
                   <Link 
-                    to={slide.link as string} 
+                    to={slide.link as any} 
                     className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition-colors"
                     tabIndex={isActive ? 0 : -1}
                   >
@@ -84,7 +84,7 @@ export function ProductShowcaseCarousel() {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -119,5 +119,5 @@ export function ProductShowcaseCarousel() {
         ))}
       </div>
     </div>
-  )
+  );
 }

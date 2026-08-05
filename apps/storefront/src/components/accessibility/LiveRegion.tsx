@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState } from 'react';
 
 // Export a singleton function to announce messages from anywhere
-let announceFn: (message: string) => void = () => {}
+let announceFn: (message: string) => void = () => {};
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function announceToScreenReader(message: string) {
-  announceFn(message)
+  announceFn(message);
 }
 
 export function LiveRegion() {
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     announceFn = (msg: string) => {
-      setMessage(msg)
+      setMessage(msg);
       // Clear after a while so the same message can be announced again if needed
-      setTimeout(() => setMessage(""), 3000)
-    }
-  }, [])
+      setTimeout(() => setMessage(''), 3000);
+    };
+  }, []);
 
   return (
     <div 
@@ -28,5 +27,5 @@ export function LiveRegion() {
     >
       {message}
     </div>
-  )
+  );
 }

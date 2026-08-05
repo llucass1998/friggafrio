@@ -1,8 +1,8 @@
-import { PublicHeader } from "@/components/public-header"
-import { PublicFooter } from "@/components/public-footer"
-import { FloatingActions } from "@/components/FloatingActions"
-import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button"
-import { CartDropdown } from "@/components/cart"
+import { PublicHeader } from "./public-header"
+import { PublicFooter } from "./public-footer"
+import { FloatingActions } from "./FloatingActions"
+import { FloatingWhatsAppButton } from "./floating-whatsapp-button"
+import { CartDropdown } from "./cart"
 import {
   AccessibilityProvider,
   AccessibilityTopBar,
@@ -12,7 +12,7 @@ import {
   ReadingGuide,
   VLibrasWidget,
   LiveRegion
-} from "@/components/accessibility"
+} from "./accessibility"
 
 interface PublicLayoutProps {
   children: React.ReactNode
@@ -33,7 +33,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 flex flex-col focus:outline-none"
+          className={`flex-1 flex flex-col focus:outline-none pt-16 md:pt-[148px]`}
         >
           {children}
         </main>

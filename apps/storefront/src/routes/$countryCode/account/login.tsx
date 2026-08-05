@@ -9,9 +9,9 @@ export const Route = createFileRoute("/$countryCode/account/login")({
       await sdk.store.customer.retrieve()
       // If successful, user is already logged in, redirect to proper country code
       throw redirect({ to: "/$countryCode", params: { countryCode: params.countryCode || "br" } })
-    } catch (error: unknown) {
+    } catch (error: any) {
       // Re-throw redirect
-      if ((error as Record<string, unknown>)?.to) throw error
+      if (error?.to) throw error
       // Unauthorized errors are expected for login page - ignore them
       // Any other errors we also silently ignore to allow showing login page
     }

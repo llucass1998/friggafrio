@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from "react"
-import { Button } from "@/components/ui/button"
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from './ui/button';
 
 interface Props {
   children?: ReactNode;
@@ -12,22 +12,22 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public override state: State = {
+  public state: State = {
     hasError: false
-  }
+  };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
-  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo)
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught error:', error, errorInfo);
   }
 
-  public override render() {
+  public render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
       
       return (
@@ -47,15 +47,15 @@ export class ErrorBoundary extends Component<Props, State> {
               Tentar Novamente
             </Button>
             <Button 
-              onClick={() => window.location.href = "/"}
+              onClick={() => window.location.href = '/'}
             >
               Voltar ao Início
             </Button>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }

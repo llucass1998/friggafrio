@@ -14,9 +14,9 @@ export const Route = createFileRoute("/$countryCode/account/accept-invite")({
       await sdk.store.customer.retrieve()
       // If successful, user is already logged in
       throw redirect({ to: "/$countryCode", params: { countryCode: "us" } })
-    } catch (error: unknown) {
+    } catch (error: any) {
       // Re-throw redirect
-      if ((error as Record<string, unknown>)?.to) throw error
+      if (error?.to) throw error
       // Unauthorized errors are expected - ignore them
     }
   },

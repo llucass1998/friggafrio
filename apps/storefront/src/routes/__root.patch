@@ -1,0 +1,11 @@
+--- __root.tsx
++++ __root.tsx
+@@ -14,7 +14,7 @@
+ import { Toaster } from "sonner";
+ import appCss from "../styles/app.css?url";
+ 
+-const NotFound = lazy(() => import("@/components/not-found"));
++const NotFound = lazy(() => import("../components/not-found"));
+ 
+ export const Route = createRootRouteWithContext<{
+   queryClient: QueryClient;

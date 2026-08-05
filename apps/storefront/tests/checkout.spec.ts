@@ -352,8 +352,7 @@ test.describe('Checkout and Cart Flow', () => {
     // Address Step
     await page.getByLabel(/Nome/i).first().fill('João');
     await page.getByLabel(/Sobrenome/i).first().fill('Silva');
-    await page.getByLabel(/Logradouro/i).first().fill('Rua das Flores');
-    await page.getByLabel(/Número/i).first().fill('123');
+    await page.getByLabel(/Endereço/i).first().fill('Rua das Flores 123');
     await page.getByLabel(/Cidade/i).first().fill('São Paulo');
     await page.getByLabel(/CEP/i).first().fill('01001-000');
 

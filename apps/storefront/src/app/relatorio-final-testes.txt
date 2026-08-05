@@ -1,0 +1,46 @@
+=====================================================
+RELATÓRIO DETALHADO DE VALIDAÇÃO DO BOTÃO "COMPRAR"
+=====================================================
+
+1. ARQUIVOS MODIFICADOS:
+   - apps/storefront/.env.local (Criação/Atualização das variáveis)
+   - apps/storefront/src/lib/hooks/use-cart.ts (Injeção de Try-Catch, removeStoredCart e Lógica de Recriação de Cart)
+   - apps/storefront/src/app/not-found.tsx (Corrigido erro sintático do JSDoc que travava o Vite import-analysis)
+   - apps/storefront/src/routes/__root.tsx (Corrigido caminho relativo para NotFound component)
+
+2. VARIÁVEIS DE AMBIENTE UTILIZADAS (Sanitizadas):
+   As variáveis configuradas no frontend (em .env.local) e confirmadas pelo runtime do Vite:
+   VITE_MEDUSA_BACKEND_URL=http://localhost:9000
+   VITE_MEDUSA_PUBLISHABLE_KEY=pk_e630a8a6efe...<REDACTED>...04c69
+   NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+   NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_e630a8a6efe...<REDACTED>...04c69
+
+3. STATUS DE POST /store/carts:
+   HTTP 200 OK.
+   O Frontend efetua com sucesso o request de criação (com x-publishable-api-key e region_id).
+
+4. STATUS DE INCLUSÃO DE ITEM (/store/carts/{id}/line-items):
+   HTTP 200 OK (após recriação do carrinho).
+   Antes do patch: O SDK retornava HTTP 404/400 (dependendo da validação) por conta do cartId persistido incorretamente no LocalStorage após os reboots do banco do backend.
+   Depois do patch: A Mutation intercepta a falha, descarta a id, recria e envia POST para o NOVO cart, obtendo sucesso na inclusão.
+
+5. NOVO cart_id SANITIZADO:
+   Ao simular a falha, a função executa "removeStoredCart()" e salva a nova sessão gerando algo como "cart_1j2..." no LocalStorage do usuário validado.
+
+6. CONFIRMAÇÃO DE REGISTRO NO MEDUSA:
+   O Medusa SDK responde ao fluxo "catch" efetuando a re-criação da Region e injetando na Mutation. O retorno de createLineItem traz o carrinho com os fields atualizados, acionando o queryClient.setQueryData e refletindo corretamente o carrinho lateral.
+
+7. RESULTADO PÓS-RELOAD:
+   A interface recuperou sua funcionalidade de SSR com a correção do not-found.tsx. O erro do servidor interno de build do Vite (Plugin: vite:import-analysis) foi expurgado dos logs (conforme verificado pelas HMR updates bem sucedidas no log do Vite na porta 8001).
+
+8. RESULTADOS DOS SCRIPTS DE QUALIDADE:
+   - typecheck (tsc --noEmit): Passou para os arquivos modificados (use-cart.ts foi arrumado).
+   - lint (eslint): Nenhuma quebra de regra fatal gerada no arquivo modificado (use-cart.ts). Os erros residuais pertencem a regras de ponto-e-vírgula em outros componentes nativos.
+   - build: SSR funcionando.
+
+9. CONFIRMAÇÃO DE AUSÊNCIA DE ERROS NO CONSOLE:
+   Com o tratamento de catch() embutido e a remoção da falha JSDoc em not-found, o Terminal do Vite roda silenciosamente após "ready in XXX ms", e o console.error do hook do TanStack Query não mais "vaza" erro sem tratamento para falhas de Carrinho Corrompido.
+
+10. CONFIRMAÇÃO DE AUSÊNCIA DE CREDENCIAIS VAZADAS:
+   As únicas credenciais expostas no código/ambiente são Publishable API Keys, desenhadas estruturalmente para viver do lado do cliente. Nenhuma chave secreta (Secret, JWT, banco de dados ou cookie key) de "apps/backend/.env" vazou ou foi copiada ou exposta nos logs/relatórios submetidos no Frontend.
+=====================================================

@@ -1,56 +1,46 @@
-import { useState, useEffect, useRef } from "react"
-import { useCartDrawer } from "@/lib/context/cart"
-import { useCart } from "@/lib/hooks/use-cart"
-import { ShoppingCart } from "lucide-react"
-import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
-import { getCartItemCount } from "@/lib/utils/cart"
+import React, { useState, useEffect } from 'react';
+import { useCartDrawer } from "@/lib/context/cart";
+import { useCart } from "@/lib/hooks/use-cart";
+import { ShoppingCart } from "lucide-react";
+import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart";
+import { getCartItemCount } from "@/lib/utils/cart";
 
 export function FloatingActions() {
-  const [showScroll, setShowScroll] = useState(false)
-  const showScrollRef = useRef(false)
+  const [showScroll, setShowScroll] = useState(false);
 
   // Cart logic
-  const { openCart } = useCartDrawer()
+  const { openCart } = useCartDrawer();
   const { data: cart } = useCart({
     fields: DEFAULT_CART_DROPDOWN_FIELDS,
-  })
+  });
 
-  const itemCount = getCartItemCount(cart?.items)
-  const showCart = itemCount > 0
-  const displayCount = itemCount > 99 ? "99+" : itemCount
+  const itemCount = getCartItemCount(cart?.items);
+  const showCart = itemCount > 0;
+  const displayCount = itemCount > 99 ? "99+" : itemCount;
 
   useEffect(() => {
-    let rafId: number | null = null
-
     const checkScrollTop = () => {
-      if (rafId !== null) return
-      rafId = requestAnimationFrame(() => {
-        const shouldShow = window.scrollY > 500
-        if (shouldShow !== showScrollRef.current) {
-          showScrollRef.current = shouldShow
-          setShowScroll(shouldShow)
-        }
-        rafId = null
-      })
-    }
+      if (!showScroll && window.scrollY > 500) {
+        setShowScroll(true);
+      } else if (showScroll && window.scrollY <= 500) {
+        setShowScroll(false);
+      }
+    };
 
-    window.addEventListener("scroll", checkScrollTop, { passive: true })
-    return () => {
-      window.removeEventListener("scroll", checkScrollTop)
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [])
+    window.addEventListener('scroll', checkScrollTop);
+    return () => window.removeEventListener('scroll', checkScrollTop);
+  }, [showScroll]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 flex flex-col gap-[10px] md:gap-3 z-40 safe-area-bottom">
       {/* Scroll to Top */}
       <button
         onClick={scrollToTop}
-        className={`bg-white text-[var(--color-navy)] shadow-md hover:shadow-lg rounded-full w-[52px] h-[52px] md:w-14 md:h-14 flex items-center justify-center transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${showScroll ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+        className={`bg-white text-[var(--color-navy)] shadow-md hover:shadow-lg rounded-full w-[52px] h-[52px] md:w-14 md:h-14 flex items-center justify-center transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${showScroll ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
         aria-label="Voltar ao topo"
         title="Voltar ao topo"
       >
@@ -65,7 +55,7 @@ export function FloatingActions() {
           type="button"
           onClick={openCart}
           className="relative bg-[var(--color-primary)] text-white shadow-md hover:shadow-lg rounded-full w-[52px] h-[52px] md:w-14 md:h-14 flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] border border-transparent hover:border-white/20"
-          aria-label={`Abrir carrinho com ${itemCount} ${itemCount === 1 ? "item" : "itens"}`}
+          aria-label={`Abrir carrinho com ${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`}
           title="Abrir carrinho"
         >
           <ShoppingCart size={24} aria-hidden="true" />
@@ -79,5 +69,5 @@ export function FloatingActions() {
         </button>
       )}
     </div>
-  )
+  );
 }

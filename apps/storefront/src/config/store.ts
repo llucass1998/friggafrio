@@ -1,4 +1,4 @@
-import { StoreLocation, storeLocations } from "@/config/store-locations"
+import { StoreLocation, storeLocations } from "./store-locations"
 
 export type StoreConfig = {
   name: string;
@@ -20,4 +20,4 @@ export const storeConfig: StoreConfig = {
   whatsappNumber: "5511948777156",
   instagramUrl: "https://www.instagram.com/frigga.frio/",
   locations: storeLocations,
-} as const
+} as const;

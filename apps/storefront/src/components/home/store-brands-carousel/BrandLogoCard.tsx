@@ -1,4 +1,4 @@
-import { } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 interface BrandLogoCardProps {
   name: string

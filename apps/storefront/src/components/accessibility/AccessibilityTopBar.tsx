@@ -1,11 +1,11 @@
-import React from "react"
-import { useAccessibility } from "@/components/accessibility/AccessibilityProvider"
-import * as Switch from "@radix-ui/react-switch"
-import { storeConfig } from "@/config/store"
+import React from 'react';
+import { useAccessibility } from './AccessibilityProvider';
+import * as Switch from '@radix-ui/react-switch';
+import { storeConfig } from '@/config/store';
 
 export function AccessibilityTopBar() {
-  const { preferences, togglePanel } = useAccessibility()
-  const phoneFormatted = storeConfig.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, "($1) $2-$3")
+  const { preferences, togglePanel } = useAccessibility();
+  const phoneFormatted = storeConfig.phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
 
   return (
     <div className="a11y-top-bar bg-[#f8fafc] border-b border-[#e2e8f0] py-2 px-4 sm:px-6 lg:px-8 text-sm">
@@ -28,14 +28,14 @@ export function AccessibilityTopBar() {
             htmlFor="a11y-toggle-top" 
             className="text-[var(--color-navy)] font-medium cursor-pointer select-none"
           >
-            {preferences.panelEnabled ? "Acessibilidade ativada" : "Ativar acessibilidade"}
+            {preferences.panelEnabled ? 'Acessibilidade ativada' : 'Ativar acessibilidade'}
           </label>
         </div>
 
         {/* Right Side: Contact / Help */}
         <div className="hidden md:flex items-center gap-6 text-[var(--color-navy)] font-medium">
           <a 
-            href={`https://wa.me/55${storeConfig.phone.replace(/\D/g, "")}`}
+            href={`https://wa.me/55${storeConfig.phone.replace(/\D/g, '')}`}
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
@@ -52,5 +52,5 @@ export function AccessibilityTopBar() {
 
       </div>
     </div>
-  )
+  );
 }

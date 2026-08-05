@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { AccessibilityPreferences, DEFAULT_PREFERENCES } from "@/components/accessibility/accessibility.types"
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { AccessibilityPreferences, DEFAULT_PREFERENCES } from "./accessibility.types";
 
 interface AccessibilityContextData {
   preferences: AccessibilityPreferences;
@@ -13,106 +13,106 @@ interface AccessibilityContextData {
   isSpeaking: boolean;
 }
 
-const STORAGE_KEY = "friggafrio:a11y:v1"
+const STORAGE_KEY = "friggafrio:a11y:v1";
 
-const AccessibilityContext = createContext<AccessibilityContextData | undefined>(undefined)
+const AccessibilityContext = createContext<AccessibilityContextData | undefined>(undefined);
 
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
-  const [preferences, setPreferences] = useState<AccessibilityPreferences>(DEFAULT_PREFERENCES)
-  const [mounted, setMounted] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [preferences, setPreferences] = useState<AccessibilityPreferences>(DEFAULT_PREFERENCES);
+  const [mounted, setMounted] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Load preferences safely on client side only (avoid hydration mismatch)
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored)
+        const parsed = JSON.parse(stored);
         // Only merge valid keys to prevent prototype pollution or invalid state
-        const merged = { ...DEFAULT_PREFERENCES }
+        const merged = { ...DEFAULT_PREFERENCES };
         Object.keys(DEFAULT_PREFERENCES).forEach((key) => {
-          const k = key as keyof AccessibilityPreferences
+          const k = key as keyof AccessibilityPreferences;
           if (parsed[k] !== undefined) {
             // Type assertions needed for dynamic assignment
-            (merged as Record<string, unknown>)[k] = parsed[k]
+            (merged as any)[k] = parsed[k];
           }
-        })
-        setPreferences(merged)
+        });
+        setPreferences(merged);
       }
     } catch (e) {
-      console.warn("Failed to load accessibility preferences", e)
+      console.warn("Failed to load accessibility preferences", e);
     }
-  }, [])
+  }, []);
 
   // Save to local storage and apply to document.documentElement
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted) return;
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
 
-    const root = document.documentElement
-    root.setAttribute("data-a11y-font-scale", preferences.fontScale.toString())
-    root.setAttribute("data-a11y-contrast", preferences.contrast)
-    root.setAttribute("data-a11y-grayscale", preferences.grayscale.toString())
-    root.setAttribute("data-a11y-links", preferences.underlineLinks.toString())
-    root.setAttribute("data-a11y-line-spacing", preferences.lineSpacing)
-    root.setAttribute("data-a11y-letter-spacing", preferences.letterSpacing)
-    root.setAttribute("data-a11y-focus", preferences.enhancedFocus.toString())
-    root.setAttribute("data-a11y-motion", preferences.reducedMotion.toString())
-    root.setAttribute("data-a11y-reading-guide", preferences.readingGuide.toString())
-  }, [preferences, mounted])
+    const root = document.documentElement;
+    root.setAttribute("data-a11y-font-scale", preferences.fontScale.toString());
+    root.setAttribute("data-a11y-contrast", preferences.contrast);
+    root.setAttribute("data-a11y-grayscale", preferences.grayscale.toString());
+    root.setAttribute("data-a11y-links", preferences.underlineLinks.toString());
+    root.setAttribute("data-a11y-line-spacing", preferences.lineSpacing);
+    root.setAttribute("data-a11y-letter-spacing", preferences.letterSpacing);
+    root.setAttribute("data-a11y-focus", preferences.enhancedFocus.toString());
+    root.setAttribute("data-a11y-motion", preferences.reducedMotion.toString());
+    root.setAttribute("data-a11y-reading-guide", preferences.readingGuide.toString());
+  }, [preferences, mounted]);
 
   const updatePreference = useCallback(<K extends keyof AccessibilityPreferences>(key: K, value: AccessibilityPreferences[K]) => {
-    setPreferences((prev) => ({ ...prev, [key]: value }))
-  }, [])
-
-  const cancelSpeech = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel()
-      setIsSpeaking(false)
-    }
-  }, [])
+    setPreferences((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const resetPreferences = useCallback(() => {
     // Preserve the panel open state
-    setPreferences({ ...DEFAULT_PREFERENCES, panelEnabled: preferences.panelEnabled })
-    
-  }, [preferences.panelEnabled])
+    setPreferences({ ...DEFAULT_PREFERENCES, panelEnabled: preferences.panelEnabled });
+    cancelSpeech();
+  }, [preferences.panelEnabled]);
 
   const togglePanel = useCallback(() => {
-    setPreferences((prev) => ({ ...prev, panelEnabled: !prev.panelEnabled }))
-  }, [])
+    setPreferences((prev) => ({ ...prev, panelEnabled: !prev.panelEnabled }));
+  }, []);
 
   // Web Speech API
   const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return
-
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = "pt-BR"
-
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
-
-    window.speechSynthesis.speak(utterance)
-  }, [])
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    cancelSpeech();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "pt-BR";
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    window.speechSynthesis.speak(utterance);
+  }, []);
 
   const pauseSpeech = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.pause()
-      setIsSpeaking(false)
+      window.speechSynthesis.pause();
+      setIsSpeaking(false);
     }
-  }, [])
+  }, []);
 
   const resumeSpeech = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.resume()
-      setIsSpeaking(true)
+      window.speechSynthesis.resume();
+      setIsSpeaking(true);
     }
-  }, [])
+  }, []);
 
-  
+  const cancelSpeech = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, []);
 
   return (
     <AccessibilityContext.Provider
@@ -130,16 +130,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     >
       {children}
     </AccessibilityContext.Provider>
-  )
+  );
 }
 
-function useAccessibilityContext() {
-  const context = useContext(AccessibilityContext)
+export function useAccessibility() {
+  const context = useContext(AccessibilityContext);
   if (context === undefined) {
-    throw new Error("useAccessibility must be used within an AccessibilityProvider")
+    throw new Error("useAccessibility must be used within an AccessibilityProvider");
   }
-  return context
+  return context;
 }
-
-// eslint-disable-next-line react-refresh/only-export-components
-export { useAccessibilityContext as useAccessibility }

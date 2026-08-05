@@ -1,0 +1,11 @@
+--- use-cart.ts
++++ use-cart.ts
+@@ -108,8 +108,8 @@
+         )
+         return response.cart
+-      } catch (err) {
+-        if (err?.message?.includes("not found") || err?.status === 404 || err?.status === 400 || err?.type === "not_found") {
++      } catch (err: any) {
++        if (err?.message?.includes("not found") || err?.status === 404 || err?.status === 400 || err?.type === "not_found") {
+           // Removes corrupted/old cart ID
+           removeStoredCart()

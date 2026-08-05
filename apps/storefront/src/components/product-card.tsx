@@ -12,18 +12,17 @@ import { DocumentText } from "@medusajs/icons"
 
 interface ProductCardProps {
   product: HttpTypes.StoreProduct
-  regionId?: string
-  _countryCode?: string
+  regionId: string
   countryCode: string
 }
 
-export function ProductCard({ product, regionId: _regionId, countryCode }: ProductCardProps) {
+export function ProductCard({ product, regionId, countryCode }: ProductCardProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const addToCartMutation = useAddToCart()
   const createQuoteFromCartMutation = useCreateQuoteFromCart()
-  const { data: _cart } = useCart()
+  const { data: cart } = useCart()
   const [isQuoting, setIsQuoting] = useState(false)
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   
@@ -32,7 +31,7 @@ export function ProductCard({ product, regionId: _regionId, countryCode }: Produ
   const variantCount = isDefault ? 0 : variants.length
   const sku = variants[0]?.sku || "N/A"
   const additionalSkus = variantCount > 1 ? variantCount - 1 : 0
-  const category = product.categories?.[0]?.name || product.collection?.title || "Geral"
+  const category = product.categories?.[0]?.name || product.collection?.title || "Equipment"
 
   const primaryImage = product.thumbnail || product.images?.[0]?.url
   const secondImage = product.images && product.images.length > 1 ? product.images[1]?.url : null
@@ -42,13 +41,13 @@ export function ProductCard({ product, regionId: _regionId, countryCode }: Produ
     e.stopPropagation()
 
     if (!isAuthenticated) {
-      toast.error("Faça login para solicitar um orçamento")
+      toast.error("Please log in to request a quote")
       navigate({ to: "/$countryCode/account/login" as string, params: { countryCode } })
       return
     }
     const variant = product.variants?.[0]
     if (!variant?.id) {
-      toast.error("Produto indisponível para orçamento")
+      toast.error("Product not available for quote")
       return
     }
     setIsQuoting(true)
@@ -66,7 +65,7 @@ export function ProductCard({ product, regionId: _regionId, countryCode }: Produ
           setShowQuoteModal(true)
         },
         onError: (error: Error) => {
-          toast.error(error.message || "Erro ao adicionar ao carrinho")
+          toast.error(error.message || "Failed to add to cart")
           setIsQuoting(false)
         },
       }
@@ -163,12 +162,12 @@ export function ProductCard({ product, regionId: _regionId, countryCode }: Produ
         onClose={() => setShowQuoteModal(false)}
         onContinueShopping={() => {
           setShowQuoteModal(false)
-          toast.success("Item adicionado ao carrinho para orçamento")
+          toast.success("Item added to cart for quote")
         }}
         onRequestQuote={() => {
           const cartId = getStoredCart()
           if (!cartId) {
-            toast.error("Carrinho não encontrado")
+            toast.error("No cart found")
             setShowQuoteModal(false)
             return
           }
@@ -177,11 +176,11 @@ export function ProductCard({ product, regionId: _regionId, countryCode }: Produ
             {
               onSuccess: () => {
                 setShowQuoteModal(false)
-                toast.success("Orçamento solicitado com sucesso!")
+                toast.success("Quote request submitted!")
                 navigate({ to: "/$countryCode/quotes", params: { countryCode } })
               },
               onError: (error: Error) => {
-                toast.error(error.message || "Erro ao criar orçamento")
+                toast.error(error.message || "Failed to create quote")
               },
             }
           )

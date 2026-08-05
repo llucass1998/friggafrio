@@ -1,8 +1,8 @@
-import { useRouterState, useParams } from "@tanstack/react-router"
+import { Link, useRouterState, useParams } from "@tanstack/react-router"
 import { Search } from "lucide-react"
 
 export function HeaderSearch({ compact = false }: { compact?: boolean }) {
-  const _routerState = useRouterState()
+  const routerState = useRouterState()
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 

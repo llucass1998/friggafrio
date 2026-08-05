@@ -33,4 +33,4 @@ export const storeBrands: StoreBrand[] = [
   { id: "electrolux", name: "Electrolux", logoSrc: "/images/brands/electrolux.jpg", logoAlt: "Logo da Electrolux", active: true, order: 22 },
   { id: "mueller", name: "Mueller", logoSrc: "/images/brands/mueller.jpg", logoAlt: "Logo da Mueller", active: true, order: 23 },
   { id: "tramontina", name: "Tramontina", logoSrc: "/images/brands/tramontina.jpg", logoAlt: "Logo da Tramontina", active: true, order: 24 }
-]
+];

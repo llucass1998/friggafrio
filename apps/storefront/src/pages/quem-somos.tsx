@@ -44,7 +44,7 @@ export function QuemSomosPage() {
         <section className="bg-white py-16 md:py-24 px-4 border-y border-[#E5EDF4]">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-navy)] mb-12 text-center">Diretoria</h2>
-
+            
             {founders.length > 0 && (
               <div className="flex flex-col md:flex-row gap-8 items-center md:items-start max-w-4xl mx-auto mb-16">
                 {founders.map(founder => (
@@ -107,8 +107,7 @@ export function QuemSomosPage() {
               Fale pelo WhatsApp
             </a>
             <Link
-              to="/$countryCode/nossa-loja"
-              params={{ countryCode: "br" }}
+              to="/nossa-loja"
               className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-white hover:bg-white hover:text-[var(--color-navy)] text-white font-bold py-3 px-8 rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Conheça nossas lojas

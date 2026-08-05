@@ -1,213 +1,395 @@
+import AddressForm from "@/components/address-form"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { useSetCartAddresses } from "@/lib/hooks/use-checkout"
+import { useAuth } from "@/lib/hooks/use-auth"
+import { sdk } from "@/lib/medusa"
+import { getStoredCountryCode } from "@/lib/utils/region"
+import { AddressFormData } from "@/lib/types/global"
 import { HttpTypes } from "@medusajs/types"
-import { useState } from "react"
-import { Loader2 } from "lucide-react"
-import { checkoutAddressSchema } from "@/lib/schemas/checkout-address"
-import { formatCPF, formatCNPJ, formatCEP } from "@/lib/utils/formatters"
+import { useQuery } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import { MapPin } from "@medusajs/icons"
+
+interface CompanyAddressData {
+  id: string
+  name: string
+  first_name: string
+  last_name: string
+  company_name: string | null
+  address_1: string
+  address_2: string | null
+  city: string
+  province: string | null
+  postal_code: string
+  country_code: string
+  phone: string | null
+  is_default_shipping: boolean
+  is_default_billing: boolean
+  is_billing_only: boolean
+}
 
 interface AddressStepProps {
-  cart: HttpTypes.StoreCart
-  onNext: () => void
+  cart: HttpTypes.StoreCart;
+  onNext: () => void;
 }
 
 const AddressStep = ({ cart, onNext }: AddressStepProps) => {
+  const setAddressesMutation = useSetCartAddresses()
+  const { employee } = useAuth()
+  const [sameAsBilling, setSameAsBilling] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isShippingAddressValid, setIsShippingAddressValid] = useState(false)
+  const [isBillingAddressValid, setIsBillingAddressValid] = useState(false)
+  const [email, setEmail] = useState(cart.email || "")
+  const [emailTouched, setEmailTouched] = useState(false)
+  const storedCountryCode = getStoredCountryCode()
   const [mutationError, setMutationError] = useState<string | null>(null)
-  const setCartAddressesMutation = useSetCartAddresses()
 
-  // Extrai as partes salvas no carrinho (caso voltem da API)
-  const existingAddress1 = cart.shipping_address?.address_1 || ""
-  const parts = existingAddress1.split(",")
-  let exLogradouro = existingAddress1
-  let exNumero = ""
-  let exBairro = ""
+  const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(null)
+  const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null)
 
-  if (parts.length > 1) {
-    exLogradouro = parts[0].trim()
-    const numAndBairro = parts[1].split("-")
-    exNumero = numAndBairro[0]?.trim() || ""
-    exBairro = numAndBairro[1]?.trim() || ""
-  }
-
-  const [form, setForm] = useState({
-    email: cart.email || "",
-    first_name: cart.shipping_address?.first_name || "",
-    last_name: cart.shipping_address?.last_name || "",
-    phone: cart.shipping_address?.phone || "",
-    postal_code: cart.shipping_address?.postal_code || "",
-    logradouro: exLogradouro,
-    numero: exNumero,
-    complemento: cart.shipping_address?.address_2 || "",
-    bairro: exBairro,
-    city: cart.shipping_address?.city || "",
-    province: cart.shipping_address?.province || "",
-    cpf_cnpj: (cart.shipping_address?.metadata?.cpf_cnpj as string) || "",
+  const { data: companyAddresses = [] } = useQuery({
+    queryKey: ["company-addresses"],
+    queryFn: async () => {
+      const response = await sdk.client.fetch<{ addresses: CompanyAddressData[] }>(
+        "/store/company/addresses",
+        { method: "GET" }
+      )
+      return response.addresses
+    },
+    enabled: !!employee,
   })
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const shippingAddresses = companyAddresses.filter((a) => !a.is_billing_only)
+  const billingAddresses = companyAddresses
+  const hasCompanyAddresses = shippingAddresses.length > 0 && !!employee
+  const hasCompanyBillingAddresses = billingAddresses.length > 0 && !!employee
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+  const [shippingAddress, setShippingAddress] = useState<AddressFormData>({
+    first_name: cart.shipping_address?.first_name || "",
+    last_name: cart.shipping_address?.last_name || "",
+    company: cart.shipping_address?.company || "",
+    address_1: cart.shipping_address?.address_1 || "",
+    address_2: cart.shipping_address?.address_2 || "",
+    city: cart.shipping_address?.city || "",
+    postal_code: cart.shipping_address?.postal_code || "",
+    province: cart.shipping_address?.province || "",
+    country_code:
+      cart.shipping_address?.country_code || storedCountryCode || "",
+    phone: cart.shipping_address?.phone || "",
+  })
+  const [billingAddress, setBillingAddress] = useState<AddressFormData>({
+    first_name: cart.billing_address?.first_name || "",
+    last_name: cart.billing_address?.last_name || "",
+    company: cart.billing_address?.company || "",
+    address_1: cart.billing_address?.address_1 || "",
+    address_2: cart.billing_address?.address_2 || "",
+    city: cart.billing_address?.city || "",
+    postal_code: cart.billing_address?.postal_code || "",
+    province: cart.billing_address?.province || "",
+    country_code: cart.billing_address?.country_code || storedCountryCode || "",
+    phone: cart.billing_address?.phone || "",
+  })
 
-    let parsedValue = value
-    if (name === "cpf_cnpj") {
-      const numbers = value.replace(/\D/g, "")
-      parsedValue = numbers.length > 11 ? formatCNPJ(value) : formatCPF(value)
+  useEffect(() => {
+    if (hasCompanyAddresses && !selectedShippingAddressId) {
+      const defaultShipping = shippingAddresses.find((a) => a.is_default_shipping) || shippingAddresses[0]
+      setSelectedShippingAddressId(defaultShipping.id)
+      applyCompanyAddress(defaultShipping, setShippingAddress)
+      setIsShippingAddressValid(true)
+      if (sameAsBilling) {
+        setSelectedBillingAddressId(defaultShipping.id)
+      }
     }
+    if (hasCompanyBillingAddresses && !selectedBillingAddressId && !sameAsBilling) {
+      const defaultBilling = billingAddresses.find((a) => a.is_default_billing) || billingAddresses[0]
+      setSelectedBillingAddressId(defaultBilling.id)
+      applyCompanyAddress(defaultBilling, setBillingAddress)
+      setIsBillingAddressValid(true)
+    }
+  }, [hasCompanyAddresses, shippingAddresses, hasCompanyBillingAddresses, billingAddresses, sameAsBilling])
 
-    setForm(prev => ({ ...prev, [name]: parsedValue }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
-    if (mutationError) setMutationError(null)
+  function applyCompanyAddress(
+    addr: CompanyAddressData,
+    setter: React.Dispatch<React.SetStateAction<AddressFormData>>
+  ) {
+    setter({
+      first_name: addr.first_name,
+      last_name: addr.last_name,
+      company: addr.company_name || "",
+      address_1: addr.address_1,
+      address_2: addr.address_2 || "",
+      city: addr.city,
+      postal_code: addr.postal_code,
+      province: addr.province || "",
+      country_code: addr.country_code,
+      phone: addr.phone || "",
+    })
+  }
+
+  const handleSelectShippingAddress = (addr: CompanyAddressData) => {
+    setSelectedShippingAddressId(addr.id)
+    applyCompanyAddress(addr, setShippingAddress)
+    setIsShippingAddressValid(true)
+    if (sameAsBilling) {
+      setSelectedBillingAddressId(addr.id)
+    }
+  }
+
+  const handleSelectBillingAddress = (addr: CompanyAddressData) => {
+    setSelectedBillingAddressId(addr.id)
+    applyCompanyAddress(addr, setBillingAddress)
+    setIsBillingAddressValid(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (isSubmitting) return
 
-    const parseResult = checkoutAddressSchema.safeParse(form)
-
-    if (!parseResult.success) {
-      const newErrors: Record<string, string> = {}
-      parseResult.error.issues.forEach((err: any) => {
-        if (err.path[0]) newErrors[err.path[0].toString()] = err.message
-      })
-      setErrors(newErrors)
-      return
-    }
-
-    setErrors({})
     setIsSubmitting(true)
-    setMutationError(null)
 
     try {
-      const validated = parseResult.data
-      const address_1 = `${validated.logradouro}, ${validated.numero} - ${validated.bairro}`
-      const address_2 = validated.complemento || ""
+      const submitData = new FormData()
 
-      const payload = {
-        email: validated.email,
-        shipping_address: {
-          first_name: validated.first_name,
-          last_name: validated.last_name,
-          phone: validated.phone,
-          postal_code: validated.postal_code,
-          address_1,
-          address_2,
-          city: validated.city,
-          province: "sp", // Ensure lowercase 'sp' as requested
-          country_code: "br",
-          metadata: validated.cpf_cnpj ? { cpf_cnpj: validated.cpf_cnpj } : undefined
-        }
-      }
+      submitData.append("email", email)
 
-      await setCartAddressesMutation.mutateAsync(payload)
+      Object.entries(shippingAddress).forEach(([key, value]) => {
+        submitData.append(`shipping_address.${key}`, value)
+      })
+
+      const billingData = sameAsBilling ? shippingAddress : billingAddress
+      Object.entries(billingData).forEach(([key, value]) => {
+        submitData.append(`billing_address.${key}`, value)
+      })
+
+      await setAddressesMutation.mutateAsync(submitData)
+      setMutationError(null)
       onNext()
-    } catch {
-      setMutationError("Não foi possível salvar o endereço. Verifique os dados e tente novamente.")
+    } catch (err: any) {
+      setMutationError(err.message || "Failed to submit address. Please check the fields and try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const isFormValid = () => {
+    const emailValid = email.trim() && email.includes("@")
+
+    if (hasCompanyAddresses) {
+      const shippingValid = !!selectedShippingAddressId
+      const billingValid = sameAsBilling || !!selectedBillingAddressId
+      return emailValid && shippingValid && billingValid
+    }
+
+    return (
+      emailValid &&
+      isShippingAddressValid &&
+      (isBillingAddressValid || sameAsBilling)
+    )
+  }
+
+  // Auto-validate email on mount if it's already prefilled
+  useEffect(() => {
+    if (email) {
+      setEmailTouched(true);
+    }
+  }, []);
+
+  // Use an effect to auto-validate the component's state without requiring manual changes.
+  useEffect(() => {
+    // Attempt validation on state changes
+  }, [email, isShippingAddressValid, isBillingAddressValid, sameAsBilling, hasCompanyAddresses, selectedShippingAddressId, selectedBillingAddressId])
+
+  useEffect(() => {
+    if (!cart.region) {
+      return
+    }
+
+    const isValidShippingAddressCountry = cart.region.countries?.some(
+      (country) => country.iso_2 === shippingAddress.country_code
+    )
+    if (!isValidShippingAddressCountry && !hasCompanyAddresses) {
+      setShippingAddress((prev) => ({
+        ...prev,
+        country_code: storedCountryCode || "",
+      }))
+    }
+
+    const isValidBillingAddressCountry = cart.region.countries?.some(
+      (country) => country.iso_2 === billingAddress.country_code
+    )
+    if (!isValidBillingAddressCountry && !hasCompanyAddresses) {
+      setBillingAddress((prev) => ({
+        ...prev,
+        country_code: storedCountryCode || "",
+      }))
+    }
+  }, [cart.region, storedCountryCode, shippingAddress.country_code, billingAddress.country_code, hasCompanyAddresses])
+
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-xl font-semibold">Endereço de Entrega</h2>
-
-      {mutationError && (
-        <div className="p-4 text-sm text-red-800 bg-red-100 rounded-md">
-          {mutationError}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Nome *</label>
-            <Input name="first_name" value={form.first_name} onChange={handleChange} />
-            {errors.first_name && <span className="text-xs text-red-500">{errors.first_name}</span>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Sobrenome *</label>
-            <Input name="last_name" value={form.last_name} onChange={handleChange} />
-            {errors.last_name && <span className="text-xs text-red-500">{errors.last_name}</span>}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">E-mail *</label>
-            <Input name="email" type="email" value={form.email} onChange={handleChange} />
-            {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">CPF / CNPJ (Opcional)</label>
-            <Input name="cpf_cnpj" value={form.cpf_cnpj} onChange={handleChange} placeholder="000.000.000-00" />
-            {errors.cpf_cnpj && <span className="text-xs text-red-500">{errors.cpf_cnpj}</span>}
-          </div>
+    <div className="flex flex-col gap-8">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        {/* Shipping Address */}
+        <div className="flex flex-col gap-2">
+          <h3 className="text-zinc-900 !text-base font-semibold">
+            Endereço de Entrega
+          </h3>
+          {hasCompanyAddresses ? (
+            <CompanyAddressSelector
+              addresses={shippingAddresses}
+              selectedId={selectedShippingAddressId}
+              onSelect={handleSelectShippingAddress}
+            />
+          ) : (
+            <AddressForm
+              addressFormData={shippingAddress}
+              setAddressFormData={setShippingAddress}
+              countries={cart.region?.countries}
+              setIsFormValid={setIsShippingAddressValid}
+            />
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Telefone *</label>
-            <Input name="phone" type="tel" value={form.phone} onChange={handleChange} />
-            {errors.phone && <span className="text-xs text-red-500">{errors.phone}</span>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">CEP *</label>
-            <div className="relative">
-              <Input name="postal_code" value={form.postal_code} onChange={handleChange} placeholder="00000-000" disabled={false} />
-              {false && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-zinc-400" />}
-            </div>
-            {errors.postal_code && <span className="text-xs text-red-500">{errors.postal_code}</span>}
-          </div>
+        {/* Billing Address Checkbox */}
+        <div className="flex items-center gap-x-2">
+          <Checkbox
+            id="same_as_billing"
+            type="checkbox"
+            checked={sameAsBilling}
+            onChange={(e) => {
+              const checked = !!e.target.checked
+              setSameAsBilling(checked)
+              if (checked && hasCompanyAddresses && selectedShippingAddressId) {
+                setSelectedBillingAddressId(selectedShippingAddressId)
+              }
+            }}
+          />
+          <label htmlFor="same_as_billing" className="text-sm">
+            O endereço de cobrança é o mesmo da entrega
+          </label>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">Logradouro *</label>
-          <Input name="logradouro" value={form.logradouro} onChange={handleChange} />
-          {errors.logradouro && <span className="text-xs text-red-500">{errors.logradouro}</span>}
+        {/* Billing Address (if different) */}
+        {!sameAsBilling && (
+          <div className="flex flex-col gap-2">
+            <h3 className="text-zinc-900 !text-base font-semibold">
+              Endereço de Cobrança
+            </h3>
+            {hasCompanyBillingAddresses ? (
+              <CompanyAddressSelector
+                addresses={billingAddresses}
+                selectedId={selectedBillingAddressId}
+                onSelect={handleSelectBillingAddress}
+              />
+            ) : (
+              <AddressForm
+                addressFormData={billingAddress}
+                setAddressFormData={setBillingAddress}
+                countries={cart.region?.countries}
+                setIsFormValid={setIsBillingAddressValid}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Email */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className="block text-sm font-medium">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setEmailTouched(true)
+            }}
+            onBlur={() => setEmailTouched(true)}
+            placeholder="seu@email.com"
+            className="w-full"
+            aria-invalid={!!(emailTouched && (!email.trim() || !email.includes("@")))}
+            aria-describedby={emailTouched && (!email.trim() || !email.includes("@")) ? "email-error" : "email-desc"}
+          />
+          <p id="email-desc" className="text-xs text-zinc-600">
+            Você receberá atualizações do pedido neste email.
+          </p>
+          {emailTouched && (!email.trim() || !email.includes("@")) && (
+            <p id="email-error" className="text-rose-900 text-sm mt-1" aria-live="polite">
+              Por favor, insira um email válido.
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Número *</label>
-            <Input name="numero" value={form.numero} onChange={handleChange} />
-            {errors.numero && <span className="text-xs text-red-500">{errors.numero}</span>}
+        {mutationError && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-900 rounded-md" aria-live="assertive">
+            {mutationError}
           </div>
-          <div className="flex flex-col gap-1 md:col-span-2">
-            <label className="text-sm font-medium">Complemento (opcional)</label>
-            <Input name="complemento" value={form.complemento} onChange={handleChange} />
-          </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Bairro *</label>
-            <Input name="bairro" value={form.bairro} onChange={handleChange} />
-            {errors.bairro && <span className="text-xs text-red-500">{errors.bairro}</span>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Cidade *</label>
-            <Input name="city" value={form.city} onChange={handleChange} />
-            {errors.city && <span className="text-xs text-red-500">{errors.city}</span>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Estado *</label>
-            <Input name="province" value={form.province} onChange={handleChange} placeholder="Ex: SP" />
-            <span className="text-xs text-zinc-500">Entregamos em todo o estado de São Paulo.</span>
-            {errors.province && <span className="text-xs text-red-500">{errors.province}</span>}
-          </div>
-        </div>
-
-        <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Continuar para Entrega
+        <div className="flex">
+          <Button type="submit" disabled={!isFormValid() || isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
+            Próximo
           </Button>
         </div>
       </form>
+    </div>
+  )
+}
+
+function CompanyAddressSelector({
+  addresses,
+  selectedId,
+  onSelect,
+}: {
+  addresses: CompanyAddressData[]
+  selectedId: string | null
+  onSelect: (addr: CompanyAddressData) => void
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-zinc-600">Selecione um endereço da empresa</p>
+      {addresses.map((addr) => {
+        const isSelected = selectedId === addr.id
+        return (
+          <button
+            key={addr.id}
+            type="button"
+            onClick={() => onSelect(addr)}
+            className={`w-full flex items-start gap-4 p-4 border rounded-lg transition-colors text-left ${
+              isSelected
+                ? "border-zinc-900 bg-zinc-50"
+                : "border-zinc-200 hover:border-zinc-300"
+            }`}
+          >
+            <div className="w-10 h-10 bg-zinc-100 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+              <MapPin className="w-5 h-5 text-zinc-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-zinc-900">{addr.name}</p>
+              <p className="text-sm text-zinc-600 mt-0.5">
+                {addr.first_name} {addr.last_name}
+                {addr.company_name ? ` - ${addr.company_name}` : ""}
+              </p>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                {addr.address_1}
+                {addr.address_2 ? `, ${addr.address_2}` : ""}
+                , {addr.city}
+                {addr.province ? `, ${addr.province}` : ""}
+                {" "}{addr.postal_code}, {addr.country_code.toUpperCase()}
+              </p>
+            </div>
+            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+              isSelected ? "border-zinc-900" : "border-zinc-300"
+            }`}>
+              {isSelected && <div className="w-2 h-2 rounded-full bg-zinc-900" />}
+            </div>
+          </button>
+        )
+      })}
     </div>
   )
 }

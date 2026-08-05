@@ -86,24 +86,22 @@ export default function AcceptInvitePage() {
         },
       })
 
-      toast.success("Conta criada com sucesso! Fazendo login...")
+      toast.success("Account created successfully! Logging you in...")
 
       // Log in the user (refresh the session)
       await login(email!, formData.password)
 
       // Navigate to the dashboard
       navigate({ to: "/$countryCode", params: { countryCode } })
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Accept invite error:", error)
-      const err = error as Record<string, unknown>
-      const message = typeof err?.message === "string" ? err.message : ""
       let errorMessage: string
-      if (message.includes("already exists") || message.includes("Identity with email already exists")) {
+      if (error.message?.includes("already exists") || error.message?.includes("Identity with email already exists")) {
         errorMessage = "An account with this email already exists. Please sign in instead."
-      } else if (message.includes("expired") || message.includes("Invalid")) {
+      } else if (error.message?.includes("expired") || error.message?.includes("Invalid")) {
         errorMessage = "This invite link is invalid or has expired. Please request a new invite."
       } else {
-        errorMessage = message || "Failed to create account. Please try again."
+        errorMessage = error.message || "Failed to create account. Please try again."
       }
       setSubmitError(errorMessage)
       toast.error(errorMessage)
@@ -127,7 +125,7 @@ export default function AcceptInvitePage() {
               </svg>
             </div>
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-text-primary mb-2">Convite Inválido</h1>
+              <h1 className="text-2xl font-semibold text-text-primary mb-2">Invalid Invite</h1>
               <p className="text-text-secondary">
                 {!token ? "No invite token provided" : "This invite link appears to be invalid"}
               </p>
@@ -213,7 +211,7 @@ export default function AcceptInvitePage() {
                   onChange={(e) => updateFormData("first_name", e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="João"
+                  placeholder="John"
                 />
               </div>
 
@@ -229,7 +227,7 @@ export default function AcceptInvitePage() {
                   onChange={(e) => updateFormData("last_name", e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="Silva"
+                  placeholder="Doe"
                 />
               </div>
 

@@ -26,7 +26,7 @@ export function BulkVariantTable({ product, region }: BulkVariantTableProps) {
   const { openCart } = useCartDrawer()
 
   const variants = product.variants || []
-  const options = useMemo(() => product.options || [], [product.options])
+  const options = product.options || []
 
   const hasRealOptions = useMemo(
     () =>

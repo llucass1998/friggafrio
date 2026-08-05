@@ -29,4 +29,4 @@ export const DEFAULT_PREFERENCES: AccessibilityPreferences = {
   readingGuide: false,
   textReaderEnabled: false,
   vlibrasEnabled: false,
-}
+};

@@ -1,4 +1,5 @@
-import { getProductPrice } from "@/lib/utils/price"
+import { Loading } from "@/components/ui/loading"
+import { getProductPrice, formatPrice } from "@/lib/utils/price"
 import { HttpTypes } from "@medusajs/types"
 import { LockClosedSolid } from "@medusajs/icons"
 

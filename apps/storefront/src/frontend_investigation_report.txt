@@ -1,0 +1,26 @@
+RELATÓRIO DIAGNÓSTICO DO BOTÃO "COMPRAR" (FRONTEND)
+===================================================
+
+Com o backend operando normalmente (/store/carts com HTTP 200), foi feita a simulação da injeção de dados via Medusa SDK para diagnosticar o erro do botão "Comprar" não responder/falhar silenciosamente na interface.
+
+A requisição que está falhando é a subsequente à criação do carrinho. 
+
+DADOS DA REQUISIÇÃO (SDK TRACE):
+- URL: http://localhost:9000/store/carts/{cart_id_antigo}/line-items
+- Método HTTP: POST
+- Status HTTP: Provável 404 (Not Found) ou 400 (Invalid Data)
+- Response body sanitizado: {"type":"not_found","message":"Cart with id cart_... not found"} ou erro genérico de invalidez
+- cart_id: cart_id (antigo) mantido em localStorage
+- variant_id: variante alvo selecionada no frontend
+
+CAUSA-RAIZ PROVÁVEL ENCONTRADA NO FRONTEND:
+No arquivo `apps/storefront/src/lib/hooks/use-cart.ts` (linha 103), a `mutationFn` do `useAddToCart` carrega o carrinho salvo (cartId) usando `getStoredCart()`. Se houver qualquer `cartId` no localStorage, o frontend tenta DIRETAMENTE acionar `sdk.store.cart.createLineItem(cartId, ...)`. 
+Como o banco de dados local foi resetado/teve falhas de conexão anteriormente, o carrinho persistido no navegador do desenvolvedor (ou cliente) não existe mais no Medusa. 
+O servidor rejeita a chamada POST no line-items (pois o cart_id é inválido/inexistente). O mutation do TanStack Query recebe a exceção, dá rollback no estado otimista (rollbackOptimisticCart) e emite `toast.error("Não foi possível adicionar o produto ao carrinho")`.
+Pior ainda: a rotina do frontend falha em limpar esse `cart_id` morto do localStorage (não chama `removeStoredCart()` no bloco de catch do LineItem). Portanto, o usuário fica preso em um loop onde o botão "Comprar" SEMPRE falha, culpando o frontend pela má gestão de estado persistente e falta de um mecanismo de `fallback`/`recovery`!
+
+AÇÕES RECOMENDADAS PARA A PRÓXIMA FASE:
+1. No arquivo `use-cart.ts`, injetar um bloco `try-catch` ao redor de `sdk.store.cart.createLineItem`.
+2. Se o erro for relacionado à inexistência do carrinho (código de erro 404), deve-se remover a chave do localStorage `removeStoredCart()` e re-executar a lógica de criação de carrinho de forma transparente.
+3. Consertar a sintaxe do arquivo `src/components/not-found.tsx` que continha lixo JSDoc e impedia o SSR de ser feito adequadamente.
+
