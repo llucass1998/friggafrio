@@ -1,8 +1,7 @@
 import Home from "@/pages/home"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, notFound } from "@tanstack/react-router"
 import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
-import { listCategories } from "@/lib/data/categories"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { storeConfig } from "@/config/store"
 
@@ -12,24 +11,13 @@ export const Route = createFileRoute("/$countryCode/")({
     const { queryClient } = context
 
     // Fetch region for the country code
-    // If backend is unavailable, fallback gracefully so the page still renders
-    let region: Awaited<ReturnType<typeof getRegion>> | null = null
-    try {
-      region = await queryClient.ensureQueryData({
-        queryKey: ["region", countryCode],
-        queryFn: () => getRegion({ country_code: countryCode }),
-      })
-    } catch (_err) {
-      // Backend unavailable — render the page without region data
-      // Components handle their own loading/error states
-      return { countryCode, region: null }
-    }
+    const region = await queryClient.ensureQueryData({
+      queryKey: ["region", countryCode],
+      queryFn: () => getRegion({ country_code: countryCode }),
+    })
 
     if (!region) {
-      // Backend unavailable or region not configured yet — render the page
-      // without region data so users still see the storefront (same graceful
-      // degradation pattern used in $countryCode.tsx parent loader)
-      return { countryCode, region: null }
+      throw notFound()
     }
 
     // Prefetch latest products for SSR (non-blocking)
@@ -41,14 +29,8 @@ export const Route = createFileRoute("/$countryCode/")({
             limit: 4,
             order: "-created_at",
           },
-          region_id: region!.id,
+          region_id: region.id,
         }),
-    })
-
-    // Prefetch categories for SSR (non-blocking)
-    queryClient.prefetchQuery({
-      queryKey: ["categories"],
-      queryFn: () => listCategories(),
     })
 
     return {

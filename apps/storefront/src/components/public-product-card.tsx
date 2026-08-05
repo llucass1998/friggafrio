@@ -87,7 +87,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
           toast.success(`${product.title} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
-        onError: (_err) => {
+        onError: (err) => {
           // Error telemetry could go here
           toast.error("Não foi possível adicionar este produto ao carrinho. Tente novamente.")
         }
@@ -99,12 +99,8 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   let buttonText = "Comprar"
   let buttonDisabled = true
 
-  // Verificação de Quote
-  const isQuoteOnly = product.metadata?.quote_only === true || product.tags?.some((t: any) => t.value === "b2b");
-
   if (purchaseState.status === "purchasable") {
     buttonDisabled = false
-    buttonText = isQuoteOnly ? "Orçar" : "Comprar"
   } else if (purchaseState.status === "select_variant") {
     buttonText = "Escolher opções"
     buttonDisabled = true // Navega pra página do produto no clique geral

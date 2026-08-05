@@ -81,6 +81,17 @@ export const productCategories: NavigationItem[] = [
   },
 ]
 
+export const applicationCategories: NavigationItem[] = [
+  { id: "app-frigobar", label: "Frigobares e refrigeradores", href: "/br/store?aplicacao=frigobar" },
+  { id: "app-camaras", label: "Câmaras frias", href: "/br/store?aplicacao=camaras-frias" },
+  { id: "app-supermercados", label: "Supermercados", href: "/br/store?aplicacao=supermercados" },
+  { id: "app-restaurantes", label: "Restaurantes", href: "/br/store?aplicacao=restaurantes" },
+  { id: "app-hoteis", label: "Hotéis", href: "/br/store?aplicacao=hoteis" },
+  { id: "app-farmacias", label: "Farmácias", href: "/br/store?aplicacao=farmacias" },
+  { id: "app-industrias", label: "Indústrias", href: "/br/store?aplicacao=industrias" },
+  { id: "app-tecnicos", label: "Técnicos e instaladores", href: "/br/store?aplicacao=tecnicos" },
+]
+
 export const mainNavigation: NavigationItem[] = [
   { id: "nav-gases", label: "Gases Refrigerantes", href: "/br/store?category=gases-refrigerantes" },
   { id: "nav-compressores", label: "Compressores", href: "/br/store?category=compressores" },

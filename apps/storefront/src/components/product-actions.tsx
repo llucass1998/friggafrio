@@ -2,7 +2,7 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
-import { getVariantOptionsKeymap } from "@/lib/utils/product"
+import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
@@ -14,46 +14,11 @@ import { Loader2, ShoppingCart, Check } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
-type StoreVariantWithCalculatedPrice = HttpTypes.StoreProductVariant & {
-  calculated_price?: {
-    calculated_amount?: number | null
-    currency_code?: string | null
-  } | null
-  inventory_quantity?: number | null
-  manage_inventory?: boolean | null
-}
-
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct;
   region: HttpTypes.StoreRegion;
   disabled?: boolean;
 };
-
-// Helper function to safely get variant prices without any cast
-function getVariantCalculatedPrice(variant?: StoreVariantWithCalculatedPrice | null): number | null {
-  if (!variant?.calculated_price?.calculated_amount) return null;
-  return variant.calculated_price.calculated_amount;
-}
-
-function getVariantCurrencyCode(variant?: StoreVariantWithCalculatedPrice | null, defaultCode = "BRL"): string {
-  if (variant?.calculated_price?.currency_code) {
-    return variant.calculated_price.currency_code;
-  }
-  return defaultCode;
-}
-
-function getVariantInventoryAvailability(variant?: StoreVariantWithCalculatedPrice | null): boolean {
-  if (!variant) return false;
-
-  if (variant.manage_inventory) {
-    if (variant.inventory_quantity === undefined || variant.inventory_quantity === null) {
-      return false; // Fail closed for unknown inventory
-    }
-    return variant.inventory_quantity > 0;
-  }
-
-  return true;
-}
 
 const ProductActions = memo(function ProductActions({
   product,
@@ -115,23 +80,21 @@ const ProductActions = memo(function ProductActions({
 
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
-    if (!selectedVariant) return false;
-    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending") return false;
+    if (!selectedVariant) return false
+    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending") return false
 
-    const price = getVariantCalculatedPrice(selectedVariant as StoreVariantWithCalculatedPrice);
-    if (price === null) return false;
+    // Additional strict price validation for the chosen variant
+    const calcPrice = (selectedVariant as any).calculated_price
+    if (!calcPrice || calcPrice.calculated_amount === null || calcPrice.calculated_amount === undefined) return false
 
-    // Check real inventory status
-    if (!getVariantInventoryAvailability(selectedVariant as StoreVariantWithCalculatedPrice)) return false;
-
-    return true;
+    return true // Ignorar checagem local isVariantInStock() para permitir itens "falsos" locais
   }, [selectedVariant, purchaseState])
 
   const displayPrice = selectedVariant
-    ? getVariantCalculatedPrice(selectedVariant as StoreVariantWithCalculatedPrice) ?? 0
+    ? (selectedVariant as any).calculated_price?.calculated_amount ?? 0
     : purchaseState.status === "purchasable"
       ? purchaseState.price
-      : getVariantCalculatedPrice(product.variants?.[0] as StoreVariantWithCalculatedPrice) ?? 0
+      : (product.variants?.[0] as any)?.calculated_price?.calculated_amount ?? 0
 
   
   // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
@@ -163,7 +126,8 @@ const ProductActions = memo(function ProductActions({
           toast.success(`${product.title} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
-        onError: (_err) => {
+        onError: (err) => {
+          // Error telemetry could go here
           toast.error("Não foi possível adicionar o produto ao carrinho")
         }
       }
@@ -171,50 +135,24 @@ const ProductActions = memo(function ProductActions({
   }
 
   // Generate Button Text
-  let buttonText = isQuoteOnly ? "Adicionar para Orçamento" : "Comprar"
-  let buttonDisabled = true
+  let buttonText = "Comprar";
+  let buttonDisabled = true;
 
   if (purchaseState.status === "unavailable") {
-    buttonText = "Indisponível"
+    buttonText = "Indisponível";
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação"
+    buttonText = "Preço em confirmação";
   } else if (!selectedVariant) {
-    buttonText = "Selecione uma opção"
+    buttonText = "Selecione uma opção";
   } else if (!isValidVariant || !canBuySelected) {
-    buttonText = "Sem estoque"
+    buttonText = "Sem estoque";
   } else {
-    buttonDisabled = false
+    buttonDisabled = false;
   }
-
-  const displayCurrencyCode = countryCode === "br" ? "BRL" : (
-     selectedVariant ? getVariantCurrencyCode(selectedVariant as StoreVariantWithCalculatedPrice) : getVariantCurrencyCode(product.variants?.[0] as StoreVariantWithCalculatedPrice)
-  )
 
   return (
     <div className="flex flex-col gap-y-4">
       {/* Dynamic Price Display */}
-      {/* Inventory Status Banner */}
-      {selectedVariant && selectedVariant.manage_inventory && selectedVariant.inventory_quantity !== null && selectedVariant.inventory_quantity !== undefined && (
-        <div className="mb-4">
-          {selectedVariant.inventory_quantity <= 0 ? (
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-              Sem estoque
-            </span>
-          ) : selectedVariant.inventory_quantity <= 5 ? (
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-              Últimas {selectedVariant.inventory_quantity} unidades
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Em estoque
-            </span>
-          )}
-        </div>
-      )}
-
       <div className="flex flex-col gap-1 mb-2">
          {displayPrice && purchaseState.status === "price_pending" ? (
            <>
@@ -222,12 +160,12 @@ const ProductActions = memo(function ProductActions({
                Valor em configuração
              </span>
              <span className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrencyCode })}
+               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
              </span>
            </>
          ) : displayPrice && purchaseState.status !== "price_pending" ? (
              <span className="text-3xl md:text-4xl font-bold text-[var(--color-navy)] tracking-tight">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrencyCode })}
+               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
              </span>
          ) : (
             <span className="text-xl font-medium text-[var(--color-text-muted)] italic">Consulte o valor</span>
@@ -255,7 +193,7 @@ const ProductActions = memo(function ProductActions({
         onClick={handleAddToCart}
         disabled={buttonDisabled || !!disabled || addToCartMutation.isPending || isSuccess}
         aria-label={`${buttonText} ${product.title}`}
-        className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-[background-color,color,border-color,transform,box-shadow] duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
+        className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-all duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
           buttonDisabled
             ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"
             : isSuccess

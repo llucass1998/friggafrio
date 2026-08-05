@@ -1,12 +1,11 @@
 import { useState } from "react"
-import { useNavigate, useParams, Link, useSearch } from "@tanstack/react-router"
-import { getSafeReturnTo } from "@/lib/utils/return-to"
+import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { BuildingsSolid, User } from "@medusajs/icons"
 import { Eye, EyeOff } from "lucide-react"
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
+import { GoogleLogin } from "@react-oauth/google"
 import {
   personRegistrationSchema,
   companyRegistrationSchema,
@@ -20,10 +19,9 @@ import { registerCustomer } from "@/lib/data/customer"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { returnTo?: string }
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
-  const { loginWithGoogle, login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
 
   const [registerType, setRegisterType] = useState<"PERSON" | "COMPANY">("PERSON")
   const [showPassword, setShowPassword] = useState(false)
@@ -95,11 +93,9 @@ export default function RegisterPage() {
       await login(data.email, data.password)
       navigate({ to: "/$countryCode" as string, params: { countryCode } })
 
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Person registration error:", err)
-      const e = err as Record<string, unknown>
-      const message = typeof e?.message === "string" ? e.message : ""
-      if (message.includes("already exists") || message.includes("duplicate")) {
+      if (err.message?.includes("already exists") || err.message?.includes("duplicate")) {
         setServerError("Este e-mail já pode estar associado a uma conta.")
       } else {
         setServerError("Não foi possível concluir o cadastro. Revise os dados e tente novamente.")
@@ -160,11 +156,9 @@ export default function RegisterPage() {
 
       navigate({ to: "/$countryCode" as string, params: { countryCode } })
 
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Company registration error:", err)
-      const e = err as Record<string, unknown>
-      const message = typeof e?.message === "string" ? e.message : ""
-      if (message.includes("already exists") || message.includes("duplicate")) {
+      if (err.message?.includes("already exists") || err.message?.includes("duplicate")) {
         setServerError("Este e-mail já pode estar associado a uma conta.")
       } else {
         setServerError("Não foi possível concluir o cadastro. Revise os dados e tente novamente.")
@@ -174,27 +168,25 @@ export default function RegisterPage() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     setServerError("")
     setIsLoading(true)
 
     try {
       if (credentialResponse.credential) {
         // Redireciona com base no hook centralizado
-        
+        const { useAuth } = await import("@/lib/hooks/use-auth")
         // Como useAuth não pode ser chamado fora da renderização do componente,
         // a gente usa ele lá em cima.
         await loginWithGoogle(credentialResponse.credential)
         console.log("[RegisterPage] Google login/register successful, navigating to home")
-        window.location.href = getSafeReturnTo(search.returnTo, countryCode)
+        navigate({ to: "/$countryCode", params: { countryCode } })
       } else {
         throw new Error("No credential received from Google")
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Google Login error:", err)
-      const e = err as Record<string, unknown>
-      const message = typeof e?.message === "string" ? e.message : ""
-      setServerError(message || "Falha na autenticação com Google. Tente novamente.")
+      setServerError(err.message || "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -209,7 +201,7 @@ export default function RegisterPage() {
     label: string,
     show: boolean,
     toggleShow: () => void,
-    registerReturn: Record<string, unknown>,
+    registerReturn: any,
     error?: string
   ) => (
     <div>
@@ -434,7 +426,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <span className="text-sm text-[var(--color-text)]">
-                      Li e aceito os <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
+                      Li e aceito os <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
                     </span>
                   </label>
                   {personForm.formState.errors.acceptTerms && <p className="text-xs text-red-600 font-medium pl-8" role="alert">{personForm.formState.errors.acceptTerms.message}</p>}
@@ -611,7 +603,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <span className="text-sm text-[var(--color-text)]">
-                      Li e aceito os <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as string} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
+                      Li e aceito os <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Termos de Uso</Link> e a <Link to={"/" as any} className="text-[var(--color-primary)] hover:underline font-medium">Política de Privacidade</Link>. <span className="text-red-500">*</span>
                     </span>
                   </label>
                   {companyForm.formState.errors.acceptTerms && <p className="text-xs text-red-600 font-medium pl-8" role="alert">{companyForm.formState.errors.acceptTerms.message}</p>}

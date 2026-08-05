@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Customer Registration UI Verify', () => {
   test('Take a screenshot of the register page to understand what is rendering', async ({ page }) => {

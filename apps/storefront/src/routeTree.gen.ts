@@ -9,22 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrocasRouteImport } from './routes/trocas'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as StoreRouteImport } from './routes/store'
+import { Route as QuemSomosRouteImport } from './routes/quem-somos'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as NossaLojaRouteImport } from './routes/nossa-loja'
+import { Route as HealthRouteImport } from './routes/health'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as CountryCodeRouteImport } from './routes/$countryCode'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CountryCodeIndexRouteImport } from './routes/$countryCode/index'
-import { Route as CountryCodeTrocasRouteImport } from './routes/$countryCode/trocas'
-import { Route as CountryCodeTermosRouteImport } from './routes/$countryCode/termos'
 import { Route as CountryCodeStoreRouteImport } from './routes/$countryCode/store'
 import { Route as CountryCodeQuotesRouteImport } from './routes/$countryCode/quotes'
-import { Route as CountryCodeQuemSomosRouteImport } from './routes/$countryCode/quem-somos'
-import { Route as CountryCodePrivacidadeRouteImport } from './routes/$countryCode/privacidade'
-import { Route as CountryCodeNossaLojaRouteImport } from './routes/$countryCode/nossa-loja'
-import { Route as CountryCodeHealthRouteImport } from './routes/$countryCode/health'
 import { Route as CountryCodeEmployeesRouteImport } from './routes/$countryCode/employees'
 import { Route as CountryCodeCheckoutRouteImport } from './routes/$countryCode/checkout'
 import { Route as CountryCodeCartRouteImport } from './routes/$countryCode/cart'
-import { Route as CountryCodeAjudaRouteImport } from './routes/$countryCode/ajuda'
 import { Route as CountryCodeAccountIndexRouteImport } from './routes/$countryCode/account/index'
 import { Route as CountryCodeProductsHandleRouteImport } from './routes/$countryCode/products/$handle'
 import { Route as CountryCodeCategoriesHandleRouteImport } from './routes/$countryCode/categories/$handle'
@@ -35,6 +38,56 @@ import { Route as CountryCodeAccountAcceptInviteRouteImport } from './routes/$co
 import { Route as CountryCodeOrderOrderIdPaymentRouteImport } from './routes/$countryCode/order/$orderId/payment'
 import { Route as CountryCodeOrderOrderIdConfirmedRouteImport } from './routes/$countryCode/order/$orderId/confirmed'
 
+const TrocasRoute = TrocasRouteImport.update({
+  id: '/trocas',
+  path: '/trocas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuemSomosRoute = QuemSomosRouteImport.update({
+  id: '/quem-somos',
+  path: '/quem-somos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NossaLojaRoute = NossaLojaRouteImport.update({
+  id: '/nossa-loja',
+  path: '/nossa-loja',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjudaRoute = AjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CountryCodeRoute = CountryCodeRouteImport.update({
   id: '/$countryCode',
   path: '/$countryCode',
@@ -55,16 +108,6 @@ const CountryCodeIndexRoute = CountryCodeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CountryCodeRoute,
 } as any)
-const CountryCodeTrocasRoute = CountryCodeTrocasRouteImport.update({
-  id: '/trocas',
-  path: '/trocas',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodeTermosRoute = CountryCodeTermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
 const CountryCodeStoreRoute = CountryCodeStoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -73,26 +116,6 @@ const CountryCodeStoreRoute = CountryCodeStoreRouteImport.update({
 const CountryCodeQuotesRoute = CountryCodeQuotesRouteImport.update({
   id: '/quotes',
   path: '/quotes',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodeQuemSomosRoute = CountryCodeQuemSomosRouteImport.update({
-  id: '/quem-somos',
-  path: '/quem-somos',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodePrivacidadeRoute = CountryCodePrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodeNossaLojaRoute = CountryCodeNossaLojaRouteImport.update({
-  id: '/nossa-loja',
-  path: '/nossa-loja',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodeHealthRoute = CountryCodeHealthRouteImport.update({
-  id: '/health',
-  path: '/health',
   getParentRoute: () => CountryCodeRoute,
 } as any)
 const CountryCodeEmployeesRoute = CountryCodeEmployeesRouteImport.update({
@@ -108,11 +131,6 @@ const CountryCodeCheckoutRoute = CountryCodeCheckoutRouteImport.update({
 const CountryCodeCartRoute = CountryCodeCartRouteImport.update({
   id: '/cart',
   path: '/cart',
-  getParentRoute: () => CountryCodeRoute,
-} as any)
-const CountryCodeAjudaRoute = CountryCodeAjudaRouteImport.update({
-  id: '/ajuda',
-  path: '/ajuda',
   getParentRoute: () => CountryCodeRoute,
 } as any)
 const CountryCodeAccountIndexRoute = CountryCodeAccountIndexRouteImport.update({
@@ -172,18 +190,21 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/$countryCode': typeof CountryCodeRouteWithChildren
-  '/$countryCode/ajuda': typeof CountryCodeAjudaRoute
+  '/ajuda': typeof AjudaRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/quem-somos': typeof QuemSomosRoute
+  '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
-  '/$countryCode/health': typeof CountryCodeHealthRoute
-  '/$countryCode/nossa-loja': typeof CountryCodeNossaLojaRoute
-  '/$countryCode/privacidade': typeof CountryCodePrivacidadeRoute
-  '/$countryCode/quem-somos': typeof CountryCodeQuemSomosRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
-  '/$countryCode/termos': typeof CountryCodeTermosRoute
-  '/$countryCode/trocas': typeof CountryCodeTrocasRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
@@ -198,18 +219,21 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/$countryCode/ajuda': typeof CountryCodeAjudaRoute
+  '/ajuda': typeof AjudaRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/quem-somos': typeof QuemSomosRoute
+  '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
-  '/$countryCode/health': typeof CountryCodeHealthRoute
-  '/$countryCode/nossa-loja': typeof CountryCodeNossaLojaRoute
-  '/$countryCode/privacidade': typeof CountryCodePrivacidadeRoute
-  '/$countryCode/quem-somos': typeof CountryCodeQuemSomosRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
-  '/$countryCode/termos': typeof CountryCodeTermosRoute
-  '/$countryCode/trocas': typeof CountryCodeTrocasRoute
   '/$countryCode': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
@@ -226,18 +250,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/$countryCode': typeof CountryCodeRouteWithChildren
-  '/$countryCode/ajuda': typeof CountryCodeAjudaRoute
+  '/ajuda': typeof AjudaRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/health': typeof HealthRoute
+  '/nossa-loja': typeof NossaLojaRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/quem-somos': typeof QuemSomosRoute
+  '/store': typeof StoreRoute
+  '/termos': typeof TermosRoute
+  '/trocas': typeof TrocasRoute
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
-  '/$countryCode/health': typeof CountryCodeHealthRoute
-  '/$countryCode/nossa-loja': typeof CountryCodeNossaLojaRoute
-  '/$countryCode/privacidade': typeof CountryCodePrivacidadeRoute
-  '/$countryCode/quem-somos': typeof CountryCodeQuemSomosRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
-  '/$countryCode/termos': typeof CountryCodeTermosRoute
-  '/$countryCode/trocas': typeof CountryCodeTrocasRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
@@ -255,18 +282,21 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/$countryCode'
-    | '/$countryCode/ajuda'
+    | '/ajuda'
+    | '/cart'
+    | '/checkout'
+    | '/health'
+    | '/nossa-loja'
+    | '/privacidade'
+    | '/quem-somos'
+    | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
-    | '/$countryCode/health'
-    | '/$countryCode/nossa-loja'
-    | '/$countryCode/privacidade'
-    | '/$countryCode/quem-somos'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
-    | '/$countryCode/termos'
-    | '/$countryCode/trocas'
     | '/$countryCode/'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/login'
@@ -281,18 +311,21 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
-    | '/$countryCode/ajuda'
+    | '/ajuda'
+    | '/cart'
+    | '/checkout'
+    | '/health'
+    | '/nossa-loja'
+    | '/privacidade'
+    | '/quem-somos'
+    | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
-    | '/$countryCode/health'
-    | '/$countryCode/nossa-loja'
-    | '/$countryCode/privacidade'
-    | '/$countryCode/quem-somos'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
-    | '/$countryCode/termos'
-    | '/$countryCode/trocas'
     | '/$countryCode'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/login'
@@ -308,18 +341,21 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/$countryCode'
-    | '/$countryCode/ajuda'
+    | '/ajuda'
+    | '/cart'
+    | '/checkout'
+    | '/health'
+    | '/nossa-loja'
+    | '/privacidade'
+    | '/quem-somos'
+    | '/store'
+    | '/termos'
+    | '/trocas'
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
-    | '/$countryCode/health'
-    | '/$countryCode/nossa-loja'
-    | '/$countryCode/privacidade'
-    | '/$countryCode/quem-somos'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
-    | '/$countryCode/termos'
-    | '/$countryCode/trocas'
     | '/$countryCode/'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/login'
@@ -336,10 +372,90 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   CountryCodeRoute: typeof CountryCodeRouteWithChildren
+  AjudaRoute: typeof AjudaRoute
+  CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
+  HealthRoute: typeof HealthRoute
+  NossaLojaRoute: typeof NossaLojaRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
+  QuemSomosRoute: typeof QuemSomosRoute
+  StoreRoute: typeof StoreRoute
+  TermosRoute: typeof TermosRoute
+  TrocasRoute: typeof TrocasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trocas': {
+      id: '/trocas'
+      path: '/trocas'
+      fullPath: '/trocas'
+      preLoaderRoute: typeof TrocasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quem-somos': {
+      id: '/quem-somos'
+      path: '/quem-somos'
+      fullPath: '/quem-somos'
+      preLoaderRoute: typeof QuemSomosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nossa-loja': {
+      id: '/nossa-loja'
+      path: '/nossa-loja'
+      fullPath: '/nossa-loja'
+      preLoaderRoute: typeof NossaLojaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajuda': {
+      id: '/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AjudaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$countryCode': {
       id: '/$countryCode'
       path: '/$countryCode'
@@ -368,20 +484,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryCodeIndexRouteImport
       parentRoute: typeof CountryCodeRoute
     }
-    '/$countryCode/trocas': {
-      id: '/$countryCode/trocas'
-      path: '/trocas'
-      fullPath: '/$countryCode/trocas'
-      preLoaderRoute: typeof CountryCodeTrocasRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/termos': {
-      id: '/$countryCode/termos'
-      path: '/termos'
-      fullPath: '/$countryCode/termos'
-      preLoaderRoute: typeof CountryCodeTermosRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
     '/$countryCode/store': {
       id: '/$countryCode/store'
       path: '/store'
@@ -394,34 +496,6 @@ declare module '@tanstack/react-router' {
       path: '/quotes'
       fullPath: '/$countryCode/quotes'
       preLoaderRoute: typeof CountryCodeQuotesRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/quem-somos': {
-      id: '/$countryCode/quem-somos'
-      path: '/quem-somos'
-      fullPath: '/$countryCode/quem-somos'
-      preLoaderRoute: typeof CountryCodeQuemSomosRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/privacidade': {
-      id: '/$countryCode/privacidade'
-      path: '/privacidade'
-      fullPath: '/$countryCode/privacidade'
-      preLoaderRoute: typeof CountryCodePrivacidadeRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/nossa-loja': {
-      id: '/$countryCode/nossa-loja'
-      path: '/nossa-loja'
-      fullPath: '/$countryCode/nossa-loja'
-      preLoaderRoute: typeof CountryCodeNossaLojaRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/health': {
-      id: '/$countryCode/health'
-      path: '/health'
-      fullPath: '/$countryCode/health'
-      preLoaderRoute: typeof CountryCodeHealthRouteImport
       parentRoute: typeof CountryCodeRoute
     }
     '/$countryCode/employees': {
@@ -443,13 +517,6 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/$countryCode/cart'
       preLoaderRoute: typeof CountryCodeCartRouteImport
-      parentRoute: typeof CountryCodeRoute
-    }
-    '/$countryCode/ajuda': {
-      id: '/$countryCode/ajuda'
-      path: '/ajuda'
-      fullPath: '/$countryCode/ajuda'
-      preLoaderRoute: typeof CountryCodeAjudaRouteImport
       parentRoute: typeof CountryCodeRoute
     }
     '/$countryCode/account/': {
@@ -519,18 +586,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface CountryCodeRouteChildren {
-  CountryCodeAjudaRoute: typeof CountryCodeAjudaRoute
   CountryCodeCartRoute: typeof CountryCodeCartRoute
   CountryCodeCheckoutRoute: typeof CountryCodeCheckoutRoute
   CountryCodeEmployeesRoute: typeof CountryCodeEmployeesRoute
-  CountryCodeHealthRoute: typeof CountryCodeHealthRoute
-  CountryCodeNossaLojaRoute: typeof CountryCodeNossaLojaRoute
-  CountryCodePrivacidadeRoute: typeof CountryCodePrivacidadeRoute
-  CountryCodeQuemSomosRoute: typeof CountryCodeQuemSomosRoute
   CountryCodeQuotesRoute: typeof CountryCodeQuotesRoute
   CountryCodeStoreRoute: typeof CountryCodeStoreRoute
-  CountryCodeTermosRoute: typeof CountryCodeTermosRoute
-  CountryCodeTrocasRoute: typeof CountryCodeTrocasRoute
   CountryCodeIndexRoute: typeof CountryCodeIndexRoute
   CountryCodeAccountAcceptInviteRoute: typeof CountryCodeAccountAcceptInviteRoute
   CountryCodeAccountLoginRoute: typeof CountryCodeAccountLoginRoute
@@ -544,18 +604,11 @@ interface CountryCodeRouteChildren {
 }
 
 const CountryCodeRouteChildren: CountryCodeRouteChildren = {
-  CountryCodeAjudaRoute: CountryCodeAjudaRoute,
   CountryCodeCartRoute: CountryCodeCartRoute,
   CountryCodeCheckoutRoute: CountryCodeCheckoutRoute,
   CountryCodeEmployeesRoute: CountryCodeEmployeesRoute,
-  CountryCodeHealthRoute: CountryCodeHealthRoute,
-  CountryCodeNossaLojaRoute: CountryCodeNossaLojaRoute,
-  CountryCodePrivacidadeRoute: CountryCodePrivacidadeRoute,
-  CountryCodeQuemSomosRoute: CountryCodeQuemSomosRoute,
   CountryCodeQuotesRoute: CountryCodeQuotesRoute,
   CountryCodeStoreRoute: CountryCodeStoreRoute,
-  CountryCodeTermosRoute: CountryCodeTermosRoute,
-  CountryCodeTrocasRoute: CountryCodeTrocasRoute,
   CountryCodeIndexRoute: CountryCodeIndexRoute,
   CountryCodeAccountAcceptInviteRoute: CountryCodeAccountAcceptInviteRoute,
   CountryCodeAccountLoginRoute: CountryCodeAccountLoginRoute,
@@ -576,6 +629,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   CountryCodeRoute: CountryCodeRouteWithChildren,
+  AjudaRoute: AjudaRoute,
+  CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
+  HealthRoute: HealthRoute,
+  NossaLojaRoute: NossaLojaRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
+  QuemSomosRoute: QuemSomosRoute,
+  StoreRoute: StoreRoute,
+  TermosRoute: TermosRoute,
+  TrocasRoute: TrocasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

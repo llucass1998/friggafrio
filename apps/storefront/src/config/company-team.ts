@@ -282,4 +282,4 @@ export const companyTeam: CompanyTeamMember[] = [
     "order": 24,
     "imageSrc": "/images/team/sidnei.webp"
   }
-]
+];

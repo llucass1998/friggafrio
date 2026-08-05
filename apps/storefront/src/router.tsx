@@ -10,10 +10,10 @@ export function createRouter() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // 5 minutes — critical queries (cart, checkout) override this individually
-        staleTime: 1000 * 60 * 5,
-        // Disable global refetch on focus; critical queries handle freshness via mutation invalidation
-        refetchOnWindowFocus: false,
+        // Optimize for SSR - shorter stale time for fresh data
+        staleTime: 1000 * 60, // 1 minute
+        // Enable refetch on window focus for fresh data
+        refetchOnWindowFocus: true,
         // Enable refetch on reconnect
         refetchOnReconnect: true,
         // Retry failed requests
@@ -28,7 +28,6 @@ export function createRouter() {
     defaultPreload: "intent", // Puxa os chunks sob demanda quando o usuário foca ou passa o mouse no link
     defaultNotFoundComponent: NotFound,
     scrollRestoration: true,
-    defaultViewTransition: true,
   })
   setupRouterSsrQueryIntegration({
     router,

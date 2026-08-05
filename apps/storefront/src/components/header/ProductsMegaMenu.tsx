@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { productCategories } from "@/components/header/categories"
+import { NavigationItem, productCategories, applicationCategories, mainNavigation } from "./categories"
 import { useState } from "react"
 
 export function ProductsMegaMenu() {
@@ -16,7 +16,7 @@ export function ProductsMegaMenu() {
       </button>
 
       {/* Dropdown Container */}
-      <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] xl:w-[1000px] bg-[var(--color-background)] shadow-2xl rounded-lg border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex overflow-hidden">
+      <div className="absolute top-full left-0 w-[800px] xl:w-[1000px] bg-[var(--color-background)] shadow-2xl rounded-b-lg border border-[var(--color-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex overflow-hidden">
 
         {/* Left Sidebar - Categories */}
         <div className="w-1/3 bg-[var(--color-surface)] border-r border-[var(--color-border)] py-4">
@@ -41,7 +41,7 @@ export function ProductsMegaMenu() {
 
           <div className="mt-6 px-6">
             <Link
-              to="/$countryCode/store" params={{ countryCode: "br" }} 
+              to={"/$countryCode/store" as any} 
               className="text-[var(--color-primary)] font-medium hover:underline flex items-center gap-1 text-sm"
             >
               Ver todos os produtos
@@ -55,7 +55,7 @@ export function ProductsMegaMenu() {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-[var(--color-navy)]">{activeCategoryData.label}</h3>
             <Link
-              to={activeCategoryData.href as string}
+              to={activeCategoryData.href as any}
               className="text-[var(--color-text-muted)] text-sm hover:text-[var(--color-primary)] hover:underline inline-block mt-1"
             >
               Explorar departamento completo &rarr;
@@ -63,10 +63,10 @@ export function ProductsMegaMenu() {
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {activeCategoryData.children?.filter(child => !child.id.endsWith("-all")).map((child) => (
+            {activeCategoryData.children?.filter(child => !child.id.endsWith('-all')).map((child) => (
               <Link
                 key={child.id}
-                to={child.href as string}
+                to={child.href as any}
                 className="text-[var(--color-text)] hover:text-[var(--color-primary)] hover:translate-x-1 transition-all text-sm font-medium py-1"
               >
                 {child.label}

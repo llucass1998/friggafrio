@@ -1,12 +1,13 @@
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { getStoredCountryCode } from "@/lib/data/country-code";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
-    // Explicitly enforce canonical navigation to /br
-    // Do not use stored cookies or dynamic defaults for the root redirect
+    const { countryCode } = await getStoredCountryCode();
+
     throw redirect({
       to: "/$countryCode",
-      params: { countryCode: "br" },
-    })
+      params: { countryCode },
+    });
   },
-})
+});

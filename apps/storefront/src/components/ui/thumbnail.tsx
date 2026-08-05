@@ -22,7 +22,7 @@ export const Thumbnail = ({ thumbnail, alt, className }: ThumbnailProps) => {
             className
           )}
         >
-          <span className="text-xs text-zinc-600">Sem imagem</span>
+          <span className="text-xs text-zinc-600">No image</span>
         </div>
       )}
     </>

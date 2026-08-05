@@ -25,15 +25,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchCustomer = useCallback(async () => {
     try {
-      // Run both requests in parallel to cut auth init time in half
-      const [{ customer }, meResult] = await Promise.all([
-        sdk.store.customer.retrieve({
-          fields: "id,email,first_name,last_name,phone,has_account"
-        }),
-        getMe().catch(() => ({ customer: { employee: null as Employee | null } })),
-      ])
+      // Fetch basic customer data
+      const { customer } = await sdk.store.customer.retrieve({
+        fields: "id,email,first_name,last_name,phone,has_account"
+      })
 
-      const employeeData = meResult.customer.employee ?? null
+      // Fetch employee data before updating any state so the layout
+      // never sees isAuthenticated=true with employee still null.
+      // This prevents the dashboard from flashing before the pending
+      // review screen when a company hasn't been activated yet.
+      let employeeData: Employee | null = null
+      try {
+        const { customer: customerWithEmployee } = await getMe()
+        if (customerWithEmployee.employee) {
+          employeeData = customerWithEmployee.employee
+        }
+      } catch {
+        // Not a B2B customer or error fetching employee data
+      }
 
       // Batch all state updates together so React renders once with
       // the complete picture (customer + employee + authenticated).

@@ -1,13 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { HttpTypes } from "@medusajs/types"
+import { queryKeys } from "@/lib/utils/query-keys"
+import { sdk } from "@/lib/medusa"
 import {
-useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-HttpTypes } from "@medusajs/types"
-import {
-queryKeys } from "@/lib/utils/query-keys"
-import {
-sdk } from "@/lib/medusa"
-import {
-
   getStoredCart,
   removeStoredCart,
   setStoredCart,
@@ -19,7 +14,6 @@ import {
   removeLineItemOptimistically,
   createOptimisticCart,
 } from "@/lib/utils/cart"
-import { isRecoverableStaleCartError } from "@/lib/utils/is-recoverable-cart-error"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name, +subtotal, +item_subtotal, +shipping_total, +discount_total, +tax_total, +total"
 
@@ -34,7 +28,7 @@ export const useCart = ({ fields }: { fields?: string } = {}) => {
       })
       return cart
     },
-    staleTime: 1000 * 30  // 30s — mutations already invalidate the cache
+    staleTime: 0
   })
 }
 
@@ -94,30 +88,12 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
 
       let cartId = getStoredCart()
 
-      const { regions } = await sdk.store.region.list({})
-      const region = regions.find(r =>
-        r.countries?.some(c => c.iso_2 === country_code.toLowerCase())
-      )
-      if (!region) throw new Error(`Region not found for country code: ${country_code}`)
-
-      if (cartId) {
-        try {
-          const { cart: currentCart } = await sdk.store.cart.retrieve(cartId, { fields: "id,region_id,currency_code" });
-          if (currentCart.region_id !== region.id || currentCart.currency_code !== region.currency_code) {
-            removeStoredCart();
-            cartId = undefined;
-          }
-        } catch (err: unknown) {
-          if (isRecoverableStaleCartError(err)) {
-            removeStoredCart();
-            cartId = undefined;
-          } else {
-            throw err;
-          }
-        }
-      }
-
       if (!cartId) {
+        const { regions } = await sdk.store.region.list({})
+        const region = regions.find(r =>
+          r.countries?.some(c => c.iso_2 === country_code.toLowerCase())
+        )
+        if (!region) throw new Error(`Region not found for country code: ${country_code}`)
         const { cart } = await sdk.store.cart.create({ region_id: region.id }, {
           fields: requestFields || fields || DEFAULT_CART_FIELDS,
         })
@@ -125,12 +101,36 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
         cartId = cart.id
       }
 
-      const response = await sdk.store.cart.createLineItem(
-        cartId,
-        { variant_id, quantity },
-        { fields: requestFields || fields || DEFAULT_CART_FIELDS }
-      )
-      return response.cart
+      try {
+        const response = await sdk.store.cart.createLineItem(
+          cartId,
+          { variant_id, quantity },
+          { fields: requestFields || fields || DEFAULT_CART_FIELDS }
+        )
+        return response.cart
+      } catch (err: any) {
+        if (err?.message?.includes("not found") || err?.status === 404 || err?.status === 400 || err?.type === "not_found") {
+          // Removes corrupted/old cart ID
+          removeStoredCart()
+          
+          // Recreate the cart transparently
+          const { regions } = await sdk.store.region.list({})
+          const region = regions.find(r => r.countries?.some(c => c.iso_2 === country_code.toLowerCase()))
+          if (region) {
+            const { cart } = await sdk.store.cart.create({ region_id: region.id }, {
+              fields: requestFields || fields || DEFAULT_CART_FIELDS,
+            })
+            setStoredCart(cart.id)
+            const response = await sdk.store.cart.createLineItem(
+              cart.id,
+              { variant_id, quantity },
+              { fields: requestFields || fields || DEFAULT_CART_FIELDS }
+            )
+            return response.cart
+          }
+        }
+        throw err;
+      }
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ predicate: queryKeys.cart.predicate })
@@ -217,12 +217,7 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
     mutationFn: async (variables: { line_id: string }) => {
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
-      const { parent } = await sdk.store.cart.deleteLineItem(
-        cartId,
-        variables.line_id,
-        { fields: fields || DEFAULT_CART_FIELDS }
-      )
-      return parent as HttpTypes.StoreCart
+      await sdk.store.cart.deleteLineItem(cartId, variables.line_id)
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({

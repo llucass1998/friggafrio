@@ -5,7 +5,7 @@ import Address from "@/components/address"
 import PaymentMethodInfo from "@/components/payment-method-info"
 import { isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { formatOrderId } from "@/lib/utils/order"
-import { Link, getRouteApi } from "@tanstack/react-router"
+import { useLoaderData, Link, useParams, getRouteApi } from "@tanstack/react-router"
 import { CheckCircleSolid, ShoppingBag } from "@medusajs/icons"
 import { Package, Truck, Info, MapPin, CreditCard, FileText } from "lucide-react"
 import type { HttpTypes } from "@medusajs/types"
@@ -30,14 +30,11 @@ const translatePaymentStatus = (status?: string) => {
   switch (status) {
     case "not_paid": return "Não pago"
     case "awaiting": return "Aguardando"
-    case "authorized": return "Aprovado" // Adicionado para lidar com as operadoras que usam "authorized" ao invés de "captured" no momento inicial
     case "captured": return "Aprovado"
     case "partially_refunded": return "Parcialmente estornado"
     case "refunded": return "Estornado"
     case "canceled": return "Cancelado"
     case "requires_action": return "Ação Necessária"
-    case "failed": return "Recusado" // Adicionado feedback claro para pagamentos recusados
-    case "rejected": return "Recusado" 
     default: return status || "Aguardando"
   }
 }
@@ -59,9 +56,7 @@ const translateFulfillmentStatus = (status?: string) => {
 }
 
 const OrderConfirmation = () => {
-  const _params = routeApi.useParams()
-  const countryCode = (_params as Record<string, string>).countryCode || "br"
-
+  const { countryCode } = useParams({ strict: false })
   const { order } = routeApi.useLoaderData()
 
   if (!order) {

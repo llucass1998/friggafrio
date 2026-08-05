@@ -12,10 +12,6 @@ export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default") || providerId === "manual"
 }
 
-export const isMercadopago = (providerId?: string) => {
-  return providerId?.startsWith("mercadopago") || providerId === "mp" || providerId === "mercadopago" || providerId === "pp_mercadopago"
-}
-
 // ============ ACTIVE PAYMENT SESSION ============
 
 export const getActivePaymentSession = (cart: HttpTypes.StoreCart): HttpTypes.StorePaymentSession | undefined => {
@@ -27,7 +23,8 @@ export const getActivePaymentSession = (cart: HttpTypes.StoreCart): HttpTypes.St
 // ============ GIFT CARD CHECK ============
 
 export const isPaidWithGiftCard = (cartOrOrder: HttpTypes.StoreCart | HttpTypes.StoreOrder): boolean => {
-  return !!(cartOrOrder as {gift_cards?: unknown[]})?.gift_cards?.length &&
+  return (cartOrOrder as any)?.gift_cards &&
+  (cartOrOrder as any)?.gift_cards?.length > 0 &&
   cartOrOrder?.total === 0
 }
 

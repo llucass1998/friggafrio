@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useSearch, useNavigate, useParams } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare, ArrowRightOnRectangle as LogOut } from "@medusajs/icons"
+import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare } from "@medusajs/icons"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null
 
-interface PerfilFormData {
+interface ProfileFormData {
   first_name: string
   last_name: string
   phone: string
@@ -88,13 +88,6 @@ const RESET_FREQUENCY_OPTIONS: { value: SpendLimitResetFrequency; label: string;
   { value: "yearly", label: "Anualmente", description: "Resets on January 1st" },
 ]
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) return error.message
-  if (typeof error === "string") return error
-  if (error && typeof error === "object" && "message" in error) return String(error.message)
-  return fallback
-}
-
 function CardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden animate-pulse">
@@ -153,13 +146,13 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
       })
 
       if (error) {
-        toast.error(error.message || "Falha ao salvar cartão")
+        toast.error(error.message || "Failed to save card")
       } else {
-        toast.success("Cartão salvo com sucesso")
+        toast.success("Card saved successfully")
         onSuccess()
       }
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, "Falha ao salvar cartão"))
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save card")
     } finally {
       setIsSubmitting(false)
     }
@@ -186,7 +179,7 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
           disabled={isSubmitting || !stripe || !elements}
           className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Salvando..." : "Salvar Cartão"}
+          {isSubmitting ? "Saving..." : "Save Card"}
         </button>
       </div>
     </form>
@@ -194,7 +187,8 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
 }
 
 function PaymentMethodsSection({ companyData }: { companyData: Company }) {
-    const [isModalOpen, setIsModalOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -223,7 +217,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       setIsModalOpen(true)
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao inicializar configuração do cartão")
+      toast.error(error.message || "Failed to initialize card setup")
     },
   })
 
@@ -234,11 +228,11 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       })
     },
     onSuccess: () => {
-      toast.success("Método de pagamento removido")
+      toast.success("Payment method removed")
       refetchMethods()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao remover método de pagamento")
+      toast.error(error.message || "Failed to remove payment method")
     },
     onSettled: () => {
       setDeletingId(null)
@@ -262,14 +256,14 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Formas de Pagamento</h2>
-          <p className="text-sm text-slate-500">Gerencie as formas de pagamento salvas da sua empresa</p>
+          <h2 className="text-lg font-semibold text-slate-900">Payment Methods</h2>
+          <p className="text-sm text-slate-500">Manage saved payment methods for your company</p>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
             <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500">
-              As formas de pagamento estarão disponíveis quando sua empresa for ativada.
+              Payment methods are available once your company is activated.
             </p>
           </div>
         </div>
@@ -282,8 +276,8 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Formas de Pagamento</h2>
-            <p className="text-sm text-slate-500">Gerencie as formas de pagamento salvas da sua empresa</p>
+            <h2 className="text-lg font-semibold text-slate-900">Payment Methods</h2>
+            <p className="text-sm text-slate-500">Manage saved payment methods for your company</p>
           </div>
           {hasPaymentMethods && (
             <button
@@ -292,7 +286,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
-              {createSetupIntentMutation.isPending ? "Configurando..." : "Adicionar Cartão"}
+              {createSetupIntentMutation.isPending ? "Setting up..." : "Add Card"}
             </button>
           )}
         </div>
@@ -319,7 +313,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                 disabled={createSetupIntentMutation.isPending}
                 className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50"
               >
-                {createSetupIntentMutation.isPending ? "Configurando..." : "Adicionar Seu Primeiro Cartão"}
+                {createSetupIntentMutation.isPending ? "Setting up..." : "Add Your First Card"}
               </button>
             </div>
           ) : (
@@ -339,7 +333,7 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900">
-                        {card ? cardBrandLabel(card.brand) : "Cartão"} final {card?.last4 || "****"}
+                        {card ? cardBrandLabel(card.brand) : "Card"} ending in {card?.last4 || "****"}
                       </p>
                       {card && (
                         <p className="text-xs text-slate-500 mt-0.5">
@@ -369,9 +363,9 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
       <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleModalClose() }}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Adicionar Forma de Pagamento</DialogTitle>
+            <DialogTitle className="text-slate-900">Add Payment Method</DialogTitle>
             <DialogDescription>
-              Insira os detalhes do seu cartão abaixo. Seu cartão será salvo de forma segura para compras futuras.
+              Enter your card details below. Your card will be securely saved for future purchases.
             </DialogDescription>
           </DialogHeader>
           {setupClientSecret && stripePromise ? (
@@ -400,8 +394,9 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
   )
 }
 
-function EndereçosSection({ companyData }: { companyData: Company }) {
-    const [isModalOpen, setIsModalOpen] = useState(false)
+function AddressesSection({ companyData }: { companyData: Company }) {
+  const queryClient = useQueryClient()
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<CompanyAddressData | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -462,12 +457,12 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
       return response.address
     },
     onSuccess: () => {
-      toast.success("Endereço adicionado")
+      toast.success("Address added")
       handleModalClose()
       refetchAddresses()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao adicionar endereço")
+      toast.error(error.message || "Failed to add address")
     },
   })
 
@@ -498,12 +493,12 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
       return response.address
     },
     onSuccess: () => {
-      toast.success("Endereço atualizado")
+      toast.success("Address updated")
       handleModalClose()
       refetchAddresses()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao atualizar endereço")
+      toast.error(error.message || "Failed to update address")
     },
   })
 
@@ -514,11 +509,11 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
       })
     },
     onSuccess: () => {
-      toast.success("Endereço removido")
+      toast.success("Address removed")
       refetchAddresses()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao remover endereço")
+      toast.error(error.message || "Failed to remove address")
     },
     onSettled: () => {
       setDeletingId(null)
@@ -748,7 +743,7 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Nome</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">First Name</label>
                 <input
                   type="text"
                   value={formData.first_name}
@@ -758,7 +753,7 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Sobrenome</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Last Name</label>
                 <input
                   type="text"
                   value={formData.last_name}
@@ -775,7 +770,7 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
                 value={formData.company_name}
                 onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                 className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                placeholder="Nome da empresa (opcional)"
+                placeholder="Company name (optional)"
               />
             </div>
             <div>
@@ -918,7 +913,7 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
                 disabled={isSubmitting || !isFormValid}
                 className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Salvando..." : editingAddress ? "Update Address" : "Add Address"}
+                {isSubmitting ? "Saving..." : editingAddress ? "Update Address" : "Add Address"}
               </button>
             </div>
           </form>
@@ -929,22 +924,14 @@ function EndereçosSection({ companyData }: { companyData: Company }) {
 }
 
 export default function SettingsPage() {
-  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee, logout } = useAuth()
-  const navigate = useNavigate()
-  const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
-
-  const handleLogout = async () => {
-    await logout()
-    navigate({ to: "/$countryCode", params: { countryCode } })
-  }
+  const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee, isAuthenticated } = useAuth()
   const searchParams = useSearch({ strict: false }) as { tab?: string } | undefined
   const initialTab = (searchParams?.tab as "profile" | "company" | "addresses" | "payment_methods") || "profile"
   const [activeTab, setActiveTab] = useState<"profile" | "company" | "addresses" | "payment_methods">(initialTab)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingCompany, setIsEditingCompany] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
-  const [profileFormData, setPerfilFormData] = useState<PerfilFormData>({
+  const [profileFormData, setProfileFormData] = useState<ProfileFormData>({
     first_name: "",
     last_name: "",
     phone: "",
@@ -975,7 +962,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (customer) {
-      setPerfilFormData({
+      setProfileFormData({
         first_name: customer.first_name || "",
         last_name: customer.last_name || "",
         phone: customer.phone || "",
@@ -1000,7 +987,7 @@ export default function SettingsPage() {
   }, [companyData])
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: PerfilFormData) => {
+    mutationFn: async (data: ProfileFormData) => {
       const response = await sdk.store.customer.update({
         first_name: data.first_name || undefined,
         last_name: data.last_name || undefined,
@@ -1009,12 +996,12 @@ export default function SettingsPage() {
       return response.customer
     },
     onSuccess: () => {
-      toast.success("Perfil atualizado com sucesso")
+      toast.success("Profile updated successfully")
       setIsEditingProfile(false)
       refetch()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Falha ao atualizar perfil")
+      toast.error(error.message || "Failed to update profile")
     },
   })
 
@@ -1037,12 +1024,12 @@ export default function SettingsPage() {
       return response.company
     },
     onSuccess: () => {
-      toast.success("Empresa atualizada com sucesso")
+      toast.success("Company updated successfully")
       setIsEditingCompany(false)
       refetchCompany()
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao atualizar empresa")
+      toast.error(error.message || "Failed to update company")
     },
   })
 
@@ -1118,7 +1105,7 @@ export default function SettingsPage() {
   }
 
   const handleProfileCancelar = () => {
-    setPerfilFormData({
+    setProfileFormData({
       first_name: customer?.first_name || "",
       last_name: customer?.last_name || "",
       phone: customer?.phone || "",
@@ -1161,15 +1148,9 @@ export default function SettingsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
           <p className="text-slate-500 mt-1">Gerencie as configurações e preferências da sua conta</p>
-        </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
-          <LogOut className="w-4 h-4" />
-          Sair da Conta
-        </button>
         </div>
 
         {/* Tabs */}
@@ -1238,7 +1219,7 @@ export default function SettingsPage() {
                         type="text"
                         id="first_name"
                         value={profileFormData.first_name}
-                        onChange={(e) => setPerfilFormData({ ...profileFormData, first_name: e.target.value })}
+                        onChange={(e) => setProfileFormData({ ...profileFormData, first_name: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
                         placeholder="Digite o nome"
                       />
@@ -1258,7 +1239,7 @@ export default function SettingsPage() {
                         type="text"
                         id="last_name"
                         value={profileFormData.last_name}
-                        onChange={(e) => setPerfilFormData({ ...profileFormData, last_name: e.target.value })}
+                        onChange={(e) => setProfileFormData({ ...profileFormData, last_name: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
                         placeholder="Digite o sobrenome"
                       />
@@ -1278,7 +1259,7 @@ export default function SettingsPage() {
                         type="tel"
                         id="phone"
                         value={profileFormData.phone}
-                        onChange={(e) => setPerfilFormData({ ...profileFormData, phone: e.target.value })}
+                        onChange={(e) => setProfileFormData({ ...profileFormData, phone: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
                         placeholder="Digite o número de telefone"
                       />
@@ -1346,7 +1327,7 @@ export default function SettingsPage() {
                         {(companyFormData.logo_url || companyData?.logo_url) ? (
                           <img
                             src={companyFormData.logo_url || companyData?.logo_url || ""}
-                            alt={companyData?.name || "Logo da empresa"}
+                            alt={companyData?.name || "Company logo"}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -1622,14 +1603,16 @@ export default function SettingsPage() {
         {activeTab === "addresses" && isAdmin && (
           isCompanyLoading ? (
             <CardSkeleton rows={3} />
+          ) : companyData ? (
+            <AddressesSection companyData={companyData} />
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
-              <p className="text-sm text-slate-500">Endereços removidos para refatoração.</p>
+              <p className="text-sm text-slate-500">Company data not available.</p>
             </div>
           )
         )}
 
-        {/* Métodos de Pagamento Tab Content */}
+        {/* Payment Methods Tab Content */}
         {activeTab === "payment_methods" && isAdmin && (
           isCompanyLoading ? (
             <CardSkeleton rows={3} />

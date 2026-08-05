@@ -180,30 +180,22 @@ export const updateLineItemOptimistically = (
     return null
   }
 
-  let difference = 0
-  
   const updatedItems = (currentCart.items || []).map(item => {
     if (item.id === lineId) {
-      const newTotal = (item.unit_price || 0) * quantity
-      difference = newTotal - (item.total || 0)
       return {
         ...item,
         quantity,
-        total: newTotal,
-        original_total: newTotal,
+        total: (item.unit_price || 0) * quantity,
+        original_total: (item.unit_price || 0) * quantity,
       }
     }
     return item
   })
 
-  const newItemSubtotal = updatedItems.reduce((sum, item) => sum + (item.total || 0), 0)
-
   const optimisticCart: OptimisticCart = {
     ...currentCart,
     items: updatedItems,
-    item_subtotal: newItemSubtotal,
-    subtotal: (currentCart.subtotal || 0) + difference,
-    total: (currentCart.total || 0) + difference,
+    item_subtotal: updatedItems.reduce((sum, item) => sum + (item.total || 0), 0),
     isOptimistic: true,
   }
 
@@ -225,19 +217,12 @@ export const removeLineItemOptimistically = (
     return null
   }
 
-  const removedItem = (currentCart.items || []).find(item => item.id === lineId)
-  const difference = removedItem ? -(removedItem.total || 0) : 0
-  
   const updatedItems = (currentCart.items || []).filter(item => item.id !== lineId)
-  
-  const newItemSubtotal = updatedItems.reduce((sum, item) => sum + (item.total || 0), 0)
 
   const optimisticCart: OptimisticCart = {
     ...currentCart,
     items: updatedItems,
-    item_subtotal: newItemSubtotal,
-    subtotal: (currentCart.subtotal || 0) + difference,
-    total: (currentCart.total || 0) + difference,
+    item_subtotal: updatedItems.reduce((sum, item) => sum + (item.total || 0), 0),
     isOptimistic: true,
   }
 

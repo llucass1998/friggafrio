@@ -1,15 +1,13 @@
 import { useState } from "react"
-import { useNavigate, useParams, Link, useSearch } from "@tanstack/react-router"
-import { getSafeReturnTo } from "@/lib/utils/return-to"
+import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LockClosedSolid } from "@medusajs/icons"
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
+import { GoogleLogin } from "@react-oauth/google"
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { returnTo?: string }
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "br"
+  const countryCode = params.countryCode || "us"
   const { login, loginWithGoogle } = useAuth()
 
   const [email, setEmail] = useState("")
@@ -28,8 +26,8 @@ export default function LoginPage() {
       console.log("[LoginPage] login successful, navigating to home")
 
       // Navigate without full page reload to preserve auth state
-      window.location.href = getSafeReturnTo(search.returnTo, countryCode)
-    } catch (err: unknown) {
+      navigate({ to: "/$countryCode", params: { countryCode } })
+    } catch (err: any) {
       console.error("Login error:", err)
       setError("Invalid email or password. Please try again.")
     } finally {
@@ -37,7 +35,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     setError("")
     setIsLoading(true)
 
@@ -45,14 +43,13 @@ export default function LoginPage() {
       if (credentialResponse.credential) {
         await loginWithGoogle(credentialResponse.credential)
         console.log("[LoginPage] Google login successful, navigating to home")
-        window.location.href = getSafeReturnTo(search.returnTo, countryCode)
+        navigate({ to: "/$countryCode", params: { countryCode } })
       } else {
         throw new Error("No credential received from Google")
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Google Login error:", err)
-      const message = typeof err === "object" && err !== null && "message" in err ? (err as Record<string, unknown>).message : ""
-      setError(typeof message === "string" && message ? message : "Falha na autenticação com Google. Tente novamente.")
+      setError(err.message || "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }

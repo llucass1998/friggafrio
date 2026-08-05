@@ -1,40 +1,28 @@
-import { useEffect, useRef } from "react"
-import { useAccessibility } from "@/components/accessibility/AccessibilityProvider"
+import React, { useEffect, useState } from 'react';
+import { useAccessibility } from './AccessibilityProvider';
 
 export function ReadingGuide() {
-  const { preferences } = useAccessibility()
-  const guideRef = useRef<HTMLDivElement>(null)
+  const { preferences } = useAccessibility();
+  const [mouseY, setMouseY] = useState(-100);
 
   useEffect(() => {
-    if (!preferences.readingGuide) return
-
-    let rafId: number | null = null
+    if (!preferences.readingGuide) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (rafId !== null) return
-      rafId = requestAnimationFrame(() => {
-        if (guideRef.current) {
-          guideRef.current.style.top = `${e.clientY}px`
-        }
-        rafId = null
-      })
-    }
+      setMouseY(e.clientY);
+    };
 
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove)
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [preferences.readingGuide])
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [preferences.readingGuide]);
 
-  if (!preferences.readingGuide) return null
+  if (!preferences.readingGuide) return null;
 
   return (
     <div 
-      ref={guideRef}
       id="a11y-reading-guide"
-      style={{ top: "-100px" }}
+      style={{ top: `${mouseY}px` }}
       aria-hidden="true"
     />
-  )
+  );
 }

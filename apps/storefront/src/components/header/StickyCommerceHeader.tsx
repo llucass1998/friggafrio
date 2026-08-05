@@ -1,15 +1,15 @@
-import { useParams } from "@tanstack/react-router"
+import { Link, useParams } from "@tanstack/react-router"
 import { useState, useEffect } from "react"
-import { HeaderSearch } from "@/components/header/HeaderSearch"
-import { HeaderActions } from "@/components/header/HeaderActions"
-import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
-import { HeaderMobileDrawer } from "@/components/header/HeaderMobileDrawer"
-import { HeaderLogo } from "@/components/header/HeaderLogo"
+import { HeaderSearch } from "./HeaderSearch"
+import { HeaderActions } from "./HeaderActions"
+import { HeaderDesktopNav } from "./HeaderDesktopNav"
+import { HeaderMobileDrawer } from "./HeaderMobileDrawer"
+import { HeaderLogo } from "./HeaderLogo"
 
 export function StickyCommerceHeader() {
   const [isVisible, setIsVisible] = useState(false)
   const params = useParams({ strict: false }) as Record<string, string>
-  const _countryCode = params.countryCode || "br"
+  const countryCode = params.countryCode || "br"
 
   useEffect(() => {
     const handleScroll = () => {

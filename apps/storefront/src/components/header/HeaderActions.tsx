@@ -1,9 +1,9 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { User, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { useCart } from "@/lib/hooks/use-cart"
-import { formatPrice } from "@/lib/utils/price"
-import { useCartDrawer } from "@/lib/context/cart"
+import { useCart } from "../../lib/hooks/use-cart"
+import { formatPrice } from "../../lib/utils/price"
+import { useCartDrawer } from "../../lib/context/cart"
 
 export function HeaderActions({ compact = false }: { compact?: boolean }) {
   const params = useParams({ strict: false }) as Record<string, string>
@@ -23,7 +23,7 @@ export function HeaderActions({ compact = false }: { compact?: boolean }) {
     locale: "pt-BR"
   })
 
-  const customerName = customer?.first_name || customer?.email?.split("@")[0] || ""
+  const customerName = customer?.first_name || customer?.email?.split('@')[0] || ""
 
   return (
     <div className="flex items-center gap-4 md:gap-6">

@@ -1,11 +1,10 @@
-import { useEffect } from "react"
-import { CheckoutStepKey } from "@/lib/types/global"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
   DrawerFooter,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
@@ -27,8 +26,6 @@ import { Minus, Plus, Trash, XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Link, useLocation } from "@tanstack/react-router"
 import { ShoppingCart } from "lucide-react"
-import { toast } from "sonner"
-import { useDebounce } from "@/lib/hooks/use-debounce"
 import { clsx } from "clsx"
 import { useState } from "react"
 
@@ -69,37 +66,12 @@ type CartDeleteItemProps = {
 
 export const CartDeleteItem = ({ item, fields }: CartDeleteItemProps) => {
   const deleteLineItemMutation = useDeleteLineItem({ fields })
-  const [isDeleting, setIsDeleting] = useState(false)
-  
-  const handleDelete = () => {
-    if (isDeleting) return
-    setIsDeleting(true)
-    deleteLineItemMutation.mutate(
-      { line_id: item.id },
-      {
-        onSuccess: () => {
-          toast.success("Item removido do carrinho")
-        },
-        onError: () => {
-          setIsDeleting(false)
-          toast.error("Erro ao remover item do carrinho")
-        }
-      }
-    )
-  }
-  
   return (
     <button
-      onClick={handleDelete}
-      disabled={deleteLineItemMutation.isPending || isDeleting}
-      className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 relative"
-      aria-label="Remover item"
+      onClick={() => deleteLineItemMutation.mutate({ line_id: item.id })}
+      disabled={deleteLineItemMutation.isPending}
+      className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
     >
-      {deleteLineItemMutation.isPending || isDeleting ? (
-        <span className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-          <Loading className="w-3 h-3" />
-        </span>
-      ) : null}
       <Trash className="w-4 h-4" />
     </button>
   )
@@ -119,56 +91,17 @@ export const CartItemQuantitySelector = ({
 }: CartItemQuantitySelectorProps) => {
   const updateLineItemMutation = useUpdateLineItem({ fields })
   const deleteLineItemMutation = useDeleteLineItem({ fields })
-  const [localQuantity, setLocalQuantity] = useState(item.quantity)
   const isPending = updateLineItemMutation.isPending || deleteLineItemMutation.isPending
 
-  // Sync local state when item quantity changes from outside
-  useEffect(() => {
-    setLocalQuantity(item.quantity)
-  }, [item.quantity])
-
-  // Debounce the mutation call to prevent rapid clicks
-  const debouncedQuantityUpdate = useDebounce(
-    (newQuantity: number) => {
-      if (newQuantity === 0) {
-        deleteLineItemMutation.mutate(
-          { line_id: item.id },
-          {
-            onSuccess: () => {
-              toast.success("Item removido do carrinho")
-            },
-            onError: () => {
-              setLocalQuantity(item.quantity) // Revert on error
-              toast.error("Erro ao remover item do carrinho")
-            }
-          }
-        )
-      } else {
-        updateLineItemMutation.mutate(
-          { line_id: item.id, quantity: newQuantity },
-          {
-            onSuccess: () => {
-              toast.success("Quantidade atualizada")
-            },
-            onError: () => {
-              setLocalQuantity(item.quantity) // Revert on error
-              toast.error("Erro ao atualizar quantidade")
-            }
-          }
-        )
-      }
-    },
-    500
-  )
-
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity < 0) return
-    
-    // Optmistic UI update
-    setLocalQuantity(newQuantity)
-    
-    // Debounced server call
-    debouncedQuantityUpdate(newQuantity)
+    if (newQuantity === 0) {
+      deleteLineItemMutation.mutate({ line_id: item.id })
+    } else {
+      updateLineItemMutation.mutate({
+        line_id: item.id,
+        quantity: newQuantity,
+      })
+    }
   }
 
   return (
@@ -182,7 +115,6 @@ export const CartItemQuantitySelector = ({
             ? "w-7 h-7 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             : "w-9 h-9 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
-        aria-label="Diminuir quantidade"
       >
         <Minus className="w-4 h-4" />
       </button>
@@ -194,7 +126,7 @@ export const CartItemQuantitySelector = ({
             : "text-base min-w-[2.5rem]"
         )}
       >
-        {localQuantity}
+        {item.quantity}
       </span>
       <button
         onClick={() => handleQuantityChange(item.quantity + 1)}
@@ -205,7 +137,6 @@ export const CartItemQuantitySelector = ({
             ? "w-7 h-7 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             : "w-9 h-9 text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
-        aria-label="Aumentar quantidade"
       >
         <Plus className="w-4 h-4" />
       </button>
@@ -223,9 +154,6 @@ interface CartLineItemProps {
 }
 
 const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
-  const isOutOfStock = (item.variant as any)?.manage_inventory && (item.variant as any)?.inventory_quantity !== null && (item.variant as any)?.inventory_quantity <= 0;
-  const isQuoteOnly = (item.product as any)?.metadata?.quote_only === true || (item.product as any)?.tags?.some((t: any) => t.value === "b2b");
-
   return (
     <div className="flex items-start gap-x-4" data-testid="cart-item">
       <Thumbnail thumbnail={item.thumbnail} alt={item.product_title || item.title} />
@@ -235,15 +163,9 @@ const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
             <h4 className="text-base font-medium line-clamp-1 text-zinc-900">
               {item.product_title}
             </h4>
-            <div className="text-sm text-zinc-600 flex flex-wrap gap-x-2">
+            <div className="text-sm text-zinc-600">
               {item.variant_title && item.variant_title !== "Default Variant" && (
                 <span>{item.variant_title}</span>
-              )}
-              {isOutOfStock && (
-                <span className="text-red-600 font-medium">Sem estoque</span>
-              )}
-              {isQuoteOnly && (
-                <span className="text-blue-600 font-medium">Orçamento</span>
               )}
             </div>
           </div>
@@ -252,11 +174,7 @@ const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
 
         <div className="flex items-center justify-between mt-2">
           <CartItemQuantitySelector item={item} fields={fields} />
-          {isQuoteOnly ? (
-            <span className="text-sm font-medium text-text-muted">A Combinar</span>
-          ) : (
-            <Price price={item.total ?? 0} currencyCode={cart.currency_code} textSize="small" />
-          )}
+          <Price price={item.total ?? 0} currencyCode={cart.currency_code} textSize="small" />
         </div>
       </div>
     </div>
@@ -297,10 +215,6 @@ export const CartLineItem = ({
   fields,
   className,
 }: CartLineItemProps) => {
-  const isOutOfStock = (item.variant as any)?.manage_inventory && (item.variant as any)?.inventory_quantity !== null && (item.variant as any)?.inventory_quantity <= 0;
-  const isLowStock = (item.variant as any)?.manage_inventory && (item.variant as any)?.inventory_quantity !== null && (item.variant as any)?.inventory_quantity <= 5 && (item.variant as any)?.inventory_quantity > 0;
-  const isQuoteOnly = (item.product as any)?.metadata?.quote_only === true || (item.product as any)?.tags?.some((t: any) => t.value === "b2b");
-
   if (type === "compact") {
     return <CompactCartLineItem item={item} cart={cart} fields={fields} className={className} />
   }
@@ -342,7 +256,7 @@ export const CartLineItem = ({
             <LineItemPrice item={item} currencyCode={cart.currency_code} className="text-lg font-semibold" />
             {item.quantity > 1 && (
               <p className="text-xs text-text-muted mt-1">
-                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> cada
+                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> each
               </p>
             )}
           </div>
@@ -374,7 +288,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
         </div>
 
         <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">Frete</span>
+          <span className="text-text-secondary">Shipping</span>
           {cart.shipping_total !== null && cart.shipping_total !== undefined ? (
             <Price
               price={cart.shipping_total}
@@ -399,7 +313,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
         ) : null}
 
         <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">Impostos</span>
+          <span className="text-text-secondary">Tax</span>
           {cart.tax_total !== null && cart.tax_total !== undefined ? (
             <Price
               price={cart.tax_total}
@@ -478,39 +392,36 @@ export const CartPromo = ({ cart }: CartPromoProps) => {
         <button
           onClick={() => setShowInput(true)}
           className="text-sm text-accent hover:text-accent-hover font-medium transition-colors"
-          aria-label="Adicionar cupom de desconto"
         >
-          + Adicionar cupom
+          + Add promo code
         </button>
       ) : (
         <div className="space-y-2">
           <div className="flex gap-2">
             <Input
-              placeholder="Digite o cupom"
+              placeholder="Enter code"
               name="promoCode"
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
               className="flex-1"
             />
-            <Button
-              onClick={handleApply}
-              variant="primary"
+            <Button 
+              onClick={handleApply} 
+              variant="primary" 
               size="sm"
               disabled={!promoCode.trim()}
-              aria-label="Aplicar"
             >
-              Aplicar
+              Apply
             </Button>
           </div>
-          <button
+          <button 
             onClick={() => {
               setShowInput(false)
               setPromoCode("")
-            }}
+            }} 
             className="text-xs text-text-muted hover:text-text-secondary transition-colors"
-            aria-label="Cancelar"
           >
-            Cancelar
+            Cancel
           </button>
         </div>
       )}
@@ -559,7 +470,7 @@ export const CartDropdown = () => {
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
       <DrawerContent
         className="flex flex-col z-[100] h-full sm:max-w-md w-full right-0 left-auto border-l border-[#E5EDF4]"
-        style={{ right: 0, left: "auto", bottom: 0 }}
+        style={{ right: 0, left: 'auto', bottom: 0 }}
         aria-describedby="cart-drawer-description"
       >
         <DrawerHeader className="border-b border-[#E5EDF4]">
@@ -613,7 +524,7 @@ export const CartDropdown = () => {
                     Ver carrinho
                   </Button>
                 </Link>
-                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: CheckoutStepKey.ADDRESSES }} onClick={closeCart} className="w-full">
+                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
                   <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={sortedItems?.some(item => !item.variant_id || item.quantity <= 0)}>
                     Finalizar compra
                   </Button>

@@ -1,6 +1,5 @@
 import PaymentContainer from "@/components/payment-container"
 import StripeCardContainer from "@/components/stripe-card-container"
-import MercadopagoContainer from "@/components/mercadopago-container"
 import { Button } from "@/components/ui/button"
 import {
   useCartPaymentMethods,
@@ -8,7 +7,6 @@ import {
 } from "@/lib/hooks/use-checkout"
 import {
   isStripe as isStripeFunc,
-  isMercadopago,
   getActivePaymentSession,
   isPaidWithGiftCard,
 } from "@/lib/utils/checkout"
@@ -260,7 +258,7 @@ const PaymentStep = ({
 
   const canProceed = hasSavedMethods && selectedSavedMethodId
     ? !!activeSession
-    : (isStripe || isMercadopago(selectedPaymentMethod))
+    : isStripe
       ? isPaymentDetailsComplete && !!activeSession
       : !!selectedPaymentMethod || paidByGiftcard
 
@@ -340,14 +338,6 @@ const PaymentStep = ({
                     <StripeCardContainer
                       cart={cart}
                       onPaymentDetailsComplete={handlePaymentComplete}
-                    />
-                  )}
-                {isMercadopago(paymentMethod.id) &&
-                  selectedPaymentMethod === paymentMethod.id && (
-                    <MercadopagoContainer
-                      cart={cart}
-                      onPaymentDetailsComplete={handlePaymentComplete}
-                      isSubmitting={isInitiating}
                     />
                   )}
               </PaymentContainer>

@@ -1,7 +1,6 @@
 import { sdk } from "@/lib/medusa"
 import { getRegion } from "@/lib/data/regions"
-import { getStoredCart, setStoredCart, removeStoredCart } from "@/lib/utils/cart"
-import { isRecoverableStaleCartError } from "@/lib/utils/is-recoverable-cart-error"
+import { getStoredCart, setStoredCart } from "@/lib/utils/cart"
 import { HttpTypes } from "@medusajs/types"
 import { 
   sendPostRequest, 
@@ -167,39 +166,14 @@ export const addToCart = async ({
 
   let cartId = getStoredCart()
 
-  const region = await getRegion({ country_code })
-  if (!region) {
-    throw new Error(`Region not found for country code: ${country_code}`)
-  }
-
-  if (cartId) {
-    try {
-      const cart = await retrieveCart({ cart_id: cartId, fields: "id,region_id,currency_code" });
-      if (cart) {
-        // Verifica se a region_id e currency_code batem
-        if (cart.region_id !== region.id || cart.currency_code !== region.currency_code) {
-          removeStoredCart();
-          cartId = undefined; // Invalida o carrinho incompatível
-        }
-      } else {
-        removeStoredCart();
-        cartId = undefined;
-      }
-    } catch (_e) {
-      if (isRecoverableStaleCartError(_e)) {
-        removeStoredCart();
-        cartId = undefined;
-      } else {
-        throw _e;
-      }
-    }
-  }
-
   if (!cartId) {
-    // Create new cart sem country_code solto, apenas region_id
-    const newCart = await createCart({ region_id: region.id })
-    cartId = newCart.id
-    setStoredCart(cartId)
+    const region = await getRegion({ country_code })
+  
+    if (!region) {
+      throw new Error(`Region not found for country code: ${country_code}`)
+    }
+    // Create new cart
+    cartId = (await createCart({ region_id: region.id })).id
   }
 
   if (!cartId) {
@@ -292,7 +266,7 @@ export const updateLineItem = async ({
  */
 export const deleteLineItem = async ({
   line_id,
-  fields = DEFAULT_CART_FIELDS,
+  // fields = DEFAULT_CART_FIELDS,
 }: {
   line_id: string;
   fields?: string;
@@ -303,11 +277,8 @@ export const deleteLineItem = async ({
     throw new Error("No cart found")
   }
 
-  // fields pass using Medusa v2.18 Client standard arguments
-  await sdk.client.fetch(`/store/carts/${cartId}/line-items/${line_id}`, {
-    method: "DELETE",
-    query: { fields },
-  })
+  // TODO pass fields when supported
+  await sdk.store.cart.deleteLineItem(cartId, line_id)
 }
 
 /**
