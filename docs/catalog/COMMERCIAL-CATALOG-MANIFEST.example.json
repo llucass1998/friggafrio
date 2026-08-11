@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "source": "omie",
+  "mode": "dry-run",
+  "expectedProductCount": 5,
+  "products": [],
+  "requiredApprovalFields": [
+    "product",
+    "price",
+    "inventory",
+    "fiscal",
+    "shipping"
+  ],
+  "productTemplate": {
+    "externalId": null,
+    "title": null,
+    "handle": null,
+    "category": null,
+    "tags": [],
+    "image": null,
+    "variants": [
+      {
+        "title": null,
+        "sku": null,
+        "externalId": null,
+        "weight": null,
+        "weightUnit": null,
+        "approvedPriceBRL": null,
+        "initialInventory": null,
+        "stockLocation": null,
+        "shippingProfile": null,
+        "commercialStatus": "QUOTE_ONLY"
+      }
+    ],
+    "approval": {
+      "product": false,
+      "price": false,
+      "inventory": false,
+      "fiscal": false,
+      "shipping": false
+    }
+  }
+}

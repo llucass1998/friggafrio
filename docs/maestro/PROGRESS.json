@@ -18,6 +18,16 @@
     "backup": 0,
     "observability": 0
   },
+  "phase5Discovery": {
+    "status": "partial",
+    "gate": "GATE-05-BLOCKED",
+    "integration": "structural-read-only",
+    "credentials": "unavailable",
+    "productsDiscovered": 0,
+    "catalogImported": false,
+    "sourceOfTruth": "unresolved",
+    "blocker": "OMIE credentials unavailable"
+  },
   "baselineGates": {
     "storefrontTypecheck": "fail:6",
     "backendTypecheck": "fail:24",
@@ -91,6 +101,21 @@
         "storefront typecheck, lint:0-errors-77-warnings, unit:14 and build PASS",
         "backend Jest detectOpenHandles PASS; forceExit removed",
         "diff check PASS; no tracked env or secrets"
+      ]
+    },
+    "GATE-05": {
+      "status": "blocked",
+      "date": "2026-08-11",
+      "evidence": [
+        "Omie client, reader, mapper and dry-run reconciliation added",
+        "Omie credentials unavailable; read-only connectivity not executed",
+        "candidate manifest is structural with zero commercial products",
+        "no Medusa catalog import performed"
+      ],
+      "blockers": [
+        "OMIE credentials unavailable",
+        "catalog/price/inventory source-of-truth unresolved",
+        "real approved commercial manifest unavailable"
       ]
     }
   },
@@ -252,6 +277,36 @@
         "factor-100 structured-price bug fixed"
       ],
       "commit": "CURRENT_PHASE_COMMIT"
+    },
+    "OMIE-P0-001": {
+      "id": "OMIE-P0-001",
+      "status": "completed",
+      "priority": "P0",
+      "agent": "MAESTRO",
+      "dependencies": ["GATE-04"],
+      "objective": "Provide a safe read-only Omie discovery layer without importing unapproved commercial data.",
+      "tests": [
+        "pnpm --dir apps/backend typecheck",
+        "pnpm --dir apps/backend test:unit",
+        "pnpm --dir apps/backend test:integration:http",
+        "pnpm --dir apps/storefront typecheck",
+        "pnpm --dir apps/storefront lint",
+        "pnpm --dir apps/storefront test:unit",
+        "pnpm --dir apps/storefront build"
+      ],
+      "acceptance": "Client is read-only, credentials are environment-only, incomplete products remain QUOTE_ONLY, and dry-run reconciliation performs no writes.",
+      "evidence": [
+        "backend typecheck PASS",
+        "backend unit PASS:11-suites-64-tests",
+        "backend HTTP integration PASS:1-suite-2-tests",
+        "storefront typecheck PASS",
+        "storefront lint PASS:0-errors-77-warnings",
+        "storefront unit PASS:14",
+        "storefront build PASS",
+        "no Omie credentials present; no Omie calls made",
+        "no catalog import or commercial database writes"
+      ],
+      "commit": "PENDING_PHASE_COMMIT"
     }
   }
 }
