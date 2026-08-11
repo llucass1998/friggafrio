@@ -1,3 +1,5 @@
+import { DEFAULT_CURRENCY_CODE, DEFAULT_LOCALE } from "@/config/commerce"
+
 export type FormatCurrencyParams = {
   amount: number | null | undefined
   currencyCode?: string
@@ -8,17 +10,18 @@ export type FormatCurrencyParams = {
 
 export const formatCurrencyAmount = ({
   amount,
-  currencyCode,
+  currencyCode = DEFAULT_CURRENCY_CODE,
   minimumFractionDigits = 2,
   maximumFractionDigits = 2,
-  locale = "pt-BR",
+  locale = DEFAULT_LOCALE,
 }: FormatCurrencyParams): string => {
   if (amount === null || amount === undefined) return "-"
-  if (!currencyCode) return "-"
+
+  const resolvedCurrencyCode = currencyCode.trim() || DEFAULT_CURRENCY_CODE
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: currencyCode.toUpperCase(),
+    currency: resolvedCurrencyCode.toUpperCase(),
     minimumFractionDigits,
     maximumFractionDigits,
   }).format(amount)

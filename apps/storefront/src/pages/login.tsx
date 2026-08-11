@@ -3,11 +3,12 @@ import { useNavigate, useParams, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LockClosedSolid } from "@medusajs/icons"
 import { GoogleLogin } from "@react-oauth/google"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
   const { login, loginWithGoogle } = useAuth()
 
   const [email, setEmail] = useState("")

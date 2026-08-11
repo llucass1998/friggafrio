@@ -26,6 +26,7 @@ import { formatOrderId } from "@/lib/utils/order"
 import { AddressFormData } from "@/lib/types/global"
 import { sdk } from "@/lib/medusa"
 import { useQuery } from "@tanstack/react-query"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 import {
   ShoppingBag,
   CurrencyDollar,
@@ -161,7 +162,7 @@ function CompanyAddressSelector({
 
 export default function OrderPaymentPage() {
   const params = useParams({ strict: false }) as { countryCode?: string; orderId?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
   const orderId = params.orderId || ""
   const { isAuthenticated, isLoading: authLoading, employee } = useAuth()
 

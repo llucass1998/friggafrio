@@ -5,6 +5,7 @@ import { useQuotes } from "../../../hooks/api/quotes";
 import { formatAmount } from "../../../utils";
 import QuoteStatusBadge from "./quote-status-badge";
 import { QueryQuote } from "../../../../types";
+import { DEFAULT_CURRENCY_CODE } from "../../../../lib/commerce-defaults";
 
 export const QuotesTable = () => {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export const QuotesTable = () => {
                   {quote.draft_order?.total != null
                     ? formatAmount(
                         quote.draft_order.total,
-                        quote.draft_order.currency_code || "USD"
+                        quote.draft_order.currency_code || DEFAULT_CURRENCY_CODE
                       )
                     : "-"}
                 </Text>

@@ -1,6 +1,7 @@
 import { getProductPrice } from "@/lib/utils/price"
 import { HttpTypes } from "@medusajs/types"
 import { LockClosedSolid } from "@medusajs/icons"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 export function LockedPrice({ className }: { className?: string }) {
   return (
@@ -10,7 +11,7 @@ export function LockedPrice({ className }: { className?: string }) {
         <span className="text-lg font-medium">Price available after sign in</span>
       </div>
       <a 
-        href="/us/account"
+        href={`/${DEFAULT_COUNTRY_CODE}/account`}
         className="text-sm text-accent hover:text-accent-hover underline"
       >
         Sign in to view pricing

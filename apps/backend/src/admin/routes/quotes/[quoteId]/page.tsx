@@ -27,6 +27,7 @@ import {
   QuoteTotal,
 } from "../components/quote-details";
 import { QuoteMessages } from "../components/quote-messages";
+import { DEFAULT_CURRENCY_CODE } from "../../../../lib/commerce-defaults";
 
 const QuoteDetails = () => {
   const { quoteId } = useParams();
@@ -227,7 +228,8 @@ console.log("preview", preview)
                 {customer?.employee?.spending_limit != null
                   ? formatAmount(
                       customer.employee.spending_limit,
-                      (customer.employee.company?.currency_code as string) || "USD"
+                      (customer.employee.company?.currency_code as string) ||
+                        DEFAULT_CURRENCY_CODE
                     )
                   : "-"}
               </Text>

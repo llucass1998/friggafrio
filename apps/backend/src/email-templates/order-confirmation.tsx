@@ -11,6 +11,7 @@ import {
   Hr,
 } from "@react-email/components";
 import { styles } from "./styles";
+import { DEFAULT_CURRENCY_CODE } from "../lib/commerce-defaults";
 
 interface OrderItem {
   title: string;
@@ -51,15 +52,15 @@ export default function OrderConfirmation({
   displayId = 10035,
   email = "test@example.com",
   createdAt = "2025-10-11T08:51:41.106Z",
-  currencyCode = "EUR",
+  currencyCode = DEFAULT_CURRENCY_CODE,
   shippingAddress = {
     first_name: "Tony",
     last_name: "Stark",
-    address_1: "10880 Malibu Point, 90265",
+    address_1: "Endereco de exemplo",
     address_2: "",
-    postal_code: "90265",
-    city: "Malibu",
-    country_code: "US",
+    postal_code: "00000-000",
+    city: "Sao Paulo",
+    country_code: "BR",
   },
   items = [
     {

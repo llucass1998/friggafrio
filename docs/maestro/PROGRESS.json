@@ -5,7 +5,7 @@
   "phases": {
     "typescript": 100,
     "quality": 100,
-    "brRegion": 0,
+    "brRegion": 100,
     "database": 0,
     "catalog": 0,
     "checkout": 0,
@@ -42,7 +42,7 @@
     },
     "GATE-02": {
       "status": "pass",
-      "commit": null,
+      "commit": "5d571c5619a1f0b19ede2fbff3845e7c2f4ececf",
       "date": "2026-08-10",
       "evidence": [
         "storefront typecheck PASS",
@@ -53,6 +53,25 @@
         "backend unit PASS:8-suites-34-tests",
         "diff check PASS",
         "new suppressions PASS:0"
+      ]
+    },
+    "GATE-03": {
+      "status": "pass",
+      "commit": "CURRENT_PHASE_COMMIT",
+      "date": "2026-08-10",
+      "evidence": [
+        "medusa version PASS:2.18.0",
+        "brazil country contract PASS:br",
+        "currency contract PASS:brl-BRL",
+        "locale contract PASS:pt-BR",
+        "sequential seed idempotency PASS:pure-plan-tests",
+        "storefront typecheck PASS",
+        "backend typecheck PASS",
+        "storefront lint PASS:0-errors-77-warnings",
+        "storefront build PASS",
+        "storefront unit PASS:14",
+        "backend unit PASS:9-suites-46-tests",
+        "diff check PASS"
       ]
     }
   },
@@ -133,7 +152,7 @@
         "functional failures:0",
         "residual warning:forceExit-open-handle"
       ],
-      "commit": null
+      "commit": "5d571c5619a1f0b19ede2fbff3845e7c2f4ececf"
     },
     "FE-P0-003": {
       "id": "FE-P0-003",
@@ -150,7 +169,7 @@
         "storefront typecheck PASS",
         "storefront unit PASS:7"
       ],
-      "commit": null
+      "commit": "5d571c5619a1f0b19ede2fbff3845e7c2f4ececf"
     },
     "FE-P0-004": {
       "id": "FE-P0-004",
@@ -168,7 +187,52 @@
         "storefront build PASS",
         "storefront unit PASS:7"
       ],
-      "commit": null
+      "commit": "5d571c5619a1f0b19ede2fbff3845e7c2f4ececf"
+    },
+    "BE-P1-001": {
+      "id": "BE-P1-001",
+      "status": "completed",
+      "priority": "P0",
+      "agent": "BACKEND",
+      "dependencies": ["GATE-02"],
+      "objective": "Configure reproducible Brazil, BRL, Region, Store, and Sales Channel defaults with Medusa V2 workflows.",
+      "tests": [
+        "pnpm --dir apps/backend typecheck",
+        "pnpm --dir apps/backend test:unit"
+      ],
+      "acceptance": "Brazil and BRL defaults are conflict-aware, non-destructive, and sequentially idempotent without requiring a real database in Phase 3.",
+      "evidence": [
+        "medusa version:2.18.0",
+        "backend typecheck PASS",
+        "backend unit PASS:9-suites-46-tests",
+        "seed uses Medusa V2 workflows",
+        "additional region/store relations preserved",
+        "foreign commerce fallbacks removed"
+      ],
+      "commit": "CURRENT_PHASE_COMMIT"
+    },
+    "FE-P1-001": {
+      "id": "FE-P1-001",
+      "status": "completed",
+      "priority": "P0",
+      "agent": "FRONTEND",
+      "dependencies": ["BE-P1-001"],
+      "objective": "Centralize Brazil, BRL, and pt-BR storefront defaults and reject foreign or ambiguous region resolution.",
+      "tests": [
+        "pnpm --dir apps/storefront typecheck",
+        "pnpm --dir apps/storefront lint",
+        "pnpm --dir apps/storefront build",
+        "pnpm --dir apps/storefront test:unit"
+      ],
+      "acceptance": "The storefront resolves exactly one BRL Brazil region, formats Medusa V2 money directly, and has no foreign country default.",
+      "evidence": [
+        "storefront typecheck PASS",
+        "storefront lint PASS:0-errors-77-warnings",
+        "storefront build PASS",
+        "storefront unit PASS:14",
+        "factor-100 structured-price bug fixed"
+      ],
+      "commit": "CURRENT_PHASE_COMMIT"
     }
   }
 }

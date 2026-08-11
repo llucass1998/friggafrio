@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare } from "@medusajs/icons"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null
@@ -408,7 +409,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
     city: "",
     province: "",
     postal_code: "",
-    country_code: "us",
+    country_code: DEFAULT_COUNTRY_CODE,
     phone: "",
     is_default_shipping: false,
     is_default_billing: false,
@@ -832,18 +833,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white"
                 >
                   <option value="">Select country</option>
-                  <option value="us">United States</option>
-                  <option value="ca">Canada</option>
-                  <option value="gb">United Kingdom</option>
-                  <option value="de">Germany</option>
-                  <option value="fr">France</option>
-                  <option value="it">Italy</option>
-                  <option value="es">Spain</option>
-                  <option value="au">Australia</option>
-                  <option value="nl">Netherlands</option>
-                  <option value="se">Sweden</option>
-                  <option value="dk">Denmark</option>
-                  <option value="no">Norway</option>
+                  <option value={DEFAULT_COUNTRY_CODE}>Brasil</option>
                 </select>
               </div>
               <div>
@@ -942,7 +932,7 @@ export default function SettingsPage() {
     city: "",
     state: "",
     postal_code: "",
-    country_code: "",
+    country_code: DEFAULT_COUNTRY_CODE,
     logo_url: null,
   })
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -978,7 +968,7 @@ export default function SettingsPage() {
         city: companyData.city || "",
         state: companyData.state || "",
         postal_code: companyData.postal_code || "",
-        country_code: companyData.country_code || "",
+        country_code: DEFAULT_COUNTRY_CODE,
         logo_url: companyData.logo_url || null,
       })
     }
@@ -1015,7 +1005,7 @@ export default function SettingsPage() {
           city: data.city || null,
           state: data.state || null,
           postal_code: data.postal_code || null,
-          country_code: data.country_code || null,
+          country_code: DEFAULT_COUNTRY_CODE,
           logo_url: data.logo_url || null,
         },
       })
@@ -1126,7 +1116,7 @@ export default function SettingsPage() {
         city: companyData.city || "",
         state: companyData.state || "",
         postal_code: companyData.postal_code || "",
-        country_code: companyData.country_code || "",
+        country_code: DEFAULT_COUNTRY_CODE,
         logo_url: companyData.logo_url || null,
       })
     }
@@ -1504,15 +1494,14 @@ export default function SettingsPage() {
                       País Code
                     </label>
                     {isEditingCompany ? (
-                      <input
-                        type="text"
+                      <select
                         id="country_code"
                         value={companyFormData.country_code}
                         onChange={(e) => setCompanyFormData({ ...companyFormData, country_code: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                        placeholder="e.g., US"
-                        maxLength={2}
-                      />
+                      >
+                        <option value={DEFAULT_COUNTRY_CODE}>Brasil</option>
+                      </select>
                     ) : (
                       <p className="px-4 py-2.5 text-slate-900">
                         {companyData?.country_code?.toUpperCase() || <span className="text-slate-400">Not set</span>}

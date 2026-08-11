@@ -1,5 +1,7 @@
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router"
 import { listRegions } from "@/lib/data/regions"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { resolveStoreRegion } from "@/lib/utils/region"
 
 export const Route = createFileRoute("/$countryCode")({
   loader: async ({ params, context }) => {
@@ -12,19 +14,13 @@ export const Route = createFileRoute("/$countryCode")({
       queryFn: () => listRegions({ fields: "currency_code, *countries" }),
     })
 
-    // Check if country code is valid
-    const isValidCountry = regions.some(
-      region => region.countries?.some(
-        country => country.iso_2 === countryCode.toLowerCase()
-      )
-    )
-
-    if (!isValidCountry) {
-      throw notFound() // Show 404 for invalid countries
+    if (countryCode.toLowerCase() !== DEFAULT_COUNTRY_CODE) {
+      throw notFound()
     }
 
-    // Valid country - proceed to child routes
-    return { countryCode }
+    resolveStoreRegion(regions, countryCode)
+
+    return { countryCode: DEFAULT_COUNTRY_CODE }
   },
   component: () => <Outlet />,
 })

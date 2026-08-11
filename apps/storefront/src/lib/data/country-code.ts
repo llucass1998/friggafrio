@@ -1,5 +1,10 @@
 import { listRegions } from "@/lib/data/regions"
-import { COUNTRY_CODE_KEY, getDefaultCountryCode } from "@/lib/utils/region"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import {
+  COUNTRY_CODE_KEY,
+  getDefaultCountryCode,
+  isStoreCountryCode,
+} from "@/lib/utils/region"
 import { createServerFn } from "@tanstack/react-start"
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server"
 
@@ -17,7 +22,7 @@ export const getStoredCountryCode = createServerFn().handler(async () => {
     countryCode = countryCodeCookie?.split("=")[1]
   }
 
-  if (!countryCode) {
+  if (!isStoreCountryCode(countryCode)) {
     const maxAge = 60 * 60 * 24 * 365 // 1 year in seconds
 
     const regions = await listRegions()
@@ -29,11 +34,5 @@ export const getStoredCountryCode = createServerFn().handler(async () => {
     )
   }
 
-  if (!countryCode) {
-    throw new Error(
-      "Default region not found. Please set a default region in the admin panel."
-    )
-  }
-
-  return { countryCode }
+  return { countryCode: DEFAULT_COUNTRY_CODE }
 })

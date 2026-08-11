@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner"
 import type { Quote } from "@/lib/data/quotes"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
+import { DEFAULT_COUNTRY_CODE, DEFAULT_CURRENCY_CODE } from "@/config/commerce"
 
 function formatCurrency(
   amount: number | null | undefined,
@@ -100,7 +101,7 @@ function QuoteDetailModal({
   const cart = quote.cart
   const draftOrder = quote.draft_order
   const orderPreview = quoteWithPreview?.order_preview
-  const currencyCode = draftOrder?.currency_code || "usd"
+  const currencyCode = draftOrder?.currency_code || DEFAULT_CURRENCY_CODE
 
   // Build a map of original prices from cart items (what customer originally requested)
   const originalPriceMap = new Map<string, { unit_price: number; total: number }>()
@@ -358,7 +359,7 @@ function QuoteDetailModal({
 
 export default function QuotesPage() {
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading, employee } = useAuth()
   const isAdmin = employee?.is_admin === true
@@ -571,7 +572,7 @@ export default function QuotesPage() {
                   const StatusIcon = statusConfig.icon
                   const itemCount = quote.draft_order?.items?.length || 0
                   const currencyCode =
-                    quote.draft_order?.currency_code || "usd"
+                    quote.draft_order?.currency_code || DEFAULT_CURRENCY_CODE
                   
                   // Calculate savings: cart (original request) vs final quoted price
                   // For pending_customer: use order_preview (admin's offer)

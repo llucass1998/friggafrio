@@ -20,6 +20,7 @@ import {
 } from "@medusajs/icons"
 import type { HttpTypes } from "@medusajs/types"
 import { paymentAvailability } from "@/lib/config/payment-availability"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 function formatDate(dateValue: string | Date | undefined | null): string {
   if (!dateValue) return "-"
@@ -412,7 +413,7 @@ export default function OrdersPage() {
         // Clear the search param after opening
         navigate({
           to: "/$countryCode/account/orders",
-          params: { countryCode: countryCode || "us" },
+          params: { countryCode: countryCode || DEFAULT_COUNTRY_CODE },
           search: {},
           replace: true,
         })
@@ -427,7 +428,7 @@ export default function OrdersPage() {
       // Navigate to the review step of checkout
       navigate({
         to: "/$countryCode/checkout",
-        params: { countryCode: countryCode || "us" },
+        params: { countryCode: countryCode || DEFAULT_COUNTRY_CODE },
         search: { step: CheckoutStepKey.REVIEW },
       })
     } catch (error) {
@@ -643,7 +644,7 @@ export default function OrdersPage() {
       {selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}
-          countryCode={countryCode || "us"}
+          countryCode={countryCode || DEFAULT_COUNTRY_CODE}
           onClose={() => setSelectedOrder(null)}
           onReorder={handleReorder}
           isReordering={reorderingId === selectedOrder.id}

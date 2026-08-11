@@ -2,6 +2,7 @@ import { listProducts, retrieveProduct } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sanitize } from "@/lib/utils/sanitize"
+import { formatMoneyAmountForStructuredData } from "@/lib/utils/price"
 import ProductDetails from "@/pages/product"
 import { HttpTypes } from "@medusajs/types"
 import { createFileRoute, notFound } from "@tanstack/react-router"
@@ -87,6 +88,9 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       }
     }
 
+    const structuredPrice =
+      product.variants?.[0]?.calculated_price?.calculated_amount
+
     // Create structured data for SEO
     const structuredData = {
       "@context": "https://schema.org",
@@ -102,8 +106,8 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         "@type": "Offer",
         availability: "https://schema.org/InStock",
         priceCurrency: region?.currency_code?.toUpperCase(),
-        price: (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== null && (product.variants as any)?.[0]?.calculated_price?.calculated_amount !== undefined
-          ? ((product.variants as any)[0].calculated_price.calculated_amount / 100).toFixed(2)
+        price: structuredPrice !== null && structuredPrice !== undefined
+          ? formatMoneyAmountForStructuredData(structuredPrice)
           : undefined,
       },
     }

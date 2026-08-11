@@ -1,5 +1,6 @@
 import { isEmpty } from "@/lib/utils/validation"
 import { HttpTypes } from "@medusajs/types"
+import { DEFAULT_CURRENCY_CODE, DEFAULT_LOCALE } from "@/config/commerce"
 
 // ============ FORMAT PRICE ============
 
@@ -13,19 +14,30 @@ type FormatPriceParams = {
 
 export const formatPrice = ({
   amount,
-  currency_code = "BRL",
+  currency_code = DEFAULT_CURRENCY_CODE,
   minimumFractionDigits,
   maximumFractionDigits,
-  locale = "pt-BR",
+  locale = DEFAULT_LOCALE,
 }: FormatPriceParams): string => {
-  return currency_code && !isEmpty(currency_code)
-    ? new Intl.NumberFormat(locale, {
-        style: "currency",
-        currency: currency_code,
-        minimumFractionDigits,
-        maximumFractionDigits,
-      }).format(amount)
-    : amount.toString()
+  const resolvedCurrencyCode =
+    currency_code && !isEmpty(currency_code)
+      ? currency_code.toUpperCase()
+      : DEFAULT_CURRENCY_CODE
+
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: resolvedCurrencyCode,
+    minimumFractionDigits,
+    maximumFractionDigits,
+  }).format(amount)
+}
+
+export const formatMoneyAmountForStructuredData = (amount: number): string => {
+  if (!Number.isFinite(amount)) {
+    throw new Error("Structured money amount must be finite")
+  }
+
+  return amount.toFixed(2)
 }
 
 // ============ PERCENTAGE DIFF ============

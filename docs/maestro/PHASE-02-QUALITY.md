@@ -2,7 +2,8 @@
 
 Status: PASS
 Date: 2026-08-10
-Commit: pending cohesive Phase 2 commit
+Commit: `5d571c5619a1f0b19ede2fbff3845e7c2f4ececf`
+Author: Lucas <llucass_souza@hotmail.com>
 
 ## Scope
 
@@ -29,6 +30,7 @@ Final backend result:
 - 34/34 tests passed.
 - 0 bootstrap/configuration failures.
 - 0 functional test failures.
+- The ninth file from the old discovery count is `integration-tests/http/health.spec.ts`; it is an HTTP integration suite, not a unit suite, and is now selected only by `test:integration:http`.
 - No business bug was exposed by the stabilized unit suites.
 - Residual risk: Jest still reports the existing `--forceExit` open-handle warning.
 - HTTP integration was not run because it requires `TEST_DATABASE_URL`; real database work remains outside Phase 2.

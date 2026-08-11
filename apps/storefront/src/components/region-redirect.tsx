@@ -6,6 +6,8 @@ import {
   getCountryCodeFromPath,
   getDefaultCountryCode,
   getStoredCountryCode,
+  isStoreCountryCode,
+  resolveStoreRegion,
   setStoredCountryCode,
 } from "@/lib/utils/region"
 import { useLocation, useNavigate } from "@tanstack/react-router"
@@ -31,7 +33,7 @@ const RegionRedirect = ({
   const [is404, setIs404] = useState(false)
 
   useEffect(() => {
-    if (isLoadingRegions) return
+    if (isLoadingRegions || createCartMutation.isPending) return
 
     const handleRegionRedirect = async () => {
       try {
@@ -39,53 +41,44 @@ const RegionRedirect = ({
         const urlCountryCode = getCountryCodeFromPath(currentPath)
         let countryCode: string | undefined = urlCountryCode
 
-        if (countryCode) {
-          const isValidCountryCode = regions.some((r) =>
-            r.countries?.some((c) => c.iso_2 === countryCode)
-          )
+        if (isStoreCountryCode(countryCode)) {
+          const region = resolveStoreRegion(regions, countryCode)
 
-          if (isValidCountryCode) {
+          if (region) {
             setStoredCountryCode(countryCode!)
             const cartId = getStoredCart()
 
             if (!cartId) {
-              const region = regions.find((r) =>
-                r.countries?.some((c) => c.iso_2 === countryCode)
-              )
-
-              if (region) {
-                createCartMutation.mutate({ region_id: region.id })
-              }
+              await createCartMutation.mutateAsync({ region_id: region.id })
             }
 
             return
           }
         }
 
-        countryCode = getStoredCountryCode() || getDefaultCountryCode(regions)
+        const storedCountryCode = getStoredCountryCode()
+        countryCode = isStoreCountryCode(storedCountryCode)
+          ? storedCountryCode
+          : getDefaultCountryCode(regions)
 
         if (countryCode) {
           setStoredCountryCode(countryCode)
           const newPath = buildPathWithCountryCode(currentPath, countryCode)
 
-          navigate({ to: newPath, replace: true })
-
           const cartId = getStoredCart()
 
           if (!cartId) {
-            const region = regions.find((r) =>
-              r.countries?.some((c) => c.iso_2 === countryCode)
-            )
-
-            if (region) {
-              createCartMutation.mutate({ region_id: region.id })
-            }
+            const region = resolveStoreRegion(regions, countryCode)
+            await createCartMutation.mutateAsync({ region_id: region.id })
           }
+
+          navigate({ to: newPath, replace: true })
         } else {
           setIs404(true)
         }
-      } catch {
-        // Continue rendering even if region detection fails
+      } catch (error) {
+        console.error("[RegionRedirect] Failed to resolve the Brazil storefront region.", error)
+        setIs404(true)
       }
     }
 
@@ -96,6 +89,8 @@ const RegionRedirect = ({
     navigate,
     regions,
     isLoadingRegions,
+    createCartMutation.isPending,
+    createCartMutation.mutateAsync,
     createCartMutation,
   ])
 

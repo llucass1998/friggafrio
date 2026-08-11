@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router"
 import { ShoppingBag, MagnifyingGlass, User, XMark } from "@medusajs/icons"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 // Simple hamburger menu icon
 function MenuIcon({ className }: { className?: string }) {
@@ -20,7 +21,7 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false)
 
   const itemCount = getCartItemCount(cart?.items)
-  const countryCode = (params as { countryCode?: string })?.countryCode || "us"
+  const countryCode = (params as { countryCode?: string })?.countryCode || DEFAULT_COUNTRY_CODE
 
   return (
     <>

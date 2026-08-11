@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
 import { User, BuildingsSolid } from "@medusajs/icons"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 interface FormData {
   first_name: string
@@ -15,7 +16,7 @@ interface FormData {
 export default function AcceptInvitePage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
   const search = useSearch({ strict: false }) as { token?: string; email?: string; company?: string }
   const { token, email, company } = search
 

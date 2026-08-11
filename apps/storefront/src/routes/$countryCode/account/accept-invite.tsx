@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 import AcceptInvitePage from "@/pages/accept-invite"
 import { sdk } from "@/lib/medusa"
 
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/$countryCode/account/accept-invite")({
     try {
       await sdk.store.customer.retrieve()
       // If successful, user is already logged in
-      throw redirect({ to: "/$countryCode", params: { countryCode: "us" } })
+      throw redirect({ to: "/$countryCode", params: { countryCode: DEFAULT_COUNTRY_CODE } })
     } catch (error: any) {
       // Re-throw redirect
       if (error?.to) throw error

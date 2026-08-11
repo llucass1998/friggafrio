@@ -9,6 +9,7 @@ import { validateQuoteCanAcceptStep } from "./steps/validate-quote-can-accept"
 import { validateSpendingLimitStep } from "./steps/validate-spending-limit"
 import { QuoteStatus } from "../modules/quote/models/quote"
 import { updateQuotesStep } from "./steps/update-quotes"
+import { DEFAULT_CURRENCY_CODE } from "../lib/commerce-defaults"
 
 type WorkflowInput = {
   quote_id: string
@@ -43,7 +44,8 @@ export const customerAcceptQuoteWorkflow = createWorkflow(
     const spendingLimitInput = transform({ quotes, input }, ({ quotes, input }) => ({
       customer_id: input.customer_id,
       order_total: Number(quotes[0].draft_order?.total) || 0,
-      currency_code: quotes[0].draft_order?.currency_code || "usd",
+      currency_code:
+        quotes[0].draft_order?.currency_code || DEFAULT_CURRENCY_CODE,
     }))
 
     validateSpendingLimitStep(spendingLimitInput)

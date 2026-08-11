@@ -2,6 +2,7 @@ import { Link, useLoaderData } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
 import { ProductCard } from "@/components/product-card"
 import { ChevronRight } from "@medusajs/icons"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 interface CategoryPageData {
   category: HttpTypes.StoreProductCategory
@@ -12,7 +13,7 @@ interface CategoryPageData {
 
 export function CategoryPage() {
   const loaderData = useLoaderData({ strict: false }) as CategoryPageData | undefined
-  const { category, products = [], region, countryCode = "us" } = loaderData || {}
+  const { category, products = [], region, countryCode = DEFAULT_COUNTRY_CODE } = loaderData || {}
 
   if (!category) {
     return (

@@ -7,6 +7,11 @@ import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu"
 import { PencilSquare, ChevronUpMini, ChevronDownMini, ArrowLeftMini, ArrowRightMini, XMark, CheckMini, MagnifyingGlassMini, Plus, EnvelopeSolid, Clock, Users, ArrowPath, SquareTwoStack } from "@medusajs/icons"
 import { toast } from "sonner"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
+import {
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_CURRENCY_CODE,
+  DEFAULT_LOCALE,
+} from "@/config/commerce"
 
 type Tab = "employees" | "invites"
 
@@ -15,7 +20,7 @@ type SortOrder = "asc" | "desc"
 
 function formatCurrency(amount: number | null): string {
   if (amount === null) return "Ilimitado"
-  return formatCurrencyAmount({ amount, currencyCode: "BRL" })
+  return formatCurrencyAmount({ amount, currencyCode: DEFAULT_CURRENCY_CODE })
 }
 
 function SortIcon({ field, currentField, order }: { field: SortField; currentField: SortField; order: SortOrder }) {
@@ -90,10 +95,10 @@ function EditSpendingLimitModal({ employee, onClose, onSave, isSaving }: EditMod
             {!isUnlimited && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Spending Limit (USD)
+                  Spending Limit (BRL)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
                   <input
                     type="number"
                     value={limitValue}
@@ -215,10 +220,10 @@ function InviteEmployeeModal({ onClose, onInvite, isInviting, error }: InviteMod
               {!isUnlimited && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Spending Limit (USD)
+                    Spending Limit (BRL)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
                     <input
                       type="number"
                       value={limitValue}
@@ -280,7 +285,7 @@ function InviteEmployeeModal({ onClose, onInvite, isInviting, error }: InviteMod
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -448,7 +453,7 @@ function InvitesTab({ invites, isLoading, onResend, resendingId, companyName }: 
 
 export default function EmployeesPage() {
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
   const navigate = useNavigate()
   const { isAdmin, isLoading: authLoading, employee } = useAuth()
   const queryClient = useQueryClient()

@@ -5,6 +5,7 @@ import { Thumbnail } from "@/components/ui/thumbnail"
 import { isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { formatOrderId } from "@/lib/utils/order"
 import { HttpTypes } from "@medusajs/types"
+import { DEFAULT_LOCALE } from "@/config/commerce"
 
 type OrderInfoProps = {
   order: HttpTypes.StoreOrder
@@ -23,7 +24,7 @@ export const OrderInfo = ({ order }: OrderInfoProps) => {
       <div className="flex gap-2 items-center">
         <span className="text-base font-semibold text-zinc-900">Order Date:</span>
         <span className="text-sm text-zinc-600">
-          {new Date(order.created_at!).toLocaleDateString("en-US", {
+          {new Date(order.created_at!).toLocaleDateString(DEFAULT_LOCALE, {
             month: "short",
             day: "numeric",
             year: "numeric",

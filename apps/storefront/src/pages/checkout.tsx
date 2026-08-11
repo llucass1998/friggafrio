@@ -12,6 +12,7 @@ import {
   useParams,
 } from "@tanstack/react-router"
 import { lazy, Suspense, useCallback, useEffect, useMemo } from "react"
+import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 
 const DeliveryStep = lazy(() => import("@/components/checkout-delivery-step"))
 const AddressStep = lazy(() => import("@/components/checkout-address-step"))
@@ -25,7 +26,7 @@ function CheckoutSetupBlocker({
   setupStatus: { steps: { key: string; label: string; completed: boolean; required_for_checkout: boolean }[] }
 }) {
   const params = useParams({ strict: false }) as { countryCode?: string }
-  const countryCode = params.countryCode || "us"
+  const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
 
   const missing = setupStatus.steps
     .filter((s) => !s.completed && s.required_for_checkout)
