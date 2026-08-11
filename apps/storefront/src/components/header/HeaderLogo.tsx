@@ -31,7 +31,7 @@ export function HeaderLogo({ compact = false }: HeaderLogoProps) {
         </div>
       ) : (
         <img
-          src="/images/brand/frigga-frio-logo.png"
+          src="/images/brand/logo-friggafrio-optimized.webp"
           alt="FriggaFrio — Refrigeração e Ar Condicionado"
           className="h-[70px] sm:h-[80px] md:h-[90px] w-auto object-contain"
           loading="eager"

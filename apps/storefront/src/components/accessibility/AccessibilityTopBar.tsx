@@ -43,7 +43,7 @@ export function AccessibilityTopBar() {
             Vendas: {phoneFormatted}
           </a>
           <a 
-            href="/br/store"
+            href="/ajuda"
             className="hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
           >
             Central de Ajuda

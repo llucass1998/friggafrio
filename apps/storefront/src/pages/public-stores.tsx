@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { storeLocations } from "@/config/store-locations"
 import { storeConfig } from "@/config/store"
+import { COMPANY_INFORMATION } from "@/config/company"
 import { GoogleStoreMap } from "@/components/store-locations/GoogleStoreMap"
 import { StoreStreetView } from "@/components/store-locations/StoreStreetView"
 import { StoreLocationCard } from "@/components/store-locations/StoreLocationCard"
@@ -51,6 +52,8 @@ export function PublicStoresPage() {
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
             name: activeLocation.name,
+            legalName: COMPANY_INFORMATION.legalName,
+            taxID: COMPANY_INFORMATION.cnpj,
             url: `https://www.friggafrio.com.br/nossa-loja?unidade=${activeLocation.id}`,
             telephone: storeConfig.phone,
             email: storeConfig.email,
@@ -98,16 +101,16 @@ export function PublicStoresPage() {
                 <span className="mx-2">/</span>
               </li>
               <li>
-                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossas lojas</span>
+                <span className="text-[var(--color-text)] font-semibold" aria-current="page">Nossa Loja</span>
               </li>
             </ol>
           </nav>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--color-navy)] mb-6">
-            Nossas lojas
+            Nossa Loja
           </h1>
           <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
-            Encontre a unidade FriggaFrio mais próxima e conheça nossos canais de atendimento para produtos de refrigeração e climatização.
+            Encontre nossa unidade FriggaFrio e conheça nossos canais de atendimento para produtos de refrigeração e climatização.
           </p>
         </div>
       </div>
@@ -208,7 +211,7 @@ export function PublicStoresPage() {
               </div>
               <h3 className="text-lg font-bold text-[var(--color-navy)] mb-3">Confirme a unidade</h3>
               <p className="text-[var(--color-text-muted)] leading-relaxed">
-                Alguns produtos podem estar disponíveis em apenas uma das lojas.
+                Alguns produtos podem estar disponíveis apenas na unidade atual.
               </p>
             </div>
           </div>

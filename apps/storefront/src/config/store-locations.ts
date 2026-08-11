@@ -70,7 +70,7 @@ export const storeLocations: StoreLocation[] = [
     // placeId: "ChI...", //TODO: Obter do Google
     phone: "(11) 4580-1227",
     whatsapp: "5511948777156",
-    active: true,
+    active: false,
     order: 2,
   },
 ]

@@ -1,5 +1,6 @@
 import { MapPin, Phone, MessageSquare, Navigation, Map } from "lucide-react"
 import { StoreLocation } from "@/config/store-locations"
+import { COMPANY_INFORMATION } from "@/config/company"
 import { GooglePlacePhoto } from "@/components/store-locations/GooglePlacePhoto"
 
 interface StoreLocationCardProps {
@@ -82,6 +83,7 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
             <p className="font-medium text-[var(--color-text)]">{location.addressLine}</p>
             <p>{location.district} — {location.city}/{location.stateCode}</p>
             <p>CEP {location.postalCode}</p>
+            <p className="text-xs text-gray-500">CNPJ: {COMPANY_INFORMATION.cnpj}</p>
           </div>
 
           {location.phone && (
