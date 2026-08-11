@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { Search, ChevronDown, MessageCircle, Mail, MapPin } from "lucide-react"
+import { storeConfig } from "@/config/store"
 
 // Conteúdo inspirado na Dufrio (políticas e processos logísticos) mas 100% autoral na redação,
 // focado para a realidade B2B/B2C da FriggaFrio com foco em equipamentos pesados, gases e infraestrutura
@@ -229,7 +230,7 @@ export default function AjudaPage() {
               Nossa equipe de especialistas está pronta para te atender no WhatsApp e tirar todas as suas dúvidas técnicas e comerciais.
             </p>
             <a
-              href="https://wa.me/551145801227"
+              href={`https://wa.me/${storeConfig.whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-8 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-[var(--radius-button)] transition-transform hover:-translate-y-1 w-full sm:w-auto shadow-lg shadow-[#25D366]/20"

@@ -31,7 +31,7 @@ export function HeaderActions({ compact = false }: { compact?: boolean }) {
       <Link
         to={isAuthenticated ? ("/$countryCode/account" as string) : ("/$countryCode/account/login" as string)}
         params={{ countryCode }}
-        className="flex items-center gap-2 text-sm text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md p-1"
+        className="flex min-h-11 min-w-11 items-center gap-2 rounded-md p-1 text-sm text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         aria-label="Minha conta"
       >
         <User className="w-5 h-5 shrink-0 text-[var(--color-navy)]" aria-hidden="true" />
@@ -46,7 +46,7 @@ export function HeaderActions({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         onClick={openCart}
-        className="flex items-center gap-2 text-[var(--color-navy)] hover:text-[var(--color-primary)] transition-colors relative focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md p-1"
+        className="relative flex min-h-11 min-w-11 items-center gap-2 rounded-md p-1 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         aria-label={`Abrir carrinho com ${cartItemCount} ${cartItemCount === 1 ? "item" : "itens"}`}
       >
         <div className="relative">

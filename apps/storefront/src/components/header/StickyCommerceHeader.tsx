@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
-import { HeaderMobileDrawer } from "@/components/header/HeaderMobileDrawer"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 
 export function StickyCommerceHeader() {
@@ -23,15 +22,14 @@ export function StickyCommerceHeader() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-50 bg-[var(--color-background)] shadow-md border-b border-[var(--color-border)] transform transition-transform duration-300 ease-in-out ${
+      className={`fixed top-0 left-0 right-0 z-50 hidden bg-[var(--color-background)] shadow-md border-b border-[var(--color-border)] transform transition-transform duration-300 ease-in-out lg:block ${
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo & Mobile Menu */}
+          {/* Logo */}
           <div className="flex items-center gap-2">
-            <HeaderMobileDrawer />
             <HeaderLogo compact />
           </div>
 

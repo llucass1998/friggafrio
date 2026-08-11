@@ -16,7 +16,7 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
           type="text"
           placeholder="Busque por produto, gás, marca ou código"
           className={`w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-md pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all ${
-            compact ? "py-2" : "py-2.5"
+            compact ? "min-h-11 py-2" : "py-2.5"
           }`}
           aria-label="Busque por produto, gás, marca ou código"
         />

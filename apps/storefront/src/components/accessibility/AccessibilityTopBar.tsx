@@ -35,7 +35,7 @@ export function AccessibilityTopBar() {
         {/* Right Side: Contact / Help */}
         <div className="hidden md:flex items-center gap-6 text-[var(--color-navy)] font-medium">
           <a 
-            href={`https://wa.me/55${storeConfig.phone.replace(/\D/g, "")}`}
+            href={`https://wa.me/${storeConfig.whatsappNumber}`}
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
