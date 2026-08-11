@@ -1,15 +1,20 @@
-import { MapPin, Phone, MessageSquare, Navigation, Map } from "lucide-react"
+import { useState } from "react"
+import { Eye, MapPin, MessageSquare, Navigation, Phone } from "lucide-react"
 import { StoreLocation } from "@/config/store-locations"
 import { COMPANY_INFORMATION } from "@/config/company"
 import { GooglePlacePhoto } from "@/components/store-locations/GooglePlacePhoto"
+import { GoogleStoreMap } from "@/components/store-locations/GoogleStoreMap"
+import { StoreStreetView } from "@/components/store-locations/StoreStreetView"
 
 interface StoreLocationCardProps {
   location: StoreLocation
-  isSelected?: boolean
-  onSelect?: () => void
 }
 
-export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocationCardProps) {
+type LocationView = "map" | "streetview"
+
+export function StoreLocationCard({ location }: StoreLocationCardProps) {
+  const [activeView, setActiveView] = useState<LocationView>("map")
+
   const handleWhatsapp = () => {
     const text = encodeURIComponent(
       `Olá! Gostaria de falar com a equipe da FriggaFrio sobre a unidade da ${location.addressLine}.`
@@ -18,127 +23,123 @@ export function StoreLocationCard({ location, isSelected, onSelect }: StoreLocat
   }
 
   const handleDirections = () => {
-    let url = `https://www.google.com/maps/dir/?api=1`
-    if (location.placeId) {
-      url += `&destination=Place+ID:${location.placeId}`
-    } else {
-      const addressString = `${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`
-      url += `&destination=${encodeURIComponent(addressString)}`
-    }
+    const url = location.placeId
+      ? `https://www.google.com/maps/dir/?api=1&destination=Place+ID:${location.placeId}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
+
     window.open(url, "_blank", "noopener,noreferrer")
   }
 
   return (
-    
-    <div
-      onClick={(e) => {
-                e.stopPropagation()
-                if (onSelect) onSelect()
-              }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          if (onSelect) onSelect()
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-pressed={isSelected}
-      className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 border-2 cursor-pointer
-        motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]
-        ${isSelected 
-          ? "border-[var(--color-primary)] ring-4 ring-[var(--color-primary)]/10 shadow-md" 
-          : "border-[#E5EDF4] hover:border-[var(--color-primary)]/50 hover:shadow-xl hover:-translate-y-2"}
-      `}
+    <article
+      data-testid="store-location-card"
+      className="w-full overflow-hidden rounded-3xl border border-[#E5EDF4] bg-white shadow-sm"
     >
+      <header className="border-b border-[#E5EDF4] px-6 py-6 md:px-8 lg:px-10">
+        <h2 className="text-2xl font-bold text-[var(--color-navy)] md:text-3xl">{location.name}</h2>
+        <p className="mt-2 flex items-center gap-2 text-[var(--color-text-muted)]">
+          <MapPin className="h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden="true" />
+          <span>{location.addressLine} - {location.district}</span>
+        </p>
+      </header>
 
-      {/* Top Image Section */}
-      <div className="w-full aspect-video relative bg-[#F5F8FA]">
-        {location.ownImageSrc ? (
-          <img
-            src={location.ownImageSrc}
-            alt={location.ownImageAlt || `Fachada da ${location.name}`}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <GooglePlacePhoto location={location} />
-        )}
-        
-        {isSelected && (
-          <div className="absolute top-4 right-4 bg-[var(--color-primary)] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" />
-            Unidade selecionada
-          </div>
-        )}
-      </div>
-
-      {/* Content Section */}
-      <div className="p-6 md:p-8 flex-1 flex flex-col">
-        <h3 className="text-xl md:text-2xl font-bold text-[var(--color-navy)] mb-4">
-          {location.name}
-        </h3>
-
-        <div className="space-y-4 mb-6 flex-1 text-[var(--color-text-muted)]">
-          <div>
-            <p className="font-medium text-[var(--color-text)]">{location.addressLine}</p>
-            <p>{location.district} — {location.city}/{location.stateCode}</p>
-            <p>CEP {location.postalCode}</p>
-            <p className="text-xs text-gray-500">CNPJ: {COMPANY_INFORMATION.cnpj}</p>
+      <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-10 lg:p-10">
+        <div className="flex min-w-0 flex-col">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F5F8FA]">
+            {location.ownImageSrc ? (
+              <img
+                src={location.ownImageSrc}
+                alt={location.ownImageAlt || `Fachada da ${location.name}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <GooglePlacePhoto location={location} />
+            )}
           </div>
 
-          {location.phone && (
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-[var(--color-primary)]" />
-              <span>Telefone: <strong>{location.phone}</strong></span>
+          <div className="flex flex-1 flex-col pt-6">
+            <h3 className="text-lg font-bold text-[var(--color-navy)]">Informações da loja</h3>
+            <div className="mt-4 space-y-3 text-[var(--color-text-muted)]">
+              <div>
+                <p className="font-medium text-[var(--color-text)]">{location.addressLine}</p>
+                <p>{location.district} — {location.city}/{location.stateCode}</p>
+                <p>CEP {location.postalCode}</p>
+                <p className="text-xs text-gray-500">CNPJ: {COMPANY_INFORMATION.cnpj}</p>
+              </div>
+
+              {location.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[var(--color-primary)]" aria-hidden="true" />
+                  <span>Telefone: <strong>{location.phone}</strong></span>
+                </div>
+              )}
+
+              <div>
+                <p className="font-medium text-[var(--color-text)] text-sm">Horário de atendimento</p>
+                <p className="text-sm">Consulte o horário de atendimento</p>
+              </div>
             </div>
-          )}
 
-          <div className="pt-2">
-            <p className="font-medium text-[var(--color-text)] text-sm mb-1">Horário de hoje:</p>
-            <p className="text-sm">Consulte o horário de atendimento</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={handleDirections}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 font-bold text-white transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+                aria-label={`Traçar rota até a ${location.name}`}
+              >
+                <Navigation className="h-5 w-5" aria-hidden="true" />
+                Como chegar
+              </button>
+              <button
+                type="button"
+                onClick={handleWhatsapp}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 font-bold text-white transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
+                aria-label={`Falar com a ${location.name} pelo WhatsApp`}
+              >
+                <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                Falar pelo WhatsApp
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-3 mt-auto">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="flex min-w-0 flex-col">
+          <div className="mb-4 flex w-full rounded-xl border border-[#E5EDF4] bg-[#F5F8FA] p-1.5" role="tablist" aria-label="Visualização da localização">
             <button
-              onClick={onSelect}
-              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-colors ${
-                isSelected
-                  ? "bg-[var(--color-surface-soft)] text-[var(--color-navy)] cursor-default"
-                  : "bg-white border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
+              type="button"
+              role="tab"
+              aria-selected={activeView === "map"}
+              onClick={() => setActiveView("map")}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+                activeView === "map"
+                  ? "bg-white text-[var(--color-primary)] shadow-sm"
+                  : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-navy)]"
               }`}
-              aria-label={`Visualizar ${location.name} no mapa`}
             >
-              <Map className="w-5 h-5" />
-              {isSelected ? "No mapa" : "Ver no mapa"}
+              <Navigation className="h-4 w-4" aria-hidden="true" />
+              Mapa
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDirections()
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-hover)] transition-colors"
-              aria-label={`Traçar rota até a ${location.name}`}
+              type="button"
+              role="tab"
+              aria-selected={activeView === "streetview"}
+              onClick={() => setActiveView("streetview")}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+                activeView === "streetview"
+                  ? "bg-white text-[var(--color-primary)] shadow-sm"
+                  : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-navy)]"
+              }`}
             >
-              <Navigation className="w-5 h-5" />
-              Como chegar
+              <Eye className="h-4 w-4" aria-hidden="true" />
+              Vista da rua
             </button>
           </div>
-          <button
-            onClick={(e) => {
-                e.stopPropagation()
-                handleWhatsapp()
-              }}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#20bd5a] transition-colors w-full"
-            aria-label={`Falar com a ${location.name} pelo WhatsApp`}
-          >
-            <MessageSquare className="w-5 h-5" />
-            Falar pelo WhatsApp
-          </button>
+
+          <div className="min-h-[280px] flex-1 lg:min-h-[360px]">
+            {activeView === "map" ? <GoogleStoreMap location={location} /> : <StoreStreetView location={location} />}
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

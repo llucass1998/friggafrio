@@ -10,15 +10,15 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
 
   if (!apiKey) {
     return (
-      <div className="w-full h-[420px] lg:h-[520px] bg-[#F5F8FA] rounded-2xl border-2 border-[#E5EDF4] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 text-[var(--color-primary)]">
-          <MapPin className="w-8 h-8" />
+      <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center lg:min-h-[360px]">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--color-primary)] shadow-sm">
+          <MapPin className="h-6 w-6" aria-hidden="true" />
         </div>
-        <h3 className="text-xl font-bold text-[var(--color-navy)] mb-2">Localização no Mapa</h3>
-        <p className="text-sm text-[var(--color-text-muted)] mb-8 max-w-md">
+        <h3 className="mb-2 text-lg font-bold text-[var(--color-navy)]">Localização no mapa</h3>
+        <p className="mb-4 max-w-md text-sm text-[var(--color-text-muted)]">
           O mapa interativo não pôde ser carregado no momento. Você ainda pode abrir a localização diretamente no Google Maps.
         </p>
-        <p className="text-sm font-bold text-[var(--color-navy)] mb-6">
+        <p className="mb-5 text-sm font-bold text-[var(--color-navy)]">
           {location.addressLine}, {location.district} - {location.city}/{location.stateCode}
         </p>
         <a
@@ -26,16 +26,15 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Abrir ${location.name} no Google Maps`}
-          className="inline-flex items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-3 px-6 rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
         >
-          <MapPin className="w-5 h-5" />
+          <MapPin className="h-5 w-5" aria-hidden="true" />
           Abrir no Google Maps
         </a>
       </div>
     )
   }
 
-  // Use Place ID se disponível, caso contrário use a string do endereço completo
   const queryParam = location.placeId
     ? `q=place_id:${location.placeId}`
     : `q=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
@@ -43,7 +42,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
 
   return (
-    <div className="w-full h-[420px] lg:h-[520px] rounded-2xl overflow-hidden border-2 border-[#E5EDF4] shadow-sm bg-[#F5F8FA]">
+    <div className="h-[300px] w-full overflow-hidden rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] shadow-sm lg:h-[360px]">
       <iframe
         title={`Mapa da ${location.name}`}
         width="100%"
@@ -53,7 +52,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
         allowFullScreen
         referrerPolicy="strict-origin-when-cross-origin"
         src={embedUrl}
-        className="w-full h-full"
+        className="h-full w-full"
       />
     </div>
   )
