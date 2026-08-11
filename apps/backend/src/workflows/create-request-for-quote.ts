@@ -61,7 +61,6 @@ export const createRequestForQuoteWorkflow = createWorkflow(
         shipping_address: carts[0].shipping_address,
         items: carts[0].items || [],
         region_id: carts[0].region_id || undefined,
-        // @ts-expect-error
         promo_codes: carts[0].promotions?.map((promo: { code?: string }) => promo?.code),
         currency_code: carts[0].currency_code,
         shipping_methods: carts[0].shipping_methods || [],

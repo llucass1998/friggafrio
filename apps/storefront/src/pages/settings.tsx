@@ -132,7 +132,7 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventPadrão()
+    e.preventDefault()
     if (!stripe || !elements) return
 
     setIsSubmitting(true)
@@ -554,7 +554,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventPadrão()
+    e.preventDefault()
     if (editingAddress) {
       updateAddressMutation.mutate({ id: editingAddress.id, data: formData })
     } else {
@@ -1100,7 +1100,7 @@ export default function SettingsPage() {
   }
 
   const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventPadrão()
+    e.preventDefault()
     updateProfileMutation.mutate(profileFormData)
   }
 
@@ -1114,7 +1114,7 @@ export default function SettingsPage() {
   }
 
   const handleCompanySubmit = (e: React.FormEvent) => {
-    e.preventPadrão()
+    e.preventDefault()
     updateCompanyMutation.mutate(companyFormData)
   }
 

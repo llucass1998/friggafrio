@@ -68,7 +68,6 @@ export const reorderWorkflow = createWorkflow(
               phone: order.shipping_address.phone ?? undefined,
             }
           : undefined,
-        // @ts-expect-error
         items: order.items?.map((item: { variant_id: string, quantity: number, unit_price: number, variant_title: string, variant_sku: string, title: string, id: string }) => ({
           variant_id: item.variant_id!,
           quantity: item.quantity!,
@@ -100,13 +99,10 @@ export const reorderWorkflow = createWorkflow(
         const validOptions =
           order.shipping_methods
             ?.filter((method) =>
-              // @ts-expect-error
               availableOptionIds.has(method.shipping_option_id)
             )
             .map((method) => ({
-              // @ts-expect-error
               id: method.shipping_option_id!,
-              // @ts-expect-error
               data: method.data || {},
             })) ?? []
 

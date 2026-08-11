@@ -27,7 +27,6 @@ export async function POST(
   })
 
   const emailExists = existingEmployees.some(
-    // @ts-expect-error
     (emp: { customer?: { email: string } }) => emp.customer?.email?.toLowerCase() === email.toLowerCase()
   )
 

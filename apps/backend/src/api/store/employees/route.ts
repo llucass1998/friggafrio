@@ -5,6 +5,14 @@ type AuthenticatedRequest = MedusaRequest & {
   auth_context?: { actor_id?: string }
 }
 
+type EmployeeRecord = {
+  id?: string
+  is_admin: boolean
+  spending_limit?: number | null
+  created_at: string
+  customer?: { first_name?: string; last_name?: string; email?: string }
+}
+
 export async function GET(
   req: AuthenticatedRequest,
   res: MedusaResponse
@@ -53,7 +61,7 @@ export async function GET(
   const offset = (page - 1) * limit
 
   // Get all employees for the company with their customer data
-  const { data: employees } = await query.graph({
+  const { data: employees } = (await query.graph({
     entity: "employee",
     fields: [
       "id",
@@ -68,14 +76,13 @@ export async function GET(
     filters: {
       company_id: currentEmployee.company_id,
     },
-  })
+  })) as unknown as { data: EmployeeRecord[] }
 
   // Filter by search if provided (search by name or email)
-  let filteredEmployees = employees
+  let filteredEmployees: EmployeeRecord[] = employees
   if (search) {
     const searchLower = search.toLowerCase()
-    // @ts-expect-error
-    filteredEmployees = employees.filter((emp: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean }) => {
+    filteredEmployees = employees.filter((emp) => {
       const firstName = emp.customer?.first_name?.toLowerCase() || ""
       const lastName = emp.customer?.last_name?.toLowerCase() || ""
       const email = emp.customer?.email?.toLowerCase() || ""
@@ -89,10 +96,9 @@ export async function GET(
   }
 
   // Sort employees
-  // @ts-expect-error
-  filteredEmployees.sort((a: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean, created_at: string }, b: { customer?: { first_name?: string, last_name?: string, email?: string }, is_admin: boolean, created_at: string }) => {
-    let aVal: string | boolean | undefined
-    let bVal: string | boolean | undefined
+  filteredEmployees.sort((a, b) => {
+    let aVal: string | number | boolean = ""
+    let bVal: string | number | boolean = ""
 
     switch (sortBy) {
       case "name":
@@ -104,9 +110,7 @@ export async function GET(
         bVal = b.customer?.email?.toLowerCase() || ""
         break
       case "spending_limit":
-        // @ts-expect-error
         aVal = a.spending_limit === null ? Infinity : Number(a.spending_limit)
-        // @ts-expect-error
         bVal = b.spending_limit === null ? Infinity : Number(b.spending_limit)
         break
       default:
@@ -114,9 +118,7 @@ export async function GET(
         bVal = b.created_at
     }
 
-    // @ts-expect-error
     if (aVal < bVal) return sortOrder === "asc" ? -1 : 1
-    // @ts-expect-error
     if (aVal > bVal) return sortOrder === "asc" ? 1 : -1
     return 0
   })

@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { COMPANY_MODULE } from "../../../../modules/company"
+import CompanyModuleService from "../../../../modules/company/service"
 
 type AuthenticatedRequest = MedusaRequest & {
   auth_context?: { actor_id?: string }
@@ -79,7 +80,8 @@ export async function POST(
   // Update the spending limit
   const { spending_limit } = req.body as { spending_limit: number | null }
 
-  const companyModuleService = req.scope.resolve(COMPANY_MODULE)
+  const companyModuleService: CompanyModuleService =
+    req.scope.resolve(COMPANY_MODULE)
   const updatedEmployee = await companyModuleService.updateEmployees({
     id: employeeId,
     spending_limit,

@@ -4,6 +4,7 @@ import type {
 } from "@medusajs/framework/http";
 import { z } from "@medusajs/framework/zod";
 import { CUSTOMER_PROFILE_MODULE } from "../../../modules/customer-profile";
+import CustomerProfileService from "../../../modules/customer-profile/service";
 import {
   isValidCpf,
   isValidCnpj,
@@ -49,7 +50,8 @@ export const GET = async (
     return;
   }
 
-  const customerProfileService = req.scope.resolve(CUSTOMER_PROFILE_MODULE);
+  const customerProfileService: CustomerProfileService =
+    req.scope.resolve(CUSTOMER_PROFILE_MODULE);
   const profiles = await customerProfileService.listCustomerProfiles({
     customer_id: customerId,
   });
@@ -93,7 +95,8 @@ export const POST = async (
     ? normalizeDocument(data.document)
     : undefined;
 
-  const customerProfileService = req.scope.resolve(CUSTOMER_PROFILE_MODULE);
+  const customerProfileService: CustomerProfileService =
+    req.scope.resolve(CUSTOMER_PROFILE_MODULE);
   const profiles = await customerProfileService.listCustomerProfiles({
     customer_id: customerId,
   });

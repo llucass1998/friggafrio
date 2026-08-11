@@ -6,6 +6,25 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { COMPANY_MODULE } from "../../../../modules/company"
 import CompanyModuleService from "../../../../modules/company/service"
 
+type CompanyOrder = {
+  customer_id: string
+  placed_by?: {
+    id: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    is_admin: boolean
+  }
+}
+
+type OrderCustomer = {
+  id: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  employee?: { is_admin?: boolean }
+}
+
 /**
  * GET /store/company/orders
  * 
@@ -51,18 +70,16 @@ export const GET = async (
 
     if (employeeIds.length > 0) {
       // Query employees with their linked customers
-      const { data: employeesWithCustomers } = await query.graph({
+      const { data: employeesWithCustomers } = (await query.graph({
         entity: "employee",
         fields: ["id", "customer.id"],
         filters: {
           id: employeeIds,
         },
-      })
+      })) as unknown as { data: Array<{ customer?: { id?: string } }> }
       
       customerIds = employeesWithCustomers
-        // @ts-expect-error
         .filter((e: { customer?: { id?: string } }) => e.customer?.id)
-        // @ts-expect-error
         .map((e: { customer: { id: string } }) => e.customer.id)
     }
   } else {
@@ -106,7 +123,7 @@ export const GET = async (
   ]
 
   // Query orders for all relevant customers
-  const { data: orders, metadata } = await query.graph({
+  const { data: orders, metadata } = (await query.graph({
     entity: "order",
     fields: orderFields,
     filters: {
@@ -119,35 +136,28 @@ export const GET = async (
         created_at: "DESC",
       },
     },
-  })
+  })) as unknown as { data: CompanyOrder[]; metadata?: { count?: number } }
 
   // For admin view, attach employee info to each order
   if (isAdmin && orders.length > 0) {
     // Get customer details for all orders
-    // @ts-expect-error
     const orderCustomerIds = [...new Set(orders.map((o: { customer_id: string }) => o.customer_id))]
-    const { data: orderCustomers } = await query.graph({
+    const { data: orderCustomers } = (await query.graph({
       entity: "customer",
       fields: ["id", "email", "first_name", "last_name", "employee.id", "employee.is_admin"],
       filters: { id: orderCustomerIds },
-    })
+    })) as unknown as { data: OrderCustomer[] }
 
-    const customerMap = new Map(orderCustomers.map((c: { id: string }) => [c.id, c]))
+    const customerMap = new Map(orderCustomers.map((customer) => [customer.id, customer]))
 
-    // @ts-expect-error
-    orders.forEach((order: { customer_id: string, customer?: unknown }) => {
+    orders.forEach((order) => {
       const orderCustomer = customerMap.get(order.customer_id)
       if (orderCustomer) {
-        // @ts-expect-error
         order.placed_by = {
           id: orderCustomer.id,
-          // @ts-expect-error
           email: orderCustomer.email,
-          // @ts-expect-error
           first_name: orderCustomer.first_name,
-          // @ts-expect-error
           last_name: orderCustomer.last_name,
-          // @ts-expect-error
           is_admin: orderCustomer.employee?.is_admin || false,
         }
       }

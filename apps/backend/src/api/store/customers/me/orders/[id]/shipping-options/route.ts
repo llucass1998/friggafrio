@@ -42,8 +42,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     fields: ["id", "name", "price_type", "provider_id", "prices.*"],
   })
 
-  // @ts-expect-error
-  const shippingOptions = shippingOptionsData.map((option: { id: string, name: string, prices: { currency_code: string, amount: number }[] }) => {
+  const shippingOptions = (shippingOptionsData as unknown as Array<{
+    id: string
+    name: string
+    price_type?: string
+    provider_id?: string
+    prices: { currency_code: string; amount: number }[]
+  }>).map((option) => {
     // Find the price for the order's currency
     const price = option.prices?.find(
       (p: { currency_code: string }) => p.currency_code === order.currency_code
@@ -52,11 +57,9 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     return {
       id: option.id,
       name: option.name,
-      // @ts-expect-error
       price_type: option.price_type,
       amount: price?.amount ?? 0,
       currency_code: order.currency_code,
-      // @ts-expect-error
       provider_id: option.provider_id,
     }
   })

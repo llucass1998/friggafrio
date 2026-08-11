@@ -94,7 +94,6 @@ export async function getCompanySetupStatus(
     pagination: { skip: 0, take: 1000 },
   })
 
-  // @ts-expect-error
   const pendingInviteCount = invites.filter((invite: { metadata?: { type?: string, company_id?: string } }) => {
     const meta = invite.metadata as Record<string, unknown>
     return meta?.type === "employee_invite" && meta?.company_id === companyId
@@ -187,7 +186,9 @@ export async function GET(
     filters: { id: customerId },
   })
 
-  const employee = (customers[0] as { employee?: { company?: { id: string, status: string } } })?.employee
+  const employee = (customers[0] as {
+    employee?: { is_admin?: boolean; company?: { id: string, status: string } }
+  })?.employee
   if (!employee?.company) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Company not found")
   }
@@ -200,7 +201,6 @@ export async function GET(
   res.json({
     setup_status: setupStatus,
     company_status: employee.company.status,
-    // @ts-expect-error
     is_admin: employee.is_admin,
   })
 }

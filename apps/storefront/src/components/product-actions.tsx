@@ -2,7 +2,7 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
-import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
+import { getVariantOptionsKeymap, isVariantInStock as isVariantInStockLocal } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
@@ -78,6 +78,8 @@ const ProductActions = memo(function ProductActions({
   // --- Purchase Logic Block ---
   const purchaseState = getProductPurchaseState(product)
 
+  const inStock = selectedVariant ? isVariantInStockLocal(selectedVariant) : false
+
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
     if (!selectedVariant) return false
@@ -87,7 +89,7 @@ const ProductActions = memo(function ProductActions({
     const calcPrice = (selectedVariant as any).calculated_price
     if (!calcPrice || calcPrice.calculated_amount === null || calcPrice.calculated_amount === undefined) return false
 
-    return true // Ignorar checagem local isVariantInStock() para permitir itens "falsos" locais
+    return true // Inventory is enforced server-side; local fixtures may omit stock fields.
   }, [selectedVariant, purchaseState])
 
   const displayPrice = selectedVariant
@@ -102,7 +104,7 @@ const ProductActions = memo(function ProductActions({
   const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !inStock;
   
   const handleQuoteRequest = () => {
-    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${variant?.sku || 'N/A'})`);
+    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || 'N/A'})`);
     window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
   };
 
