@@ -21,6 +21,11 @@ test("returnTo rejects paths from another country scope", () => {
   assert.equal(normalizeReturnTo("/us/account", "br"), "/br");
 });
 
+test("returnTo rejects paths containing control characters", () => {
+  assert.equal(normalizeReturnTo("/br/account\u0000/orders", "br"), "/br");
+  assert.equal(normalizeReturnTo("/br/account\u007f/orders", "br"), "/br");
+});
+
 test("the authenticated fallback normalizes invalid country codes", () => {
   assert.equal(defaultAuthenticatedPath("BR"), "/br");
   assert.equal(defaultAuthenticatedPath("../admin"), "/br");

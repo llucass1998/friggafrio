@@ -1,5 +1,4 @@
 import { sdk } from "@/lib/medusa"
-import { HttpTypes } from "@medusajs/types"
 import { cache } from "react"
 // import { getAuthHeaders } from "./cookies" // Unused and missing
 
@@ -8,7 +7,6 @@ export const listProducts = cache(
     pageParam = 1,
     queryParams,
     query_params, // For compatibility
-    countryCode,
     regionId,
     region_id, // For compatibility
   }: {
@@ -19,8 +17,8 @@ export const listProducts = cache(
     regionId?: string
     region_id?: string
   }) => {
-    const qParams = queryParams || query_params || {};
-    const rId = regionId || region_id;
+    const qParams = queryParams || query_params || {}
+    const rId = regionId || region_id
     
     const limit = qParams.limit || 12
     const offset = (pageParam - 1) * limit
@@ -30,7 +28,7 @@ export const listProducts = cache(
       offset,
       region_id: rId,
       ...qParams,
-    };
+    }
     
     return sdk.store.product
       .list(storeParams, { next: { tags: ["products"] } }) 
@@ -43,17 +41,17 @@ export const listProducts = cache(
           queryParams: storeParams,
         }
       })
-      .catch((error) => {
+      .catch(() => {
         // Logging silenced for production
-        return { response: { products: [], count: 0 }, products: [], count: 0, nextPage: null, queryParams: storeParams };
-      });
+        return { response: { products: [], count: 0 }, products: [], count: 0, nextPage: null, queryParams: storeParams }
+      })
   }
 )
 
 export const retrieveProduct = cache(
   async (params: any, additionalArgs?: any) => {
     // If it's a string, it's an ID
-    if (typeof params === 'string') {
+    if (typeof params === "string") {
       return sdk.store.product.retrieve(params, { region_id: additionalArgs }, { next: { tags: ["products"] } })
     }
     
@@ -63,12 +61,12 @@ export const retrieveProduct = cache(
         handle: params.handle,
         region_id: params.region_id,
         fields: params.fields,
-      }, { next: { tags: ["products"] } });
+      }, { next: { tags: ["products"] } })
       
       if (!products || products.length === 0) {
-        throw new Error(`Product with handle ${params.handle} not found`);
+        throw new Error(`Product with handle ${params.handle} not found`)
       }
-      return products[0];
+      return products[0]
     }
     
     // If it's an object with an ID
@@ -76,10 +74,10 @@ export const retrieveProduct = cache(
       return sdk.store.product.retrieve(params.id, { 
         region_id: params.region_id,
         fields: params.fields 
-      }, { next: { tags: ["products"] } });
+      }, { next: { tags: ["products"] } })
     }
     
-    throw new Error("Invalid parameters for retrieveProduct");
+    throw new Error("Invalid parameters for retrieveProduct")
   }
 )
 

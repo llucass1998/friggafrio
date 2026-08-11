@@ -1,4 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react"
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type Dispatch,
+  type SetStateAction,
+} from "react"
 import { Link, useParams } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import {
@@ -65,6 +72,24 @@ interface SavedPaymentMethod {
     type?: string
     [key: string]: unknown
   }
+}
+
+function applyCompanyAddress(
+  addr: CompanyAddressData,
+  setter: Dispatch<SetStateAction<AddressFormData>>
+) {
+  setter({
+    first_name: addr.first_name,
+    last_name: addr.last_name,
+    company: addr.company_name || "",
+    address_1: addr.address_1,
+    address_2: addr.address_2 || "",
+    city: addr.city,
+    postal_code: addr.postal_code,
+    province: addr.province || "",
+    country_code: addr.country_code,
+    phone: addr.phone || "",
+  })
 }
 
 function cardBrandLabel(brand: string): string {
@@ -250,38 +275,20 @@ export default function OrderPaymentPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("")
   const [selectedSavedPaymentId, setSelectedSavedPaymentId] = useState<string | null>(null)
 
-  function applyCompanyAddress(
-    addr: CompanyAddressData,
-    setter: React.Dispatch<React.SetStateAction<AddressFormData>>
-  ) {
-    setter({
-      first_name: addr.first_name,
-      last_name: addr.last_name,
-      company: addr.company_name || "",
-      address_1: addr.address_1,
-      address_2: addr.address_2 || "",
-      city: addr.city,
-      postal_code: addr.postal_code,
-      province: addr.province || "",
-      country_code: addr.country_code,
-      phone: addr.phone || "",
-    })
-  }
-
-  const handleSelectShippingAddress = (addr: CompanyAddressData) => {
+  const handleSelectShippingAddress = useCallback((addr: CompanyAddressData) => {
     setSelectedShippingAddressId(addr.id)
     applyCompanyAddress(addr, setShippingAddress)
     setIsShippingAddressValid(true)
     if (sameAsBilling) {
       setSelectedBillingAddressId(addr.id)
     }
-  }
+  }, [sameAsBilling])
 
-  const handleSelectBillingAddress = (addr: CompanyAddressData) => {
+  const handleSelectBillingAddress = useCallback((addr: CompanyAddressData) => {
     setSelectedBillingAddressId(addr.id)
     applyCompanyAddress(addr, setBillingAddress)
     setIsBillingAddressValid(true)
-  }
+  }, [])
 
   // Auto-select first company address
   useEffect(() => {
@@ -289,7 +296,12 @@ export default function OrderPaymentPage() {
       const first = companyAddresses[0]
       handleSelectShippingAddress(first)
     }
-  }, [hasCompanyAddresses, companyAddresses])
+  }, [
+    companyAddresses,
+    handleSelectShippingAddress,
+    hasCompanyAddresses,
+    selectedShippingAddressId,
+  ])
 
   // Initialize form with order data (for non-B2B or fallback)
   useEffect(() => {
@@ -375,15 +387,15 @@ export default function OrderPaymentPage() {
     try {
       const billingData = sameAsBilling ? shippingAddress : billingAddress
       
-      const { country_code: _shippingCountry, ...shippingWithoutCountry } = shippingAddress
+      const { country_code: shippingCountry, ...shippingWithoutCountry } = shippingAddress
       const shippingPayload = order?.shipping_address?.country_code 
         ? shippingWithoutCountry 
-        : shippingAddress
+        : { ...shippingWithoutCountry, country_code: shippingCountry }
       
-      const { country_code: _billingCountry, ...billingWithoutCountry } = billingData
+      const { country_code: billingCountry, ...billingWithoutCountry } = billingData
       const billingPayload = (order?.billing_address?.country_code || (sameAsBilling && order?.shipping_address?.country_code))
         ? billingWithoutCountry 
-        : billingData
+        : { ...billingWithoutCountry, country_code: billingCountry }
       
       await updateAddressMutation.mutateAsync({
         orderId,

@@ -1,13 +1,10 @@
-import { Link, useParams } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 interface HeaderLogoProps {
   compact?: boolean
 }
 
 export function HeaderLogo({ compact = false }: HeaderLogoProps) {
-  const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
-
   return (
     <Link
       to={"/$countryCode" as any} 

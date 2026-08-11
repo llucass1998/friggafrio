@@ -174,10 +174,6 @@ export default function RegisterPage() {
 
     try {
       if (credentialResponse.credential) {
-        // Redireciona com base no hook centralizado
-        const { useAuth } = await import("@/lib/hooks/use-auth")
-        // Como useAuth não pode ser chamado fora da renderização do componente,
-        // a gente usa ele lá em cima.
         await loginWithGoogle(credentialResponse.credential)
         console.log("[RegisterPage] Google login/register successful, navigating to home")
         navigate({ to: "/$countryCode", params: { countryCode } })

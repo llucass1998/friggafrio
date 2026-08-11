@@ -2,7 +2,7 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
-import { getVariantOptionsKeymap, isVariantInStock as isVariantInStockLocal } from "@/lib/utils/product"
+import { getVariantOptionsKeymap } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
@@ -78,8 +78,6 @@ const ProductActions = memo(function ProductActions({
   // --- Purchase Logic Block ---
   const purchaseState = getProductPurchaseState(product)
 
-  const inStock = selectedVariant ? isVariantInStockLocal(selectedVariant) : false
-
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
     if (!selectedVariant) return false
@@ -99,15 +97,6 @@ const ProductActions = memo(function ProductActions({
       : (product.variants?.[0] as any)?.calculated_price?.calculated_amount ?? 0
 
   
-  // Determine if product is quote-only (draft/pending status mapped via metadata or tags in a real scenario)
-  // For Phase 20, we assume any B2B-flagged product or explicitly 'quote_only' metadata triggers this.
-  const isQuoteOnly = product?.metadata?.quote_only === true || product?.tags?.some((t: any) => t.value === "b2b") || !inStock;
-  
-  const handleQuoteRequest = () => {
-    const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para o produto: ${product.title} (SKU: ${selectedVariant?.sku || 'N/A'})`);
-    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
-  };
-
   const handleAddToCart = async () => {
     if (!selectedVariant?.id || !canBuySelected) return null
 
@@ -128,7 +117,7 @@ const ProductActions = memo(function ProductActions({
           toast.success(`${product.title} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
-        onError: (err) => {
+        onError: () => {
           // Error telemetry could go here
           toast.error("Não foi possível adicionar o produto ao carrinho")
         }
@@ -137,19 +126,19 @@ const ProductActions = memo(function ProductActions({
   }
 
   // Generate Button Text
-  let buttonText = "Comprar";
-  let buttonDisabled = true;
+  let buttonText = "Comprar"
+  let buttonDisabled = true
 
   if (purchaseState.status === "unavailable") {
-    buttonText = "Indisponível";
+    buttonText = "Indisponível"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação";
+    buttonText = "Preço em confirmação"
   } else if (!selectedVariant) {
-    buttonText = "Selecione uma opção";
+    buttonText = "Selecione uma opção"
   } else if (!isValidVariant || !canBuySelected) {
-    buttonText = "Sem estoque";
+    buttonText = "Sem estoque"
   } else {
-    buttonDisabled = false;
+    buttonDisabled = false
   }
 
   return (

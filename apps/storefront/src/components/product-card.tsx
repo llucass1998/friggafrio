@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
 import { getProductPrice } from "@/lib/utils/price"
 import { useCreateQuoteFromCart } from "@/lib/hooks/use-quotes"
-import { useAddToCart, useCart } from "@/lib/hooks/use-cart"
+import { useAddToCart } from "@/lib/hooks/use-cart"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { toast } from "sonner"
 import { useState } from "react"
@@ -16,13 +16,12 @@ interface ProductCardProps {
   countryCode: string
 }
 
-export function ProductCard({ product, regionId, countryCode }: ProductCardProps) {
+export function ProductCard({ product, countryCode }: ProductCardProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const addToCartMutation = useAddToCart()
   const createQuoteFromCartMutation = useCreateQuoteFromCart()
-  const { data: cart } = useCart()
   const [isQuoting, setIsQuoting] = useState(false)
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   

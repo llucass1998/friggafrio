@@ -9,7 +9,7 @@ import { getStoredCountryCode } from "@/lib/utils/region"
 import { AddressFormData } from "@/lib/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { MapPin } from "@medusajs/icons"
 
 interface CompanyAddressData {
@@ -35,6 +35,24 @@ interface AddressStepProps {
   onNext: () => void;
 }
 
+function applyCompanyAddress(
+  addr: CompanyAddressData,
+  setter: React.Dispatch<React.SetStateAction<AddressFormData>>
+) {
+  setter({
+    first_name: addr.first_name,
+    last_name: addr.last_name,
+    company: addr.company_name || "",
+    address_1: addr.address_1,
+    address_2: addr.address_2 || "",
+    city: addr.city,
+    postal_code: addr.postal_code,
+    province: addr.province || "",
+    country_code: addr.country_code,
+    phone: addr.phone || "",
+  })
+}
+
 const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   const setAddressesMutation = useSetCartAddresses()
   const { employee } = useAuth()
@@ -43,7 +61,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   const [isShippingAddressValid, setIsShippingAddressValid] = useState(false)
   const [isBillingAddressValid, setIsBillingAddressValid] = useState(false)
   const [email, setEmail] = useState(cart.email || "")
-  const [emailTouched, setEmailTouched] = useState(false)
+  const [emailTouched, setEmailTouched] = useState(Boolean(cart.email))
   const storedCountryCode = getStoredCountryCode()
   const [mutationError, setMutationError] = useState<string | null>(null)
 
@@ -62,7 +80,10 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     enabled: !!employee,
   })
 
-  const shippingAddresses = companyAddresses.filter((a) => !a.is_billing_only)
+  const shippingAddresses = useMemo(
+    () => companyAddresses.filter((a) => !a.is_billing_only),
+    [companyAddresses]
+  )
   const billingAddresses = companyAddresses
   const hasCompanyAddresses = shippingAddresses.length > 0 && !!employee
   const hasCompanyBillingAddresses = billingAddresses.length > 0 && !!employee
@@ -109,25 +130,15 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       applyCompanyAddress(defaultBilling, setBillingAddress)
       setIsBillingAddressValid(true)
     }
-  }, [hasCompanyAddresses, shippingAddresses, hasCompanyBillingAddresses, billingAddresses, sameAsBilling])
-
-  function applyCompanyAddress(
-    addr: CompanyAddressData,
-    setter: React.Dispatch<React.SetStateAction<AddressFormData>>
-  ) {
-    setter({
-      first_name: addr.first_name,
-      last_name: addr.last_name,
-      company: addr.company_name || "",
-      address_1: addr.address_1,
-      address_2: addr.address_2 || "",
-      city: addr.city,
-      postal_code: addr.postal_code,
-      province: addr.province || "",
-      country_code: addr.country_code,
-      phone: addr.phone || "",
-    })
-  }
+  }, [
+    billingAddresses,
+    hasCompanyAddresses,
+    hasCompanyBillingAddresses,
+    sameAsBilling,
+    selectedBillingAddressId,
+    selectedShippingAddressId,
+    shippingAddresses,
+  ])
 
   const handleSelectShippingAddress = (addr: CompanyAddressData) => {
     setSelectedShippingAddressId(addr.id)
@@ -190,18 +201,6 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       (isBillingAddressValid || sameAsBilling)
     )
   }
-
-  // Auto-validate email on mount if it's already prefilled
-  useEffect(() => {
-    if (email) {
-      setEmailTouched(true);
-    }
-  }, []);
-
-  // Use an effect to auto-validate the component's state without requiring manual changes.
-  useEffect(() => {
-    // Attempt validation on state changes
-  }, [email, isShippingAddressValid, isBillingAddressValid, sameAsBilling, hasCompanyAddresses, selectedShippingAddressId, selectedBillingAddressId])
 
   useEffect(() => {
     if (!cart.region) {

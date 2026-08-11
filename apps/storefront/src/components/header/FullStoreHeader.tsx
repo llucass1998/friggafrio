@@ -1,14 +1,10 @@
-import { Link, useParams } from "@tanstack/react-router"
-import { HeaderSearch } from "./HeaderSearch"
-import { HeaderActions } from "./HeaderActions"
-import { HeaderDesktopNav } from "./HeaderDesktopNav"
-import { HeaderMobileDrawer } from "./HeaderMobileDrawer"
-import { HeaderLogo } from "./HeaderLogo"
+import { HeaderSearch } from "@/components/header/HeaderSearch"
+import { HeaderActions } from "@/components/header/HeaderActions"
+import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
+import { HeaderMobileDrawer } from "@/components/header/HeaderMobileDrawer"
+import { HeaderLogo } from "@/components/header/HeaderLogo"
 
 export function FullStoreHeader() {
-  const params = useParams({ strict: false }) as Record<string, string>
-  const countryCode = params.countryCode || "br"
-
   return (
     <header className="w-full bg-[var(--color-background)] border-b border-[var(--color-border)] relative z-40">
       {/* O Top bar com telefone e infos extras foi migrado para o AccessibilityTopBar para unificar a acessibilidade e layout

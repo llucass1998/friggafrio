@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
-
-// Export a singleton function to announce messages from anywhere
-let announceFn: (message: string) => void = () => {};
-
-export function announceToScreenReader(message: string) {
-  announceFn(message);
-}
+import { subscribeToScreenReaderAnnouncements } from "@/components/accessibility/live-region-announcer"
+import { useEffect, useState } from "react"
 
 export function LiveRegion() {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("")
 
   useEffect(() => {
-    announceFn = (msg: string) => {
-      setMessage(msg);
-      // Clear after a while so the same message can be announced again if needed
-      setTimeout(() => setMessage(''), 3000);
-    };
-  }, []);
+    let clearTimer: ReturnType<typeof setTimeout> | undefined
+    const unsubscribe = subscribeToScreenReaderAnnouncements((nextMessage) => {
+      setMessage(nextMessage)
+      clearTimeout(clearTimer)
+      clearTimer = setTimeout(() => setMessage(""), 3000)
+    })
+
+    return () => {
+      unsubscribe()
+      clearTimeout(clearTimer)
+    }
+  }, [])
 
   return (
     <div 
@@ -27,5 +27,5 @@ export function LiveRegion() {
     >
       {message}
     </div>
-  );
+  )
 }

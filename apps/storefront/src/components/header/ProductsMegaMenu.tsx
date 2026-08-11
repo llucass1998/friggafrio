@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { NavigationItem, productCategories, applicationCategories, mainNavigation } from "./categories"
+import { productCategories } from "@/components/header/categories"
 import { useState } from "react"
 
 export function ProductsMegaMenu() {
@@ -63,7 +63,7 @@ export function ProductsMegaMenu() {
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {activeCategoryData.children?.filter(child => !child.id.endsWith('-all')).map((child) => (
+            {activeCategoryData.children?.filter(child => !child.id.endsWith("-all")).map((child) => (
               <Link
                 key={child.id}
                 to={child.href as any}

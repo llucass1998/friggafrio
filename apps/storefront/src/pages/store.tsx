@@ -362,10 +362,10 @@ export function StorePage({
               {(searchInput || selectedCategory || optionValueIds.length > 0) && (
                 <button
                   onClick={() => {
-                    setSearchInput("");
-                    setDebouncedSearch("");
-                    setSelectedCategory(null);
-                    updateOptionValueIds([]);
+                    setSearchInput("")
+                    setDebouncedSearch("")
+                    setSelectedCategory(null)
+                    updateOptionValueIds([])
                   }}
                   className="px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm font-semibold rounded-[var(--radius-button)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
                 >

@@ -14,6 +14,10 @@ type BulkVariantTableProps = {
   region: HttpTypes.StoreRegion
 }
 
+const EMPTY_PRODUCT_OPTIONS: NonNullable<
+  HttpTypes.StoreProduct["options"]
+> = []
+
 export function BulkVariantTable({ product, region }: BulkVariantTableProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [isAdding, setIsAdding] = useState(false)
@@ -26,7 +30,7 @@ export function BulkVariantTable({ product, region }: BulkVariantTableProps) {
   const { openCart } = useCartDrawer()
 
   const variants = product.variants || []
-  const options = product.options || []
+  const options = product.options ?? EMPTY_PRODUCT_OPTIONS
 
   const hasRealOptions = useMemo(
     () =>

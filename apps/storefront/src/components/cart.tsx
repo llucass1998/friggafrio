@@ -4,7 +4,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
   DrawerFooter,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
@@ -470,7 +469,7 @@ export const CartDropdown = () => {
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
       <DrawerContent
         className="flex flex-col z-[100] h-full sm:max-w-md w-full right-0 left-auto border-l border-[#E5EDF4]"
-        style={{ right: 0, left: 'auto', bottom: 0 }}
+        style={{ right: 0, left: "auto", bottom: 0 }}
         aria-describedby="cart-drawer-description"
       >
         <DrawerHeader className="border-b border-[#E5EDF4]">

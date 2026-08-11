@@ -191,7 +191,7 @@ export default function AjudaPage() {
                           className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] rounded-2xl"
                           aria-expanded={isOpen}
                         >
-                          <span className={`font-semibold text-lg pr-4 transition-colors ${isOpen ? 'text-[var(--color-primary)]' : 'text-[var(--color-navy)]'}`}>
+                          <span className={`font-semibold text-lg pr-4 transition-colors ${isOpen ? "text-[var(--color-primary)]" : "text-[var(--color-navy)]"}`}>
                             {item.q}
                           </span>
                           <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300 ${isOpen ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] rotate-180" : "bg-white text-gray-400 shadow-sm border border-gray-100"}`}>

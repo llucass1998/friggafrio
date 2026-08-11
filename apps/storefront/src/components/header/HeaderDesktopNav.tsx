@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
-import { ProductsMegaMenu } from "./ProductsMegaMenu"
-import { mainNavigation, applicationCategories } from "./categories"
+import { ProductsMegaMenu } from "@/components/header/ProductsMegaMenu"
+import { mainNavigation, applicationCategories } from "@/components/header/categories"
 import { ChevronDown } from "lucide-react"
 
 export function HeaderDesktopNav() {
@@ -37,7 +37,7 @@ export function HeaderDesktopNav() {
         Nossa Loja
       </Link>
 
-      {mainNavigation.filter(nav => nav.id !== 'nav-gases' && nav.id !== 'nav-compressores' && nav.id !== 'nav-camara' && nav.id !== 'nav-ferramentas').map((nav) => (
+      {mainNavigation.filter(nav => nav.id !== "nav-gases" && nav.id !== "nav-compressores" && nav.id !== "nav-camara" && nav.id !== "nav-ferramentas").map((nav) => (
         <Link
           key={nav.id}
           to={nav.href as any}

@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { storeLocations } from "../config/store-locations"
-import { storeConfig } from "../config/store"
-import { GoogleStoreMap } from "../components/store-locations/GoogleStoreMap"
-import { StoreStreetView } from "../components/store-locations/StoreStreetView"
-import { StoreLocationCard } from "../components/store-locations/StoreLocationCard"
+import { storeLocations } from "@/config/store-locations"
+import { storeConfig } from "@/config/store"
+import { GoogleStoreMap } from "@/components/store-locations/GoogleStoreMap"
+import { StoreStreetView } from "@/components/store-locations/StoreStreetView"
+import { StoreLocationCard } from "@/components/store-locations/StoreLocationCard"
 import { Link } from "@tanstack/react-router"
 import { MapPin, PhoneCall, Info, Navigation, Eye, Image as ImageIcon } from "lucide-react"
 
@@ -42,7 +42,7 @@ export function PublicStoresPage() {
   return (
     <div className="w-full bg-[#FAFAFA] min-h-screen pb-16 font-sans">
       <div aria-live="polite" className="sr-only">
-        {activeLocation ? `${activeLocation.name} selecionada.` : ''}
+        {activeLocation ? `${activeLocation.name} selecionada.` : ""}
       </div>
       <script
         type="application/ld+json"
@@ -230,4 +230,3 @@ export function PublicStoresPage() {
     </div>
   )
 }
-

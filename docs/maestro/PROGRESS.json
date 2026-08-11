@@ -4,7 +4,7 @@
   "baselineProductionReadiness": 40,
   "phases": {
     "typescript": 100,
-    "quality": 0,
+    "quality": 100,
     "brRegion": 0,
     "database": 0,
     "catalog": 0,
@@ -27,6 +27,35 @@
     "storefrontBuild": "pass",
     "playwrightDiscovered": "pass:46-tests"
   },
+  "gates": {
+    "GATE-01": {
+      "status": "pass",
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89",
+      "date": "2026-08-10",
+      "evidence": [
+        "storefront typecheck PASS",
+        "backend typecheck PASS",
+        "storefront build PASS",
+        "storefront unit PASS:6",
+        "commit diff check PASS"
+      ]
+    },
+    "GATE-02": {
+      "status": "pass",
+      "commit": null,
+      "date": "2026-08-10",
+      "evidence": [
+        "storefront typecheck PASS",
+        "backend typecheck PASS",
+        "storefront lint PASS:0-errors-80-warnings",
+        "storefront build PASS",
+        "storefront unit PASS:7",
+        "backend unit PASS:8-suites-34-tests",
+        "diff check PASS",
+        "new suppressions PASS:0"
+      ]
+    }
+  },
   "tasks": {
     "FE-P0-001": {
       "id": "FE-P0-001",
@@ -38,7 +67,7 @@
       "tests": ["pnpm --dir apps/storefront typecheck", "pnpm --dir apps/storefront build"],
       "acceptance": "All four invalid event handlers use preventDefault and storefront TypeScript passes.",
       "evidence": ["storefront typecheck PASS", "storefront build PASS"],
-      "commit": null
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89"
     },
     "FE-P0-002": {
       "id": "FE-P0-002",
@@ -50,7 +79,7 @@
       "tests": ["pnpm --dir apps/storefront typecheck", "pnpm --dir apps/storefront build"],
       "acceptance": "Product actions use the selected variant without adding TypeScript suppressions.",
       "evidence": ["storefront typecheck PASS", "storefront build PASS"],
-      "commit": null
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89"
     },
     "BE-P0-001": {
       "id": "BE-P0-001",
@@ -62,7 +91,7 @@
       "tests": ["pnpm --dir apps/backend typecheck"],
       "acceptance": "Obsolete suppressions are removed and backend TypeScript passes.",
       "evidence": ["backend typecheck PASS"],
-      "commit": null
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89"
     },
     "BE-P0-002": {
       "id": "BE-P0-002",
@@ -74,7 +103,7 @@
       "tests": ["pnpm --dir apps/backend typecheck"],
       "acceptance": "Customer profile routes resolve the typed service and backend TypeScript passes.",
       "evidence": ["backend typecheck PASS"],
-      "commit": null
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89"
     },
     "BE-P0-003": {
       "id": "BE-P0-003",
@@ -86,42 +115,59 @@
       "tests": ["pnpm --dir apps/backend typecheck"],
       "acceptance": "Company routes and workflows typecheck without new suppressions.",
       "evidence": ["backend typecheck PASS", "git diff --check PASS"],
-      "commit": null
+      "commit": "26e73ed56325e91e6afd74c344416ecf7bca4e89"
     },
     "BE-P0-004": {
       "id": "BE-P0-004",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "agent": "BACKEND",
       "dependencies": ["GATE-01"],
       "objective": "Stabilize backend Jest, TypeScript, and ESM test infrastructure.",
       "tests": ["pnpm --dir apps/backend test:unit", "pnpm --dir apps/backend typecheck"],
       "acceptance": "All backend suites load without bootstrap or configuration errors; functional failures are documented or fixed.",
-      "evidence": [],
+      "evidence": [
+        "backend typecheck PASS",
+        "backend unit PASS:8-suites-34-tests",
+        "bootstrap failures:0",
+        "functional failures:0",
+        "residual warning:forceExit-open-handle"
+      ],
       "commit": null
     },
     "FE-P0-003": {
       "id": "FE-P0-003",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "agent": "FRONTEND",
       "dependencies": ["GATE-01"],
       "objective": "Correct structural storefront ESLint errors before mechanical cleanup.",
       "tests": ["pnpm --dir apps/storefront lint", "pnpm --dir apps/storefront typecheck"],
       "acceptance": "Hook, JSX, promise, undefined reference, async, and runtime-risk lint errors are corrected and reclassified.",
-      "evidence": [],
+      "evidence": [
+        "measured baseline:569-errors-93-warnings",
+        "structural pass:484-errors-82-warnings",
+        "storefront typecheck PASS",
+        "storefront unit PASS:7"
+      ],
       "commit": null
     },
     "FE-P0-004": {
       "id": "FE-P0-004",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "agent": "FRONTEND",
       "dependencies": ["FE-P0-003"],
       "objective": "Correct remaining deterministic and mechanical storefront ESLint errors.",
       "tests": ["pnpm --dir apps/storefront lint", "pnpm --dir apps/storefront typecheck"],
       "acceptance": "Storefront ESLint reports zero errors; remaining warnings are documented.",
-      "evidence": [],
+      "evidence": [
+        "storefront lint PASS:0-errors-80-warnings",
+        "remaining warnings:no-explicit-any-77,no-console-3",
+        "storefront typecheck PASS",
+        "storefront build PASS",
+        "storefront unit PASS:7"
+      ],
       "commit": null
     }
   }

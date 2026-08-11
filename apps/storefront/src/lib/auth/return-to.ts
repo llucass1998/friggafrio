@@ -1,5 +1,10 @@
-const CONTROL_CHARACTER = /[\u0000-\u001f\u007f]/
 const COUNTRY_CODE = /^[a-z]{2}$/i
+
+const hasControlCharacter = (value: string): boolean =>
+  Array.from(value).some((character) => {
+    const codePoint = character.codePointAt(0)
+    return codePoint !== undefined && (codePoint <= 0x1f || codePoint === 0x7f)
+  })
 
 export const defaultAuthenticatedPath = (countryCode: string): string => {
   const normalizedCountryCode = COUNTRY_CODE.test(countryCode)
@@ -23,7 +28,7 @@ export const normalizeReturnTo = (
     !candidate.startsWith("/") ||
     candidate.startsWith("//") ||
     candidate.includes("\\") ||
-    CONTROL_CHARACTER.test(candidate)
+    hasControlCharacter(candidate)
   ) {
     return fallback
   }

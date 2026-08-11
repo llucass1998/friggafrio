@@ -2,6 +2,8 @@
 
 Status: PASS
 Date: 2026-08-10
+Commit: `26e73ed56325e91e6afd74c344416ecf7bca4e89`
+Author: Lucas <llucass_souza@hotmail.com>
 
 ## Scope
 
@@ -23,6 +25,8 @@ Date: 2026-08-10
 | Storefront TypeScript | `pnpm --dir apps/storefront typecheck` | PASS - zero errors |
 | Backend TypeScript | `pnpm --dir apps/backend typecheck` | PASS - zero errors |
 | Storefront build | `pnpm --dir apps/storefront build` | PASS - client and SSR bundles generated |
+| Storefront unit tests | `pnpm --dir apps/storefront test:unit` | PASS - 6 passed, 0 failed, 0 skipped |
+| Commit diff check | `git diff --check HEAD~1..HEAD` | PASS |
 | New suppressions scan | diff scan for `any`, `ts-ignore`, and `ts-expect-error` | PASS - no new matches |
 
 ## Acceptance gate
@@ -30,6 +34,9 @@ Date: 2026-08-10
 - [x] Storefront typecheck passes.
 - [x] Backend typecheck passes.
 - [x] Storefront build passes.
+- [x] Storefront unit tests pass.
+- [x] Commit diff check passes.
+- [x] One cohesive Phase 1 commit was created with the configured developer identity.
 - [x] No new suppression was introduced to hide a type error.
 - [x] Diff is limited to the Phase 1 frontend/backend scope plus this documentation.
 

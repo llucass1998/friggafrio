@@ -1,8 +1,8 @@
 import useEmblaCarousel from "embla-carousel-react"
 import { useCallback, useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { showcaseSlides } from "./carousel-data"
-import { ProductShowcaseSlide } from "./ProductShowcaseSlide"
+import { showcaseSlides } from "@/components/home/product-showcase-carousel/carousel-data"
+import { ProductShowcaseSlide } from "@/components/home/product-showcase-carousel/ProductShowcaseSlide"
 
 export function ProductShowcaseCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -43,8 +43,8 @@ export function ProductShowcaseCarousel() {
     // Suporte ao teclado acessível
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.closest('[aria-roledescription="carousel"]')) {
-        if (e.key === "ArrowLeft") scrollPrev();
-        if (e.key === "ArrowRight") scrollNext();
+        if (e.key === "ArrowLeft") scrollPrev()
+        if (e.key === "ArrowRight") scrollNext()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
