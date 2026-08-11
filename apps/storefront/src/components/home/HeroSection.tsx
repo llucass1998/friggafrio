@@ -2,11 +2,12 @@ import { ProductShowcaseCarousel } from "@/components/home/product-showcase-caro
 
 export function HeroSection() {
   return (
-    <section className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pt-8 pb-12">
-        <div className="w-full">
-          <ProductShowcaseCarousel />
-        </div>
+    <section
+      aria-label="Destaques da FriggaFrio"
+      className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)] w-full overflow-hidden"
+    >
+      <div data-testid="home-hero-carousel" className="w-full relative z-10 mx-auto">
+        <ProductShowcaseCarousel />
       </div>
     </section>
   )

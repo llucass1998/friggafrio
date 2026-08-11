@@ -1,18 +1,21 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useParams } from "@tanstack/react-router"
 
 interface HeaderLogoProps {
   compact?: boolean
 }
 
 export function HeaderLogo({ compact = false }: HeaderLogoProps) {
+  const params = useParams({ strict: false }) as Record<string, string>
+  const countryCode = params.countryCode || "br"
+
   return (
     <Link
-      to={"/$countryCode" as any} 
+      to="/$countryCode"
+      params={{ countryCode }}
       className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
       aria-label="Ir para a página inicial da FriggaFrio"
     >
       {compact ? (
-        // Mobile / Sticky compact logo (simbolo + texto se possivel, ou só simbolo)
         <div className="flex items-center gap-2">
           <img
             src="/favicon.png"
@@ -27,11 +30,10 @@ export function HeaderLogo({ compact = false }: HeaderLogoProps) {
           </span>
         </div>
       ) : (
-        // Full Logo
         <img
-          src="/images/brand/logo-friggafrio.png"
+          src="/images/brand/frigga-frio-logo.png"
           alt="FriggaFrio — Refrigeração e Ar Condicionado"
-          className="h-[70px] sm:h-[80px] md:h-[90px] w-auto object-contain transform scale-110"
+          className="h-[70px] sm:h-[80px] md:h-[90px] w-auto object-contain"
           loading="eager"
         />
       )}
