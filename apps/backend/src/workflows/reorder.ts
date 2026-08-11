@@ -68,11 +68,15 @@ export const reorderWorkflow = createWorkflow(
               phone: order.shipping_address.phone ?? undefined,
             }
           : undefined,
-        items: order.items?.map((item: { variant_id: string, quantity: number, unit_price: number, variant_title: string, variant_sku: string, title: string, id: string }) => ({
-          variant_id: item.variant_id!,
-          quantity: item.quantity!,
-          unit_price: item.unit_price!,
-        })),
+        items: order.items?.flatMap((item) =>
+          item
+            ? [{
+                variant_id: item.variant_id!,
+                quantity: item.quantity!,
+                unit_price: item.unit_price!,
+              }]
+            : []
+        ),
       }
     })
 
@@ -98,8 +102,8 @@ export const reorderWorkflow = createWorkflow(
         // Filter to only shipping options that are still valid for this cart
         const validOptions =
           order.shipping_methods
-            ?.filter((method) =>
-              availableOptionIds.has(method.shipping_option_id)
+            ?.filter((method): method is NonNullable<typeof method> =>
+              method !== null && availableOptionIds.has(method.shipping_option_id)
             )
             .map((method) => ({
               id: method.shipping_option_id!,

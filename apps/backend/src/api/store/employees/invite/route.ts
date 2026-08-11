@@ -27,7 +27,7 @@ export async function POST(
   })
 
   const emailExists = existingEmployees.some(
-    (emp: { customer?: { email: string } }) => emp.customer?.email?.toLowerCase() === email.toLowerCase()
+    (emp) => emp.customer?.email?.toLowerCase() === email.toLowerCase()
   )
 
   if (emailExists) {

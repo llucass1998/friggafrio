@@ -94,8 +94,8 @@ export async function getCompanySetupStatus(
     pagination: { skip: 0, take: 1000 },
   })
 
-  const pendingInviteCount = invites.filter((invite: { metadata?: { type?: string, company_id?: string } }) => {
-    const meta = invite.metadata as Record<string, unknown>
+  const pendingInviteCount = invites.filter((invite) => {
+    const meta = invite.metadata as Record<string, unknown> | null
     return meta?.type === "employee_invite" && meta?.company_id === companyId
   }).length
 

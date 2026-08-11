@@ -5,7 +5,7 @@ export const COMMERCIAL_DEFAULTS = Object.freeze({
   localeCode: "pt-BR",
   regionName: "Brasil",
   salesChannelName: "Canal Brasil",
-  storeName: "FriggaFrio",
+  storeName: "FriggaFrio"
 })
 
 export const DEFAULT_CURRENCY_CODE = COMMERCIAL_DEFAULTS.currencyCode
@@ -33,6 +33,8 @@ export type StoreSnapshot = {
   name: string
   default_region_id?: string | null
   default_sales_channel_id?: string | null
+  default_location_id?: string | null
+  created_at?: string | Date
   metadata?: Metadata
   supported_currencies?: Array<{
     currency_code: string
@@ -46,6 +48,50 @@ export type CommercialState = {
   regions: RegionSnapshot[]
   salesChannels: SalesChannelSnapshot[]
   stores: StoreSnapshot[]
+}
+
+export type CommercialGraphQuery = {
+  graph: (input: {
+    entity: string
+    fields: string[]
+  }) => Promise<{ data: unknown[] }>
+}
+
+export const readCommercialState = async (
+  query: CommercialGraphQuery
+): Promise<CommercialState> => {
+  const [regions, salesChannels, stores] = await Promise.all([
+    query.graph({
+      entity: "region",
+      fields: ["id", "name", "currency_code", "metadata", "countries.iso_2"]
+    }),
+    query.graph({
+      entity: "sales_channel",
+      fields: ["id", "name", "description", "is_disabled", "metadata"]
+    }),
+    query.graph({
+      entity: "store",
+      fields: [
+        "id",
+        "name",
+        "default_region_id",
+        "default_sales_channel_id",
+        "default_location_id",
+        "created_at",
+        "metadata",
+        "supported_currencies.currency_code",
+        "supported_currencies.is_default",
+        "supported_currencies.is_tax_inclusive",
+        "supported_locales.locale_code"
+      ]
+    })
+  ])
+
+  return {
+    regions: regions.data as RegionSnapshot[],
+    salesChannels: salesChannels.data as SalesChannelSnapshot[],
+    stores: stores.data as StoreSnapshot[]
+  }
 }
 
 export type PlannedEntity = {
@@ -72,6 +118,74 @@ const selectUnique = <T>(items: T[], label: string): T | undefined => {
 
 const normalize = (value: string): string => value.trim().toLowerCase()
 
+const MEDUSA_DEFAULT_STORE_NAME = "Medusa Store"
+const MEDUSA_DEFAULT_STORE_RACE_WINDOW_MS = 10_000
+
+const hasMetadata = (metadata: Metadata): boolean =>
+  Boolean(metadata && Object.keys(metadata).length)
+
+const isPristineMedusaDefaultStore = (store: StoreSnapshot): boolean =>
+  store.name === MEDUSA_DEFAULT_STORE_NAME &&
+  Boolean(store.default_sales_channel_id) &&
+  !store.default_region_id &&
+  !store.default_location_id &&
+  !hasMetadata(store.metadata) &&
+  (store.supported_locales?.length ?? 0) === 0
+
+const currencySignature = (store: StoreSnapshot): string =>
+  JSON.stringify(
+    [...(store.supported_currencies ?? [])]
+      .map((currency) => ({
+        currency_code: normalize(currency.currency_code),
+        is_default: currency.is_default,
+        is_tax_inclusive: currency.is_tax_inclusive
+      }))
+      .sort((left, right) =>
+        left.currency_code.localeCompare(right.currency_code)
+      )
+  )
+
+export const getRedundantMedusaDefaultStoreIds = (
+  stores: StoreSnapshot[]
+): string[] => {
+  if (
+    stores.length < 2 ||
+    stores.some((store) => !isPristineMedusaDefaultStore(store))
+  ) {
+    return []
+  }
+
+  const salesChannelIds = new Set(
+    stores.map((store) => store.default_sales_channel_id)
+  )
+  const currencySignatures = new Set(stores.map(currencySignature))
+  const orderedStores = [...stores].sort((left, right) => {
+    const leftCreatedAt = Date.parse(String(left.created_at ?? ""))
+    const rightCreatedAt = Date.parse(String(right.created_at ?? ""))
+
+    if (Number.isNaN(leftCreatedAt) || Number.isNaN(rightCreatedAt)) {
+      return left.id.localeCompare(right.id)
+    }
+
+    return leftCreatedAt - rightCreatedAt || left.id.localeCompare(right.id)
+  })
+  const createdAtValues = orderedStores.map((store) =>
+    Date.parse(String(store.created_at ?? ""))
+  )
+
+  if (
+    salesChannelIds.size !== 1 ||
+    currencySignatures.size !== 1 ||
+    createdAtValues.some(Number.isNaN) ||
+    createdAtValues.at(-1)! - createdAtValues[0] >
+      MEDUSA_DEFAULT_STORE_RACE_WINDOW_MS
+  ) {
+    return []
+  }
+
+  return orderedStores.slice(1).map((store) => store.id)
+}
+
 export const mergeRegionCountryCodes = (
   countries: RegionSnapshot["countries"]
 ): string[] => {
@@ -97,14 +211,14 @@ export const mergeSupportedCurrencies = (
       is_default: currencyCode === COMMERCIAL_DEFAULTS.currencyCode,
       ...(currency.is_tax_inclusive === undefined
         ? {}
-        : { is_tax_inclusive: currency.is_tax_inclusive }),
+        : { is_tax_inclusive: currency.is_tax_inclusive })
     })
   }
 
   if (!merged.has(COMMERCIAL_DEFAULTS.currencyCode)) {
     merged.set(COMMERCIAL_DEFAULTS.currencyCode, {
       currency_code: COMMERCIAL_DEFAULTS.currencyCode,
-      is_default: true,
+      is_default: true
     })
   }
 
@@ -184,14 +298,16 @@ export const resolveBrazilRegion = (
   const countryRegion = selectUnique(
     regions.filter((region) =>
       region.countries?.some(
-        (country) => normalize(country.iso_2) === COMMERCIAL_DEFAULTS.countryCode
+        (country) =>
+          normalize(country.iso_2) === COMMERCIAL_DEFAULTS.countryCode
       )
     ),
     "regions containing country br"
   )
   const namedRegion = selectUnique(
     regions.filter(
-      (region) => normalize(region.name) === normalize(COMMERCIAL_DEFAULTS.regionName)
+      (region) =>
+        normalize(region.name) === normalize(COMMERCIAL_DEFAULTS.regionName)
     ),
     'regions named "Brasil"'
   )
@@ -227,7 +343,9 @@ export const resolveDefaultSalesChannel = (
   }
 
   const keyedChannel = selectUnique(
-    salesChannels.filter((salesChannel) => hasBootstrapKey(salesChannel.metadata)),
+    salesChannels.filter((salesChannel) =>
+      hasBootstrapKey(salesChannel.metadata)
+    ),
     "sales channels"
   )
 
@@ -266,9 +384,7 @@ const regionIsCurrent = (region: RegionSnapshot): boolean =>
   containsBrazil(region) &&
   hasBootstrapKey(region.metadata)
 
-const salesChannelIsCurrent = (
-  salesChannel: SalesChannelSnapshot
-): boolean =>
+const salesChannelIsCurrent = (salesChannel: SalesChannelSnapshot): boolean =>
   salesChannel.name === COMMERCIAL_DEFAULTS.salesChannelName &&
   salesChannel.is_disabled === false &&
   hasBootstrapKey(salesChannel.metadata)
@@ -297,8 +413,8 @@ const storeIsCurrent = (
     brazilCurrencies[0].is_default === true &&
     currencies.every(
       (currency) =>
-        normalize(currency.currency_code) === COMMERCIAL_DEFAULTS.currencyCode ||
-        currency.is_default === false
+        normalize(currency.currency_code) ===
+          COMMERCIAL_DEFAULTS.currencyCode || currency.is_default === false
     ) &&
     locales.some(
       (locale) => locale.locale_code === COMMERCIAL_DEFAULTS.localeCode
@@ -322,7 +438,7 @@ export const buildCommercialBootstrapPlan = (
   const salesChannelPlan: PlannedEntity = salesChannel
     ? {
         action: salesChannelIsCurrent(salesChannel) ? "none" : "update",
-        id: salesChannel.id,
+        id: salesChannel.id
       }
     : { action: "create" }
   const storePlan: PlannedEntity = store
@@ -330,14 +446,14 @@ export const buildCommercialBootstrapPlan = (
         action: storeIsCurrent(store, regionPlan, salesChannelPlan)
           ? "none"
           : "update",
-        id: store.id,
+        id: store.id
       }
     : { action: "create" }
 
   return {
     region: regionPlan,
     salesChannel: salesChannelPlan,
-    store: storePlan,
+    store: storePlan
   }
 }
 
@@ -345,5 +461,5 @@ export const withCommercialDefaultsKey = (
   metadata: Metadata
 ): Record<string, unknown> => ({
   ...(metadata ?? {}),
-  commercial_defaults_key: COMMERCIAL_DEFAULTS.bootstrapKey,
+  commercial_defaults_key: COMMERCIAL_DEFAULTS.bootstrapKey
 })

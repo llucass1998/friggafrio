@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-10",
+  "updatedAt": "2026-08-11",
   "baselineFunctional": 65,
   "baselineProductionReadiness": 40,
   "phases": {
     "typescript": 100,
     "quality": 100,
     "brRegion": 100,
-    "database": 0,
+    "database": 100,
     "catalog": 0,
     "checkout": 0,
     "payment": 0,
@@ -72,6 +72,25 @@
         "storefront unit PASS:14",
         "backend unit PASS:9-suites-46-tests",
         "diff check PASS"
+      ]
+    },
+    "GATE-04": {
+      "status": "pass",
+      "commit": "CURRENT_PHASE_COMMIT",
+      "date": "2026-08-11",
+      "evidence": [
+        "PostgreSQL 16.14 and Redis 7.4.9 health PASS",
+        "fresh Medusa V2 migration PASS:187-mikro-orm-5-script-0-failed",
+        "second migration PASS:0-unexpected-pending",
+        "real Brazil seed and Graph validation PASS",
+        "second seed idempotency PASS:store-region-sales-channel-1-1-1",
+        "PostgreSQL advisory-lock concurrency seed PASS:1-1-1",
+        "backend, PostgreSQL and Redis restart recovery PASS",
+        "backend HTTP integration PASS:1-suite-2-tests",
+        "backend unit PASS:10-suites-50-tests",
+        "storefront typecheck, lint:0-errors-77-warnings, unit:14 and build PASS",
+        "backend Jest detectOpenHandles PASS; forceExit removed",
+        "diff check PASS; no tracked env or secrets"
       ]
     }
   },

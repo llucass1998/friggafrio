@@ -1,34 +1,54 @@
-version: "3.8"
+name: frigga-maestro-local
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    container_name: frigga-maestro-postgres
     environment:
       POSTGRES_DB: frigga
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_USER: frigga
+      POSTGRES_PASSWORD: frigga-local-only
     ports:
-      - "5433:5432"
+      - "127.0.0.1:55432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d frigga"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U frigga -d frigga"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 10s
+    labels:
+      com.friggafrio.scope: local-disposable
+      com.friggafrio.stack: frigga-maestro-local
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+    container_name: frigga-maestro-redis
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:56379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 5s
+    labels:
+      com.friggafrio.scope: local-disposable
+      com.friggafrio.stack: frigga-maestro-local
 
 volumes:
   postgres-data:
+    name: frigga-maestro-local-postgres-data
+    labels:
+      com.friggafrio.scope: local-disposable
+      com.friggafrio.stack: frigga-maestro-local
   redis-data:
+    name: frigga-maestro-local-redis-data
+    labels:
+      com.friggafrio.scope: local-disposable
+      com.friggafrio.stack: frigga-maestro-local

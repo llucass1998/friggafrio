@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import {
   COMMERCIAL_DEFAULTS,
   buildCommercialBootstrapPlan,
+  getRedundantMedusaDefaultStoreIds,
   mergeRegionCountryCodes,
   mergeSupportedCurrencies,
   mergeSupportedLocales,
@@ -186,6 +187,54 @@ describe("Brazil commercial defaults", () => {
     expect(() => buildCommercialBootstrapPlan(state)).toThrow(
       "Multiple stores exist"
     )
+  })
+
+  it("identifies only pristine Medusa stores created by the same first-boot race", () => {
+    const stores = [
+      {
+        id: "store_first",
+        name: "Medusa Store",
+        default_sales_channel_id: "sc_default",
+        created_at: "2026-08-11T15:23:24.868Z",
+        metadata: null,
+        supported_currencies: [{ currency_code: "eur", is_default: true }],
+        supported_locales: [],
+      },
+      {
+        id: "store_second",
+        name: "Medusa Store",
+        default_sales_channel_id: "sc_default",
+        created_at: "2026-08-11T15:23:24.877Z",
+        metadata: null,
+        supported_currencies: [{ currency_code: "eur", is_default: true }],
+        supported_locales: [],
+      },
+    ]
+
+    expect(getRedundantMedusaDefaultStoreIds(stores)).toEqual([
+      "store_second",
+    ])
+    expect(
+      getRedundantMedusaDefaultStoreIds([
+        stores[0],
+        { ...stores[1], metadata: { tenant: "legitimate" } },
+      ])
+    ).toEqual([])
+    expect(
+      getRedundantMedusaDefaultStoreIds([
+        stores[0],
+        {
+          ...stores[1],
+          supported_currencies: [{ currency_code: "brl", is_default: true }],
+        },
+      ])
+    ).toEqual([])
+    expect(
+      getRedundantMedusaDefaultStoreIds([
+        stores[0],
+        { ...stores[1], created_at: "2026-08-11T16:23:24.877Z" },
+      ])
+    ).toEqual([])
   })
 
   it("rejects conflicting Brazil region identifiers", () => {

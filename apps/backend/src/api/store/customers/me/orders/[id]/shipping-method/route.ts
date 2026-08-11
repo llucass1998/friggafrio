@@ -58,7 +58,11 @@ export const POST = async (
 
   // Find the price for the order's currency
   const currencyCode = order.currency_code?.toLowerCase()
-  const prices = (shippingOption as { prices: Array<{ currency_code: string; amount: number }> }).prices as Array<{ currency_code: string; amount: number }> | undefined
+  const prices = (
+    shippingOption as unknown as {
+      prices?: Array<{ currency_code: string; amount: number }>
+    }
+  ).prices
   const priceForCurrency = prices?.find(
     (p) => p.currency_code?.toLowerCase() === currencyCode
   )

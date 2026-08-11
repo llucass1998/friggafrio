@@ -42,7 +42,7 @@ export async function GET(
 
   // Filter invites that belong to this company and are employee invites
   // Note: We filter in memory because metadata is a JSON field
-  const employeeInvites = invites.filter((invite: { metadata: { type?: string, company_id?: string } }) => {
+  const employeeInvites = invites.filter((invite) => {
     const inviteMetadata = invite.metadata as EmployeeInviteMetadata | null
     return (
       inviteMetadata?.type === "employee_invite" &&

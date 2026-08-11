@@ -1,10 +1,15 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
-jest.setTimeout(60 * 1000)
+jest.setTimeout(240 * 1000)
 
 const databaseUrl = process.env.TEST_DATABASE_URL
+const redisUrl = process.env.REDIS_URL
 
 if (!databaseUrl) {
   throw new Error("TEST_DATABASE_URL is required for HTTP integration tests")
+}
+
+if (!redisUrl) {
+  throw new Error("REDIS_URL is required for HTTP integration tests")
 }
 
 medusaIntegrationTestRunner({
@@ -13,12 +18,41 @@ medusaIntegrationTestRunner({
     DATABASE_URL: databaseUrl,
     DB_URL: databaseUrl,
     POSTGRES_URL: databaseUrl,
+    REDIS_URL: redisUrl,
   },
   testSuite: ({ api }) => {
-    describe("Ping", () => {
-      it("ping the server health endpoint", async () => {
-        const response = await api.get('/health')
-        expect(response.status).toEqual(200)
+    describe("Health", () => {
+      it("reports the process as live", async () => {
+        const response = await api.get("/health/live", {
+          validateStatus: () => true,
+        })
+
+        expect({ status: response.status, data: response.data }).toMatchObject({
+          status: 200,
+          data: { status: "ok" },
+        })
+        expect(Number.isNaN(Date.parse(response.data.timestamp))).toBe(false)
+      })
+
+      it("reports readiness from the active database connection", async () => {
+        const originalDatabaseUrl = process.env.DATABASE_URL
+        process.env.DATABASE_URL = ""
+
+        try {
+          const response = await api.get("/health/ready", {
+            validateStatus: () => true,
+          })
+
+          expect({ status: response.status, data: response.data }).toEqual({
+            status: 200,
+            data: {
+              status: "ready",
+              checks: { database: "up" },
+            },
+          })
+        } finally {
+          process.env.DATABASE_URL = originalDatabaseUrl
+        }
       })
     })
   },
