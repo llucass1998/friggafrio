@@ -17,10 +17,14 @@ export { getVariantOptionsKeymap }
 // ============ VARIANT IN STOCK ============
 
 export function isVariantInStock(variant: HttpTypes.StoreProductVariant): boolean {
-  return !variant.manage_inventory || variant.allow_backorder || (
-    variant.manage_inventory === true &&
-    (variant.inventory_quantity || 0) > 0
-  )
+  if (variant.allow_backorder === true) return true
+  if (variant.manage_inventory === false) return true
+  if (variant.manage_inventory === true) {
+    return typeof variant.inventory_quantity === "number" && variant.inventory_quantity > 0
+  }
+
+  // Missing inventory metadata is unknown, never implicitly available.
+  return false
 }
 
 // ============ SORT PRODUCTS TYPE ============

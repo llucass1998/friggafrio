@@ -35,7 +35,8 @@ export const createRequestForQuoteWorkflow = createWorkflow(
         "shipping_methods.*",
         "promotions.code",
       ],
-      filters: { id: input.cart_id },
+      // A quote request is authenticated; the cart must belong to that customer.
+      filters: { id: input.cart_id, customer_id: input.customer_id },
       options: {
         throwIfKeyNotFound: true,
       },

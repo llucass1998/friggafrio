@@ -2,7 +2,7 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
-import { getVariantOptionsKeymap } from "@/lib/utils/product"
+import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
@@ -81,13 +81,17 @@ const ProductActions = memo(function ProductActions({
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
     if (!selectedVariant) return false
-    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending") return false
+    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending" || purchaseState.status === "out_of_stock") return false
 
-    // Additional strict price validation for the chosen variant
-    const calcPrice = (selectedVariant as any).calculated_price
-    if (!calcPrice || calcPrice.calculated_amount === null || calcPrice.calculated_amount === undefined) return false
+    const isApprovedVariant = purchaseState.status === "purchasable"
+      ? purchaseState.variant.id === selectedVariant.id
+      : purchaseState.variants.some((variant) => variant.id === selectedVariant.id)
+    if (!isApprovedVariant || !isVariantInStock(selectedVariant)) return false
 
-    return true // Inventory is enforced server-side; local fixtures may omit stock fields.
+    const amount = selectedVariant.calculated_price?.calculated_amount
+    if (typeof amount !== "number" || amount <= 0) return false
+
+    return true
   }, [selectedVariant, purchaseState])
 
   const displayPrice = selectedVariant

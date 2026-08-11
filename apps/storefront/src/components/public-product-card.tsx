@@ -28,28 +28,8 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   const brand = (metadata.brand as string) || product.collection?.title || "Friggafrio"
   const hasRealImages = metadata.has_real_images === true
 
-  // Forçamos uma análise resiliente que permite os itens aparecerem se faltar inventário de backend local
-  // O carrinho vai lidar com as travas finais baseadas na API
-  let purchaseState = getProductPurchaseState(product)
-
-  // Em public cards (listagem, vitrine, etc.), se a validação "select_variant" ocorrer, nós marcamos como selecionável
-  // para que o botão vire "Escolher opções" e leve a PDP ao invés de barrar
-  if (purchaseState.status === "out_of_stock") {
-    // Se o backend retornou nulo na query de inventário mas o item existe e tem preço na StoreAPI, liberamos o front.
-    const variantsWithPrice = (product.variants ?? []).filter(
-      (variant) => variant.calculated_price?.calculated_amount != null
-    )
-    if (variantsWithPrice.length === 1 && product.variants?.length === 1) {
-      const variant = variantsWithPrice[0]
-      purchaseState = {
-        status: "purchasable",
-        variant,
-        price: variant.calculated_price?.calculated_amount ?? 0,
-      }
-    } else if (product.variants && product.variants.length > 1) {
-      purchaseState = { status: "select_variant", variants: product.variants }
-    }
-  }
+  // Purchase state requires explicit price and inventory metadata.
+  const purchaseState = getProductPurchaseState(product)
 
   // Resgata o preço geral
   const firstCalculatedPrice = product.variants?.[0]?.calculated_price
