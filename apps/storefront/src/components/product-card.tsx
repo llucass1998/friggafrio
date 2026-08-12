@@ -72,7 +72,7 @@ export function ProductCard({ product, countryCode }: ProductCardProps) {
   }
 
   return (
-    <div className="bg-surface rounded-lg border border-border overflow-hidden hover:shadow-md transition-all duration-200 group flex flex-col">
+    <div className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition-[box-shadow,border-color,transform] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] hover:shadow-md">
       {/* Image */}
       <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
         <Link 
@@ -85,13 +85,13 @@ export function ProductCard({ product, countryCode }: ProductCardProps) {
               <img width="300" height="300"
                 src={primaryImage}
                 alt={product.title}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${secondImage ? "group-hover:opacity-0" : "group-hover:scale-105 transition-transform"}`}
+                className={`h-full w-full object-cover transition-[opacity,transform] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] ${secondImage ? "group-hover:opacity-0" : "group-hover:scale-[1.02]"}`}
               />
               {secondImage && (
                 <img
                   src={secondImage}
                   alt={`${product.title} - alternate view`}
-                  className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] group-hover:opacity-100"
                 />
               )}
             </>

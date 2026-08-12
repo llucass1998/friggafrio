@@ -110,7 +110,7 @@ export function StoreLocationCard({ location }: StoreLocationCardProps) {
               role="tab"
               aria-selected={activeView === "map"}
               onClick={() => setActiveView("map")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-[background-color,color,box-shadow] duration-[var(--motion-duration-interaction)] ${
                 activeView === "map"
                   ? "bg-white text-[var(--color-primary)] shadow-sm"
                   : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-navy)]"
@@ -124,7 +124,7 @@ export function StoreLocationCard({ location }: StoreLocationCardProps) {
               role="tab"
               aria-selected={activeView === "streetview"}
               onClick={() => setActiveView("streetview")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-[background-color,color,box-shadow] duration-[var(--motion-duration-interaction)] ${
                 activeView === "streetview"
                   ? "bg-white text-[var(--color-primary)] shadow-sm"
                   : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-navy)]"
@@ -136,7 +136,9 @@ export function StoreLocationCard({ location }: StoreLocationCardProps) {
           </div>
 
           <div className="min-h-[280px] flex-1 lg:min-h-[360px]">
-            {activeView === "map" ? <GoogleStoreMap location={location} /> : <StoreStreetView location={location} />}
+            <div key={activeView} className="motion-tab-content h-full">
+              {activeView === "map" ? <GoogleStoreMap location={location} /> : <StoreStreetView location={location} />}
+            </div>
           </div>
         </div>
       </div>

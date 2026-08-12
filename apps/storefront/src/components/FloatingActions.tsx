@@ -40,7 +40,7 @@ export function FloatingActions() {
       {/* Scroll to Top */}
       <button
         onClick={scrollToTop}
-        className={`bg-white text-[var(--color-navy)] shadow-md hover:shadow-lg rounded-full w-[52px] h-[52px] md:w-14 md:h-14 flex items-center justify-center transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${showScroll ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+        className={`flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white text-[var(--color-navy)] shadow-md transition-[opacity,transform,box-shadow] duration-[var(--motion-duration-medium)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] hover:shadow-lg md:h-14 md:w-14 ${showScroll ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
         aria-label="Voltar ao topo"
         title="Voltar ao topo"
       >
@@ -54,7 +54,7 @@ export function FloatingActions() {
         <button
           type="button"
           onClick={openCart}
-          className="relative bg-[var(--color-primary)] text-white shadow-md hover:shadow-lg rounded-full w-[52px] h-[52px] md:w-14 md:h-14 flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] border border-transparent hover:border-white/20"
+          className="relative flex h-[52px] w-[52px] items-center justify-center rounded-full border border-transparent bg-[var(--color-primary)] text-white shadow-md transition-[background-color,border-color,box-shadow,transform] duration-[var(--motion-duration-interaction)] hover:border-white/20 hover:bg-[var(--color-primary-hover)] hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] md:h-14 md:w-14"
           aria-label={`Abrir carrinho com ${itemCount} ${itemCount === 1 ? "item" : "itens"}`}
           title="Abrir carrinho"
         >

@@ -4,8 +4,10 @@ import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { getRegion } from "@/lib/data/regions"
 import { PublicProductCard } from "@/components/public-product-card"
+import { useEffect, useState } from "react"
 
 export function FeaturedProducts() {
+  const [isHydrated, setIsHydrated] = useState(false)
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -30,6 +32,10 @@ export function FeaturedProducts() {
 
   const products = productsData?.response?.products || []
 
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
   return (
     <section className="py-10 md:py-16 lg:py-24 bg-white relative w-full mb-12 md:mb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative w-full h-full flex flex-col">
@@ -47,7 +53,7 @@ export function FeaturedProducts() {
           </Link>
         </div>
 
-        {isLoading ? (
+        {!isHydrated || isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] h-[400px]">

@@ -102,7 +102,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
   }
 
   return (
-    <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden transition-all duration-[var(--motion-duration-card,300ms)] ease-[var(--ease-standard,cubic-bezier(0.2,0.8,0.2,1))] hover:-translate-y-[5px] hover:shadow-lg hover:border-[var(--color-primary)] group flex flex-col h-full focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
+    <div className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white transition-[transform,box-shadow,border-color] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:shadow-lg focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
       {/* Image */}
       <Link
         to={"/$countryCode/products/$handle" as string}
@@ -128,7 +128,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
             loading="lazy"
             width="300"
             height="300"
-            className="w-full h-full object-contain mix-blend-multiply transition-transform duration-[var(--motion-duration-card,300ms)] ease-out group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
+            className="h-full w-full object-contain mix-blend-multiply transition-transform duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none"
           />
         ) : (
           <ProductImagePlaceholder productName={product.title} />
@@ -178,7 +178,7 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
             onClick={handleActionClick}
             disabled={(buttonDisabled && purchaseState.status !== "select_variant") || addToCartMutation.isPending || isSuccess}
             aria-label={`${buttonText} ${product.title}`}
-            className={`flex items-center justify-center w-full min-h-[44px] px-3 py-2.5 text-sm font-semibold rounded-[var(--radius-button-sm)] transition-all duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
+            className={`flex min-h-[44px] w-full items-center justify-center rounded-[var(--radius-button-sm)] px-3 py-2.5 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] duration-[var(--motion-duration-interaction)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
               buttonDisabled && purchaseState.status !== "select_variant"
                 ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"
                 : isSuccess

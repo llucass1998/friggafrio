@@ -17,9 +17,10 @@ const DrawerOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     className={clsx(
       "fixed inset-0 z-50 bg-[#051428]/45 backdrop-blur-[2px]",
+      "motion-drawer-overlay",
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
-      "data-[state=open]:transition-opacity data-[state=closed]:transition-opacity",
-      "data-[state=open]:duration-[280ms] data-[state=closed]:duration-[240ms]",
+      "transition-opacity",
+      "data-[state=open]:duration-[var(--motion-duration-medium)] data-[state=closed]:duration-[var(--motion-duration-small)]",
       "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
       className
     )}
@@ -63,11 +64,13 @@ const DrawerContent = React.forwardRef<
       className={clsx(
         drawerVariants({ side }),
         "group",
+        "motion-drawer-content",
         // Animação CSS direta baseada em data-state sem depender de plugins animate-in
-        "data-[state=open]:duration-[420ms] data-[state=closed]:duration-[320ms]",
+        "data-[state=open]:duration-[var(--motion-duration-cart-open)] data-[state=closed]:duration-[var(--motion-duration-cart-close)]",
         "data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
         className
       )}
+      data-motion-side={side}
       {...props}
     >
       {!hideClose && (
@@ -77,7 +80,7 @@ const DrawerContent = React.forwardRef<
         </DialogPrimitive.Close>
       )}
       {/* O conteúdo interno perde opacidade discretamente antes de sair e entra com delay suave */}
-      <div className="flex flex-col h-full opacity-100 group-data-[state=closed]:opacity-0 transition-opacity duration-[320ms]">
+      <div className="flex h-full flex-col opacity-100 transition-opacity group-data-[state=closed]:opacity-0 group-data-[state=open]:duration-[var(--motion-duration-cart-open)] group-data-[state=closed]:duration-[var(--motion-duration-cart-close)]">
         {children}
       </div>
     </DialogPrimitive.Content>

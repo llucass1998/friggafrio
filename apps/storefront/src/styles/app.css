@@ -48,7 +48,7 @@ html {
 .motion-interactive {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, transform;
   transition-timing-function: var(--motion-ease-standard);
-  transition-duration: var(--motion-duration-fast);
+  transition-duration: var(--motion-duration-interaction);
 }
 
 .motion-surface {
@@ -60,19 +60,178 @@ html {
 .motion-card {
   transition-property: transform, box-shadow, border-color;
   transition-timing-function: var(--motion-ease-standard);
-  transition-duration: var(--motion-duration-medium);
+  transition-duration: var(--motion-duration-card);
 }
 
 .motion-dropdown {
   transition-property: opacity, transform;
   transition-timing-function: var(--motion-ease-enter);
-  transition-duration: var(--motion-duration-base);
+  transition-duration: var(--motion-duration-dropdown-open);
 }
 
 .motion-overlay {
   transition-property: opacity;
   transition-timing-function: var(--motion-ease-standard);
-  transition-duration: var(--motion-duration-base);
+  transition-duration: var(--motion-duration-medium);
+}
+
+.motion-page-enter {
+  animation: motion-page-enter var(--motion-duration-page) var(--motion-ease-enter) both;
+  will-change: opacity, transform;
+}
+
+.motion-dialog-content {
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
+.motion-dialog-content[data-state="open"] {
+  animation: motion-modal-enter var(--motion-duration-modal-open) var(--motion-ease-enter) both;
+}
+
+.motion-dialog-content[data-state="closed"] {
+  animation: motion-modal-exit var(--motion-duration-modal-close) var(--motion-ease-exit) both;
+}
+
+.motion-drawer-content[data-motion-side="right"][data-state="open"] {
+  animation: motion-drawer-enter-right var(--motion-duration-cart-open) var(--motion-ease-enter) both;
+}
+
+.motion-drawer-content[data-motion-side="right"][data-state="closed"] {
+  animation: motion-drawer-exit-right var(--motion-duration-cart-close) var(--motion-ease-exit) both;
+}
+
+.motion-drawer-overlay[data-state="open"] {
+  animation: motion-overlay-enter var(--motion-duration-medium) var(--motion-ease-enter) both;
+}
+
+.motion-drawer-overlay[data-state="closed"] {
+  animation: motion-overlay-exit var(--motion-duration-small) var(--motion-ease-exit) both;
+}
+
+.motion-accordion {
+  transition-property: opacity, transform, grid-template-rows;
+  transition-duration: var(--motion-duration-accordion);
+  transition-timing-function: var(--motion-ease-move);
+}
+
+.motion-tab-content {
+  animation: motion-tab-content-enter var(--motion-duration-base) var(--motion-ease-enter) both;
+  will-change: opacity;
+}
+
+.motion-cart-content,
+.motion-cart-item-enter {
+  animation: motion-cart-content-enter var(--motion-duration-base) var(--motion-ease-enter) both;
+}
+
+.motion-cart-item-removing {
+  animation: motion-cart-item-exit var(--motion-duration-small) var(--motion-ease-exit) both;
+  pointer-events: none;
+}
+
+@keyframes motion-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes motion-modal-exit {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+}
+
+@keyframes motion-drawer-enter-right {
+  from {
+    opacity: 0.98;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-drawer-exit-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0.98;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes motion-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-overlay-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-cart-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-tab-content-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-cart-item-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+  }
 }
 
 body {

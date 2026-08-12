@@ -3,6 +3,7 @@ import { PublicFooter } from "@/components/public-footer"
 import { FloatingActions } from "@/components/FloatingActions"
 import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button"
 import { CartDropdown } from "@/components/cart"
+import { useLocation } from "@tanstack/react-router"
 import {
   AccessibilityProvider,
   AccessibilityTopBar,
@@ -19,6 +20,9 @@ interface PublicLayoutProps {
 }
 
 export function PublicLayout({ children }: PublicLayoutProps) {
+  const location = useLocation()
+  const pageKey = location.href
+
   return (
     <AccessibilityProvider>
       <div className="min-h-screen bg-[var(--color-background)] flex flex-col font-sans text-[var(--color-text)]">
@@ -35,7 +39,9 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           tabIndex={-1}
           className="flex-1 flex flex-col focus:outline-none"
         >
-          {children}
+          <div key={pageKey} className="flex flex-1 flex-col motion-page-enter">
+            {children}
+          </div>
         </main>
 
         <PublicFooter />

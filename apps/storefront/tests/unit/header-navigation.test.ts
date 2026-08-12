@@ -37,6 +37,10 @@ test("mobile navigation exposes an accessible open/close flow", () => {
   assert.match(mobileDrawerSource, /document\.body\.style\.overflow = "hidden"/)
   assert.match(mobileDrawerSource, /document\.body\.style\.overflow = previousOverflowRef\.current/)
   assert.match(mobileDrawerSource, /createPortal\(drawer, document\.body\)/)
+  assert.match(mobileDrawerSource, /const \[isMounted, setIsMounted\]/)
+  assert.match(mobileDrawerSource, /onTransitionEnd=\{handleDrawerTransitionEnd\}/)
+  assert.match(mobileDrawerSource, /motion-duration-menu-open/)
+  assert.match(mobileDrawerSource, /motion-duration-menu-close/)
 })
 
 test("mobile navigation has canonical links and no duplicate action group", () => {

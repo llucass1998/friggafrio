@@ -19,7 +19,7 @@ export function FloatingWhatsAppButton() {
         rel="noopener noreferrer"
         aria-label="Falar com a loja Friggafrio pelo WhatsApp"
         title="Falar com a loja Friggafrio pelo WhatsApp"
-        className="flex h-[52px] w-[52px] sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition duration-200 hover:scale-105 hover:bg-[#20bd5a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/30 active:scale-95"
+        className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-[background-color,box-shadow,transform] duration-[var(--motion-duration-interaction)] hover:scale-[1.02] hover:bg-[#20bd5a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/30 active:scale-[0.98] sm:h-14 sm:w-14"
       >
         <svg
           aria-hidden="true"
@@ -34,7 +34,7 @@ export function FloatingWhatsAppButton() {
       </a>
 
       {/* Tooltip (visível apenas em telas não touch e ao passar o mouse ou focar o link interior) */}
-      <div className="absolute left-full top-1/2 ml-3 -translate-y-1/2 scale-0 opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100 hidden md:block whitespace-nowrap z-50 pointer-events-none">
+      <div className="absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 scale-0 whitespace-nowrap opacity-0 transition-[opacity,transform] duration-[var(--motion-duration-interaction)] md:block group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100 pointer-events-none">
         <div className="rounded-md bg-white px-3 py-2 text-sm font-medium text-[var(--color-navy)] shadow-md border border-[var(--color-border)]">
           Fale com a Friggafrio no WhatsApp
           {/* Arrow */}
@@ -44,4 +44,3 @@ export function FloatingWhatsAppButton() {
     </div>
   )
 }
-

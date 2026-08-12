@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { Link, useParams } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { productCategories } from "@/components/header/categories"
@@ -8,6 +8,7 @@ export function ProductsMegaMenu() {
   const [activeCategory, setActiveCategory] = useState<string>(productCategories[0].id)
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuId = `products-mega-menu-${useId().replace(/:/g, "")}`
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -54,20 +55,20 @@ export function ProductsMegaMenu() {
         className="-ml-2 flex h-full items-center gap-1 rounded-md px-2 py-4 font-medium text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
         aria-haspopup="true"
         aria-expanded={isOpen}
-        aria-controls="products-mega-menu"
+        aria-controls={menuId}
       >
         Produtos
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "-rotate-180" : ""}`} aria-hidden="true" />
       </button>
 
       <div
-        id="products-mega-menu"
+        id={menuId}
         role="region"
         aria-label="Categorias de produtos"
-        className={`absolute left-0 top-full flex w-[800px] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl transition-all duration-200 xl:w-[1000px] ${
+        className={`absolute left-0 top-full flex w-[800px] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl transition-[opacity,transform,visibility] xl:w-[1000px] ${
           isOpen
-            ? "visible opacity-100"
-            : "invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            ? "visible translate-y-0 opacity-100 duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)]"
+            : "invisible translate-y-[-4px] opacity-0 duration-[var(--motion-duration-dropdown-close)] ease-[var(--motion-ease-exit)] group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[var(--motion-duration-dropdown-open)] group-hover:ease-[var(--motion-ease-enter)] group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-focus-within:duration-[var(--motion-duration-dropdown-open)] group-focus-within:ease-[var(--motion-ease-enter)]"
         }`}
       >
         <div className="w-1/3 border-r border-[var(--color-border)] bg-[var(--color-surface)] py-4">
@@ -123,7 +124,7 @@ export function ProductsMegaMenu() {
                 key={child.id}
                 to={toCountryPath(child.href) as string}
                 onClick={closeMenu}
-                className="min-h-11 py-1 text-sm font-medium text-[var(--color-text)] transition-all hover:translate-x-1 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                className="min-h-11 py-1 text-sm font-medium text-[var(--color-text)] transition-[color,transform] duration-[var(--motion-duration-interaction)] hover:translate-x-1 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               >
                 {child.label}
               </Link>

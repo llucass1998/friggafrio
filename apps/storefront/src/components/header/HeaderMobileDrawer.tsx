@@ -1,18 +1,22 @@
 import { createPortal } from "react-dom"
 import { Link, useParams } from "@tanstack/react-router"
 import { Menu, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { type TransitionEvent, useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+  const [mountedCategory, setMountedCategory] = useState<string | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const previousOverflowRef = useRef("")
+  const openFrameRef = useRef<number | null>(null)
+  const categoryFrameRef = useRef<number | null>(null)
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -69,32 +73,84 @@ export function HeaderMobileDrawer() {
     const closeOnDesktop = () => {
       if (desktopMediaQuery.matches) {
         setIsOpen(false)
+        setExpandedCategory(null)
       }
     }
 
     desktopMediaQuery.addEventListener("change", closeOnDesktop)
-    return () => desktopMediaQuery.removeEventListener("change", closeOnDesktop)
+    return () => {
+      desktopMediaQuery.removeEventListener("change", closeOnDesktop)
+      if (categoryFrameRef.current !== null) {
+        window.cancelAnimationFrame(categoryFrameRef.current)
+      }
+      if (openFrameRef.current !== null) {
+        window.cancelAnimationFrame(openFrameRef.current)
+      }
+    }
   }, [])
 
   const closeDrawer = () => {
+    if (openFrameRef.current !== null) {
+      window.cancelAnimationFrame(openFrameRef.current)
+      openFrameRef.current = null
+    }
+    if (!isOpen) {
+      setIsMounted(false)
+    }
     setIsOpen(false)
     setExpandedCategory(null)
   }
 
+  const openDrawer = () => {
+    setIsMounted(true)
+    openFrameRef.current = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+      openFrameRef.current = null
+    })
+  }
+
+  const handleDrawerTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+    if (
+      !isOpen &&
+      event.target === event.currentTarget &&
+      (event.propertyName === "transform" || event.propertyName === "opacity")
+    ) {
+      setIsMounted(false)
+    }
+  }
+
   const toggleCategory = (id: string) => {
-    setExpandedCategory((current) => (current === id ? null : id))
+    if (expandedCategory === id) {
+      setExpandedCategory(null)
+      return
+    }
+
+    if (categoryFrameRef.current !== null) {
+      window.cancelAnimationFrame(categoryFrameRef.current)
+    }
+
+    setMountedCategory(id)
+    categoryFrameRef.current = window.requestAnimationFrame(() => {
+      setExpandedCategory(id)
+      categoryFrameRef.current = null
+    })
   }
 
   const toCountryPath = (href: string) =>
     href.replace(/^\/br(?=\/|$)/, `/${countryCode}`)
 
-  const drawer = isOpen ? (
-    <div className="fixed inset-0 z-[80] lg:hidden" data-testid="mobile-navigation-layer">
+  const drawer = isMounted ? (
+    <div
+      className={`fixed inset-0 z-[80] lg:hidden ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+      data-state={isOpen ? "open" : "closed"}
+      data-testid="mobile-navigation-layer"
+    >
       <button
         type="button"
-        className="absolute inset-0 bg-black/50"
+        className={`absolute inset-0 bg-black/50 transition-opacity data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-medium)] data-[state=closed]:duration-[var(--motion-duration-small)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "opacity-100" : "opacity-0"}`}
         onClick={closeDrawer}
         aria-label="Fechar menu mobile"
+        data-state={isOpen ? "open" : "closed"}
         data-testid="mobile-navigation-overlay"
       />
 
@@ -104,8 +160,10 @@ export function HeaderMobileDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Menu principal"
-        className="absolute inset-y-0 left-0 flex w-[min(85vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl"
+        className={`motion-mobile-drawer absolute inset-y-0 left-0 flex w-[min(85vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
+        data-state={isOpen ? "open" : "closed"}
         data-testid="mobile-navigation-drawer"
+        onTransitionEnd={handleDrawerTransitionEnd}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-white p-4">
           <div onClick={closeDrawer}>
@@ -159,13 +217,23 @@ export function HeaderMobileDrawer() {
                         </span>
                       </button>
 
-                      {isExpanded && category.children && (
-                        <ul id={categoryPanelId} className="mt-1 mb-2 overflow-hidden rounded-md bg-[var(--color-surface)] py-2">
+                      {mountedCategory === category.id && category.children && (
+                        <ul
+                          id={categoryPanelId}
+                          aria-hidden={!isExpanded}
+                          className={`motion-accordion-content mt-1 mb-2 overflow-hidden rounded-md bg-[var(--color-surface)] py-2 transition-[max-height,opacity,transform] duration-[var(--motion-duration-accordion)] ease-[var(--motion-ease-move)] ${isExpanded ? "max-h-[32rem] translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-1 opacity-0"}`}
+                          onTransitionEnd={(event) => {
+                            if (!isExpanded && event.propertyName === "max-height") {
+                              setMountedCategory(null)
+                            }
+                          }}
+                        >
                           {category.children.map((child) => (
                             <li key={child.id}>
                               <Link
                                 to={toCountryPath(child.href) as string}
                                 onClick={closeDrawer}
+                                tabIndex={isExpanded ? 0 : -1}
                                 className="block min-h-11 px-8 py-3 text-sm text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                               >
                                 {child.label}
@@ -217,7 +285,7 @@ export function HeaderMobileDrawer() {
         ref={triggerRef}
         type="button"
         className="-ml-2 flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
-        onClick={() => setIsOpen(true)}
+        onClick={openDrawer}
         aria-label="Abrir menu mobile"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation-drawer"

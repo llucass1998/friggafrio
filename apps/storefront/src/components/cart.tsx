@@ -26,7 +26,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Link, useLocation } from "@tanstack/react-router"
 import { ShoppingCart } from "lucide-react"
 import { clsx } from "clsx"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 
 type LineItemPriceProps = {
@@ -61,13 +61,17 @@ export const LineItemPrice = ({ item, currencyCode, className }: LineItemPricePr
 type CartDeleteItemProps = {
   item: HttpTypes.StoreCartLineItem
   fields?: string
+  onRemoveStart?: (item: HttpTypes.StoreCartLineItem) => void
 }
 
-export const CartDeleteItem = ({ item, fields }: CartDeleteItemProps) => {
+export const CartDeleteItem = ({ item, fields, onRemoveStart }: CartDeleteItemProps) => {
   const deleteLineItemMutation = useDeleteLineItem({ fields })
   return (
     <button
-      onClick={() => deleteLineItemMutation.mutate({ line_id: item.id })}
+      onClick={() => {
+        onRemoveStart?.(item)
+        deleteLineItemMutation.mutate({ line_id: item.id })
+      }}
       disabled={deleteLineItemMutation.isPending}
       className="p-2 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
     >
@@ -150,9 +154,10 @@ interface CartLineItemProps {
   type?: "default" | "compact" | "display"
   fields?: string
   className?: string
+  onRemoveStart?: (item: HttpTypes.StoreCartLineItem) => void
 }
 
-const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
+const CompactCartLineItem = ({ item, cart, fields, onRemoveStart }: CartLineItemProps) => {
   return (
     <div className="flex items-start gap-x-4" data-testid="cart-item">
       <Thumbnail thumbnail={item.thumbnail} alt={item.product_title || item.title} />
@@ -168,7 +173,7 @@ const CompactCartLineItem = ({ item, cart, fields }: CartLineItemProps) => {
               )}
             </div>
           </div>
-          <CartDeleteItem item={item} fields={fields} />
+          <CartDeleteItem item={item} fields={fields} onRemoveStart={onRemoveStart} />
         </div>
 
         <div className="flex items-center justify-between mt-2">
@@ -213,9 +218,10 @@ export const CartLineItem = ({
   type = "default",
   fields,
   className,
+  onRemoveStart,
 }: CartLineItemProps) => {
   if (type === "compact") {
-    return <CompactCartLineItem item={item} cart={cart} fields={fields} className={className} />
+    return <CompactCartLineItem item={item} cart={cart} fields={fields} className={className} onRemoveStart={onRemoveStart} />
   }
 
   if (type === "display") {
@@ -463,7 +469,33 @@ export const CartDropdown = () => {
   const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
   const sortedItems = sortCartItems(cart?.items || [])
-  const itemCount = getCartItemCount(sortedItems)
+  const [pendingRemovedItems, setPendingRemovedItems] = useState<HttpTypes.StoreCartLineItem[]>([])
+  const sortedItemIds = sortedItems.map((item) => item.id).join("|")
+
+  useEffect(() => {
+    const currentItemIds = new Set(sortedItemIds ? sortedItemIds.split("|") : [])
+    setPendingRemovedItems((current) =>
+      current.filter((pendingItem) => !currentItemIds.has(pendingItem.id))
+    )
+  }, [sortedItemIds])
+
+  const visibleItems = [
+    ...sortedItems,
+    ...pendingRemovedItems.filter(
+      (pendingItem) => !sortedItems.some((item) => item.id === pendingItem.id)
+    ),
+  ]
+  const itemCount = getCartItemCount(visibleItems)
+
+  const handleRemoveStart = (item: HttpTypes.StoreCartLineItem) => {
+    setPendingRemovedItems((current) =>
+      current.some((pendingItem) => pendingItem.id === item.id) ? current : [...current, item]
+    )
+  }
+
+  const handleRemoveAnimationEnd = (itemId: string) => {
+    setPendingRemovedItems((current) => current.filter((item) => item.id !== itemId))
+  }
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => (open ? openCart() : closeCart())}>
@@ -479,7 +511,7 @@ export const CartDropdown = () => {
 
         {/* Empty Cart */}
         {(!cart || itemCount === 0) && (
-          <div className="flex flex-col items-center justify-center flex-1 p-6 motion-dropdown animate-in fade-in-0 duration-[var(--motion-duration-medium)]">
+          <div className="flex flex-1 flex-col items-center justify-center p-6 motion-cart-content">
             <div className="w-20 h-20 rounded-2xl bg-[#F5F8FA] border border-[#E5EDF4] flex items-center justify-center mb-6">
               <ShoppingCart className="w-10 h-10 text-[#8EA6BC] opacity-60" />
             </div>
@@ -498,20 +530,33 @@ export const CartDropdown = () => {
         {/* Cart Items */}
         {cart && itemCount > 0 && (
           <>
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 motion-dropdown animate-in slide-in-from-bottom-2 fade-in-0 duration-[var(--motion-duration-medium)]">
-              {sortedItems?.map((item) => (
-                <div key={item.id} className="animate-in fade-in-0 duration-[var(--motion-duration-fast)]">
-                  <CartLineItem
-                    item={item}
-                    cart={cart}
-                    type="compact"
-                    fields={DEFAULT_CART_DROPDOWN_FIELDS}
-                  />
-                </div>
-              ))}
+            <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-6 motion-cart-content">
+              {visibleItems.map((item) => {
+                const isPendingRemoval = pendingRemovedItems.some((pendingItem) => pendingItem.id === item.id)
+
+                return (
+                  <div
+                    key={item.id}
+                    className={isPendingRemoval ? "motion-cart-item-removing" : "motion-cart-item-enter"}
+                    onAnimationEnd={() => {
+                      if (isPendingRemoval) {
+                        handleRemoveAnimationEnd(item.id)
+                      }
+                    }}
+                  >
+                    <CartLineItem
+                      item={item}
+                      cart={cart}
+                      type="compact"
+                      fields={DEFAULT_CART_DROPDOWN_FIELDS}
+                      onRemoveStart={handleRemoveStart}
+                    />
+                  </div>
+                )
+              })}
             </div>
 
-            <DrawerFooter className="border-t border-[#E5EDF4] bg-[#F5F8FA] motion-dropdown animate-in slide-in-from-bottom-4 fade-in-0 duration-[var(--motion-duration-slow)]">
+            <DrawerFooter className="border-t border-[#E5EDF4] bg-[#F5F8FA] motion-cart-content">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-base font-bold text-[var(--color-navy)]">Subtotal</span>
                 <Price price={cart.item_subtotal ?? 0} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
@@ -524,7 +569,7 @@ export const CartDropdown = () => {
                   </Button>
                 </Link>
                 <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
-                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={sortedItems?.some(item => !item.variant_id || item.quantity <= 0)}>
+                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={visibleItems.some(item => !item.variant_id || item.quantity <= 0)}>
                     Finalizar compra
                   </Button>
                 </Link>
