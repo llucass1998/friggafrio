@@ -4,6 +4,7 @@ import { isVariantInStock } from "@/lib/utils/product"
 export type ProductPurchaseState =
   | { status: "purchasable"; variant: HttpTypes.StoreProductVariant; price: number }
   | { status: "select_variant"; variants: HttpTypes.StoreProductVariant[] }
+  | { status: "quote_only"; reason: string }
   | { status: "price_pending"; reason: string }
   | { status: "out_of_stock"; reason: string }
   | { status: "unavailable"; reason: string }
@@ -15,20 +16,21 @@ export function getProductPurchaseState(product: HttpTypes.StoreProduct): Produc
 
   const isDemoPrice = (product.metadata?.is_demo_price as boolean) === true
   const priceApprovalStatus = product.metadata?.price_approval_status as string
+  const isPricePending = product.metadata?.price_pending === true
   const purchaseEnabled = product.metadata?.purchase_enabled !== false
   const isQuoteOnly =
     product.metadata?.is_quote_only === true ||
     product.metadata?.commercial_status === "QUOTE_ONLY"
 
+  if (isQuoteOnly) {
+    return { status: "quote_only", reason: "Produto disponível somente sob consulta" }
+  }
+
   if (!purchaseEnabled) {
     return { status: "unavailable", reason: "Compra desabilitada comercialmente" }
   }
 
-  if (isQuoteOnly) {
-    return { status: "unavailable", reason: "Produto disponível somente sob consulta" }
-  }
-
-  if (priceApprovalStatus === "pending" || isDemoPrice) {
+  if (isPricePending || priceApprovalStatus === "pending" || isDemoPrice) {
     return { status: "price_pending", reason: "Preço em configuração" }
   }
 

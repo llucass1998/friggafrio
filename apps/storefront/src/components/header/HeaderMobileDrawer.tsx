@@ -9,16 +9,20 @@ import { HeaderLogo } from "@/components/header/HeaderLogo"
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [mountedCategory, setMountedCategory] = useState<string | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const previousOverflowRef = useRef("")
-  const openFrameRef = useRef<number | null>(null)
   const categoryFrameRef = useRef<number | null>(null)
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   useEffect(() => {
     if (!isOpen) {
@@ -83,17 +87,10 @@ export function HeaderMobileDrawer() {
       if (categoryFrameRef.current !== null) {
         window.cancelAnimationFrame(categoryFrameRef.current)
       }
-      if (openFrameRef.current !== null) {
-        window.cancelAnimationFrame(openFrameRef.current)
-      }
     }
   }, [])
 
   const closeDrawer = () => {
-    if (openFrameRef.current !== null) {
-      window.cancelAnimationFrame(openFrameRef.current)
-      openFrameRef.current = null
-    }
     if (!isOpen) {
       setIsMounted(false)
     }
@@ -103,10 +100,7 @@ export function HeaderMobileDrawer() {
 
   const openDrawer = () => {
     setIsMounted(true)
-    openFrameRef.current = window.requestAnimationFrame(() => {
-      setIsOpen(true)
-      openFrameRef.current = null
-    })
+    setIsOpen(true)
   }
 
   const handleDrawerTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
@@ -290,6 +284,7 @@ export function HeaderMobileDrawer() {
         aria-expanded={isOpen}
         aria-controls="mobile-navigation-drawer"
         data-testid="mobile-navigation-trigger"
+        data-hydrated={isHydrated ? "true" : "false"}
       >
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>

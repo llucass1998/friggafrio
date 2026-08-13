@@ -151,6 +151,12 @@ describe("OmieClient", () => {
 })
 
 describe("Omie discovery mapping", () => {
+  it("preserves numeric Omie identifiers as lossless strings", () => {
+    const product = normalizeOmieProduct({ codigo_produto: 12345, codigo: 67890 })
+    expect(product.externalId).toBe("12345")
+    expect(product.variants[0]?.sku).toBe("12345")
+  })
+
   it("normalizes only observed values and keeps incomplete products quote-only", () => {
     const product = normalizeOmieProduct({
       id_produto: "fixture-product-1",
@@ -210,6 +216,21 @@ describe("Omie discovery mapping", () => {
 
     const reader = new OmieCatalogReader(client)
     await expect(reader.readAll({ pageSize: 1 })).resolves.toEqual([{ id_produto: "1" }])
+  })
+
+  it("fails closed when the upstream repeats a non-empty page", async () => {
+    const page = new Response(JSON.stringify({ produto_servico_cadastro: [{ id_produto: "1" }] }), { status: 200 })
+    const client = new OmieClient(
+      { apiUrl: "https://example.invalid", appKey: "fixture-key", appSecret: "fixture-secret" },
+      { fetchImpl: jest.fn().mockResolvedValueOnce(page).mockResolvedValueOnce(
+        new Response(JSON.stringify({ produto_servico_cadastro: [{ id_produto: "1" }] }), { status: 200 }),
+      ) },
+    )
+
+    await expect(new OmieCatalogReader(client).readAll({ pageSize: 1 })).rejects.toMatchObject({
+      code: "INVALID_RESPONSE",
+      operation: "ListarProdutos",
+    })
   })
 })
 

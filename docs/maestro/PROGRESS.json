@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-11",
+  "updatedAt": "2026-08-12",
   "baselineFunctional": 65,
   "baselineProductionReadiness": 40,
   "phases": {
@@ -19,14 +19,120 @@
     "observability": 0
   },
   "phase5Discovery": {
-    "status": "partial",
-    "gate": "GATE-05-BLOCKED",
-    "integration": "structural-read-only",
-    "credentials": "unavailable",
-    "productsDiscovered": 0,
-    "catalogImported": false,
-    "sourceOfTruth": "unresolved",
-    "blocker": "OMIE credentials unavailable"
+    "status": "pass",
+    "gate": "GATE-05-PASS",
+    "integration": "read-only-omie-to-medusa-projection",
+    "credentials": {
+      "apiUrl": "present",
+      "appKey": "present",
+      "appSecret": "present"
+    },
+    "localEnvFile": "apps/backend/.env",
+    "localEnvIgnored": true,
+    "endpointConfirmed": true,
+    "productsDiscovered": 1229,
+    "catalogImported": true,
+    "sourceOfTruth": {
+      "status": "decided",
+      "operationalMaster": "omie",
+      "operationalFields": ["sku", "price", "inventory", "operationalStatus"],
+      "ecommerceProjection": "medusa",
+      "projectionFields": [
+        "handle",
+        "seo",
+        "category",
+        "images",
+        "shipping",
+        "metadata",
+        "sellability"
+      ]
+    },
+    "blocker": null,
+    "securityAuthorization": "GRANTED",
+    "pagination": { "pages": 13, "complete": true },
+    "activeProducts": 1080,
+    "inactiveProductsSkipped": 149,
+    "omieWrites": 0,
+    "firstDryRun": { "create": 1080, "update": 0, "noOp": 0, "conflict": 0, "skip": 149 },
+    "import": { "created": 1080, "updated": 0, "duplicates": 0 },
+    "secondSync": { "create": 0, "update": 0, "noOp": 1080, "conflict": 0, "skip": 149, "idempotent": true },
+    "storefront": { "realProductsVisible": 1080, "storeApiOnly": true, "quoteOnly": "pass", "pricePending": "pass", "cartBlocking": "pass" },
+    "nextAction": "Gate 5 passed; Gate 6 is ready to start."
+  },
+  "responsiveHomologation": {
+    "status": "blocked",
+    "date": "2026-08-12",
+    "suite": "tests/responsive-homologation.spec.ts",
+    "result": "1-passed-16-failed",
+    "failureClass": "backend-unavailable",
+    "backendUrl": "http://127.0.0.1:9000",
+    "dockerService": "stopped",
+    "requiredPorts": [55432, 56379],
+    "staticEvidence": [
+      "storefront typecheck PASS",
+      "storefront lint PASS:0-errors-68-warnings",
+      "storefront unit PASS:30-tests",
+      "storefront build PASS",
+      "backend typecheck PASS",
+      "backend lint PASS:0-errors-35-warnings",
+      "backend unit PASS:11-suites-64-tests",
+      "backend build PASS",
+      "playwright discovery PASS:88-tests",
+      "git diff --check PASS"
+    ],
+    "nextAction": "Start Docker Desktop, run the disposable PostgreSQL/Redis stack, start Medusa on port 9000, then rerun the responsive and full Playwright suites."
+  },
+  "securityRevalidation": {
+    "status": "authorized",
+    "date": "2026-08-12",
+    "formalGates": "5/14",
+    "p0Open": 0,
+    "p1Open": 0,
+    "p1Findings": [],
+    "historicalWarnings": ["HISTORICAL_EXPIRED_SECRET retained for apps/storefront/token.txt at e576de2; historical exposure remains, current blocker: no"],
+    "fixedInWorktree": [
+      "hardcoded admin passwords removed from one-off scripts",
+      "invite tokens removed from employee invite responses",
+      "admin quote field debug log removed"
+    ],
+    "secretScan": "pass-with-historical-warning",
+    "agentRecovery": {
+      "status": "recovered-with-isolated-codex",
+      "rootCause": [
+        "CONFIGURATION_FAILURE: an experimental mcp_servers.github override was invalid for Codex 0.144.6",
+        "MCP_SERVER_UNAVAILABLE: keyproxy provider/MCP HTTP timeout",
+        "OPTIONAL_MCP_STARTUP: node_repl stalled worker boot until disabled"
+      ],
+      "retryCount": 3,
+      "securityWorkerDone": true,
+      "provisionalJwt": {
+        "alg": "HS256",
+        "typ": "JWT",
+        "issuer": "unknown",
+        "expiration": "expired",
+        "currentlyReusable": "no",
+        "formalP1Cleared": true
+      },
+      "securityAgent": {
+        "delegation": "DELEGATED_AND_EXECUTED",
+        "workerDone": true,
+        "authorization": "GRANTED",
+        "p0Open": 0,
+        "p1Open": 0,
+        "jwt": "HISTORICAL_EXPIRED_SECRET:expired-no-refresh-or-session-found-currently-reusable-no",
+        "omieAppKey": "present",
+        "omieAppSecret": "present"
+      }
+    },
+    "omie": {
+      "apiUrl": "present",
+      "appKey": "present",
+      "appSecret": "present",
+      "auth": "not-run",
+      "listProducts": "not-run",
+      "writes": 0
+    },
+    "nextAction": "Ready for Backend Agent to execute authorized read-only Omie discovery."
   },
   "baselineGates": {
     "storefrontTypecheck": "fail:6",
@@ -104,19 +210,18 @@
       ]
     },
     "GATE-05": {
-      "status": "blocked",
-      "date": "2026-08-11",
+      "status": "pass",
+      "date": "2026-08-12",
       "evidence": [
-        "Omie client, reader, mapper and dry-run reconciliation added",
-        "Omie credentials unavailable; read-only connectivity not executed",
-        "candidate manifest is structural with zero commercial products",
-        "no Medusa catalog import performed"
+        "Security PASS: P0=0, P1=0, reusable secret scan PASS with HISTORICAL_EXPIRED_SECRET warning",
+        "Real Omie auth and read-only ListarProdutos PASS; 13/13 pages and 1229 records discovered",
+        "First dry run/import PASS: 1080 created, 149 inactive skipped, Omie writes=0",
+        "Second sync PASS: 1080 NO_OP and duplicates=0",
+        "1080 real Store API products visible as QUOTE_ONLY with purchase blocking",
+        "Storefront metadata propagation, typecheck, lint, 38 unit tests, client build and SSR build PASS",
+        "Independent QA recommendation: GATE_5_PASS"
       ],
-      "blockers": [
-        "OMIE credentials unavailable",
-        "catalog/price/inventory source-of-truth unresolved",
-        "real approved commercial manifest unavailable"
-      ]
+      "blockers": []
     }
   },
   "tasks": {

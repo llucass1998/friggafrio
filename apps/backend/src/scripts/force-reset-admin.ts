@@ -1,41 +1,27 @@
 import { Modules } from "@medusajs/framework/utils"
 import { ExecArgs } from "@medusajs/framework/types"
-import { createUsersWorkflow } from "@medusajs/medusa/core-flows"
 
 export default async function forceResetAdmin({ container }: ExecArgs) {
-  console.log("Forcing a new admin account creation with linked identity...");
-  
+  const adminEmail = process.env.ADMIN_EMAIL?.trim()
+  const adminPassword = process.env.ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD are required for this one-off script.")
+  }
+
   const authModuleService = container.resolve(Modules.AUTH)
   const userModuleService = container.resolve(Modules.USER)
-  
-  // Use a completely new email to bypass any existing conflicts
-  const newEmail = "admin3@friggafrio.com.br";
-  const newPass = "supersecret";
-  
+
   try {
-    console.log("1. Creating auth identity...");
-    const authResult = await authModuleService.register("emailpass", {
-      body: {
-        email: newEmail,
-        password: newPass
-      }
-    }) as Record<string, unknown>;
-    const authIdentity = authResult.authIdentity as { id: string } | undefined;
-    console.log("-> Auth identity created:", authIdentity?.id);
-    
-    console.log("2. Creating user...");
-    const newUser = await userModuleService.createUsers({
-      email: newEmail,
-      first_name: "Admin3",
-      last_name: "Friggafrio"
-    });
-    console.log("-> User created:", newUser.id);
-    
-    console.log("--- SUCCESS ---");
-    console.log(`Email: ${newEmail}`);
-    console.log(`Senha: ${newPass}`);
-    
-  } catch (e) {
-    console.error("Failed:", e.message);
+    await authModuleService.register("emailpass", {
+      body: { email: adminEmail, password: adminPassword },
+    })
+    await userModuleService.createUsers({
+      email: adminEmail,
+      first_name: "Admin",
+      last_name: "User",
+    })
+    console.log("Admin identity created.")
+  } catch {
+    console.error("Failed to create admin identity.")
   }
 }

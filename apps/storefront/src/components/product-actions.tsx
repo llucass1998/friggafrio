@@ -81,7 +81,7 @@ const ProductActions = memo(function ProductActions({
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
     if (!selectedVariant) return false
-    if (purchaseState.status === "unavailable" || purchaseState.status === "price_pending" || purchaseState.status === "out_of_stock") return false
+    if (purchaseState.status === "unavailable" || purchaseState.status === "quote_only" || purchaseState.status === "price_pending" || purchaseState.status === "out_of_stock") return false
 
     const isApprovedVariant = purchaseState.status === "purchasable"
       ? purchaseState.variant.id === selectedVariant.id
@@ -135,8 +135,10 @@ const ProductActions = memo(function ProductActions({
 
   if (purchaseState.status === "unavailable") {
     buttonText = "Indisponível"
+  } else if (purchaseState.status === "quote_only") {
+    buttonText = "Solicitar cotação"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação"
+    buttonText = "Solicitar orçamento"
   } else if (!selectedVariant) {
     buttonText = "Selecione uma opção"
   } else if (!isValidVariant || !canBuySelected) {
@@ -149,16 +151,21 @@ const ProductActions = memo(function ProductActions({
     <div className="flex flex-col gap-y-4">
       {/* Dynamic Price Display */}
       <div className="flex flex-col gap-1 mb-2">
-         {displayPrice && purchaseState.status === "price_pending" ? (
+         {purchaseState.status === "quote_only" ? (
+           <>
+             <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
+               QUOTE_ONLY · Somente sob cotação
+             </span>
+             <span className="text-xl font-medium text-[var(--color-text-muted)]">Consulte condições comerciais</span>
+           </>
+         ) : purchaseState.status === "price_pending" ? (
            <>
              <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
                Valor em configuração
              </span>
-             <span className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
-             </span>
+             <span className="text-xl font-medium text-[var(--color-text-muted)]">Consulte o valor</span>
            </>
-         ) : displayPrice && purchaseState.status !== "price_pending" ? (
+         ) : displayPrice ? (
              <span className="text-3xl md:text-4xl font-bold text-[var(--color-navy)] tracking-tight">
                {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
              </span>

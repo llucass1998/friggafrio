@@ -11,8 +11,6 @@ export const GET = async (
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { id } = req.params
 
-  console.log("received fields are ", req.queryConfig.fields)
-
   const {
     data: [quote],
   } = await query.graph(

@@ -18,7 +18,7 @@ export async function GET(
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
   // Get pagination from queryConfig (set by validateAndTransformQuery middleware)
-  const { pagination, fields } = req.queryConfig || {}
+  const { pagination } = req.queryConfig || {}
   const skip = pagination?.skip ?? 0
   const take = pagination?.take ?? 50
   const order = pagination?.order
@@ -26,10 +26,9 @@ export async function GET(
   // Fetch invites with pagination from Query
   const {
     data: invites,
-    metadata,
   } = await query.graph({
     entity: "invite",
-    fields: fields || ["id", "email", "token", "accepted", "expires_at", "metadata", "created_at"],
+    fields: ["id", "email", "accepted", "expires_at", "metadata", "created_at"],
     filters: {
       accepted: false,
     },
@@ -60,7 +59,6 @@ export async function GET(
   const formattedInvites = (paginatedInvites as unknown as Array<{
     id: string
     email: string
-    token?: string
     created_at: string
     expires_at?: string
     metadata: { company_name?: string }
@@ -69,7 +67,6 @@ export async function GET(
     return {
       id: invite.id,
       email: invite.email,
-      token: invite.token,
       spending_limit: inviteMetadata.spending_limit,
       is_admin: inviteMetadata.is_admin,
       created_at: invite.created_at,

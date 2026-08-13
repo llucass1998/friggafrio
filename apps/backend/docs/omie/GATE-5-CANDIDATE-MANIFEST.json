@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "source": "omie",
+  "mode": "sanitized-import-verified",
+  "pagination": {
+    "status": "COMPLETE",
+    "pages": 13,
+    "products": 1229
+  },
+  "identifiers": {
+    "missingExternalIds": 0,
+    "duplicateExternalIds": 0,
+    "missingSkus": 0,
+    "duplicateSkus": 0,
+    "invalidSkus": 0
+  },
+  "priceBRL": {
+    "valid": 1213,
+    "zero": 16,
+    "missing": 0,
+    "invalid": 0,
+    "semantics": "decimal BRL values preserved without cent conversion"
+  },
+  "stock": {
+    "available": 0,
+    "zero": 1229,
+    "missing": 0,
+    "invalid": 0
+  },
+  "lifecycle": {
+    "active": 1080,
+    "inactive": 149
+  },
+  "commercial": {
+    "SELLABLE": 0,
+    "QUOTE_ONLY": 1229,
+    "PRICE_PENDING": 16
+  },
+  "reconciliation": {
+    "status": "IMPORTED_AND_IDEMPOTENT",
+    "eligibleCandidates": 1080,
+    "skippedInactive": 149,
+    "firstDryRun": { "create": 1080, "update": 0, "noOp": 0, "conflict": 0, "skip": 149 },
+    "imported": { "created": 1080, "updated": 0 },
+    "storefrontVisibilityCorrection": {
+      "dryRun": { "create": 0, "update": 1080, "noOp": 0, "conflict": 0, "skip": 149 },
+      "updated": 1080,
+      "visibleRealProducts": 1080,
+      "purchasePolicy": "QUOTE_ONLY",
+      "purchaseEnabled": false,
+      "observedStock": 0,
+      "allowBackorder": false
+    },
+    "secondSync": { "create": 0, "update": 0, "noOp": 1080, "conflict": 0, "skip": 149 },
+    "duplicates": { "products": 0, "variants": 0, "skuMappings": 0, "inventoryRelations": 0 }
+  },
+  "containsCredentials": false,
+  "containsRawOmieResponses": false
+}

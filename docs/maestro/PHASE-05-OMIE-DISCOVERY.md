@@ -1,6 +1,28 @@
 # Fase 5 — Omie Discovery (read-only)
 
-## Estado
+## Gate 5 final evidence (2026-08-12)
+
+- Security authorization: PASS. The local backend `.env` is ignored and untracked;
+  the current Omie credentials were not found in tracked content, diffs, client
+  bundles, or Git history. The historical JWT at `e576de2` is retained as the
+  non-blocking `HISTORICAL_EXPIRED_SECRET` warning after confirming expiration,
+  absence of an associated refresh credential, and expiration enforcement.
+- Omie authentication and read-only `ListarProdutos`: PASS. Omie writes: `0`.
+- Discovery: 13/13 pages, 1,229 records. The sanitised candidate manifest
+  records 1,080 active catalog candidates and 149 inactive records skipped.
+- First dry run/import: `CREATE 1080`, `UPDATE 0`, `NO_OP 0`, `CONFLICT 0`,
+  `SKIP 149`; import created 1,080 Medusa products.
+- Storefront projection: all 1,080 real products are visible through the Store
+  API as `QUOTE_ONLY`, with purchase disabled, zero observed stock, and no
+  implicit backorder.
+- Second sync: `CREATE 0`, `UPDATE 0`, `NO_OP 1080`, `CONFLICT 0`, `SKIP 149`.
+  Duplicate products, variants, SKU mappings, and inventory relations: `0`.
+- Storefront: Store API only; no direct Omie browser calls. `QUOTE_ONLY` and
+  `price_pending` metadata propagate to Product Card and PDP without showing a
+  fake price or enabling Add to Cart.
+- Gate 5 result: PASS. The preparation notes below are retained as chronology.
+
+## State before final homologation
 
 - Gate 4 permanece PASS no commit `c014d1524aa02adb3259148fea1067a92760451c`.
 - Omie não estava implementada no repositório auditado.
@@ -8,12 +30,38 @@
 - Nenhuma chamada Omie foi executada e nenhum dado foi gravado no Medusa.
 - Gate 5 permanece bloqueado até existir fonte comercial real e aprovada.
 
+## Preparação automática do ambiente
+
+- Arquivo local utilizado pelo Medusa: `apps/backend/.env`.
+- `git check-ignore`: PASS; o arquivo é ignorado por `apps/backend/.gitignore`.
+- `OMIE_API_URL`: PRESENT, endpoint oficial confirmado com HTTP 200 sem autenticação.
+- `OMIE_APP_KEY`: MISSING.
+- `OMIE_APP_SECRET`: MISSING.
+- `loadEnv('development', process.cwd())`: confirmou o mesmo estado no processo Medusa.
+- Nenhum valor secreto foi impresso, copiado para logs ou incluído no diff.
+
+O endpoint configurado é `https://app.omie.com.br/api/v1/geral/produtos/`. As
+credenciais permanecem vazias porque não foram encontradas em Process/User/
+Machine environment, `.env*` locais, Docker ou arquivos do projeto.
+
 ## Fonte de verdade
 
-Catálogo, preço e estoque continuam `UNRESOLVED`. A decisão entre Omie master,
-Medusa master ou modelo híbrido exige confirmação do negócio. A implementação
-mantém a arquitetura `Omie -> integration layer -> Medusa` e nunca conecta o
-Storefront diretamente à Omie.
+A decisão de negócio foi registrada: o modelo é híbrido com a Omie como fonte
+operacional e o Medusa como projeção ecommerce.
+
+| Domínio | Fonte oficial | Contrato |
+| --- | --- | --- |
+| SKU e identificadores operacionais | Omie | Integração preserva o valor Omie e usa matching por identificador estável. |
+| Preço | Omie | Nenhuma margem, conversão ou preço de pesquisa pode ser aplicado pela integração. |
+| Estoque, quantidade e status operacional | Omie | Produto sem estoque confirmado não se torna vendável automaticamente. |
+| Handle, SEO, categoria e imagens | Medusa | Enriquecimento próprio da projeção ecommerce. |
+| Shipping, metadata e sellability | Medusa | Regras de publicação da loja; não podem fabricar preço ou estoque Omie. |
+| Storefront | Medusa | Nunca acessa a Omie diretamente. |
+
+Assim, a direção oficial permanece `Omie -> integration layer -> Medusa ->
+Storefront`. A integração futura não deve sobrescrever campos operacionais da
+Omie com dados do Medusa; conflitos devem falhar fechado e alterações de
+shipping/fiscal/sellability exigem aprovação explícita.
 
 ## Implementação estrutural
 
@@ -54,6 +102,10 @@ comercial informado, não dados descobertos.
 | Medusa variants before/after | 0 / 0 |
 | Catalog import | NÃO EXECUTADO |
 
+Como `OMIE_APP_KEY` e `OMIE_APP_SECRET` estão ausentes, a operação
+`ListarProdutos` não foi disparada. Não houve paginação, retry, 429 ou falha de
+contrato para registrar.
+
 ## Dados necessários para avançar
 
 Para cada produto real, ainda são necessários: identificador Omie estável,
@@ -64,8 +116,10 @@ permanecer `QUOTE_ONLY` ou fora de venda direta.
 
 ## Próxima ação
 
-`B) PROVIDE OMIE CREDENTIALS` para executar discovery read-only, ou
-`D) RESOLVE SOURCE-OF-TRUTH DECISION` se Omie não for a fonte operacional.
+`SECURE OMIE CREDENTIAL REQUIRED`: provisionar as duas credenciais externas,
+sem alterar o código ou inserir valores no repositório. Depois disso o Maestro
+executará `ListarProdutos`, gerará o manifesto candidato real e parará para
+aprovação humana.
 
 ## Regressão executada
 

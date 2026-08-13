@@ -86,8 +86,10 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
     buttonDisabled = true // Navega pra página do produto no clique geral
   } else if (purchaseState.status === "out_of_stock") {
     buttonText = "Sem estoque"
+  } else if (purchaseState.status === "quote_only") {
+    buttonText = "Solicitar cotação"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço em confirmação"
+    buttonText = "Solicitar orçamento"
   } else {
     buttonText = "Indisponível"
   }
@@ -156,16 +158,21 @@ export function PublicProductCard({ product, isNew = false }: PublicProductCardP
         {/* Actions - Bottom aligned */}
         <div className="mt-auto pt-4 border-t border-[var(--color-border)]">
           <div className="flex flex-col gap-1 mb-4 min-h-[40px] justify-end">
-             {displayPrice && purchaseState.status === "price_pending" ? (
+             {purchaseState.status === "quote_only" ? (
+               <>
+                 <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
+                   QUOTE_ONLY · Somente sob cotação
+                 </span>
+                 <span className="text-sm font-medium text-[var(--color-text-muted)]">Consulte condições comerciais</span>
+               </>
+             ) : purchaseState.status === "price_pending" ? (
                <>
                  <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
                    Valor em configuração
                  </span>
-                 <span className="text-xl font-bold text-[var(--color-text)]">
-                   {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrency })}
-                 </span>
+                 <span className="text-sm font-medium text-[var(--color-text-muted)]">Consulte o valor</span>
                </>
-             ) : displayPrice && purchaseState.status !== "price_pending" ? (
+             ) : displayPrice ? (
                  <span className="text-xl font-bold text-[var(--color-navy)]">
                    {formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrency })}
                  </span>

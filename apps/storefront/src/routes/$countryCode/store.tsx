@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
+import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 
 const storeSearchSchema = z.object({
   category: z.string().optional(),
@@ -44,7 +45,7 @@ export const Route = createFileRoute("/$countryCode/store")({
         query_params: {
           limit: 100,
           order: "-created_at",
-          fields: "*variants.calculated_price,*categories,*variants.options"
+          fields: PUBLIC_PRODUCT_CARD_FIELDS
         },
         region_id: region.id,
       }),

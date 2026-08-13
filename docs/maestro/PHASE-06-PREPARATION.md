@@ -1,6 +1,6 @@
 # FriggaFrio - Phase 6 Preparation
 
-Status: technical preparation only. Gate 6 has not started formally.
+Status: READY TO START. Gate 6 has not started formally; this document remains technical preparation only.
 
 ## Gate inheritance
 
@@ -9,7 +9,7 @@ Status: technical preparation only. Gate 6 has not started formally.
 - Gate 3: PASS
 - Gate 4: PASS
 - Gate 5: OPEN - external Omie blocker (`OMIE_APP_KEY` and `OMIE_APP_SECRET`)
-- Formal gates: `4/14`
+- Formal gates: `5/14`
 - Omie blocker: `DEFERRED` for this preparation run
 
 No catalog, price, inventory, stock location, shipping profile, shipping option,

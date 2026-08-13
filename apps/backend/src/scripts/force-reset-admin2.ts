@@ -2,24 +2,24 @@ import { Modules } from "@medusajs/framework/utils"
 import { ExecArgs } from "@medusajs/framework/types"
 
 export default async function forceResetAdmin({ container }: ExecArgs) {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim()
+  const adminPassword = process.env.ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD are required for this one-off script.")
+  }
+
   const authModuleService = container.resolve(Modules.AUTH)
-  
-  const newEmail = "admin4@friggafrio.com.br";
-  const newPass = "supersecret";
-  
+
   try {
-    const authIdentity = await authModuleService.createAuthIdentities({
+    await authModuleService.createAuthIdentities({
       provider_identities: [{
         provider: "emailpass",
-        entity_id: newEmail,
-        provider_metadata: {
-          password: newPass
-        }
-      }]
-    });
-    
-    console.log("Created raw auth identity:", authIdentity[0].id);
-  } catch (e) {
-    console.log("Failed creating auth raw:", e.message);
+        entity_id: adminEmail,
+        provider_metadata: { password: adminPassword },
+      }],
+    })
+    console.log("Admin identity created.")
+  } catch {
+    console.error("Failed to create admin identity.")
   }
 }

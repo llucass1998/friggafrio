@@ -9,7 +9,8 @@ const viewports = [
 for (const viewport of viewports) {
   test(`Layout Home em viewport ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto('/');
+    await page.goto('/br');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verifica se não há overflow horizontal verificando a largura do body vs viewport
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);

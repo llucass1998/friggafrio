@@ -1,5 +1,5 @@
-import { OmieClient, OmieClientError } from "./client.js"
-import { OmieCatalogPage, OmieProductRecord, OmieRecord } from "./types.js"
+import { OmieClient, OmieClientError } from "./client"
+import { OmieCatalogPage, OmieProductRecord, OmieRecord } from "./types"
 
 const PRODUCT_KEYS = [
   "produto_servico_cadastro",
@@ -77,9 +77,19 @@ export class OmieCatalogReader {
     const pageSize = options.pageSize ?? 100
     const maxPages = options.maxPages ?? 100
     const products: OmieProductRecord[] = []
+    const pageSignatures = new Set<string>()
 
     for (let page = 1; page <= maxPages; page += 1) {
       const result = await this.readPage(page, pageSize)
+      const signature = JSON.stringify(result.products)
+      if (result.products.length > 0 && pageSignatures.has(signature)) {
+        throw new OmieClientError({
+          code: "INVALID_RESPONSE",
+          operation: "ListarProdutos",
+          retryable: false,
+        })
+      }
+      pageSignatures.add(signature)
       products.push(...result.products)
       if (!result.hasMore || result.products.length === 0) {
         return products

@@ -6,6 +6,7 @@ import { formatMoneyAmountForStructuredData } from "@/lib/utils/price"
 import ProductDetails from "@/pages/product"
 import { HttpTypes } from "@medusajs/types"
 import { createFileRoute, notFound } from "@tanstack/react-router"
+import { PUBLIC_PRODUCT_CARD_FIELDS, PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
 
 export const Route = createFileRoute("/$countryCode/products/$handle")({
   loader: async ({ params, context }) => {
@@ -29,8 +30,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
           return await retrieveProduct({
             handle,
             region_id: region.id,
-            fields:
-              "*variants, +variants.inventory_quantity, +variants.manage_inventory, +variants.allow_backorder, +variants.calculated_price, *images, *options, *options.values, *collection, *tags",
+            fields: PUBLIC_PRODUCT_DETAIL_FIELDS,
           })
         } catch {
           // Logging removido em produção throw notFound();
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       queryKey: queryKeys.products.related(product.id, region.id),
       queryFn: async () => {
         const params: HttpTypes.StoreProductListParams = {
-          fields: "title, handle, *thumbnail, *variants",
+          fields: `title,handle,*thumbnail,${PUBLIC_PRODUCT_CARD_FIELDS}`,
           is_giftcard: false,
           limit: 4,
         }

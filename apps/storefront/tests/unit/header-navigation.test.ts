@@ -41,6 +41,9 @@ test("mobile navigation exposes an accessible open/close flow", () => {
   assert.match(mobileDrawerSource, /onTransitionEnd=\{handleDrawerTransitionEnd\}/)
   assert.match(mobileDrawerSource, /motion-duration-menu-open/)
   assert.match(mobileDrawerSource, /motion-duration-menu-close/)
+  assert.match(mobileDrawerSource, /const openDrawer = \(\) => \{\s*setIsMounted\(true\)\s*setIsOpen\(true\)/)
+  assert.doesNotMatch(mobileDrawerSource, /openFrameRef/)
+  assert.match(mobileDrawerSource, /data-hydrated=\{isHydrated \? "true" : "false"\}/)
 })
 
 test("mobile navigation has canonical links and no duplicate action group", () => {

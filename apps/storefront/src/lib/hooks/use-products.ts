@@ -2,6 +2,7 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query"
 import { HttpTypes } from "@medusajs/types"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
+import { PUBLIC_PRODUCT_CARD_FIELDS, PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
 
 type ProductListQueryParams = HttpTypes.StoreProductListParams & {
   option_value_id?: string | string[]
@@ -25,6 +26,7 @@ export const useProducts = ({
         limit,
         offset,
         region_id,
+        fields: query_params?.fields || PUBLIC_PRODUCT_CARD_FIELDS,
         ...query_params,
       } as HttpTypes.StoreProductListParams)
 
@@ -58,8 +60,7 @@ export const useProduct = ({
       const { products } = await sdk.store.product.list({
         handle: handle,
         region_id,
-        fields: fields ||
-          "*variants, +variants.inventory_quantity, +variants.manage_inventory, +variants.allow_backorder, *images, *options, *options.values, *collection, *tags",
+        fields: fields || PUBLIC_PRODUCT_DETAIL_FIELDS,
       })
 
       if (!products || products.length === 0) {
@@ -87,7 +88,7 @@ export const useRelatedProducts = ({
     queryKey: queryKeys.products.related(product_id, region_id),
     queryFn: async () => {
       const params: HttpTypes.StoreProductListParams = {
-        fields: "title, handle, *thumbnail, *variants",
+        fields: `title,handle,*thumbnail,${PUBLIC_PRODUCT_CARD_FIELDS}`,
         is_giftcard: false,
         limit: 4
       }
@@ -126,6 +127,7 @@ export const useLatestProducts = ({
         offset: 0,
         order: "-created_at",
         region_id,
+        fields: PUBLIC_PRODUCT_CARD_FIELDS,
       })
 
       return {

@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { useProducts } from "@/lib/hooks/use-products"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
+import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 
 interface StorePageData {
   products: HttpTypes.StoreProduct[]
@@ -27,7 +28,7 @@ export function StorePage({
   hideOptionsPicker?: boolean
 } = {}) {
   const loaderData = useLoaderData({ strict: false }) as StorePageData | undefined
-  const { region, countryCode = "br" } = loaderData || {}
+  const { region, countryCode = "br", products: loaderProducts = [] } = loaderData || {}
   const searchParams = useSearch({ strict: false }) as StoreSearch | undefined
   const navigate = useNavigate()
 
@@ -105,7 +106,7 @@ export function StorePage({
   } = useProducts({
     query_params: {
       limit: 24,
-      fields: "*variants.calculated_price,*categories,*images,*variants.options",
+      fields: PUBLIC_PRODUCT_CARD_FIELDS,
       order: sortOrder,
       ...(selectedCategory && { category_id: [selectedCategory] }),
       ...(debouncedSearch && { q: debouncedSearch }),
@@ -115,7 +116,7 @@ export function StorePage({
   })
 
   // Flatten products from all pages
-  const allProducts = infiniteData?.pages.flatMap((page) => page.products) ?? []
+  const allProducts = infiniteData?.pages.flatMap((page) => page.products) ?? loaderProducts
 
   // Infinite scroll observer
   const loadMoreRef = useRef<HTMLDivElement>(null)

@@ -40,5 +40,12 @@ export async function POST(req: RequestWithCompany, res: MedusaResponse) {
     },
   })
 
-  res.json({ invite: result[0] })
+  const refreshedInvite = result[0]
+  res.json({
+    invite: {
+      id: refreshedInvite.id,
+      email: refreshedInvite.email,
+      expires_at: refreshedInvite.expires_at,
+    },
+  })
 }

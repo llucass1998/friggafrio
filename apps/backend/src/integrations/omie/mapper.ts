@@ -7,7 +7,7 @@ import {
   NormalizedVariant,
   OmieProductRecord,
   OmieRecord,
-} from "./types.js"
+} from "./types"
 
 const firstValue = (record: OmieRecord, keys: readonly string[]): unknown => {
   for (const key of keys) {
@@ -20,7 +20,10 @@ const firstValue = (record: OmieRecord, keys: readonly string[]): unknown => {
 
 const stringValue = (record: OmieRecord, keys: readonly string[]): string | null => {
   const value = firstValue(record, keys)
-  return typeof value === "string" && value.trim() ? value.trim() : null
+  if (typeof value === "string" && value.trim()) {
+    return value.trim()
+  }
+  return typeof value === "number" && Number.isFinite(value) ? String(value) : null
 }
 
 const numberValue = (record: OmieRecord, keys: readonly string[]): number | null => {
