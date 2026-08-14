@@ -18,9 +18,10 @@ interface DeliveryStepProps {
   cart: HttpTypes.StoreCart;
   onNext: () => void;
   onBack: () => void;
+  resetSelectionToken?: number;
 }
 
-const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
+const DeliveryStep = ({ cart, onNext, onBack, resetSelectionToken = 0 }: DeliveryStepProps) => {
   const {
     data: shippingOptions = [],
     isLoading: shippingOptionsLoading,
@@ -35,6 +36,12 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [optionAvailability, setOptionAvailability] = useState<Record<string, ShippingOptionAvailability>>({})
   const hasAutoSelected = useRef(false)
+  useEffect(() => {
+    if (resetSelectionToken > 0) {
+      setSelectedOptionId("")
+      hasAutoSelected.current = false
+    }
+  }, [resetSelectionToken])
   const handleAvailabilityChange = useCallback((optionId: string, state: ShippingOptionCalculationState, amount?: number) => {
     setOptionAvailability((current) => ({ ...current, [optionId]: { state, amount } }))
   }, [])
@@ -89,6 +96,9 @@ const DeliveryStep = ({ cart, onNext, onBack }: DeliveryStepProps) => {
           setIsSubmitting(false)
         },
         onError: (err: any) => {
+          // A rejected/stale option must not remain selected for a retry.
+          setSelectedOptionId("")
+          hasAutoSelected.current = false
           setMutationError(err.message || "Failed to select shipping method. Please try again.")
         },
       }

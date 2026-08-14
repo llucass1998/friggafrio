@@ -6,6 +6,7 @@ import {
   getPaymentAvailability,
   sendPaymentUnavailable,
 } from "../utils/payment-availability";
+import { blockOrderCompletionUntilGate8 } from "../api/middlewares/payment-containment";
 
 describe("payment containment", () => {
   it("fails closed when flags are absent", () => {
@@ -44,6 +45,25 @@ describe("payment containment", () => {
       code: PAYMENT_UNAVAILABLE_CODE,
       message: PAYMENT_UNAVAILABLE_MESSAGE,
     });
+  });
+
+  it("keeps cart completion blocked until Gate 8 explicitly opts in", () => {
+    const original = process.env.GATE8_FINALIZATION_ENABLED;
+    const next = jest.fn();
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+
+    delete process.env.GATE8_FINALIZATION_ENABLED;
+    blockOrderCompletionUntilGate8({} as never, { status } as never, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(status).toHaveBeenCalledWith(503);
+
+    process.env.GATE8_FINALIZATION_ENABLED = "true";
+    blockOrderCompletionUntilGate8({} as never, { status } as never, next);
+    expect(next).toHaveBeenCalledTimes(1);
+
+    if (original === undefined) delete process.env.GATE8_FINALIZATION_ENABLED;
+    else process.env.GATE8_FINALIZATION_ENABLED = original;
   });
 
   it("keeps the customer pay route free of arbitrary paid-state workflows", () => {

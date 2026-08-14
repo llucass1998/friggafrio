@@ -4,9 +4,14 @@ import { sdk } from "@/lib/medusa"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   assertPaymentProcessingEnabled,
+  assertGate8FinalizationEnabled,
   paymentAvailability,
 } from "@/lib/config/payment-availability"
 import { assertCheckoutReady } from "@/lib/data/checkout/checkout-ready"
+import {
+  prepareCartForPayment,
+  type CheckoutPreparedSummary,
+} from "@/lib/data/checkout/prepare"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
 
@@ -108,6 +113,19 @@ export const useSetCartShippingMethod = () => {
   })
 }
 
+// Gate 7 stops at the server-owned READY_FOR_PAYMENT boundary. This mutation
+// never initiates payment and never finalizes a cart.
+export const usePrepareCartForPayment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation<CheckoutPreparedSummary, Error, { shippingOptionId?: string }>({
+    mutationFn: ({ shippingOptionId }) => prepareCartForPayment(shippingOptionId),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ predicate: queryKeys.cart.predicate })
+    },
+  })
+}
+
 // ============ PAYMENT ============
 
 export const useCartPaymentMethods = ({
@@ -171,6 +189,7 @@ export const useCompleteCartOrder = () => {
 
   return useMutation({
     mutationFn: async () => {
+      assertGate8FinalizationEnabled()
       assertPaymentProcessingEnabled()
 
       const cartId = getStoredCart()

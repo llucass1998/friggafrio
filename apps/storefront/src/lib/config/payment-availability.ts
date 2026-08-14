@@ -17,3 +17,8 @@ export const assertPaymentProcessingEnabled = (): void => {
     throw new Error(PAYMENT_UNAVAILABLE_MESSAGE)
   }
 }
+
+// Gate 8 finalization is intentionally closed while Gate 7 only prepares carts.
+export const assertGate8FinalizationEnabled = (): void => {
+  throw new Error("A finalizacao do pedido sera habilitada em uma etapa futura.")
+}

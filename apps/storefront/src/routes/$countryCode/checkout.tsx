@@ -10,6 +10,10 @@ export const Route = createFileRoute("/$countryCode/checkout")({
     if (!Object.values(CheckoutStepKey).includes(step as CheckoutStepKey)) {
       step = CheckoutStepKey.ADDRESSES
     }
+    // Gate 7 has no payment step; old links land on the prepared summary.
+    if (step === CheckoutStepKey.PAYMENT) {
+      step = CheckoutStepKey.REVIEW
+    }
     return {
       step: step as CheckoutStepKey,
     }

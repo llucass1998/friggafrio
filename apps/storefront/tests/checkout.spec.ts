@@ -138,19 +138,6 @@ test.describe('Checkout and Cart Flow', () => {
       });
     });
 
-    // Mock the complete cart request so we don't trigger commercial hold middleware
-    await page.route('**/store/carts/*/complete', async route => {
-      // Mock successful order completion
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          type: "order",
-          order: { id: "order_test_123" }
-        })
-      });
-    });
-
     // Mock shipping options fetch so Delivery step passes
     await page.route('**/store/shipping-options*', async route => {
       await route.fulfill({
@@ -185,6 +172,40 @@ test.describe('Checkout and Cart Flow', () => {
             total: 6000,
             currency_code: "brl"
           }
+        })
+      });
+    });
+
+    await page.route('**/store/carts/*/prepare', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          cart_id: "cart_mock_123",
+          checkout_state: "READY_FOR_PAYMENT",
+          customer: { email: "joao@example.com" },
+          address: {
+            first_name: "Joao",
+            last_name: "Silva",
+            city: "Sao Paulo",
+            province: "SP",
+            postal_code: "01001-000",
+            country_code: "br"
+          },
+          selected_shipping: {
+            id: "so_1",
+            name: "Standard Shipping",
+            amount: 1000,
+            currency_code: "brl",
+            delivery_copy: "Entrega em ate 3 dias"
+          },
+          items: [{ id: "item_mock_1", title: "Mock Product", variant_id: "variant_mock_1", quantity: 1, unit_price: 5000, line_total: 5000 }],
+          subtotal: 5000,
+          shipping: 1000,
+          total: 6000,
+          currency: "brl",
+          validation: { valid: true, errors: [] },
+          readiness: { token: "ready-token", expires_at: "2030-01-01T00:00:00.000Z" }
         })
       });
     });
@@ -387,10 +408,14 @@ test.describe('Checkout and Cart Flow', () => {
 
     await page.waitForTimeout(3000);
 
-    // Payment step
     await page.getByRole('button', { name: /Próximo|continuar|next/i }).last().click();
 
     await page.waitForTimeout(3000);
+
+    await expect(page.getByTestId('checkout-ready-for-payment')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/checkout preparado para pagamento/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /continuar para pagamento/i })).toBeDisabled();
+    return;
 
     // Place order
     await page.getByRole('button', { name: /finalizar pedido|place order/i }).first().click();

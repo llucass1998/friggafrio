@@ -1,5 +1,5 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
-import { MedusaError, Modules } from "@medusajs/framework/utils"
+import { MedusaError } from "@medusajs/framework/utils"
 import {
   createReservationsWorkflow,
   deleteReservationsByLineItemsWorkflow,
@@ -40,7 +40,21 @@ export type CartInventoryReservation = {
   allow_backorder: boolean
 }
 
-const asFiniteNumber = (value: number | string | null | undefined): number | null => {
+export type ExistingCartInventoryReservation = {
+  line_item_id?: string | null
+  inventory_item_id?: string | null
+  location_id?: string | null
+  quantity?: unknown
+  allow_backorder?: boolean | null
+  deleted_at?: string | Date | null
+}
+
+const asFiniteNumber = (value: unknown): number | null => {
+  if (value && typeof value === "object") {
+    const candidate = value as { value?: unknown; numeric?: unknown }
+    if (candidate.value !== undefined && candidate.value !== value) return asFiniteNumber(candidate.value)
+    if (candidate.numeric !== undefined && candidate.numeric !== value) return asFiniteNumber(candidate.numeric)
+  }
   const numeric = typeof value === "number" ? value : Number(value)
   return Number.isFinite(numeric) ? numeric : null
 }
@@ -136,6 +150,108 @@ export const buildCartInventoryReservations = (
 }
 
 /**
+ * Derives the reservation identities without checking stock availability. This
+ * is used only to validate a previously-created reservation before deciding if
+ * the authoritative reservation workflow must run again.
+ */
+export const deriveCartInventoryReservations = (
+  lines: CartInventoryLine[],
+  salesChannelId?: string | null,
+): CartInventoryReservation[] => {
+  const reservations: CartInventoryReservation[] = []
+
+  for (const line of lines) {
+    if (!Number.isSafeInteger(line.quantity) || line.quantity < 1) {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, "Invalid cart item quantity")
+    }
+
+    const variant = line.variant
+    if (!variant?.manage_inventory || variant.allow_backorder) continue
+
+    const inventoryItems = variant.inventory_items ?? []
+    if (!inventoryItems.length) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Managed cart item is missing an inventory mapping",
+      )
+    }
+
+    for (const inventoryItem of inventoryItems) {
+      const inventoryItemId = inventoryItem.inventory_item_id
+      const requiredQuantity = inventoryItem.required_quantity
+      if (
+        !inventoryItemId
+        || !Number.isSafeInteger(requiredQuantity)
+        || typeof requiredQuantity !== "number"
+        || requiredQuantity < 1
+      ) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "Managed cart item has an invalid inventory mapping",
+        )
+      }
+
+      const level = (inventoryItem.inventory?.location_levels ?? []).find((candidate) =>
+        isAvailableInSalesChannel(candidate, salesChannelId),
+      )
+      if (!level?.location_id) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_ALLOWED,
+          "No inventory location is available for this cart item",
+          MedusaError.Codes.INSUFFICIENT_INVENTORY,
+        )
+      }
+
+      reservations.push({
+        line_item_id: line.id,
+        inventory_item_id: inventoryItemId,
+        location_id: level.location_id,
+        quantity: line.quantity * requiredQuantity,
+        allow_backorder: false,
+      })
+    }
+  }
+
+  return reservations
+}
+
+/**
+ * Confirms that active persisted reservations still represent the current
+ * cart lines. Reservation ids are intentionally ignored; ownership is derived
+ * from line, inventory, location, and quantity persisted on the cart.
+ */
+export const areCartInventoryReservationsValid = (
+  lines: CartInventoryLine[],
+  existingReservations: ExistingCartInventoryReservation[],
+  salesChannelId?: string | null,
+): boolean => {
+  let expected: CartInventoryReservation[]
+  try {
+    expected = deriveCartInventoryReservations(lines, salesChannelId)
+  } catch {
+    return false
+  }
+
+  const active = existingReservations.filter((reservation) => !reservation.deleted_at)
+  if (active.length !== expected.length) return false
+
+  const unmatched = [...active]
+  return expected.every((required) => {
+    const index = unmatched.findIndex((candidate) => {
+      const quantity = asFiniteNumber(candidate.quantity)
+      return candidate.line_item_id === required.line_item_id
+        && candidate.inventory_item_id === required.inventory_item_id
+        && candidate.location_id === required.location_id
+        && quantity === required.quantity
+        && candidate.allow_backorder !== true
+    })
+    if (index < 0) return false
+    unmatched.splice(index, 1)
+    return true
+  })
+}
+
+/**
  * Replaces line-item reservations through Medusa's locking-backed workflows.
  * Releasing stale line reservations first keeps a quantity change from leaking
  * a previous commitment; creation remains the authoritative availability check.
@@ -145,14 +261,18 @@ export const reserveCartInventory = async (
   lines: CartInventoryLine[],
   salesChannelId?: string | null,
 ) => {
-  const reservations = buildCartInventoryReservations(lines, salesChannelId)
   const lineItemIds = lines.map((line) => line.id)
 
+  // Release this cart's previous reservations before reading availability. The
+  // inventory level includes reservations, so preflighting first makes a
+  // repeated checkout-ready transition reject its own still-valid reservation.
   if (lineItemIds.length) {
     await deleteReservationsByLineItemsWorkflow(container).run({
       input: { ids: lineItemIds },
     })
   }
+
+  const reservations = buildCartInventoryReservations(lines, salesChannelId)
 
   if (!reservations.length) return []
 

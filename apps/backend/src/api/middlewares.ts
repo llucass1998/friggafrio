@@ -4,14 +4,19 @@ import {
   globalApiRateLimit,
   secureHeaders,
 } from "./middlewares/rate-limiting";
-import { defineMiddlewares } from "@medusajs/medusa";
+import { authenticate, defineMiddlewares } from "@medusajs/medusa";
 import { validateDemoPriceCheckout } from "./middlewares/validate-demo-price";
 import { releaseCartLineInventoryReservation } from "./middlewares/release-cart-inventory-reservation";
+import {
+  invalidateCartCheckoutPreparation,
+  requireCheckoutPreparation,
+} from "./middlewares/invalidate-checkout-preparation";
 import { companyMiddlewares } from "./store/company/middlewares";
 import { employeesMiddlewares } from "./store/employees/middlewares";
 import { customersMiddlewares } from "./store/customers/middlewares";
 import { googleMiddlewares } from "./store/google/middlewares";
 import {
+  blockOrderCompletionUntilGate8,
   blockPaymentsWhenDisabled,
   blockUnsafePaymentConfirmation,
 } from "./middlewares/payment-containment";
@@ -93,17 +98,62 @@ export default defineMiddlewares({
     {
       method: "POST",
       matcher: "/store/carts/:id/complete",
-      middlewares: [blockPaymentsWhenDisabled, validateDemoPriceCheckout],
+      middlewares: [blockOrderCompletionUntilGate8, blockPaymentsWhenDisabled, requireCheckoutPreparation, validateDemoPriceCheckout],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/prepare",
+      middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/checkout-ready",
+      middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/line-items",
+      middlewares: [invalidateCartCheckoutPreparation],
     },
     {
       method: "POST",
       matcher: "/store/carts/:id/line-items/:line_id",
-      middlewares: [releaseCartLineInventoryReservation],
+      middlewares: [invalidateCartCheckoutPreparation, releaseCartLineInventoryReservation],
     },
     {
       method: "DELETE",
       matcher: "/store/carts/:id/line-items/:line_id",
-      middlewares: [releaseCartLineInventoryReservation],
+      middlewares: [invalidateCartCheckoutPreparation, releaseCartLineInventoryReservation],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id",
+      middlewares: [invalidateCartCheckoutPreparation],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/shipping-methods",
+      middlewares: [invalidateCartCheckoutPreparation],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/taxes",
+      middlewares: [invalidateCartCheckoutPreparation],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/customer",
+      middlewares: [invalidateCartCheckoutPreparation],
+    },
+    {
+      method: ["POST", "DELETE"],
+      matcher: "/store/carts/:id/promotions",
+      middlewares: [invalidateCartCheckoutPreparation],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/payment-collections",
+      middlewares: [invalidateCartCheckoutPreparation],
     },
     ...companyMiddlewares,
     ...employeesMiddlewares,

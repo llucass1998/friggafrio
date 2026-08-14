@@ -4,6 +4,7 @@ import { sdk } from "@/lib/medusa"
 import { QueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { assertCheckoutReady } from "@/lib/data/checkout/checkout-ready"
+import { assertGate8FinalizationEnabled } from "@/lib/config/payment-availability"
 
 const assertCartCheckoutReady = (cartId: string) =>
   assertCheckoutReady(cartId, (input, init) =>
@@ -52,6 +53,7 @@ const assertCartCheckoutReady = (cartId: string) =>
  * ```
  */
 export const completeCartOrder = async (): Promise<HttpTypes.StoreOrder> => {
+  assertGate8FinalizationEnabled()
   const cartId = getStoredCart()
 
   if (!cartId) {
