@@ -3,6 +3,12 @@ import { getStoredCart, removeStoredCart } from "@/lib/utils/cart"
 import { sdk } from "@/lib/medusa"
 import { QueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/utils/query-keys"
+import { assertCheckoutReady } from "@/lib/data/checkout/checkout-ready"
+
+const assertCartCheckoutReady = (cartId: string) =>
+  assertCheckoutReady(cartId, (input, init) =>
+    sdk.client.fetch(input, init),
+  )
 
 /**
  * Completes the current cart and creates an order.
@@ -51,6 +57,8 @@ export const completeCartOrder = async (): Promise<HttpTypes.StoreOrder> => {
   if (!cartId) {
     throw new Error("No cart found")
   }
+
+  await assertCartCheckoutReady(cartId)
 
   const cartRes = await sdk.store.cart.complete(cartId, {})
 

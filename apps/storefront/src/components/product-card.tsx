@@ -9,6 +9,7 @@ import { useState } from "react"
 import { QuoteModal } from "@/components/quote-modal"
 import { getStoredCart } from "@/lib/utils/cart"
 import { DocumentText } from "@medusajs/icons"
+import { getProductPurchaseState } from "@/lib/utils/product-state"
 
 interface ProductCardProps {
   product: HttpTypes.StoreProduct
@@ -18,6 +19,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, countryCode }: ProductCardProps) {
   const { cheapestPrice } = getProductPrice({ product })
+  const purchaseState = getProductPurchaseState(product)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const addToCartMutation = useAddToCart()
@@ -134,14 +136,18 @@ export function ProductCard({ product, countryCode }: ProductCardProps) {
 
         {/* Price + Quote button */}
         <div className="mt-auto flex items-center justify-between">
-          {cheapestPrice ? (
+          {purchaseState.status === "quote_only" ? (
+            <p className="text-sm font-semibold text-amber-800">Somente sob cotação</p>
+          ) : purchaseState.status === "price_pending" ? (
+            <p className="text-sm font-semibold text-text-secondary">Preço em configuração</p>
+          ) : cheapestPrice ? (
             <p className="text-base font-bold text-text-primary">
               {cheapestPrice.calculated_price}
             </p>
           ) : (
             <p className="text-sm text-text-secondary">Contact for price</p>
           )}
-          <button
+          {(purchaseState.status === "quote_only" || purchaseState.status === "price_pending") && <button
             onClick={handleQuoteClick}
             disabled={isQuoting || addToCartMutation.isPending}
             className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-accent-hover cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
@@ -152,7 +158,7 @@ export function ProductCard({ product, countryCode }: ProductCardProps) {
             ) : (
               <DocumentText className="w-4 h-4" />
             )}
-          </button>
+          </button>}
         </div>
       </div>
       

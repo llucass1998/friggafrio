@@ -10,13 +10,13 @@ import { CheckoutStepKey } from "@/lib/types/global"
 import { useCart, useCreateCart } from "@/lib/hooks/use-cart"
 import { useCreateQuoteFromCart } from "@/lib/hooks/use-quotes"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { getCartItemCount, getStoredCart, sortCartItems } from "@/lib/utils/cart"
+import { getCartItemCount, getStoredCart, isCartCheckoutReady, sortCartItems } from "@/lib/utils/cart"
 import { ShoppingCart, DocumentText } from "@medusajs/icons"
 import { Link, useLoaderData, useNavigate } from "@tanstack/react-router"
 import { toast } from "sonner"
 
 const DEFAULT_CART_FIELDS =
-  "id, *items, total, currency_code, subtotal, item_subtotal, shipping_total, discount_total, tax_total, *promotions"
+  "id,*items,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,total,currency_code,subtotal,item_subtotal,shipping_total,discount_total,tax_total,*promotions"
 
 const Cart = () => {
   const { region, countryCode } = useLoaderData({
@@ -37,6 +37,7 @@ const Cart = () => {
 
   const cartItems = sortCartItems(cart?.items || [])
   const itemCount = getCartItemCount(cartItems)
+  const checkoutReady = isCartCheckoutReady(cartItems)
 
   const handleRequestQuote = () => {
     if (!isAuthenticated) {
@@ -144,8 +145,8 @@ const Cart = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: CheckoutStepKey.ADDRESSES }} className="block">
-                    <Button className="w-full" size="lg" disabled={cartItems.some(item => !item.variant_id || item.quantity <= 0)}>
+                  <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: CheckoutStepKey.ADDRESSES }} className="block" onClick={(event) => { if (!checkoutReady) event.preventDefault() }}>
+                    <Button className="w-full" size="lg" disabled={!checkoutReady}>
                       Proceed to Checkout
                     </Button>
                   </Link>

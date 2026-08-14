@@ -17,7 +17,13 @@ import {
   useApplyPromoCode,
   useRemovePromoCode,
 } from "@/lib/hooks/use-cart"
-import { sortCartItems, getCartItemCount } from "@/lib/utils/cart"
+import {
+  cartCommercialStateLabel,
+  getCartLineCommercialState,
+  isCartCheckoutReady,
+  sortCartItems,
+  getCartItemCount,
+} from "@/lib/utils/cart"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
 import { getPricePercentageDiff } from "@/lib/utils/price"
 import { useCartDrawer } from "@/lib/context/cart"
@@ -36,19 +42,36 @@ type LineItemPriceProps = {
 }
 
 export const LineItemPrice = ({ item, currencyCode, className }: LineItemPriceProps) => {
+  const commercialState = getCartLineCommercialState(item as HttpTypes.StoreCartLineItem)
+
+  if (commercialState === "quote_only") {
+    return <span className={clsx("text-sm font-medium text-text-secondary", className)}>Sob consulta</span>
+  }
+
+  if (commercialState === "price_pending") {
+    return <span className={clsx("text-sm font-medium text-text-secondary", className)}>Preço em configuração</span>
+  }
+
+  if (commercialState !== "standard") {
+    return <span className={clsx("text-sm font-medium text-text-secondary", className)}>{cartCommercialStateLabel(commercialState)}</span>
+  }
+
   const originalPrice = item.original_total
   const currentPrice = item.total
+  if (typeof currentPrice !== "number") {
+    return <span className={clsx("text-sm font-medium text-text-secondary", className)}>PreÃ§o a confirmar</span>
+  }
   const hasReducedPrice = currentPrice !== null && currentPrice !== undefined && originalPrice !== null && originalPrice !== undefined && currentPrice < originalPrice
 
   return (
     <Price
-      price={currentPrice ?? 0}
+      price={currentPrice}
       currencyCode={currencyCode}
       originalPrice={
         hasReducedPrice
           ? {
-              price: originalPrice ?? 0,
-              percentage: getPricePercentageDiff(originalPrice ?? 0, currentPrice ?? 0),
+               price: originalPrice,
+               percentage: getPricePercentageDiff(originalPrice, currentPrice),
             }
           : undefined
       }
@@ -158,6 +181,7 @@ interface CartLineItemProps {
 }
 
 const CompactCartLineItem = ({ item, cart, fields, onRemoveStart }: CartLineItemProps) => {
+  const commercialState = getCartLineCommercialState(item)
   return (
     <div className="flex items-start gap-x-4" data-testid="cart-item">
       <Thumbnail thumbnail={item.thumbnail} alt={item.product_title || item.title} />
@@ -178,14 +202,18 @@ const CompactCartLineItem = ({ item, cart, fields, onRemoveStart }: CartLineItem
 
         <div className="flex items-center justify-between mt-2">
           <CartItemQuantitySelector item={item} fields={fields} />
-          <Price price={item.total ?? 0} currencyCode={cart.currency_code} textSize="small" />
+          <LineItemPrice item={item} currencyCode={cart.currency_code} />
         </div>
+        {commercialState !== "standard" && (
+          <p className="mt-2 text-xs font-medium text-amber-800">{cartCommercialStateLabel(commercialState)}</p>
+        )}
       </div>
     </div>
   )
 }
 
 const DisplayCartLineItem = ({ item, cart, className }: CartLineItemProps) => {
+  const commercialState = getCartLineCommercialState(item)
   return (
     <div
       className={clsx(
@@ -206,8 +234,11 @@ const DisplayCartLineItem = ({ item, cart, className }: CartLineItemProps) => {
         <p className="text-sm text-zinc-600">Quantity: {item.quantity}</p>
       </div>
       <div className="text-right">
-        <Price price={item.total ?? 0} currencyCode={cart.currency_code} textWeight="plus" />
+        <LineItemPrice item={item} currencyCode={cart.currency_code} />
       </div>
+      {commercialState !== "standard" && (
+        <p className="text-xs font-medium text-amber-800">{cartCommercialStateLabel(commercialState)}</p>
+      )}
     </div>
   )
 }
@@ -220,6 +251,7 @@ export const CartLineItem = ({
   className,
   onRemoveStart,
 }: CartLineItemProps) => {
+  const commercialState = getCartLineCommercialState(item)
   if (type === "compact") {
     return <CompactCartLineItem item={item} cart={cart} fields={fields} className={className} onRemoveStart={onRemoveStart} />
   }
@@ -259,10 +291,13 @@ export const CartLineItem = ({
 
           <div className="text-right sm:min-w-[100px]">
             <LineItemPrice item={item} currencyCode={cart.currency_code} className="text-lg font-semibold" />
-            {item.quantity > 1 && (
+            {commercialState === "standard" && item.quantity > 1 && typeof item.total === "number" && (
               <p className="text-xs text-text-muted mt-1">
-                <Price price={(item.total ?? 0) / item.quantity} currencyCode={cart.currency_code} /> each
+                <Price price={item.total / item.quantity} currencyCode={cart.currency_code} /> each
               </p>
+            )}
+            {commercialState !== "standard" && (
+              <p className="mt-2 text-xs font-medium text-amber-800">{cartCommercialStateLabel(commercialState)}</p>
             )}
           </div>
         </div>
@@ -280,28 +315,27 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
   if ("isOptimistic" in cart && cart.isOptimistic) {
     return <Loading />
   }
+  const checkoutReady = isCartCheckoutReady(cart.items)
+  const hasSelectedShipping = (cart.shipping_methods?.length ?? 0) > 0
+  const hasPricedItems = checkoutReady && typeof cart.item_subtotal === "number"
   return (
     <div className="space-y-4">
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">Subtotal</span>
-          <Price
-            price={cart.item_subtotal ?? 0}
-            currencyCode={cart.currency_code}
-            className="text-text-primary font-medium"
-          />
+          {hasPricedItems ? <Price price={cart.item_subtotal!} currencyCode={cart.currency_code} className="text-text-primary font-medium" /> : <span className="text-text-muted text-sm">Sob consulta</span>}
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">Shipping</span>
-          {cart.shipping_total !== null && cart.shipping_total !== undefined ? (
+          {hasSelectedShipping && typeof cart.shipping_total === "number" ? (
             <Price
               price={cart.shipping_total}
               currencyCode={cart.currency_code}
               className="text-text-primary font-medium"
             />
           ) : (
-            <span className="text-text-muted text-sm">-</span>
+            <span className="text-text-muted text-sm">A calcular</span>
           )}
         </div>
 
@@ -334,11 +368,7 @@ export const CartSummary = ({ cart }: CartSummaryProps) => {
       <div className="border-t border-border pt-4">
         <div className="flex justify-between items-center">
           <span className="text-base font-semibold text-text-primary">Total</span>
-          <Price
-            price={cart.total ?? 0}
-            currencyCode={cart.currency_code}
-            className="text-xl font-bold text-text-primary"
-          />
+          {checkoutReady && hasSelectedShipping && typeof cart.total === "number" ? <Price price={cart.total} currencyCode={cart.currency_code} className="text-xl font-bold text-text-primary" /> : <span className="text-text-muted text-sm">A confirmar</span>}
         </div>
       </div>
     </div>
@@ -458,7 +488,7 @@ export const CartEmpty = () => {
 }
 
 
-export const DEFAULT_CART_DROPDOWN_FIELDS = "id, *items, total, currency_code, item_subtotal"
+export const DEFAULT_CART_DROPDOWN_FIELDS = "id,*items,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,total,currency_code,item_subtotal"
 
 export const CartDropdown = () => {
   const { isOpen, openCart, closeCart } = useCartDrawer()
@@ -486,6 +516,7 @@ export const CartDropdown = () => {
     ),
   ]
   const itemCount = getCartItemCount(visibleItems)
+  const checkoutReady = isCartCheckoutReady(visibleItems)
 
   const handleRemoveStart = (item: HttpTypes.StoreCartLineItem) => {
     setPendingRemovedItems((current) =>
@@ -559,7 +590,7 @@ export const CartDropdown = () => {
             <DrawerFooter className="border-t border-[#E5EDF4] bg-[#F5F8FA] motion-cart-content">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-base font-bold text-[var(--color-navy)]">Subtotal</span>
-                <Price price={cart.item_subtotal ?? 0} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" />
+                {checkoutReady && typeof cart.item_subtotal === "number" ? <Price price={cart.item_subtotal} currencyCode={cart.currency_code} className="text-xl font-bold text-[var(--color-primary)]" /> : <span className="text-sm text-[var(--color-text-muted)]">A confirmar</span>}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -568,8 +599,8 @@ export const CartDropdown = () => {
                     Ver carrinho
                   </Button>
                 </Link>
-                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={closeCart} className="w-full">
-                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={visibleItems.some(item => !item.variant_id || item.quantity <= 0)}>
+                <Link to="/$countryCode/checkout" params={{ countryCode }} search={{ step: "address" as any }} onClick={(event) => { if (!checkoutReady) event.preventDefault(); else closeCart() }} className="w-full">
+                  <Button className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]" disabled={!checkoutReady}>
                     Finalizar compra
                   </Button>
                 </Link>

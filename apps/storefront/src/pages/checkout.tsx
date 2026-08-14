@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-router"
 import { lazy, Suspense, useCallback, useEffect, useMemo } from "react"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { isCartCheckoutReady } from "@/lib/utils/cart"
 
 const DeliveryStep = lazy(() => import("@/components/checkout-delivery-step"))
 const AddressStep = lazy(() => import("@/components/checkout-address-step"))
@@ -183,6 +184,16 @@ const Checkout = () => {
   // Block checkout if checkout-required setup steps are incomplete
   if (!setupLoading && setupStatus && !setupStatus.checkout_ready) {
     return <CheckoutSetupBlocker setupStatus={setupStatus} />
+  }
+
+  // Direct navigation cannot bypass cart commercial and inventory eligibility.
+  if (!cartLoading && cart && !isCartCheckoutReady(cart.items)) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h2 className="text-xl font-bold text-zinc-900">Seu carrinho precisa de revisão</h2>
+        <p className="mt-2 text-zinc-600">Itens sob cotação, sem preço confirmado ou sem estoque não podem seguir para o checkout.</p>
+      </div>
+    )
   }
 
   return (

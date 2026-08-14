@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-12",
+  "updatedAt": "2026-08-14",
   "baselineFunctional": 65,
   "baselineProductionReadiness": 40,
   "phases": {
@@ -57,7 +57,51 @@
     "import": { "created": 1080, "updated": 0, "duplicates": 0 },
     "secondSync": { "create": 0, "update": 0, "noOp": 1080, "conflict": 0, "skip": 149, "idempotent": true },
     "storefront": { "realProductsVisible": 1080, "storeApiOnly": true, "quoteOnly": "pass", "pricePending": "pass", "cartBlocking": "pass" },
-    "nextAction": "Gate 5 passed; Gate 6 is ready to start."
+    "nextAction": "Gate 6 passed; Gate 7 is ready to start."
+  },
+  "phase6Finalization": {
+    "status": "pass",
+    "gate": "GATE-06-PASS",
+    "formalGates": "6/14",
+    "inventory": {
+      "stockLocation": "pass",
+      "realInventoryLevels": "pass",
+      "omieStockProjection": "pass",
+      "reservationConcurrency": "pass",
+      "integrationSuites": "2/2 pass",
+      "database": "isolated PostgreSQL frigga_test"
+    },
+    "commercialCart": {
+      "quoteOnly": "pass",
+      "pricePending": "pass",
+      "checkoutReadyBoundary": "pass",
+      "storefrontUnit": "60 pass"
+    },
+    "shipping": {
+      "policyUnit": "23 pass",
+      "moneyUnit": "major BRL units",
+      "routeProvider": "pass: Google Routes live authentication and distanceMeters",
+      "routeProviderUrlPresent": true,
+      "routeProviderApiKeyPresent": true,
+      "routeProviderRuntimePresent": true,
+      "grandeSpCitiesConfigured": true,
+      "grandeSpMunicipalities": 39,
+      "googleRoutesAdapter": "implemented: X-Goog-Api-Key + routes.distanceMeters",
+      "backendEnvLoader": "fixed: medusa-config loads beside config and resolves local modules from backend root",
+      "liveHomologation": "pass: 0-100 km matrix plus >100 km unavailable",
+      "freeShippingBoundary": "R$399.99=false; R$400=true",
+      "failClosed": "pass: invalid address, provider failure, outside RMSP, browser tamper"
+    },
+    "regression": {
+      "backendTypecheck": "pass",
+      "backendUnit": "112 pass",
+      "backendLint": "pass with warnings",
+      "storefrontTypecheck": "pass",
+      "storefrontUnit": "60 pass",
+      "storefrontBuild": "pass",
+      "gitDiffCheck": "pass"
+    },
+    "nextAction": "Gate 7 READY_TO_START."
   },
   "responsiveHomologation": {
     "status": "blocked",
@@ -222,6 +266,24 @@
         "Independent QA recommendation: GATE_5_PASS"
       ],
       "blockers": []
+    },
+    "GATE-06": {
+      "status": "pass",
+      "date": "2026-08-14",
+      "evidence": [
+        "Commercial cart QUOTE_ONLY/price_pending/checkout-ready guards pass",
+        "Real PostgreSQL/Redis inventory concurrency fixtures pass: 2/2",
+        "Backend unit PASS: 15 suites / 112 tests",
+        "Storefront unit PASS: 60 tests",
+        "Shipping V1 policy PASS: 23 tests with official RMSP municipality classification and R$399.99/R$400 boundary",
+        "Google Routes live PASS: authenticated routes.distanceMeters converted server-side",
+        "Live matrix PASS: 0-100 km rate bands and >100 km unavailable",
+        "Grande SP free shipping PASS: R$400 true and R$399.99 false",
+        "Fail-closed and browser tamper checks PASS",
+        "Secret scan and git diff check remain clean"
+      ],
+      "blockers": [],
+      "nextAction": "Gate 7 READY_TO_START."
     }
   },
   "tasks": {

@@ -39,7 +39,16 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   // Get shipping options with their prices
   const { data: shippingOptionsData } = await query.graph({
     entity: "shipping_option",
-    fields: ["id", "name", "price_type", "provider_id", "prices.*"],
+    fields: [
+      "id",
+      "name",
+      "price_type",
+      "provider_id",
+      "prices.*",
+      "data",
+      "service_zone.geo_zones.*",
+      "fulfillment_provider.is_enabled",
+    ],
   })
 
   const shippingOptions = (shippingOptionsData as unknown as Array<{
@@ -48,17 +57,31 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     price_type?: string
     provider_id?: string
     prices: { currency_code: string; amount: number }[]
-  }>).map((option) => {
+  }>).flatMap((option) => {
+    const provider = (option as unknown as { fulfillment_provider?: { is_enabled?: boolean } }).fulfillment_provider
+    if (provider?.is_enabled === false) return []
+
+    const serviceZone = (option as unknown as {
+      service_zone?: { geo_zones?: Array<{ country_code?: string }> }
+    }).service_zone
+    const supportedCountries = serviceZone?.geo_zones
+      ?.map((zone) => zone.country_code?.toLowerCase())
+      .filter(Boolean) ?? []
+    if (supportedCountries.length && !supportedCountries.includes(order.shipping_address?.country_code?.toLowerCase())) {
+      return []
+    }
+
     // Find the price for the order's currency
     const price = option.prices?.find(
       (p: { currency_code: string }) => p.currency_code === order.currency_code
     )
-    
+    if (!price && option.price_type !== "calculated") return []
+
     return {
       id: option.id,
       name: option.name,
       price_type: option.price_type,
-      amount: price?.amount ?? 0,
+      amount: price?.amount,
       currency_code: order.currency_code,
       provider_id: option.provider_id,
     }

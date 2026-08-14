@@ -5,6 +5,7 @@ import { ChevronRight } from "@medusajs/icons"
 import ProductActions from "@/components/product-actions"
 import { useState } from "react"
 import { storeConfig } from "@/config/store"
+import { getProductPurchaseState } from "@/lib/utils/product-state"
 
 interface ProductPageData {
   product: HttpTypes.StoreProduct
@@ -51,6 +52,17 @@ export function ProductPage() {
   const brand = (product.collection?.title) || (product.metadata?.brand as string) || "Friggafrio"
   const sku = product.variants?.[0]?.sku || "N/A"
   const category = product.categories?.[0]?.name || product.type?.value || "Componentes"
+  const purchaseState = getProductPurchaseState(product)
+  const availabilityLabel = purchaseState.status === "quote_only"
+    ? "Somente sob cotação"
+    : purchaseState.status === "price_pending"
+      ? "Preço em configuração"
+      : purchaseState.status === "out_of_stock"
+        ? "Sem estoque"
+        : "Em estoque"
+  const availabilityClass = purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
+    ? "bg-[#e6f4ea] text-[#137333] border-[#ceead6]"
+    : "bg-amber-50 text-amber-800 border-amber-200"
 
   // Temporary Specs Logic from Product Metadata if any
   const specs = Object.entries(product.metadata || {}).filter(([k, _v]) => !["brand"].includes(k))
@@ -111,9 +123,9 @@ export function ProductPage() {
               </h1>
 
               <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e6f4ea] text-[#137333] text-sm font-semibold rounded-full border border-[#ceead6]">
-                  <span className="w-2 h-2 rounded-full bg-[#137333]"></span>
-                  Em estoque
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-full border ${availabilityClass}`}>
+                  <span className="w-2 h-2 rounded-full bg-current"></span>
+                  {availabilityLabel}
                 </span>
                 <span className="text-sm text-[var(--color-text-muted)]">
                   Categoria: <strong className="text-[var(--color-text)] font-medium">{category}</strong>

@@ -6,6 +6,7 @@ import {
 } from "./middlewares/rate-limiting";
 import { defineMiddlewares } from "@medusajs/medusa";
 import { validateDemoPriceCheckout } from "./middlewares/validate-demo-price";
+import { releaseCartLineInventoryReservation } from "./middlewares/release-cart-inventory-reservation";
 import { companyMiddlewares } from "./store/company/middlewares";
 import { employeesMiddlewares } from "./store/employees/middlewares";
 import { customersMiddlewares } from "./store/customers/middlewares";
@@ -93,6 +94,16 @@ export default defineMiddlewares({
       method: "POST",
       matcher: "/store/carts/:id/complete",
       middlewares: [blockPaymentsWhenDisabled, validateDemoPriceCheckout],
+    },
+    {
+      method: "POST",
+      matcher: "/store/carts/:id/line-items/:line_id",
+      middlewares: [releaseCartLineInventoryReservation],
+    },
+    {
+      method: "DELETE",
+      matcher: "/store/carts/:id/line-items/:line_id",
+      middlewares: [releaseCartLineInventoryReservation],
     },
     ...companyMiddlewares,
     ...employeesMiddlewares,

@@ -1,8 +1,12 @@
 import { defineConfig, loadEnv } from "@medusajs/framework/utils";
+import { resolve as resolvePath } from "node:path";
 import { getPaymentAvailability } from "./src/utils/payment-availability";
 import { getSessionCookieName } from "./src/lib/auth/session-security";
 
-loadEnv(process.env.NODE_ENV || "development", process.cwd());
+// Resolve the backend env beside this config instead of depending on the
+// directory used by pnpm, Turbo, Docker, or a manually launched process.
+loadEnv(process.env.NODE_ENV || "development", __dirname);
+const backendPath = (relativePath: string) => resolvePath(__dirname, relativePath);
 
 const nodeEnv = process.env.NODE_ENV || "development";
 const isSecureSessionEnvironment = ["production", "staging"].includes(nodeEnv);
@@ -89,25 +93,25 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "./src/modules/company",
+      resolve: backendPath("src/modules/company"),
     },
     {
-      resolve: "./src/modules/quote",
+      resolve: backendPath("src/modules/quote"),
     },
     {
-      resolve: "./src/modules/customer-profile",
+      resolve: backendPath("src/modules/customer-profile"),
     },
     {
-      resolve: "./src/modules/payment-attempt",
+      resolve: backendPath("src/modules/payment-attempt"),
     },
     {
-      resolve: "./src/modules/payment-webhook-event",
+      resolve: backendPath("src/modules/payment-webhook-event"),
     },
     {
-      resolve: "./src/modules/audit-log",
+      resolve: backendPath("src/modules/audit-log"),
     },
     {
-      resolve: "./src/modules/product-sales-policy",
+      resolve: backendPath("src/modules/product-sales-policy"),
     },
     {
       resolve: "@medusajs/medusa/payment",
@@ -115,6 +119,21 @@ module.exports = defineConfig({
         // Mercado Pago remains quarantined until its provider and webhook are
         // implemented and homologated. No provider is registered by default.
         providers: paymentProviders,
+      },
+    },
+    {
+      // Inventory reservations must serialize across backend processes. The
+      // PostgreSQL provider is the durable lock used by Medusa's reservation
+      // workflows instead of the in-memory development fallback.
+      resolve: "@medusajs/medusa/locking",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/locking-postgres",
+            id: "locking-postgres",
+            is_default: true,
+          },
+        ],
       },
     },
     {

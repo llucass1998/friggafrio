@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { HttpTypes } from "@medusajs/types"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
+import { resolveStoreRegion } from "@/lib/utils/region"
 import {
   getStoredCart,
   setStoredCart,
@@ -12,9 +13,21 @@ import {
   updateLineItemOptimistically,
   removeLineItemOptimistically,
   createOptimisticCart,
+  assertPositiveIntegerQuantity,
 } from "@/lib/utils/cart"
 
-const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name, +subtotal, +item_subtotal, +shipping_total, +discount_total, +tax_total, +total"
+const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total"
+
+let activeCartMutations = 0
+
+const beginCartMutation = () => {
+  activeCartMutations += 1
+}
+
+const finishCartMutation = () => {
+  activeCartMutations = Math.max(0, activeCartMutations - 1)
+  return activeCartMutations
+}
 
 export const useCart = ({ fields }: { fields?: string } = {}) => {
   return useQuery({
@@ -84,15 +97,13 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
     }) => {
       const { variant_id, quantity, country_code, fields: requestFields } = variables
       if (!variant_id) throw new Error("Missing variant ID when adding to cart")
+      assertPositiveIntegerQuantity(quantity)
 
       let cartId = getStoredCart()
 
       if (!cartId) {
         const { regions } = await sdk.store.region.list({})
-        const region = regions.find(r =>
-          r.countries?.some(c => c.iso_2 === country_code.toLowerCase())
-        )
-        if (!region) throw new Error(`Region not found for country code: ${country_code}`)
+        const region = resolveStoreRegion(regions, country_code)
         const { cart } = await sdk.store.cart.create({ region_id: region.id }, {
           fields: requestFields || fields || DEFAULT_CART_FIELDS,
         })
@@ -108,6 +119,7 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
       return response.cart
     },
     onMutate: async (variables) => {
+      beginCartMutation()
       await queryClient.cancelQueries({ predicate: queryKeys.cart.predicate })
       let previousCart = getCurrentCart(queryClient, fields)
       let didCartExist = true
@@ -129,17 +141,15 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
       return { previousCart: didCartExist ? previousCart : undefined }
     },
     onError: (err, variables, context) => {
-      if (context?.previousCart) {
+      if (context?.previousCart && activeCartMutations === 1) {
         rollbackOptimisticCart(queryClient, context.previousCart, fields)
       }
     },
-    onSettled: (data) => {
+    onSettled: () => {
+      finishCartMutation()
       queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields && data ? [fields] : undefined)
+        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
       })
-      if (data) {
-        queryClient.setQueryData(queryKeys.cart.current(fields), data)
-      }
     },
   })
 }
@@ -151,6 +161,7 @@ export const useUpdateLineItem = ({ fields }: { fields?: string } = {}) => {
     mutationFn: async (variables: { line_id: string; quantity: number }) => {
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
+      assertPositiveIntegerQuantity(variables.quantity)
       const { cart } = await sdk.store.cart.updateLineItem(
         cartId,
         variables.line_id,
@@ -160,6 +171,7 @@ export const useUpdateLineItem = ({ fields }: { fields?: string } = {}) => {
       return cart
     },
     onMutate: async (variables) => {
+      beginCartMutation()
       await queryClient.cancelQueries({
         predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
       })
@@ -170,17 +182,15 @@ export const useUpdateLineItem = ({ fields }: { fields?: string } = {}) => {
       return { previousCart }
     },
     onError: (err, variables, context) => {
-      if (context?.previousCart) {
+      if (context?.previousCart && activeCartMutations === 1) {
         rollbackOptimisticCart(queryClient, context.previousCart, fields)
       }
     },
-    onSettled: (data) => {
+    onSettled: () => {
+      finishCartMutation()
       queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields && data ? [fields] : undefined)
+        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
       })
-      if (data) {
-        queryClient.setQueryData(queryKeys.cart.current(fields), data)
-      }
     },
   })
 }
@@ -195,6 +205,7 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
       await sdk.store.cart.deleteLineItem(cartId, variables.line_id)
     },
     onMutate: async (variables) => {
+      beginCartMutation()
       await queryClient.cancelQueries({
         predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
       })
@@ -205,17 +216,15 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
       return { previousCart }
     },
     onError: (err, variables, context) => {
-      if (context?.previousCart) {
+      if (context?.previousCart && activeCartMutations === 1) {
         rollbackOptimisticCart(queryClient, context.previousCart, fields)
       }
     },
-    onSettled: (data) => {
+    onSettled: () => {
+      finishCartMutation()
       queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields && data ? [fields] : undefined)
+        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
       })
-      if (data) {
-        queryClient.setQueryData(queryKeys.cart.current(fields), data)
-      }
     },
   })
 }

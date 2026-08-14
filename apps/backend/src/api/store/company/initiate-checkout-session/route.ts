@@ -12,6 +12,8 @@ import {
   getPaymentAvailability,
   sendPaymentUnavailable,
 } from "../../../../utils/payment-availability"
+import { validateCartCommercialEligibility } from "../../../../utils/cart-commercial-eligibility"
+import type { CommercialLine } from "../../../../utils/cart-commercial-eligibility"
 
 const InitiateSessionSchema = z.object({
   cart_id: z.string(),
@@ -76,16 +78,49 @@ export async function POST(
   // Get the cart and its payment collection
   const { data: carts } = await query.graph({
     entity: "cart",
-    fields: ["id", "payment_collection.*", "region.*", "currency_code"],
+    fields: [
+      "id",
+      "payment_collection.*",
+      "region.*",
+      "currency_code",
+      "items.id",
+      "items.quantity",
+      "items.unit_price",
+      "items.metadata",
+      "items.variant.inventory_quantity",
+      "items.variant.manage_inventory",
+      "items.variant.allow_backorder",
+      "items.variant.metadata",
+      "items.variant.product.metadata",
+    ],
     filters: { id: body.cart_id },
   })
 
-  const cart = carts[0] as { id: string, total: number, currency_code: string, customer_id: string, email: string }
+  const cart = carts[0] as {
+    id: string
+    total: number
+    currency_code: string
+    customer_id: string
+    email: string
+    items?: CommercialLine[]
+    payment_collection?: {
+      id: string
+      amount: number
+      payment_sessions?: Array<{ id: string }>
+    }
+  }
   if (!cart) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Cart not found")
   }
 
-  // @ts-expect-error
+  const eligibility = validateCartCommercialEligibility(cart.items ?? [])
+  if (!eligibility.eligible) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Cart contains items that cannot proceed to checkout"
+    )
+  }
+
   const paymentCollection = cart.payment_collection
   if (!paymentCollection) {
     throw new MedusaError(

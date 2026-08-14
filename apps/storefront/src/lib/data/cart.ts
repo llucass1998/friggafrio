@@ -1,13 +1,13 @@
 import { sdk } from "@/lib/medusa"
 import { getRegion } from "@/lib/data/regions"
-import { getStoredCart, setStoredCart } from "@/lib/utils/cart"
+import { getStoredCart, setStoredCart, assertPositiveIntegerQuantity } from "@/lib/utils/cart"
 import { HttpTypes } from "@medusajs/types"
 import { 
   sendPostRequest, 
   sendDeleteRequest 
 } from "@/lib/data/custom"
 
-const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
+const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,shipping_methods.name"
 
 /**
  * Retrieves a cart by ID or from stored ID. Returns null if no cart is found.
@@ -163,6 +163,7 @@ export const addToCart = async ({
   if (!variant_id) {
     throw new Error("Missing variant ID when adding to cart")
   }
+  assertPositiveIntegerQuantity(quantity)
 
   let cartId = getStoredCart()
 
@@ -233,6 +234,7 @@ export const updateLineItem = async ({
   if (!cartId) {
     throw new Error("No cart found")
   }
+  assertPositiveIntegerQuantity(quantity)
 
   const { cart } = await sdk.store.cart.updateLineItem(
     cartId,

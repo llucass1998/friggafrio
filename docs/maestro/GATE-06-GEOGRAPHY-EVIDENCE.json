@@ -1,0 +1,62 @@
+{
+  "gate": "GATE-06",
+  "scope": "address-geography-routing",
+  "status": "pass",
+  "result": "GATE_06_PASS",
+  "canonicalWorktree": "C:/Users/lluca/orca/workspaces/projeto friggagafrio/Maestro",
+  "provider": {
+    "adapter": "HttpShippingDistanceProvider",
+    "configuration": {
+      "endpoint": "FRIGGAFRIO_ROUTE_PROVIDER_URL",
+      "credential": "FRIGGAFRIO_ROUTE_PROVIDER_API_KEY"
+    },
+    "endpointConfigured": true,
+    "credentialConfigured": true,
+    "runtimeConfigured": true,
+    "reason": "The approved Google Routes endpoint and credential are present in the canonical backend environment and loaded by Node/Medusa."
+  },
+  "failClosedContract": {
+    "missingCredentials": "EXTERNAL_CREDENTIAL_REQUIRED",
+    "missingAddressFields": "ADDRESS_NOT_RESOLVABLE",
+    "providerHttpFailure": "PROVIDER_FAILURE",
+    "invalidDistancePayload": "PROVIDER_FAILURE",
+    "fallbacks": ["none", "no CEP bands", "no guessed municipalities", "no geodesic distance", "no browser distance"]
+  },
+  "geography": {
+    "approvedMunicipalitySourceConfigured": true,
+    "configKey": "FRIGGAFRIO_SHIPPING_GRANDE_SP_CITIES",
+    "inventedMunicipalities": false
+  },
+  "verification": {
+    "unitCommand": "pnpm --dir apps/backend test:unit -- --runInBand src/utils/commercial-shipping-policy.unit.spec.ts",
+    "unitResult": "PASS: 23 tests",
+    "typecheckCommand": "pnpm --dir apps/backend typecheck",
+    "typecheckResult": "PASS",
+    "runtimeCredential": "Boolean(process.env.FRIGGAFRIO_ROUTE_PROVIDER_API_KEY)=true",
+    "runtimeUrl": "Boolean(process.env.FRIGGAFRIO_ROUTE_PROVIDER_URL)=true",
+    "liveGoogleRoutes": {
+      "authentication": "PASS",
+      "samples": [
+        { "destination": "Sao Paulo", "distanceMeters": 5318, "expressRate": "FRIGGAFRIO_EXPRESS_0_10" },
+        { "destination": "Osasco", "distanceMeters": 19222, "expressRate": "FRIGGAFRIO_EXPRESS_10_20" },
+        { "destination": "Santo Andre", "distanceMeters": 26077, "expressRate": "FRIGGAFRIO_EXPRESS_20_30" },
+        { "destination": "Mogi das Cruzes", "distanceMeters": 62666, "expressRate": "FRIGGAFRIO_EXPRESS_60_80" },
+        { "destination": "Santos", "distanceMeters": 82260, "expressRate": "FRIGGAFRIO_EXPRESS_80_100" },
+        { "destination": "Ribeirao Preto", "distanceMeters": 310776, "expressRate": "UNAVAILABLE" }
+      ]
+    },
+    "freeShippingBoundary": "R$399.99=false; R$400=true",
+    "failClosed": "invalid address and provider failure PASS",
+    "browserTamper": "distance/is_grande_sp/price ignored server-side",
+    "frontendFocusedQa": "PASS: storefront unit 60, typecheck, production build; checkout fixture reaches the intentional payment-disabled guard"
+  },
+  "changedFiles": [
+    "apps/backend/src/utils/commercial-shipping-policy.ts",
+    "apps/backend/src/utils/commercial-shipping-policy.unit.spec.ts",
+    "apps/backend/medusa-config.ts",
+    "deploy/docker-compose.production.yml",
+    "apps/backend/.env.example",
+    "apps/backend/docs/fulfillment/COMMERCIAL-SHIPPING-V1.md"
+  ],
+  "outOfScope": ["Omie", "inventory", "payments", "Gate 7"]
+}

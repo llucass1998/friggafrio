@@ -21,7 +21,7 @@ export const removeStoredCart = (): void => {
 // ============ SORT CART ITEMS ============
 
 export const sortCartItems = (items: HttpTypes.StoreCartLineItem[]): HttpTypes.StoreCartLineItem[] => {
-  return items.sort((a, b) => {
+  return [...items].sort((a, b) => {
     if (!a.created_at || !b.created_at) {
       return 0
     }
@@ -34,7 +34,104 @@ export const sortCartItems = (items: HttpTypes.StoreCartLineItem[]): HttpTypes.S
 export const getCartItemCount = (
   items?: ReadonlyArray<Pick<HttpTypes.StoreCartLineItem, "quantity">>
 ): number => {
-  return items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0
+  return items?.reduce((total, item) => {
+    return Number.isSafeInteger(item.quantity) && item.quantity > 0
+      ? total + item.quantity
+      : total
+  }, 0) || 0
+}
+
+type CartCommercialMetadata = Record<string, unknown>
+
+type CartLineWithCommercialMetadata = HttpTypes.StoreCartLineItem & {
+  metadata?: CartCommercialMetadata
+  variant?: HttpTypes.StoreProductVariant & {
+    metadata?: CartCommercialMetadata
+    product?: { metadata?: CartCommercialMetadata }
+  }
+}
+
+export type CartLineCommercialState = "standard" | "quote_only" | "price_pending" | "out_of_stock" | "invalid"
+
+/** Resolve product commercial metadata carried by a Store API cart line. */
+export const getCartLineCommercialState = (
+  item: HttpTypes.StoreCartLineItem
+): CartLineCommercialState => {
+  const line = item as CartLineWithCommercialMetadata
+  // Store responses can carry commercial flags at any of these persisted levels.
+  // Merge rather than picking the first object so an empty line metadata object
+  // cannot hide the product-level contract.
+  const metadata = {
+    ...(line.variant?.product?.metadata ?? {}),
+    ...(line.variant?.metadata ?? {}),
+    ...(line.metadata ?? {}),
+  }
+
+  if ((line.quantity !== undefined && (!Number.isSafeInteger(line.quantity) || line.quantity < 1)) || (line.variant_id !== undefined && !line.variant_id)) {
+    return "invalid"
+  }
+
+  if (
+    metadata.is_quote_only === true ||
+    metadata.commercial_status === "QUOTE_ONLY"
+  ) {
+    return "quote_only"
+  }
+
+  if (
+    metadata.price_pending === true ||
+    metadata.price_approval_status === "pending" ||
+    metadata.purchase_enabled === false
+  ) {
+    return "price_pending"
+  }
+
+  const inventoryQuantity = (line.variant as { inventory_quantity?: unknown } | undefined)?.inventory_quantity
+  const managesInventory = (line.variant as { manage_inventory?: unknown } | undefined)?.manage_inventory
+  const allowsBackorder = (line.variant as { allow_backorder?: unknown } | undefined)?.allow_backorder
+  if (
+    managesInventory === true &&
+    allowsBackorder !== true &&
+    (typeof inventoryQuantity !== "number" || !Number.isSafeInteger(inventoryQuantity) || inventoryQuantity < line.quantity)
+  ) {
+    return "out_of_stock"
+  }
+
+  // A missing amount is not a free item. A numeric zero remains distinct here
+  // so the server can decide whether an explicit zero-price promotion is valid.
+  if (typeof line.total !== "number" || typeof line.unit_price !== "number") {
+    return "price_pending"
+  }
+
+  return "standard"
+}
+
+/** A cart is safe to advance only when every persisted line is commercially purchasable. */
+export const isCartCheckoutReady = (items?: HttpTypes.StoreCartLineItem[]): boolean =>
+  !!items?.length && items.every((item) => getCartLineCommercialState(item) === "standard")
+
+export const cartCommercialStateLabel = (state: CartLineCommercialState): string => {
+  switch (state) {
+    case "quote_only":
+      return "Somente sob cotação"
+    case "price_pending":
+      return "Preço em configuração"
+    case "out_of_stock":
+      return "Sem estoque disponível"
+    case "invalid":
+      return "Item indisponível"
+    default:
+      return ""
+  }
+}
+
+/** Keep malformed quantities out of optimistic state and Store API requests. */
+export const assertPositiveIntegerQuantity = (quantity: number): number => {
+  if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+    throw new Error("Cart quantity must be a positive integer")
+  }
+
+  return quantity
 }
 
 // ============ OPTIMISTIC CART ============
@@ -54,9 +151,12 @@ export interface OptimisticCartItem {
   variant?: {
     id: string;
     title: string;
+    product?: {
+      metadata?: CartCommercialMetadata;
+    };
   };
-  unit_price: number;
-  total: number;
+  unit_price?: number;
+  total?: number;
   isOptimistic?: boolean;
 }
 
@@ -69,7 +169,9 @@ export const createOptimisticCartItem = (
   product: HttpTypes.StoreProduct,
   quantity: number = 1
 ): OptimisticCartItem => {
-  const unitPrice = variant.calculated_price?.calculated_amount ?? 0
+  assertPositiveIntegerQuantity(quantity)
+  const calculatedAmount = variant.calculated_price?.calculated_amount
+  const unitPrice = typeof calculatedAmount === "number" ? calculatedAmount : undefined
 
   return {
     id: `optimistic-${variant.id}-${Date.now()}`,
@@ -85,10 +187,11 @@ export const createOptimisticCartItem = (
     variant: {
       id: variant.id,
       title: variant.title || "Default Variant",
+      product: { metadata: product.metadata as CartCommercialMetadata | undefined },
     },
     variant_title: variant.title || "Default Variant",
     unit_price: unitPrice,
-    total: unitPrice * quantity,
+    total: unitPrice === undefined ? undefined : unitPrice * quantity,
     isOptimistic: true,
   }
 }
@@ -99,6 +202,7 @@ export const addItemOptimistically = (
   optimisticCart?: OptimisticCart,
   fields?: string
 ): HttpTypes.StoreCart | null => {
+  assertPositiveIntegerQuantity(newItem.quantity)
   const currentCart = optimisticCart || queryClient.getQueryData<HttpTypes.StoreCart | null>(
     queryKeys.cart.current(fields)
   )
@@ -172,6 +276,7 @@ export const updateLineItemOptimistically = (
   quantity: number,
   fields?: string
 ): HttpTypes.StoreCart | null => {
+  assertPositiveIntegerQuantity(quantity)
   const currentCart = queryClient.getQueryData<HttpTypes.StoreCart | null>(
     queryKeys.cart.current(fields)
   )

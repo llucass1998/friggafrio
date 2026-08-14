@@ -4,12 +4,18 @@ import Radio from "@/components/ui/radio"
 import { calculatePriceForShippingOption } from "@/lib/utils/checkout"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useRef, useState } from "react"
+import {
+  getShippingOptionDeliveryCopy,
+  isShippingOptionSelectable,
+  type ShippingOptionCalculationState,
+} from "@/lib/utils/shipping-state"
 
 type ShippingItemSelectorProps = {
   shippingOption: HttpTypes.StoreCartShippingOption;
   cart: HttpTypes.StoreCart;
   isSelected: boolean;
   handleSelect: (optionId: string) => void;
+  onAvailabilityChange?: (optionId: string, state: ShippingOptionCalculationState, amount?: number) => void;
 };
 
 const ShippingItemSelector = ({
@@ -17,25 +23,38 @@ const ShippingItemSelector = ({
   cart,
   isSelected,
   handleSelect,
+  onAvailabilityChange,
 }: ShippingItemSelectorProps) => {
-  const [calculatedPrice, setCalculatedPrice] = useState<number | undefined>(
-    undefined
-  )
+  const [calculatedPrice, setCalculatedPrice] = useState<number | undefined>(undefined)
   const isMounted = useRef(true)
-  const isDisabled =
-    shippingOption.price_type === "calculated" &&
-    typeof calculatedPrice !== "number"
+  const [calculationError, setCalculationError] = useState(false)
   const price =
     shippingOption.price_type === "calculated"
       ? calculatedPrice
       : shippingOption.amount
+  const hasValidAmount = typeof price === "number" && Number.isFinite(price) && price >= 0
+  const amountUnavailable = !hasValidAmount && shippingOption.price_type !== "calculated"
+  const deliveryCopy = getShippingOptionDeliveryCopy(shippingOption)
+  const isDisabled =
+    !hasValidAmount ||
+    !isShippingOptionSelectable(shippingOption, calculationError ? "error" : "ready", price)
 
   useEffect(() => {
     isMounted.current = true
 
     if (shippingOption.price_type !== "calculated") {
+      const flatAmount = shippingOption.amount
+      const flatAmountIsValid = typeof flatAmount === "number" && Number.isFinite(flatAmount) && flatAmount >= 0
+      onAvailabilityChange?.(
+        shippingOption.id,
+        flatAmountIsValid ? "ready" : "error",
+        flatAmountIsValid ? flatAmount : undefined,
+      )
       return
     }
+
+    setCalculationError(false)
+    onAvailabilityChange?.(shippingOption.id, "pending")
 
     calculatePriceForShippingOption({
       option_id: shippingOption.id,
@@ -43,16 +62,26 @@ const ShippingItemSelector = ({
       .then((option) => {
         if (isMounted.current) {
           setCalculatedPrice(option.amount)
+          const amount = option.amount
+          if (typeof amount === "number" && Number.isFinite(amount) && amount >= 0) {
+            onAvailabilityChange?.(shippingOption.id, "ready", amount)
+          } else {
+            setCalculationError(true)
+            onAvailabilityChange?.(shippingOption.id, "error")
+          }
         }
       })
       .catch(() => {
-        // Error is handled silently - price will show loading state
+        if (isMounted.current) {
+          setCalculationError(true)
+          onAvailabilityChange?.(shippingOption.id, "error")
+        }
       })
 
     return () => {
       isMounted.current = false
     }
-  }, [shippingOption.price_type, shippingOption.id])
+  }, [onAvailabilityChange, shippingOption.amount, shippingOption.id, shippingOption.price_type])
 
   return (
     <label
@@ -80,16 +109,18 @@ const ShippingItemSelector = ({
                 {shippingOption.name}
               </p>
             </div>
-            {typeof shippingOption.data?.description === "string" && (
+            {deliveryCopy && (
               <p className="text-xs text-zinc-600 mt-1">
-                {shippingOption.data.description}
+                {deliveryCopy}
               </p>
             )}
           </div>
         </div>
 
         <div className="text-right">
-          {price ? (
+          {calculationError || amountUnavailable ? (
+            <span className="text-xs font-medium text-red-700">Frete indisponível</span>
+          ) : typeof price === "number" ? (
             <Price
               price={price}
               currencyCode={cart.currency_code}

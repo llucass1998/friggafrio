@@ -94,11 +94,8 @@ const ProductActions = memo(function ProductActions({
     return true
   }, [selectedVariant, purchaseState])
 
-  const displayPrice = selectedVariant
-    ? (selectedVariant as any).calculated_price?.calculated_amount ?? 0
-    : purchaseState.status === "purchasable"
-      ? purchaseState.price
-      : (product.variants?.[0] as any)?.calculated_price?.calculated_amount ?? 0
+  const displayPrice = selectedVariant?.calculated_price?.calculated_amount
+    ?? (purchaseState.status === "purchasable" ? purchaseState.price : undefined)
 
   
   const handleAddToCart = async () => {

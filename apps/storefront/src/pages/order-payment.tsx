@@ -42,6 +42,7 @@ import {
   PAYMENT_UNAVAILABLE_MESSAGE,
   paymentAvailability,
 } from "@/lib/config/payment-availability"
+import { getShippingOptionDeliveryCopy } from "@/lib/utils/shipping-state"
 
 type OrderPaymentStep = "address" | "shipping" | "payment" | "review"
 
@@ -732,9 +733,11 @@ export default function OrderPaymentPage() {
                         />
                         <div>
                           <p className="font-medium text-gray-900">{option.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {option.price_type === "flat" ? "Flat rate" : "Calculated"}
-                          </p>
+                          {getShippingOptionDeliveryCopy(option) && (
+                            <p className="text-sm text-gray-500">
+                              {getShippingOptionDeliveryCopy(option)}
+                            </p>
+                          )}
                         </div>
                       </div>
                       {option.amount !== undefined && (

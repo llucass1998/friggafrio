@@ -6,6 +6,7 @@ import {
   assertPaymentProcessingEnabled,
   paymentAvailability,
 } from "@/lib/config/payment-availability"
+import { assertCheckoutReady } from "@/lib/data/checkout/checkout-ready"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
 
@@ -174,6 +175,10 @@ export const useCompleteCartOrder = () => {
 
       const cartId = getStoredCart()
       if (!cartId) throw new Error("No cart found")
+
+      await assertCheckoutReady(cartId, (input, init) =>
+        sdk.client.fetch(input, init),
+      )
 
       const cartRes = await sdk.store.cart.complete(cartId, {})
 

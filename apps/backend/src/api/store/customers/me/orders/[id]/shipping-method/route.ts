@@ -48,12 +48,36 @@ export const POST = async (
   // Get shipping option details with prices
   const { data: [shippingOption] } = await query.graph({
     entity: "shipping_option",
-    fields: ["id", "name", "price_type", "provider_id", "shipping_profile_id", "prices.*"],
+    fields: [
+      "id",
+      "name",
+      "price_type",
+      "provider_id",
+      "shipping_profile_id",
+      "prices.*",
+      "service_zone.geo_zones.*",
+      "fulfillment_provider.is_enabled",
+    ],
     filters: { id: shipping_option_id },
   })
 
   if (!shippingOption) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Shipping option not found")
+  }
+
+  const provider = (shippingOption as unknown as { fulfillment_provider?: { is_enabled?: boolean } }).fulfillment_provider
+  if (provider?.is_enabled === false) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Shipping provider is unavailable")
+  }
+
+  const supportedCountries = ((shippingOption as unknown as {
+    service_zone?: { geo_zones?: Array<{ country_code?: string }> }
+  }).service_zone?.geo_zones ?? [])
+    .map((zone) => zone.country_code?.toLowerCase())
+    .filter(Boolean)
+  const orderCountry = (order as unknown as { shipping_address?: { country_code?: string } }).shipping_address?.country_code?.toLowerCase()
+  if (supportedCountries.length && (!orderCountry || !supportedCountries.includes(orderCountry))) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Shipping option is not available for this address")
   }
 
   // Find the price for the order's currency
@@ -66,7 +90,15 @@ export const POST = async (
   const priceForCurrency = prices?.find(
     (p) => p.currency_code?.toLowerCase() === currencyCode
   )
-  const shippingAmount = priceForCurrency?.amount ?? 0
+  if (!priceForCurrency) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      shippingOption.price_type === "calculated"
+        ? "Shipping provider could not calculate a price"
+        : "Shipping option has no price for this currency"
+    )
+  }
+  const shippingAmount = priceForCurrency.amount
 
   const orderModule = req.scope.resolve(Modules.ORDER)
 
