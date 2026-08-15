@@ -11,7 +11,7 @@ import {
 const DEFAULT_TIMEOUT_MS = 10_000
 const DEFAULT_MAX_ATTEMPTS = 3
 const DEFAULT_BASE_BACKOFF_MS = 250
-const READ_ONLY_OPERATIONS = new Set(["ListarProdutos"])
+const READ_ONLY_OPERATIONS = new Set(["ListarProdutos", "ListarPosEstoque"])
 
 const noopLogger: OmieLogger = {}
 
@@ -113,7 +113,10 @@ export class OmieClient {
       const timeout = setTimeout(() => controller.abort(), this.timeoutMs)
 
       try {
-        const response = await this.fetchImpl(this.config.apiUrl, {
+        const endpoint = operation === "ListarPosEstoque"
+          ? this.config.inventoryApiUrl ?? new URL("/api/v1/estoque/consulta/", this.config.apiUrl).toString()
+          : this.config.apiUrl
+        const response = await this.fetchImpl(endpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),

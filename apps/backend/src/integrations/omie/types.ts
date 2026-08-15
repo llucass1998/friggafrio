@@ -2,6 +2,7 @@ export type OmieRecord = Record<string, unknown>
 
 export interface OmieClientConfig {
   apiUrl: string
+  inventoryApiUrl?: string
   appKey: string
   appSecret: string
   timeoutMs?: number
@@ -36,6 +37,20 @@ export type OmieErrorCode =
   | "UPSTREAM"
   | "INVALID_RESPONSE"
   | "READ_ONLY_VIOLATION"
+
+export type OmieStockState = "REAL_POSITIVE" | "REAL_ZERO" | "MISSING" | "INVALID"
+
+export interface OmieStockRecord {
+  externalId: string | null
+  sku: string | null
+  internalCode: string | null
+  locationCode: string | null
+  physical: number | null
+  reserved: number | null
+  balance: number | null
+  pending: number | null
+  state: OmieStockState
+}
 
 export interface OmieClientErrorOptions {
   code: OmieErrorCode

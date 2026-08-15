@@ -2,8 +2,10 @@ import {
   OmieClient,
   OmieClientError,
   OmieCatalogReader,
+  OmieStockReader,
   commercialStatusFor,
   loadOmieConfig,
+  normalizeOmieStock,
   normalizeOmieProduct,
   planCatalogSync,
 } from "./index.js"
@@ -123,6 +125,19 @@ describe("OmieClient", () => {
     expect(fetchImpl).not.toHaveBeenCalled()
   })
 
+  it("routes ListarPosEstoque to the official stock endpoint while remaining read-only", async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ nTotPaginas: 1, produtos: [{ nCodProd: 10, cCodigo: "SKU-10", fisico: 4 }] }), { status: 200 }),
+    )
+    const client = new OmieClient(
+      { apiUrl: "https://example.invalid/api/v1/geral/produtos/", appKey: "fixture-key", appSecret: "fixture-secret" },
+      { fetchImpl: fetchImpl as unknown as typeof fetch },
+    )
+
+    await expect(client.request("ListarPosEstoque", { nPagina: 1 })).resolves.toMatchObject({ nTotPaginas: 1 })
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("https://example.invalid/api/v1/estoque/consulta/")
+  })
+
   it("retries network failures and reports timeout without exposing details", async () => {
     const fetchImpl = jest
       .fn()
@@ -151,6 +166,12 @@ describe("OmieClient", () => {
 })
 
 describe("Omie discovery mapping", () => {
+  it("classifies stock source states without converting missing or negative values to zero", () => {
+    expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: 0 }).state).toBe("REAL_ZERO")
+    expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: -1 }).state).toBe("INVALID")
+    expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1" }).state).toBe("MISSING")
+  })
+
   it("preserves numeric Omie identifiers as lossless strings", () => {
     const product = normalizeOmieProduct({ codigo_produto: 12345, codigo: 67890 })
     expect(product.externalId).toBe("12345")
@@ -216,6 +237,36 @@ describe("Omie discovery mapping", () => {
 
     const reader = new OmieCatalogReader(client)
     await expect(reader.readAll({ pageSize: 1 })).resolves.toEqual([{ id_produto: "1" }])
+  })
+
+  it("paginates the operational stock endpoint and preserves real zero", async () => {
+    const client = new OmieClient(
+      { apiUrl: "https://example.invalid/api/v1/geral/produtos/", appKey: "fixture-key", appSecret: "fixture-secret" },
+      {
+        fetchImpl: jest.fn()
+          .mockResolvedValueOnce(new Response(JSON.stringify({ nTotPaginas: 2, produtos: [{ nCodProd: 1, cCodigo: "SKU-1", fisico: 0 }] }), { status: 200 }))
+          .mockResolvedValueOnce(new Response(JSON.stringify({ nTotPaginas: 2, produtos: [{ nCodProd: 2, cCodigo: "SKU-2", fisico: 3 }] }), { status: 200 })),
+      },
+    )
+
+    await expect(new OmieStockReader(client).readAll({ pageSize: 1 })).resolves.toEqual([
+      expect.objectContaining({ externalId: "1", state: "REAL_ZERO", physical: 0 }),
+      expect.objectContaining({ externalId: "2", state: "REAL_POSITIVE", physical: 3 }),
+    ])
+  })
+
+  it("passes the homologated stock location to the operational endpoint", async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ nTotPaginas: 1, produtos: [] }), { status: 200 }),
+    )
+    const client = new OmieClient(
+      { apiUrl: "https://example.invalid/api/v1/geral/produtos/", appKey: "fixture-key", appSecret: "fixture-secret" },
+      { fetchImpl: fetchImpl as unknown as typeof fetch },
+    )
+
+    await new OmieStockReader(client).readPage(1, { locationCode: 1982255302 })
+    const request = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body)) as { param?: Array<Record<string, unknown>> }
+    expect(request.param?.[0]?.codigo_local_estoque).toBe(1982255302)
   })
 
   it("fails closed when the upstream repeats a non-empty page", async () => {
