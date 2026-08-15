@@ -76,11 +76,9 @@ export const buildOmieReconciliation = (
     if (
       current.status !== undefined &&
       (current.status !== "published" ||
-        current.storefrontVisible !== true ||
-        current.purchaseEnabled !== false ||
-        current.commercialStatus !== "QUOTE_ONLY")
+        current.storefrontVisible !== true)
     ) {
-      return { action: "update", product, reason: "QUOTE_ONLY storefront projection requires reconciliation" }
+      return { action: "update", product, reason: "storefront visibility projection requires reconciliation" }
     }
     return { action: "no-op", product, reason: "managed Omie projection unchanged" }
   })

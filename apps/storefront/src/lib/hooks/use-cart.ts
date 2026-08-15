@@ -14,6 +14,9 @@ import {
   removeLineItemOptimistically,
   createOptimisticCart,
   assertPositiveIntegerQuantity,
+  isCartNotFoundError,
+  removeStoredCart,
+  retrieveCartOnce,
 } from "@/lib/utils/cart"
 
 const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total"
@@ -30,17 +33,36 @@ const finishCartMutation = () => {
 }
 
 export const useCart = ({ fields }: { fields?: string } = {}) => {
+  const queryClient = useQueryClient()
+
   return useQuery({
     queryKey: queryKeys.cart.current(fields),
     queryFn: async () => {
       const id = getStoredCart()
       if (!id) return null
-      const { cart } = await sdk.store.cart.retrieve(id, {
-        fields: fields || DEFAULT_CART_FIELDS,
-      })
-      return cart
+      try {
+        const { cart } = await retrieveCartOnce(id, () => sdk.store.cart.retrieve(id, {
+          fields: fields || DEFAULT_CART_FIELDS,
+        }))
+        return cart
+      } catch (error) {
+        if (!isCartNotFoundError(error)) {
+          throw error
+        }
+
+        // Clear only the ID that was just proven stale. A 401/403/500 is
+        // intentionally re-thrown and must never be treated as cart recovery.
+        if (getStoredCart() === id) {
+          removeStoredCart()
+          queryClient.setQueriesData({ predicate: queryKeys.cart.predicate }, null)
+          queryClient.removeQueries({ predicate: queryKeys.shipping.predicate })
+          queryClient.removeQueries({ predicate: queryKeys.payments.predicate })
+        }
+        return null
+      }
     },
-    staleTime: 0
+    staleTime: 0,
+    retry: false,
   })
 }
 

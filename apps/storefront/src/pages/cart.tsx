@@ -4,6 +4,7 @@ import {
   CartEmpty,
   CartPromo,
 } from "@/components/cart"
+import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { CheckoutStepKey } from "@/lib/types/global"
@@ -29,11 +30,25 @@ const Cart = () => {
   const createQuoteFromCartMutation = useCreateQuoteFromCart()
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const createAttemptedRef = useRef(false)
 
-  // Auto-create cart if none exists
-  if (!cart && !cartLoading && !createCartMutation.isPending) {
-    createCartMutation.mutate({ region_id: region.id })
-  }
+  // Recover a missing/stale cart once. Keeping this side effect out of render
+  // avoids duplicate cart creation when React re-renders during the mutation.
+  useEffect(() => {
+    if (cart || cartLoading || createCartMutation.isPending || createAttemptedRef.current) {
+      return
+    }
+
+    createAttemptedRef.current = true
+    createCartMutation.mutate(
+      { region_id: region.id },
+      {
+        onError: () => {
+          createAttemptedRef.current = false
+        },
+      }
+    )
+  }, [cart, cartLoading, createCartMutation, region.id])
 
   const cartItems = sortCartItems(cart?.items || [])
   const itemCount = getCartItemCount(cartItems)

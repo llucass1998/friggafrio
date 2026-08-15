@@ -61,11 +61,12 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
           source: "omie",
           omie_external_id: product.externalId,
           omie_fingerprint: omieFingerprint(product),
-          commercial_status: "QUOTE_ONLY",
-          product_sales_policy: "QUOTE_ONLY",
+          is_quote_only: false,
+          commercial_status: price.length > 0 ? "OUT_OF_STOCK" : "PRICE_PENDING",
+          product_sales_policy: "DIRECT",
           price_pending: price.length === 0,
           storefront_visible: true,
-          purchase_enabled: false,
+          purchase_enabled: true,
           catalog_homologation_status: "pending",
           inventory_quantity_observed: variant.inventory.quantity,
         },
@@ -85,10 +86,7 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
       status: ProductStatus.PUBLISHED,
       metadata: {
         ...(graphProduct.metadata ?? {}),
-        commercial_status: "QUOTE_ONLY",
-        product_sales_policy: "QUOTE_ONLY",
         storefront_visible: true,
-        purchase_enabled: false,
       },
     }
   })

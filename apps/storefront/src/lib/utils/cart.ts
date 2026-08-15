@@ -6,6 +6,11 @@ import { queryKeys } from "@/lib/utils/query-keys"
 
 const CART_KEY = "medusa_cart"
 
+// Multiple shell components ask for the current cart on the same render.
+// Share an in-flight lookup so a stale ID produces one 404 and one recovery,
+// rather than one request per component/query-fields variant.
+const inFlightCartLookups = new Map<string, Promise<{ cart: HttpTypes.StoreCart }>>()
+
 export const getStoredCart = (): string | undefined => {
   return localStorage.getItem(CART_KEY) || undefined
 }
@@ -16,6 +21,54 @@ export const setStoredCart = (cart: string): void => {
 
 export const removeStoredCart = (): void => {
   localStorage.removeItem(CART_KEY)
+}
+
+export const retrieveCartOnce = (
+  cartId: string,
+  request: () => Promise<{ cart: HttpTypes.StoreCart }>,
+): Promise<{ cart: HttpTypes.StoreCart }> => {
+  const pending = inFlightCartLookups.get(cartId)
+  if (pending) {
+    return pending
+  }
+
+  const current = request()
+  inFlightCartLookups.set(cartId, current)
+  const clear = () => {
+    if (inFlightCartLookups.get(cartId) === current) {
+      inFlightCartLookups.delete(cartId)
+    }
+  }
+  void current.then(clear, clear)
+  return current
+}
+
+/** Detect only a missing cart response; auth and server failures are not stale-cart recovery cases. */
+export const isCartNotFoundError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") {
+    return false
+  }
+
+  const candidate = error as {
+    status?: unknown
+    statusCode?: unknown
+    code?: unknown
+    type?: unknown
+    message?: unknown
+    response?: { status?: unknown }
+    cause?: { status?: unknown; statusCode?: unknown; code?: unknown; type?: unknown; message?: unknown }
+  }
+
+  const status = candidate.status ?? candidate.statusCode ?? candidate.response?.status
+    ?? candidate.cause?.status ?? candidate.cause?.statusCode
+  const code = candidate.code ?? candidate.cause?.code
+  const type = candidate.type ?? candidate.cause?.type
+  const message = String(candidate.message ?? candidate.cause?.message ?? "").toLowerCase()
+
+  return status === 404 || code === "CART_NOT_FOUND" || type === "not_found"
+    || message.includes("cart not found")
+    || message.includes("cart_not_found")
+    || (message.includes("cart") && message.includes("not found"))
 }
 
 // ============ SORT CART ITEMS ============

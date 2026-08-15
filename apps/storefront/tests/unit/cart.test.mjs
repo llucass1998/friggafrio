@@ -4,7 +4,9 @@ import {
   assertPositiveIntegerQuantity,
   getCartItemCount,
   getCartLineCommercialState,
+  isCartNotFoundError,
   isCartCheckoutReady,
+  retrieveCartOnce,
   sortCartItems,
 } from "../../src/lib/utils/cart.ts"
 
@@ -115,4 +117,25 @@ test("missing cart price blocks checkout without treating it as zero", () => {
 
   assert.equal(getCartLineCommercialState(item), "price_pending")
   assert.equal(isCartCheckoutReady([item]), false)
+})
+
+test("stale cart lookups share one in-flight request", async () => {
+  let calls = 0
+  let rejectRequest
+  const request = () => {
+    calls += 1
+    return new Promise((resolve, reject) => {
+      rejectRequest = reject
+    })
+  }
+
+  const first = retrieveCartOnce("cart_dead", request)
+  const second = retrieveCartOnce("cart_dead", request)
+
+  assert.strictEqual(first, second)
+  assert.equal(calls, 1)
+  rejectRequest({ status: 404 })
+  await assert.rejects(first)
+  assert.equal(isCartNotFoundError({ message: "Cart with id cart_dead not found" }), true)
+  assert.equal(isCartNotFoundError({ status: 401 }), false)
 })

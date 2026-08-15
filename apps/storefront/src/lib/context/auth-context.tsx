@@ -4,8 +4,29 @@ import { HttpTypes } from "@medusajs/types"
 import { getMe, Employee } from "@/lib/data/me"
 import { AuthContext } from "@/lib/context/auth-context-value"
 
-// Key to track auth state to avoid loading flash on navigation
+// This is only a local hint. The backend remains the authority for the session.
 const AUTH_STATE_KEY = "auth_state"
+
+const readAuthHint = (): boolean => {
+  if (typeof window === "undefined") {
+    return false
+  }
+
+  return (
+    sessionStorage.getItem(AUTH_STATE_KEY) === "authenticated" ||
+    localStorage.getItem(AUTH_STATE_KEY) === "authenticated"
+  )
+}
+
+const writeAuthHint = (authenticated: boolean): void => {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  const value = authenticated ? "authenticated" : "unauthenticated"
+  sessionStorage.setItem(AUTH_STATE_KEY, value)
+  localStorage.setItem(AUTH_STATE_KEY, value)
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // SSR-safe state initialization without relying on window/sessionStorage during render
@@ -14,14 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
   const [employee, setEmployee] = useState<Employee | null>(null)
-
-  // Sync with sessionStorage only on the client side after hydration
-  useEffect(() => {
-    const cachedAuthState = sessionStorage.getItem(AUTH_STATE_KEY)
-    if (cachedAuthState === "authenticated") {
-      setIsAuthenticated(true)
-    }
-  }, [])
 
   const fetchCustomer = useCallback(async () => {
     try {
@@ -49,23 +62,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomer(customer)
       setEmployee(employeeData)
       setIsAuthenticated(true)
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(AUTH_STATE_KEY, "authenticated")
-      }
+      writeAuthHint(true)
     } catch {
       setCustomer(null)
       setEmployee(null)
       setIsAuthenticated(false)
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(AUTH_STATE_KEY, "unauthenticated")
-      }
+      // A stale/expired marker must not cause a 401 loop on every navigation.
+      writeAuthHint(false)
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchCustomer()
+    // Guest pages do not need an authenticated customer request. Only probe
+    // the protected endpoint when a prior successful login left a local hint.
+    if (!readAuthHint()) {
+      setIsLoading(false)
+      return
+    }
+
+    void fetchCustomer()
   }, [fetchCustomer])
 
   const login = async (email: string, password: string) => {
@@ -101,9 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await sdk.auth.logout()
     } finally {
       // Update cached state so navigation doesn't show loading
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(AUTH_STATE_KEY, "unauthenticated")
-      }
+      writeAuthHint(false)
       setCustomer(null)
       setEmployee(null)
       setIsAuthenticated(false)

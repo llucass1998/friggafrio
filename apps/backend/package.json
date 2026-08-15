@@ -22,6 +22,8 @@
     "inventory:omie:reconcile": "medusa exec ./src/scripts/reconcile-omie-inventory.ts",
     "inventory:omie:reconcile:apply": "cross-env OMIE_INVENTORY_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-omie-inventory.ts",
     "inventory:omie:project:apply": "cross-env OMIE_INVENTORY_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-omie-inventory.ts",
+    "catalog:commercial:reconcile": "medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
+    "catalog:commercial:reconcile:apply": "cross-env STOREFRONT_COMMERCIAL_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
     "seed:validate": "medusa exec ./src/scripts/validate-commercial-defaults.ts",
     "start": "medusa start",
     "dev": "medusa develop",
