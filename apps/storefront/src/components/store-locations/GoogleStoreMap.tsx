@@ -10,7 +10,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
 
   if (!apiKey) {
     return (
-      <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center lg:min-h-[360px]">
+      <div data-testid="store-map-fallback" className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center lg:min-h-[360px]">
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--color-primary)] shadow-sm">
           <MapPin className="h-6 w-6" aria-hidden="true" />
         </div>
@@ -43,7 +43,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
 
   return (
     <div className="h-[300px] w-full overflow-hidden rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] shadow-sm lg:h-[360px]">
-      <iframe
+      <iframe data-testid="store-map-iframe"
         title={`Mapa da ${location.name}`}
         width="100%"
         height="100%"

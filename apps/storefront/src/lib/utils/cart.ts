@@ -139,13 +139,38 @@ export const getCartLineCommercialState = (
     return "price_pending"
   }
 
-  const inventoryQuantity = (line.variant as { inventory_quantity?: unknown } | undefined)?.inventory_quantity
+  if (metadata.commercial_status === "OUT_OF_STOCK") {
+    return "out_of_stock"
+  }
+
+  const projectedInventoryQuantity = (line.variant as { inventory_quantity?: unknown } | undefined)?.inventory_quantity
+  // Cart line projections do not always include inventory_quantity even when
+  // the product has a reconciled operational snapshot in its metadata.
+  const observedInventoryQuantity = metadata.inventory_quantity_observed
+  const inventoryQuantity = typeof projectedInventoryQuantity === "number"
+    ? projectedInventoryQuantity
+    : typeof observedInventoryQuantity === "number"
+      ? observedInventoryQuantity
+      : undefined
   const managesInventory = (line.variant as { manage_inventory?: unknown } | undefined)?.manage_inventory
   const allowsBackorder = (line.variant as { allow_backorder?: unknown } | undefined)?.allow_backorder
   if (
     managesInventory === true &&
     allowsBackorder !== true &&
-    (typeof inventoryQuantity !== "number" || !Number.isSafeInteger(inventoryQuantity) || inventoryQuantity < line.quantity)
+    typeof inventoryQuantity === "number" &&
+    (!Number.isFinite(inventoryQuantity) || inventoryQuantity < 0 || inventoryQuantity < line.quantity)
+  ) {
+    return "out_of_stock"
+  }
+
+  // A successful priced cart line remains purchasable when Medusa omits the
+  // optional inventory field from its public line projection.
+  if (
+    managesInventory === true &&
+    allowsBackorder !== true &&
+    inventoryQuantity === undefined &&
+    metadata.commercial_status !== "SELLABLE" &&
+    (typeof line.total !== "number" || typeof line.unit_price !== "number")
   ) {
     return "out_of_stock"
   }
@@ -204,9 +229,6 @@ export interface OptimisticCartItem {
   variant?: {
     id: string;
     title: string;
-    product?: {
-      metadata?: CartCommercialMetadata;
-    };
   };
   unit_price?: number;
   total?: number;
@@ -240,7 +262,6 @@ export const createOptimisticCartItem = (
     variant: {
       id: variant.id,
       title: variant.title || "Default Variant",
-      product: { metadata: product.metadata as CartCommercialMetadata | undefined },
     },
     variant_title: variant.title || "Default Variant",
     unit_price: unitPrice,

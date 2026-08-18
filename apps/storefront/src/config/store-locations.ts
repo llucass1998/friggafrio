@@ -48,7 +48,8 @@ export const storeLocations: StoreLocation[] = [
     countryCode: "BR",
     ownImageSrc: "/images/store/loja-1-fachada.webp",
     ownImageAlt: "Fachada FriggaFrio Loja 1",
-    placeId: "ChIJIQ22k61ZzpQRIY809f-6mY0",
+    // Keep the address as the canonical Maps target until a verified Place ID
+    // is available; stale IDs make directions/search links resolve nowhere.
     phone: "(11) 4580-1227",
     whatsapp: "5511948777156",
     active: true,
@@ -63,7 +64,7 @@ export const storeLocations: StoreLocation[] = [
     city: "São Paulo",
     stateCode: "SP",
     stateName: "São Paulo",
-    postalCode: "01215-001", 
+    postalCode: "01215-001",
     countryCode: "BR",
     ownImageSrc: "/images/store/loja-2-fachada.webp",
     ownImageAlt: "Fachada FriggaFrio Loja 2",

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useCallback, memo } from "react"
+import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 
 type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
@@ -8,6 +9,7 @@ type ImageGalleryProps = {
 
 const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length)
@@ -36,15 +38,18 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
                 key={image.id}
                 className="w-full h-full flex-shrink-0 relative"
               >
-                {!!image.url && (
+                {!!image.url && !failedImages.has(image.id) ? (
                   <img
                     src={image.url}
                     className="absolute inset-0 w-full h-full object-contain"
-                    alt={isFirstImage ? "Main product image" : `Product image ${index + 1}`}
+                    alt={isFirstImage ? "Imagem principal do produto" : `Imagem do produto ${index + 1}`}
                     loading={isCriticalImage ? "eager" : "lazy"}
                     fetchPriority={isFirstImage ? "high" : undefined}
                     decoding="async"
+                    onError={() => setFailedImages((current) => new Set(current).add(image.id))}
                   />
+                ) : (
+                  <ProductImagePlaceholder productName="este produto" />
                 )}
               </div>
             )
@@ -55,17 +60,19 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
         {images.length > 1 && (
           <>
             <button
+              type="button"
               onClick={goToPrevious}
               className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/90 hover:bg-white rounded-full shadow-md transition-colors cursor-pointer"
-              aria-label="Previous image"
+              aria-label="Imagem anterior"
             >
               <ChevronLeft className="w-5 h-5 text-slate-700" />
             </button>
             
             <button
+              type="button"
               onClick={goToNext}
               className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/90 hover:bg-white rounded-full shadow-md transition-colors cursor-pointer"
-              aria-label="Next image"
+              aria-label="Próxima imagem"
             >
               <ChevronRight className="w-5 h-5 text-slate-700" />
             </button>
@@ -86,6 +93,7 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
           {images.map((image, index) => (
             <button
               key={image.id}
+              type="button"
               onClick={() => setCurrentIndex(index)}
               className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                 index === currentIndex 
@@ -95,9 +103,10 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
             >
               <img
                 src={image.url}
-                alt={`Thumbnail ${index + 1}`}
+                alt={`Miniatura da imagem ${index + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                onError={() => setFailedImages((current) => new Set(current).add(image.id))}
               />
             </button>
           ))}

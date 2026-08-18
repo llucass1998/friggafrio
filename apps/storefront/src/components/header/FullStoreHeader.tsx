@@ -3,6 +3,7 @@ import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
 import { HeaderMobileDrawer } from "@/components/header/HeaderMobileDrawer"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
+import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 
 export function FullStoreHeader() {
   return (
@@ -29,6 +30,8 @@ export function FullStoreHeader() {
           <div className="hidden lg:flex flex-1 justify-center max-w-2xl">
             <HeaderSearch />
           </div>
+
+          <HeaderPostalCode />
 
           {/* Actions */}
           <HeaderActions />

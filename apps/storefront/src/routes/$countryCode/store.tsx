@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router"
 import { getRegion } from "@/lib/data/regions"
 import Store from "@/pages/store"
 import { listProducts } from "@/lib/data/products"
+import { retrieveCategory } from "@/lib/data/categories"
 import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
@@ -10,6 +11,7 @@ import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 
 const storeSearchSchema = z.object({
   category: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
   [OPTION_VALUE_QUERY_KEY]: z
     .union([z.string(), z.array(z.string())])
     .optional(),
@@ -19,11 +21,15 @@ export const Route = createFileRoute("/$countryCode/store")({
   validateSearch: storeSearchSchema,
   loaderDeps: ({ search }) => ({
     optionValueIds: search[OPTION_VALUE_QUERY_KEY],
+    category: search.category,
+    page: search.page,
   }),
   loader: async ({ params, context, deps }) => {
     const { countryCode } = params
     const { queryClient } = context
     const rawOptionValueIds = deps.optionValueIds
+    const category = deps.category
+    const page = deps.page ?? 1
     const optionValueIds = Array.isArray(rawOptionValueIds)
       ? rawOptionValueIds
       : rawOptionValueIds
@@ -39,15 +45,36 @@ export const Route = createFileRoute("/$countryCode/store")({
       throw notFound()
     }
 
-    const { products } = await queryClient.ensureQueryData({
-      queryKey: ["products", { region_id: region.id, optionValueIds }],
+    // Legacy navigation still carries category handles in the store query.
+    // Resolve them to canonical Medusa IDs before applying the server filter.
+    const categoryId = category
+      ? await queryClient.ensureQueryData({
+          queryKey: ["category", category],
+          queryFn: async () => {
+            try {
+              return (await retrieveCategory({ handle: category }))?.id ?? null
+            } catch {
+              return category.startsWith("pcat_") ? category : null
+            }
+          },
+        })
+      : undefined
+
+    const { products, count } = await queryClient.ensureQueryData({
+      // Keep every server-side filter in the key so a category navigation
+      // cannot reuse the unfiltered catalog snapshot during hydration.
+      queryKey: ["products", { region_id: region.id, category: categoryId, optionValueIds, page }],
       queryFn: () => listProducts({
-        query_params: {
-          limit: 100,
-          order: "-created_at",
-          fields: PUBLIC_PRODUCT_CARD_FIELDS
+        queryParams: {
+          limit: 24,
+          offset: (page - 1) * 24,
+          // Medusa's created_at ordering is not a total order: equal timestamps
+          // can move rows between offsets and duplicate pagination pages.
+          order: "-id",
+          fields: PUBLIC_PRODUCT_CARD_FIELDS,
+          ...(categoryId ? { category_id: [categoryId] } : category ? { category_id: ["__missing_category__"] } : {}),
         },
-        region_id: region.id,
+        regionId: region.id,
       }),
     })
 
@@ -55,7 +82,12 @@ export const Route = createFileRoute("/$countryCode/store")({
       countryCode,
       region,
       products: products as HttpTypes.StoreProduct[],
+      count,
+      page,
+      pageSize: 24,
       optionValueIds: optionValueIds as any,
+      category,
+      categoryId,
     })
   },
   head: ({ loaderData }) => {

@@ -1,4 +1,5 @@
 import { clsx } from "clsx"
+import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 
 type ThumbnailProps = {
   thumbnail?: string | null;
@@ -16,14 +17,7 @@ export const Thumbnail = ({ thumbnail, alt, className }: ThumbnailProps) => {
           className={clsx("w-20 h-20 object-cover bg-zinc-50", className)}
         />
       ) : (
-        <div
-          className={clsx(
-            "w-20 h-20 bg-zinc-50 flex items-center justify-center",
-            className
-          )}
-        >
-          <span className="text-xs text-zinc-600">No image</span>
-        </div>
+        <ProductImagePlaceholder productName={alt} compact className={clsx("w-20 h-20", className)} />
       )}
     </>
   )

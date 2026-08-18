@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90">
+  <defs>
+    <style>
+      .line { fill: none; stroke: #0b5c91; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+      .accent { fill: none; stroke: #ef8c2f; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+      .soft { fill: #dcecf7; stroke: #0b5c91; stroke-width: 3; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <symbol id="bombas-de-vacuo" viewBox="0 0 120 90"><path class="soft" d="M24 59h60v15H24z"/><path class="line" d="M34 59V38h38v21M72 47h18v12M41 38l9-13h14l8 13M50 25V15h14v10"/><circle class="accent" cx="90" cy="38" r="12"/><path class="accent" d="M90 38l6-5M90 38v7"/></symbol>
+  <symbol id="camara-fria" viewBox="0 0 120 90"><path class="soft" d="M22 19h76v53H22z"/><path class="line" d="M33 31h54v41H33zM60 31v41M74 51h4M39 51h4"/><path class="accent" d="M60 39v24M51 43l18 16M69 43L51 59"/></symbol>
+  <symbol id="cilindros-de-recolhimento" viewBox="0 0 120 90"><path class="soft" d="M30 28h22v45H30zM68 28h22v45H68z"/><path class="line" d="M34 28v-7h14v7M72 28v-7h14v7M26 73h30M64 73h30"/><path class="accent" d="M41 42v17M79 42v17"/></symbol>
+  <symbol id="componentes" viewBox="0 0 120 90"><circle class="soft" cx="42" cy="47" r="18"/><circle class="soft" cx="80" cy="38" r="14"/><path class="line" d="M42 19v9M42 66v9M14 47h9M61 47h9M22 27l7 7M55 60l7 7M22 67l7-7M55 34l7-7M80 18v6M80 52v6M60 38h6M94 38h6"/><circle class="accent" cx="42" cy="47" r="6"/></symbol>
+  <symbol id="compressores" viewBox="0 0 120 90"><path class="soft" d="M31 33h45v38H31z"/><path class="line" d="M31 47H20v17h11M76 47h16v17H76M42 33V22h24v11M39 71h30M51 54h7"/><circle class="accent" cx="57" cy="53" r="9"/></symbol>
+  <symbol id="conexoes" viewBox="0 0 120 90"><path class="soft" d="M25 28h25v18H42v20H25zM95 28H70v18h8v20h17z"/><path class="line" d="M25 28V18h25v10M95 28V18H70v10M25 66h25M95 66H70"/><path class="accent" d="M50 37h20M50 55h20"/></symbol>
+  <symbol id="detectores-de-vazamento" viewBox="0 0 120 90"><path class="soft" d="M48 26h25v40H48z"/><path class="line" d="M54 26v-9h13v9M60 66v10M40 76h40M73 39h14"/><path class="accent" d="M87 33c8 3 8 13 0 16M93 27c14 6 14 22 0 29"/></symbol>
+  <symbol id="ferramentas-manuais" viewBox="0 0 120 90"><path class="line" d="M25 68l32-32M26 26l13 13M20 20l17 17M57 36l10 10M73 23l28 28"/><path class="soft" d="M69 20l10-10 12 12-10 10zM22 63l10-10 14 14-10 10z"/><path class="accent" d="M75 63h26M88 50v26"/></symbol>
+  <symbol id="gases-refrigerantes" viewBox="0 0 120 90"><path class="soft" d="M25 30h25v43H25zM66 25h27v48H66z"/><path class="line" d="M30 30v-8h15v8M71 25v-8h17v8M25 73h25M66 73h27"/><path class="accent" d="M37 42v17M79 39v22"/></symbol>
+  <symbol id="isolamento-termico" viewBox="0 0 120 90"><path class="soft" d="M26 34h68v25H26z"/><path class="line" d="M26 34l12-12h68L94 34M26 59l12 12h56L94 59"/><path class="accent" d="M44 34v25M60 34v25M76 34v25"/></symbol>
+  <symbol id="manifolds-e-manometros" viewBox="0 0 120 90"><circle class="soft" cx="35" cy="27" r="15"/><circle class="soft" cx="85" cy="27" r="15"/><path class="line" d="M35 42v25M85 42v25M35 67h50M60 67V45M35 27l7-7M85 27l-7-7"/><path class="accent" d="M60 45v-9M54 36h12"/></symbol>
+  <symbol id="oleos" viewBox="0 0 120 90"><path class="soft" d="M39 25h42v48H39z"/><path class="line" d="M48 25v-9h24v9M48 39h24M48 53h24"/><path class="accent" d="M60 53v12M55 60h10"/></symbol>
+  <symbol id="produtos-quimicos" viewBox="0 0 120 90"><path class="soft" d="M26 35h25v38H26zM68 29h26v44H68z"/><path class="line" d="M31 35v-9h15v9M73 29v-10h16v10M26 73h25M68 73h26"/><path class="accent" d="M38 48v13M81 43v17"/></symbol>
+  <symbol id="recolhedoras" viewBox="0 0 120 90"><path class="soft" d="M27 35h51v36H27z"/><path class="line" d="M78 47h17v24H78M35 35V23h22v12M23 71h65M36 71v9M77 71v9"/><circle class="accent" cx="53" cy="53" r="9"/></symbol>
+  <symbol id="tubos-de-cobre" viewBox="0 0 120 90"><circle class="soft" cx="58" cy="45" r="28"/><circle class="line" cx="58" cy="45" r="15"/><path class="accent" d="M58 17c20 0 36 12 36 28s-16 28-36 28"/><path class="line" d="M30 45H18"/></symbol>
+  <symbol id="outros" viewBox="0 0 120 90"><path class="soft" d="M25 31h70v40H25z"/><path class="line" d="M25 31l10-12h50l10 12M45 31v40M75 31v40"/><path class="accent" d="M55 48h10M60 43v10"/></symbol>
+</svg>

@@ -26,7 +26,17 @@ export const invalidateCartCheckoutPreparation = async (
 ) => {
   const cartId = req.params.id
   if (cartId) await invalidateCheckoutPreparation(req.scope, cartId)
-  return next()
+  try {
+    return await next()
+  } catch (error) {
+    console.error("[cart-line-item-mutation]", {
+      cartId,
+      method: req.method,
+      path: req.path,
+      error,
+    })
+    throw error
+  }
 }
 
 /** Cart completion is only reachable after the server-owned prepare boundary. */

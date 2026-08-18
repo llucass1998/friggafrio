@@ -10,7 +10,11 @@
     "test": "turbo test",
     "backend:dev": "turbo dev --filter=backend",
     "storefront:dev": "turbo dev --filter=storefront",
-    "security:secrets": "node scripts/security/check-secrets.mjs"
+    "security:secrets": "node scripts/security/check-secrets.mjs",
+    "worktree:check": "node scripts/worktree-guard.mjs",
+    "predev": "node scripts/worktree-guard.mjs",
+    "prebackend:dev": "node scripts/worktree-guard.mjs",
+    "prestorefront:dev": "node scripts/worktree-guard.mjs"
   },
   "devDependencies": {
     "@medusajs/eslint-plugin": "2.16.0",

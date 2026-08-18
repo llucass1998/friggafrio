@@ -23,9 +23,10 @@ export function StoreLocationCard({ location }: StoreLocationCardProps) {
   }
 
   const handleDirections = () => {
-    const url = location.placeId
-      ? `https://www.google.com/maps/dir/?api=1&destination=Place+ID:${location.placeId}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
+    const destination = location.placeId
+      ? `place_id:${location.placeId}`
+      : `${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
 
     window.open(url, "_blank", "noopener,noreferrer")
   }
@@ -73,11 +74,12 @@ export function StoreLocationCard({ location }: StoreLocationCardProps) {
                   <span>Telefone: <strong>{location.phone}</strong></span>
                 </div>
               )}
-
-              <div>
-                <p className="font-medium text-[var(--color-text)] text-sm">Horário de atendimento</p>
-                <p className="text-sm">Consulte o horário de atendimento</p>
-              </div>
+              {location.openingHours && location.openingHours.length > 0 && (
+                <div>
+                  <p className="font-medium text-[var(--color-text)] text-sm">Horário de atendimento</p>
+                  <p className="text-sm">Consulte os horários da unidade</p>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">

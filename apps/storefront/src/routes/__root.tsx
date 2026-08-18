@@ -76,7 +76,12 @@ function RootComponent() {
             </AuthProvider>
           </QueryClientProvider>
         </GoogleOAuthProvider>
-        <Toaster position="bottom-right" richColors />
+        <Toaster
+          position="top-right"
+          offset={{ top: "1rem", right: "1rem" }}
+          mobileOffset={{ top: "1rem", right: "1rem" }}
+          richColors
+        />
 
         <Scripts />
       </body>

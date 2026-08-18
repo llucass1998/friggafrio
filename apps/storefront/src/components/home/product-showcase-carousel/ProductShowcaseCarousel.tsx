@@ -8,7 +8,7 @@ import "@/components/home/product-showcase-carousel/carousel.css"
 
 export function ProductShowcaseCarousel() {
   const autoplayRef = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true })
   )
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "center", skipSnaps: false },
@@ -24,6 +24,7 @@ export function ProductShowcaseCarousel() {
     if (emblaApi) {
       setDirection("prev")
       emblaApi.scrollPrev()
+      emblaApi.plugins().autoplay?.reset()
     }
   }, [emblaApi])
 
@@ -31,6 +32,7 @@ export function ProductShowcaseCarousel() {
     if (emblaApi) {
       setDirection("next")
       emblaApi.scrollNext()
+      emblaApi.plugins().autoplay?.reset()
     }
   }, [emblaApi])
 
@@ -39,6 +41,7 @@ export function ProductShowcaseCarousel() {
       if (emblaApi) {
         setDirection(index > selectedIndex ? "next" : "prev")
         emblaApi.scrollTo(index)
+        emblaApi.plugins().autoplay?.reset()
       }
     },
     [emblaApi, selectedIndex]
@@ -130,19 +133,19 @@ export function ProductShowcaseCarousel() {
       <button
         onClick={scrollPrev}
         disabled={!canScrollPrev}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute left-2 top-4 h-11 w-11 translate-y-0 bg-black/25 hover:bg-black/45 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:left-0 md:top-1/2 md:h-24 md:w-16 md:-translate-y-1/2 md:bg-white/20 md:hover:bg-white/40"
         aria-label="Ver slide anterior"
       >
-        <ChevronLeft className="w-8 h-8" />
+        <ChevronLeft className="h-5 w-5 md:h-8 md:w-8" />
       </button>
 
       <button
         onClick={scrollNext}
         disabled={!canScrollNext}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-14 h-20 bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:w-16 md:h-24 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute right-2 top-4 h-11 w-11 translate-y-0 bg-black/25 hover:bg-black/45 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:right-0 md:top-1/2 md:h-24 md:w-16 md:-translate-y-1/2 md:bg-white/20 md:hover:bg-white/40"
         aria-label="Ver próximo slide"
       >
-        <ChevronRight className="w-8 h-8" />
+        <ChevronRight className="h-5 w-5 md:h-8 md:w-8" />
       </button>
 
       <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center z-40">

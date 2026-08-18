@@ -3,6 +3,8 @@ import { getRegion } from "@/lib/data/regions"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sanitize } from "@/lib/utils/sanitize"
 import { formatMoneyAmountForStructuredData } from "@/lib/utils/price"
+import { decodeProductText } from "@/lib/utils/product-text"
+import { getProductPurchaseState } from "@/lib/utils/product-state"
 import ProductDetails from "@/pages/product"
 import { HttpTypes } from "@medusajs/types"
 import { createFileRoute, notFound } from "@tanstack/react-router"
@@ -90,13 +92,21 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
 
     const structuredPrice =
       product.variants?.[0]?.calculated_price?.calculated_amount
+    const productName = decodeProductText(product.title)
+    const productDescription = product.description ? decodeProductText(product.description) : ""
+    const purchaseState = getProductPurchaseState(product)
+    const availability = purchaseState.status === "out_of_stock"
+      ? "https://schema.org/OutOfStock"
+      : purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
+        ? "https://schema.org/InStock"
+        : "https://schema.org/PreOrder"
 
     // Create structured data for SEO
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "Product",
-      name: product.title,
-      description: product.description,
+      name: productName,
+      description: productDescription,
       image: (product.images as any)?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
       brand: {
         "@type": "Brand",
@@ -104,7 +114,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       },
       offers: {
         "@type": "Offer",
-        availability: "https://schema.org/InStock",
+        availability,
         priceCurrency: region?.currency_code?.toUpperCase(),
         price: structuredPrice !== null && structuredPrice !== undefined
           ? formatMoneyAmountForStructuredData(structuredPrice)
@@ -118,20 +128,20 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     return {
       meta: [
         {
-          title: `${product.title} | FriggaFrio`,
+          title: `${productName} | FriggaFrio`,
         },
         {
           name: "description",
-          content: product.description || "Product details",
+          content: productDescription || "Detalhes do produto",
         },
         {
           property: "og:title",
-          content: `${product.title} | FriggaFrio`,
+          content: `${productName} | FriggaFrio`,
         },
         {
           property: "og:description",
           content:
-            product.description || "Check out this product on FriggaFrio",
+            productDescription || "Confira este produto na FriggaFrio",
         },
         {
           property: "og:image",

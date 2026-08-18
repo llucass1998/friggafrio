@@ -19,7 +19,7 @@ import {
   retrieveCartOnce,
 } from "@/lib/utils/cart"
 
-const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total"
+const DEFAULT_CART_FIELDS = "*items,*promotions,+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total,+currency_code"
 
 let activeCartMutations = 0
 
@@ -169,9 +169,7 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
     },
     onSettled: () => {
       finishCartMutation()
-      queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
-      })
+      queryClient.invalidateQueries({ predicate: queryKeys.cart.predicate })
     },
   })
 }
@@ -210,9 +208,7 @@ export const useUpdateLineItem = ({ fields }: { fields?: string } = {}) => {
     },
     onSettled: () => {
       finishCartMutation()
-      queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
-      })
+      queryClient.invalidateQueries({ predicate: queryKeys.cart.predicate })
     },
   })
 }
@@ -244,9 +240,7 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
     },
     onSettled: () => {
       finishCartMutation()
-      queryClient.invalidateQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
-      })
+      queryClient.invalidateQueries({ predicate: queryKeys.cart.predicate })
     },
   })
 }

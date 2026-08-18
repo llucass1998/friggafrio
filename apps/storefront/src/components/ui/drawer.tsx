@@ -16,7 +16,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     className={clsx(
-      "fixed inset-0 z-50 bg-[#051428]/45 backdrop-blur-[2px]",
+      "fixed inset-0 z-[60] bg-[#051428]/45 backdrop-blur-[2px]",
       "motion-drawer-overlay",
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
       "transition-opacity",
@@ -80,7 +80,7 @@ const DrawerContent = React.forwardRef<
         </DialogPrimitive.Close>
       )}
       {/* O conteúdo interno perde opacidade discretamente antes de sair e entra com delay suave */}
-      <div className="flex h-full flex-col opacity-100 transition-opacity group-data-[state=closed]:opacity-0 group-data-[state=open]:duration-[var(--motion-duration-cart-open)] group-data-[state=closed]:duration-[var(--motion-duration-cart-close)]">
+      <div className="flex h-full min-w-0 max-w-full flex-col overflow-x-hidden opacity-100 transition-opacity group-data-[state=closed]:opacity-0 group-data-[state=open]:duration-[var(--motion-duration-cart-open)] group-data-[state=closed]:duration-[var(--motion-duration-cart-close)]">
         {children}
       </div>
     </DialogPrimitive.Content>

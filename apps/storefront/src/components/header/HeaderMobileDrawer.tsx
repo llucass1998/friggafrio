@@ -5,6 +5,7 @@ import { type TransitionEvent, useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
+import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
@@ -178,6 +179,9 @@ export function HeaderMobileDrawer() {
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="border-b border-[var(--color-border)] p-4">
             <HeaderSearch compact />
+            <div className="mt-3">
+              <HeaderPostalCode mobile />
+            </div>
           </div>
 
           <nav className="p-2" aria-label="Navegação mobile">
@@ -195,23 +199,34 @@ export function HeaderMobileDrawer() {
                 {productCategories.map((category) => {
                   const categoryPanelId = `mobile-category-${category.id}`
                   const isExpanded = expandedCategory === category.id
+                  const hasChildren = Boolean(category.children?.length)
 
                   return (
                     <li key={category.id}>
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(category.id)}
-                        aria-expanded={isExpanded}
-                        aria-controls={categoryPanelId}
-                        className="flex min-h-11 w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                      >
-                        {category.label}
-                        <span className="text-xl leading-none" aria-hidden="true">
-                          {isExpanded ? "-" : "+"}
-                        </span>
-                      </button>
+                      {hasChildren ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(category.id)}
+                          aria-expanded={isExpanded}
+                          aria-controls={categoryPanelId}
+                          className="flex min-h-11 w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                        >
+                          {category.label}
+                          <span className="text-xl leading-none" aria-hidden="true">
+                            {isExpanded ? "-" : "+"}
+                          </span>
+                        </button>
+                      ) : (
+                        <Link
+                          to={toCountryPath(category.href) as string}
+                          onClick={closeDrawer}
+                          className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                        >
+                          {category.label}
+                        </Link>
+                      )}
 
-                      {mountedCategory === category.id && category.children && (
+                      {hasChildren && mountedCategory === category.id && category.children && (
                         <ul
                           id={categoryPanelId}
                           aria-hidden={!isExpanded}

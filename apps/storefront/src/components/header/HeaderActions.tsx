@@ -1,70 +1,48 @@
 import { Link, useParams } from "@tanstack/react-router"
-import { User, ShoppingCart } from "lucide-react"
+import { ShoppingCart, User } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useCart } from "@/lib/hooks/use-cart"
-import { formatPrice } from "@/lib/utils/price"
 import { useCartDrawer } from "@/lib/context/cart"
+import { getCartItemCount } from "@/lib/utils/cart"
 
-export function HeaderActions({ compact = false }: { compact?: boolean }) {
+export function HeaderActions({ compact: _compact = false }: { compact?: boolean }) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
-
-  const { isAuthenticated, customer } = useAuth()
-  const { data: cart, isLoading: isCartLoading } = useCart()
+  const { isAuthenticated } = useAuth()
+  const { data: cart } = useCart()
   const { openCart } = useCartDrawer()
-
-  const cartItemCount = cart?.items?.reduce((total, item) => total + Number(item.quantity ?? 0), 0) ?? 0
-
-  // Exibir subtotal ao invés do total para ignorar taxas de frete no header.
-  // Usa o fallback para "BRL" e garante "pt-BR".
-  const cartTotal = formatPrice({
-    amount: cart?.item_subtotal || cart?.subtotal || 0,
-    currency_code: cart?.region?.currency_code || cart?.currency_code || "BRL",
-    locale: "pt-BR"
-  })
-
-  const customerName = customer?.first_name || customer?.email?.split("@")[0] || ""
+  const cartItemCount = getCartItemCount(cart?.items)
 
   return (
-    <div className="flex items-center gap-4 md:gap-6">
-      {/* Account */}
+    <div className="flex items-center gap-1 md:gap-2">
       <Link
         to={isAuthenticated ? ("/$countryCode/account" as string) : ("/$countryCode/account/login" as string)}
         params={{ countryCode }}
-        className="flex min-h-11 min-w-11 items-center gap-2 rounded-md p-1 text-sm text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-        aria-label="Minha conta"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+        aria-label={isAuthenticated ? "Minha conta" : "Entrar na conta"}
+        title={isAuthenticated ? "Minha conta" : "Entrar"}
       >
-        <User className="w-5 h-5 shrink-0 text-[var(--color-navy)]" aria-hidden="true" />
-        {!compact && (
-          <span className="font-medium whitespace-nowrap hidden lg:block">
-            {isAuthenticated ? `Olá, ${customerName}` : "Entrar"}
-          </span>
-        )}
+        <User className="h-5 w-5" aria-hidden="true" />
       </Link>
 
-      {/* Cart */}
       <button
         type="button"
         onClick={openCart}
-        className="relative flex min-h-11 min-w-11 items-center gap-2 rounded-md p-1 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+        className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
         aria-label={`Abrir carrinho com ${cartItemCount} ${cartItemCount === 1 ? "item" : "itens"}`}
+        title="Carrinho"
       >
-        <div className="relative">
-          <ShoppingCart className="w-6 h-6 shrink-0" aria-hidden="true" />
+        <span className="relative inline-flex">
+          <ShoppingCart className="h-5 w-5" aria-hidden="true" />
           {cartItemCount > 0 && (
             <span
-              className="absolute -top-2 -right-2 bg-[var(--color-accent)] text-[var(--color-navy)] text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white pointer-events-none"
+              className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--color-accent)] px-1 text-[10px] font-bold leading-none text-[var(--color-navy)]"
               aria-hidden="true"
             >
               {cartItemCount > 99 ? "99+" : cartItemCount}
             </span>
           )}
-        </div>
-        {!compact && (
-          <span className="hidden lg:block font-medium text-sm whitespace-nowrap">
-            {isCartLoading ? "Carregando..." : (cartItemCount > 0 ? cartTotal : "Carrinho")}
-          </span>
-        )}
+        </span>
       </button>
     </div>
   )

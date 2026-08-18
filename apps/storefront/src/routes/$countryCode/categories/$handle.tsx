@@ -1,12 +1,19 @@
 import { createFileRoute, notFound } from "@tanstack/react-router"
 import { retrieveCategory } from "@/lib/data/categories"
+import { listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import Category from "@/pages/category"
 import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
+import { z } from "zod"
+import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 
 export const Route = createFileRoute("/$countryCode/categories/$handle")({
-  loader: async ({ params, context }) => {
+  validateSearch: z.object({
+    page: z.coerce.number().int().min(1).default(1),
+  }),
+  loaderDeps: ({ search }) => ({ page: search.page }),
+  loader: async ({ params, context, deps }) => {
     const { countryCode, handle } = params
     const { queryClient } = context
 
@@ -32,10 +39,35 @@ export const Route = createFileRoute("/$countryCode/categories/$handle")({
       },
     })
 
+    if (!category) {
+      throw notFound()
+    }
+
+    const pageSize = 24
+    const page = deps.page ?? 1
+    const productPage = await queryClient.ensureQueryData({
+      queryKey: ["products", { region_id: region.id, category_id: category.id, page }],
+      queryFn: () => listProducts({
+        query_params: {
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+          // Use the canonical Medusa id as a total ordering for stable offsets.
+          order: "id",
+          category_id: [category.id],
+          fields: PUBLIC_PRODUCT_CARD_FIELDS,
+        },
+        region_id: region.id,
+      }),
+    })
+
     return sanitize({
       countryCode,
       region,
       category: category as HttpTypes.StoreProductCategory,
+      products: productPage.products as HttpTypes.StoreProduct[],
+      count: productPage.count,
+      page,
+      pageSize,
     })
   },
   head: ({ loaderData }) => {

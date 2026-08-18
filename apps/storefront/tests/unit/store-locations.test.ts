@@ -18,6 +18,8 @@ test("Nossa Loja uses one consolidated location component without selection UX",
   assert.match(pageSource, /<StoreLocationCard location=\{activeLocation\} \/>/)
   assert.doesNotMatch(pageSource, /selectedLocationId|map-panel|activeLocations\.map/)
   assert.doesNotMatch(cardSource, /Unidade selecionada|isSelected|onSelect|aria-pressed/)
+  assert.doesNotMatch(cardSource, /Place\+ID/)
+  assert.match(cardSource, /place_id:/)
   assert.match(cardSource, /GoogleStoreMap/)
   assert.match(cardSource, /StoreStreetView/)
 })

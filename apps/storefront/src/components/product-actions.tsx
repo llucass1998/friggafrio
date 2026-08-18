@@ -4,6 +4,7 @@ import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
 import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
+import { decodeProductText } from "@/lib/utils/product-text"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
 import { HttpTypes } from "@medusajs/types"
@@ -27,6 +28,7 @@ const ProductActions = memo(function ProductActions({
 }: ProductActionsProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | undefined>>({})
   const [isSuccess, setIsSuccess] = useState(false)
+  const [quantity, setQuantity] = useState(1)
   const location = useLocation()
   const countryCode = getCountryCodeFromPath(location.pathname) || "br"
 
@@ -38,6 +40,7 @@ const ProductActions = memo(function ProductActions({
 
   useEffect(() => {
     setSelectedOptions({})
+    setQuantity(1)
   }, [product?.handle])
 
   // If there is only 1 variant, preselect the options
@@ -77,6 +80,7 @@ const ProductActions = memo(function ProductActions({
 
   // --- Purchase Logic Block ---
   const purchaseState = getProductPurchaseState(product)
+  const publicProductTitle = decodeProductText(product.title)
 
   // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
@@ -88,23 +92,28 @@ const ProductActions = memo(function ProductActions({
       : purchaseState.variants.some((variant) => variant.id === selectedVariant.id)
     if (!isApprovedVariant || !isVariantInStock(selectedVariant)) return false
 
+    const available = selectedVariant.manage_inventory === true
+      ? selectedVariant.inventory_quantity
+      : undefined
+    if (quantity < 1 || (typeof available === "number" && quantity > available)) return false
+
     const amount = selectedVariant.calculated_price?.calculated_amount
     if (typeof amount !== "number" || amount <= 0) return false
 
     return true
-  }, [selectedVariant, purchaseState])
+  }, [selectedVariant, purchaseState, quantity])
 
   const displayPrice = selectedVariant?.calculated_price?.calculated_amount
     ?? (purchaseState.status === "purchasable" ? purchaseState.price : undefined)
 
-  
+
   const handleAddToCart = async () => {
     if (!selectedVariant?.id || !canBuySelected) return null
 
     addToCartMutation.mutateAsync(
       {
         variant_id: selectedVariant.id,
-        quantity: 1,
+        quantity,
         country_code: countryCode,
         product,
         variant: selectedVariant,
@@ -115,7 +124,7 @@ const ProductActions = memo(function ProductActions({
           queryClient.invalidateQueries({ queryKey: ["cart"] })
           setIsSuccess(true)
           openCart()
-          toast.success(`${product.title} adicionado ao carrinho`)
+          toast.success(`${publicProductTitle} adicionado ao carrinho`)
           setTimeout(() => setIsSuccess(false), 2000)
         },
         onError: () => {
@@ -127,7 +136,7 @@ const ProductActions = memo(function ProductActions({
   }
 
   // Generate Button Text
-  let buttonText = "Comprar"
+  let buttonText = "Adicionar ao carrinho"
   let buttonDisabled = true
 
   if (purchaseState.status === "unavailable") {
@@ -135,7 +144,7 @@ const ProductActions = memo(function ProductActions({
   } else if (purchaseState.status === "quote_only") {
     buttonText = "Solicitar cotação"
   } else if (purchaseState.status === "price_pending") {
-    buttonText = "Solicitar orçamento"
+    buttonText = "Preço indisponível"
   } else if (!selectedVariant) {
     buttonText = "Selecione uma opção"
   } else if (!isValidVariant || !canBuySelected) {
@@ -151,7 +160,7 @@ const ProductActions = memo(function ProductActions({
          {purchaseState.status === "quote_only" ? (
            <>
              <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
-               QUOTE_ONLY · Somente sob cotação
+               Sob cotação
              </span>
              <span className="text-xl font-medium text-[var(--color-text-muted)]">Consulte condições comerciais</span>
            </>
@@ -188,10 +197,62 @@ const ProductActions = memo(function ProductActions({
         </div>
       )}
 
+      {(purchaseState.status === "purchasable" || selectedVariant) && (
+        <div className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4">
+          <label htmlFor="product-quantity" className="text-sm font-semibold text-[var(--color-navy)]">
+            Quantidade
+          </label>
+          <div className="flex items-center rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white">
+            <button
+              type="button"
+              aria-label="Diminuir quantidade"
+              onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+              disabled={buttonDisabled || quantity <= 1 || addToCartMutation.isPending}
+              className="h-10 w-10 text-lg text-[var(--color-navy)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              -
+            </button>
+            <input
+              id="product-quantity"
+              type="number"
+              min={1}
+              max={selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : undefined}
+              step={1}
+              value={quantity}
+              onChange={(event) => {
+                const next = Number(event.target.value)
+                if (!Number.isInteger(next)) return
+                const available = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number"
+                  ? selectedVariant.inventory_quantity
+                  : Number.MAX_SAFE_INTEGER
+                setQuantity(Math.min(available, Math.max(1, next)))
+              }}
+              disabled={buttonDisabled || addToCartMutation.isPending}
+              className="h-10 w-14 border-x border-[var(--color-border)] text-center text-sm font-semibold text-[var(--color-navy)] focus:outline-none"
+              aria-label="Quantidade do produto"
+            />
+            <button
+              type="button"
+              aria-label="Aumentar quantidade"
+              onClick={() => setQuantity((value) => {
+                const available = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number"
+                  ? selectedVariant.inventory_quantity
+                  : value + 1
+                return Math.min(available, value + 1)
+              })}
+              disabled={buttonDisabled || addToCartMutation.isPending || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)}
+              className="h-10 w-10 text-lg text-[var(--color-navy)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={handleAddToCart}
         disabled={buttonDisabled || !!disabled || addToCartMutation.isPending || isSuccess}
-        aria-label={`${buttonText} ${product.title}`}
+        aria-label={`${buttonText} ${publicProductTitle}`}
         className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-all duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
           buttonDisabled
             ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"

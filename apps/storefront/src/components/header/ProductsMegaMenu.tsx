@@ -1,37 +1,44 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { productCategories } from "@/components/header/categories"
 import { storeConfig } from "@/config/store"
+import { useCategories } from "@/lib/hooks/use-categories"
 
 export function ProductsMegaMenu() {
-  const [activeCategory, setActiveCategory] = useState<string>(productCategories[0].id)
+  const [activeParent, setActiveParent] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuId = `products-mega-menu-${useId().replace(/:/g, "")}`
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
+  const { data: categories = [], isLoading } = useCategories({ queryParams: { limit: 100, offset: 0 } })
 
-  const activeCategoryData = productCategories.find((category) => category.id === activeCategory) || productCategories[0]
-  const toCountryPath = (href: string) =>
-    href.replace(/^\/br(?=\/|$)/, `/${countryCode}`)
+  const topLevel = useMemo(() => categories.filter((category) => !category.parent_category_id), [categories])
+  const childrenByParent = useMemo(() => {
+    const grouped = new Map<string, typeof categories>()
+    for (const category of categories) {
+      if (!category.parent_category_id) continue
+      const children = grouped.get(category.parent_category_id) || []
+      children.push(category)
+      grouped.set(category.parent_category_id, children)
+    }
+    return grouped
+  }, [categories])
+  const parentCategories = useMemo(
+    () => topLevel.filter((category) => (childrenByParent.get(category.id) || []).length > 0),
+    [childrenByParent, topLevel]
+  )
+  const activeParentData = topLevel.find((category) => category.id === activeParent)
+  const activeChildren = activeParentData ? childrenByParent.get(activeParentData.id) || [] : []
 
   useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
+    if (!isOpen) return
     const closeOnOutsideClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsOpen(false)
     }
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false)
-      }
+      if (event.key === "Escape") setIsOpen(false)
     }
-
     document.addEventListener("mousedown", closeOnOutsideClick)
     document.addEventListener("keydown", closeOnEscape)
     return () => {
@@ -41,6 +48,18 @@ export function ProductsMegaMenu() {
   }, [isOpen])
 
   const closeMenu = () => setIsOpen(false)
+  const renderCategoryLink = (category: (typeof topLevel)[number]) => (
+    <Link
+      key={category.id}
+      to="/$countryCode/categories/$handle"
+      params={{ countryCode, handle: category.handle }}
+      onClick={closeMenu}
+      className="flex min-h-10 items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      <span className="line-clamp-2">{category.name}</span>
+      <ChevronRight className="ml-2 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+    </Link>
+  )
 
   return (
     <div
@@ -65,86 +84,108 @@ export function ProductsMegaMenu() {
         id={menuId}
         role="region"
         aria-label="Categorias de produtos"
-        className={`absolute left-0 top-full flex w-[800px] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl transition-[opacity,transform,visibility] xl:w-[1000px] ${
-          isOpen
-            ? "visible translate-y-0 opacity-100 duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)]"
-            : "invisible translate-y-[-4px] opacity-0 duration-[var(--motion-duration-dropdown-close)] ease-[var(--motion-ease-exit)] group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[var(--motion-duration-dropdown-open)] group-hover:ease-[var(--motion-ease-enter)] group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-focus-within:duration-[var(--motion-duration-dropdown-open)] group-focus-within:ease-[var(--motion-ease-enter)]"
-        }`}
+        className={`absolute left-0 top-full w-[min(92vw,900px)] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-white shadow-xl transition-[opacity,transform,visibility] duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)] ${isOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"}`}
       >
-        <div className="w-1/3 border-r border-[var(--color-border)] bg-[var(--color-surface)] py-4">
-          <ul className="flex flex-col">
-            {productCategories.map((category) => (
-              <li key={category.id}>
-                <button
-                  type="button"
-                  onMouseEnter={() => setActiveCategory(category.id)}
-                  onFocus={() => setActiveCategory(category.id)}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`flex w-full items-center justify-between border-l-4 px-6 py-3 text-left transition-colors ${
-                    activeCategory === category.id
-                      ? "border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary)]"
-                      : "border-transparent text-[var(--color-text)] hover:bg-[var(--color-surface-soft)]"
-                  }`}
-                >
-                  {category.label}
-                  <ChevronRight className={`h-4 w-4 ${activeCategory === category.id ? "opacity-100" : "opacity-0"}`} aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 px-6">
+        <div className="max-h-[min(70vh,460px)] overflow-y-auto p-5 md:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Catálogo</p>
+              <h3 className="mt-1 text-lg font-bold text-[var(--color-navy)]">
+                {activeParentData?.name || "Encontre por categoria"}
+              </h3>
+            </div>
             <Link
               to="/$countryCode/store"
               params={{ countryCode }}
               onClick={closeMenu}
-              className="flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
             >
-              Ver todos os produtos
-              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              Ver todos
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-          </div>
-        </div>
-
-        <div className="w-2/3 bg-white p-8">
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-[var(--color-navy)]">{activeCategoryData.label}</h3>
-            <Link
-              to={toCountryPath(activeCategoryData.href) as string}
-              onClick={closeMenu}
-              className="mt-1 inline-block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-            >
-              Explorar departamento completo →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {activeCategoryData.children?.filter((child) => !child.id.endsWith("-all")).map((child) => (
-              <Link
-                key={child.id}
-                to={toCountryPath(child.href) as string}
-                onClick={closeMenu}
-                className="min-h-11 py-1 text-sm font-medium text-[var(--color-text)] transition-[color,transform] duration-[var(--motion-duration-interaction)] hover:translate-x-1 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-              >
-                {child.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-8 flex items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <div>
-              <p className="text-sm font-bold text-[var(--color-navy)]">Precisando de ajuda?</p>
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Fale com nossos especialistas técnicos.</p>
-            </div>
             <a
               href={`https://wa.me/${storeConfig.whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded px-4 py-2 text-xs font-bold text-white transition-colors bg-[#25D366] hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              onClick={closeMenu}
+              className="hidden items-center gap-1 text-xs font-semibold text-[#16803c] hover:underline sm:inline-flex"
             >
-              WhatsApp
+              Falar com especialista
             </a>
           </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4" aria-live="polite" aria-busy="true">
+              {Array.from({ length: 8 }, (_, index) => <div key={index} className="h-10 animate-pulse rounded-md bg-[var(--color-surface-soft)]" />)}
+            </div>
+          ) : topLevel.length === 0 ? (
+            <p className="py-6 text-sm text-[var(--color-text-muted)]">Nenhuma categoria disponível.</p>
+          ) : parentCategories.length === 0 ? (
+            <nav aria-label="Categorias de produtos" className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
+              {topLevel.map(renderCategoryLink)}
+            </nav>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-[minmax(180px,0.75fr)_minmax(0,1.5fr)]">
+              <nav aria-label="Departamentos" className="grid content-start gap-1 sm:grid-cols-2 md:grid-cols-1">
+                {topLevel.map((category) => {
+                  const hasChildren = (childrenByParent.get(category.id) || []).length > 0
+                  if (!hasChildren) return renderCategoryLink(category)
+                  const categoryPanelId = `${menuId}-${category.id}-children`
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onMouseEnter={() => setActiveParent(category.id)}
+                      onFocus={() => setActiveParent(category.id)}
+                      onClick={() => setActiveParent(category.id)}
+                      aria-expanded={activeParent === category.id}
+                      aria-controls={categoryPanelId}
+                      className={`flex min-h-10 items-center justify-between rounded-md px-3 py-2 text-left text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${activeParent === category.id ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)]" : "text-[var(--color-text)] hover:bg-[var(--color-surface-soft)]"}`}
+                    >
+                      {category.name}
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )
+                })}
+              </nav>
+
+              <div className="min-w-0">
+                {activeParentData && activeChildren.length > 0 ? (
+                  <div id={`${menuId}-${activeParentData.id}-children`}>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-semibold text-[var(--color-navy)]">{activeParentData.name}</h4>
+                      <Link
+                        to="/$countryCode/categories/$handle"
+                        params={{ countryCode, handle: activeParentData.handle }}
+                        onClick={closeMenu}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                      >
+                        Ver departamento
+                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-5 gap-y-1 sm:grid-cols-3">
+                      {activeChildren.map((child) => (
+                        <Link
+                          key={child.id}
+                          to="/$countryCode/categories/$handle"
+                          params={{ countryCode, handle: child.handle }}
+                          onClick={closeMenu}
+                          className="rounded-md px-2 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-md bg-[var(--color-surface-soft)] p-4">
+                    <p className="text-sm text-[var(--color-text-muted)]">Selecione um departamento para ver as subcategorias.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -108,6 +108,66 @@ test("missing inventory is not treated as purchasable", () => {
   assert.equal(isCartCheckoutReady([item]), false)
 })
 
+test("reconciled inventory metadata prevents a missing cart projection from becoming out of stock", () => {
+  const item = {
+    variant_id: "variant_reconciled",
+    quantity: 1,
+    unit_price: 10,
+    total: 10,
+    variant: {
+      manage_inventory: true,
+      allow_backorder: false,
+      product: {
+        metadata: {
+          commercial_status: "SELLABLE",
+          inventory_quantity_observed: 138,
+        },
+      },
+    },
+  }
+
+  assert.equal(getCartLineCommercialState(item), "standard")
+  assert.equal(isCartCheckoutReady([item]), true)
+})
+
+test("fractional reconciled inventory remains purchasable when it covers the line quantity", () => {
+  const item = {
+    variant_id: "variant_fractional_reconciled",
+    quantity: 1,
+    unit_price: 139.818,
+    total: 139.818,
+    variant: {
+      manage_inventory: true,
+      allow_backorder: false,
+      product: {
+        metadata: {
+          commercial_status: "SELLABLE",
+          inventory_quantity_observed: 256.6,
+        },
+      },
+    },
+  }
+
+  assert.equal(getCartLineCommercialState(item), "standard")
+  assert.equal(isCartCheckoutReady([item]), true)
+})
+
+test("explicit out-of-stock metadata still blocks checkout", () => {
+  const item = {
+    variant_id: "variant_out_explicit",
+    quantity: 1,
+    unit_price: 10,
+    total: 10,
+    variant: {
+      manage_inventory: false,
+      product: { metadata: { commercial_status: "OUT_OF_STOCK" } },
+    },
+  }
+
+  assert.equal(getCartLineCommercialState(item), "out_of_stock")
+  assert.equal(isCartCheckoutReady([item]), false)
+})
+
 test("missing cart price blocks checkout without treating it as zero", () => {
   const item = {
     variant_id: "variant_price_unknown",

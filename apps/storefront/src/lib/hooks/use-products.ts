@@ -11,12 +11,16 @@ type ProductListQueryParams = HttpTypes.StoreProductListParams & {
 export const useProducts = ({
   query_params,
   region_id,
+  initial_page = 1,
 }: {
   query_params?: ProductListQueryParams
   region_id?: string
+  initial_page?: number
 } = {}) => {
+  const initialPage = Math.max(1, Math.floor(initial_page || 1))
+
   return useInfiniteQuery({
-    queryKey: queryKeys.products.list(query_params, region_id),
+    queryKey: queryKeys.products.list(query_params, region_id, initialPage),
     queryFn: async ({ pageParam }) => {
       const limit = query_params?.limit || 12
       const _page_param = Math.max(pageParam, 1)
@@ -40,7 +44,7 @@ export const useProducts = ({
     },
     getNextPageParam: (lastPage) => lastPage.next_page,
     getPreviousPageParam: (firstPage) => firstPage.next_page,
-    initialPageParam: 1,
+    initialPageParam: initialPage,
     enabled: !!region_id,
   })
 }

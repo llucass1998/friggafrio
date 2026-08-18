@@ -3,6 +3,7 @@ import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
+import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 
 export function StickyCommerceHeader() {
   const [isVisible, setIsVisible] = useState(false)
@@ -43,6 +44,8 @@ export function StickyCommerceHeader() {
           <div className="hidden md:flex flex-1 justify-end max-w-md mr-2">
             <HeaderSearch compact />
           </div>
+
+          <HeaderPostalCode />
 
           {/* Actions */}
           <HeaderActions compact />

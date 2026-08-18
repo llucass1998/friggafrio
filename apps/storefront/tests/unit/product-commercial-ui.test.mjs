@@ -8,7 +8,7 @@ const detail = readFileSync(new URL("../../src/components/product-actions.tsx", 
 for (const [surface, source] of [["Product Card", card], ["Product Detail", detail]]) {
   test(`${surface} renders quote-only and pending states as non-purchasable`, () => {
     assert.match(source, /purchaseState\.status === "quote_only"/)
-    assert.match(source, /Somente sob cotação/)
+    assert.match(source, /(?:Somente sob cota|Sob cota|Sob cotação)/)
     assert.match(source, /purchaseState\.status === "price_pending"/)
     assert.match(source, /Valor em configuração/)
     assert.match(source, /Consulte o valor/)

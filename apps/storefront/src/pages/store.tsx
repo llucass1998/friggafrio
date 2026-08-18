@@ -14,11 +14,14 @@ interface StorePageData {
   count: number
   region: HttpTypes.StoreRegion
   countryCode: string
+  page?: number
+  pageSize?: number
   optionValueIds?: string[]
 }
 
 type StoreSearch = {
   category?: string
+  page?: number
   [OPTION_VALUE_QUERY_KEY]?: string | string[]
 }
 
@@ -28,7 +31,7 @@ export function StorePage({
   hideOptionsPicker?: boolean
 } = {}) {
   const loaderData = useLoaderData({ strict: false }) as StorePageData | undefined
-  const { region, countryCode = "br", products: loaderProducts = [] } = loaderData || {}
+  const { region, countryCode = "br", products: loaderProducts = [], page: loaderPage = 1 } = loaderData || {}
   const searchParams = useSearch({ strict: false }) as StoreSearch | undefined
   const navigate = useNavigate()
 
@@ -78,8 +81,31 @@ export function StorePage({
   const [searchInput, setSearchInput] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams?.category ?? null)
-  const [sortOrder, setSortOrder] = useState("-created_at")
+  const [sortOrder, setSortOrder] = useState("-id")
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const currentPage = Math.max(1, Number((searchParams as StoreSearch & { page?: number })?.page ?? loaderPage))
+
+  useEffect(() => {
+    setSelectedCategory(searchParams?.category ?? null)
+  }, [searchParams?.category])
+
+  const updateCategory = useCallback(
+    (nextCategory: string | null) => {
+      setSelectedCategory(nextCategory)
+      navigate({
+        to: ".",
+        search: (prev: StoreSearch | undefined) => {
+          const next: StoreSearch = { ...(prev ?? {}) }
+          if (nextCategory) next.category = nextCategory
+          else delete next.category
+          delete next.page
+          return next
+        },
+        replace: false,
+      })
+    },
+    [navigate],
+  )
 
   // Debounce search input for server-side queries
   useEffect(() => {
@@ -96,6 +122,11 @@ export function StorePage({
     },
   })
 
+  const selectedCategoryId = selectedCategory
+    ? categories.find((category) => category.id === selectedCategory || category.handle === selectedCategory)?.id
+      ?? (selectedCategory.startsWith("pcat_") ? selectedCategory : "__missing_category__")
+    : undefined
+
   // Use infinite query for everyone
   const {
     data: infiniteData,
@@ -108,15 +139,21 @@ export function StorePage({
       limit: 24,
       fields: PUBLIC_PRODUCT_CARD_FIELDS,
       order: sortOrder,
-      ...(selectedCategory && { category_id: [selectedCategory] }),
+      ...(selectedCategoryId && { category_id: [selectedCategoryId] }),
       ...(debouncedSearch && { q: debouncedSearch }),
       ...(optionValueIds.length > 0 && { option_value_id: optionValueIds }),
     },
     region_id: region?.id,
+    initial_page: currentPage,
   })
 
-  // Flatten products from all pages
-  const allProducts = infiniteData?.pages.flatMap((page) => page.products) ?? loaderProducts
+  // Keep the SSR snapshot visible until the client query has its first page.
+  // TanStack Query creates an empty pages array during hydration, which must
+  // not briefly replace the server-rendered catalog with an empty state.
+  const fetchedProducts = infiniteData?.pages.flatMap((page) => page.products) ?? []
+  const allProducts = fetchedProducts.length > 0 || loaderProducts.length === 0
+    ? fetchedProducts
+    : loaderProducts
 
   // Infinite scroll observer
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -213,7 +250,7 @@ export function StorePage({
                   <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Categorias</h3>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => setSelectedCategory(null)}
+                      onClick={() => updateCategory(null)}
                       className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                         !selectedCategory
                           ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
@@ -225,7 +262,7 @@ export function StorePage({
                     {categories.map(category => (
                       <button
                         key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => updateCategory(category.id)}
                         className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                           selectedCategory === category.id
                             ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
@@ -252,7 +289,7 @@ export function StorePage({
                 <div className="mt-8 lg:hidden">
                   <button
                     onClick={() => {
-                      setSelectedCategory(null)
+                      updateCategory(null)
                       updateOptionValueIds([])
                       setMobileFiltersOpen(false)
                     }}
@@ -298,8 +335,8 @@ export function StorePage({
                   onChange={(e) => setSortOrder(e.target.value)}
                   className="w-full px-4 py-2.5 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-button)] text-sm font-medium text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent cursor-pointer"
                 >
-                  <option value="-created_at">Mais recentes</option>
-                  <option value="created_at">Mais antigos</option>
+                  <option value="-id">Mais recentes</option>
+                  <option value="id">Mais antigos</option>
                   <option value="title">Nome: A-Z</option>
                   <option value="-title">Nome: Z-A</option>
                 </select>
@@ -309,11 +346,11 @@ export function StorePage({
           </div>
 
           {/* Product Grid */}
-          {isLoadingProducts ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {isLoadingProducts && allProducts.length === 0 ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden animate-pulse">
-                  <div className="aspect-square bg-[var(--color-background)]" />
+                  <div className="aspect-[4/3] bg-[var(--color-background)]" />
                   <div className="p-4 space-y-3">
                     <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
                     <div className="h-3 bg-[var(--color-border)] rounded w-1/2" />
@@ -324,7 +361,7 @@ export function StorePage({
             </div>
           ) : allProducts.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                 {allProducts.map((product) => (
                   <PublicProductCard
                     key={product.id}
@@ -365,7 +402,7 @@ export function StorePage({
                   onClick={() => {
                     setSearchInput("")
                     setDebouncedSearch("")
-                    setSelectedCategory(null)
+                    updateCategory(null)
                     updateOptionValueIds([])
                   }}
                   className="px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm font-semibold rounded-[var(--radius-button)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"

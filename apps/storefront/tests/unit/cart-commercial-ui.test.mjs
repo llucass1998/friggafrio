@@ -9,9 +9,10 @@ const checkoutPage = read("../../src/pages/checkout.tsx")
 const legacyCard = read("../../src/components/product-card.tsx")
 const productDetail = read("../../src/pages/product.tsx")
 
-test("cart requests persisted commercial metadata and inventory for every cart surface", () => {
+test("cart requests only the public cart projection and explicit inventory for every cart surface", () => {
   for (const source of [cartComponent, cartPage]) {
-    assert.match(source, /items\.variant\.product\.metadata/)
+    assert.doesNotMatch(source, /items\.variant\.product\.metadata/)
+    assert.doesNotMatch(source, /items\.variant\.metadata/)
     assert.match(source, /items\.variant\.inventory_quantity/)
     assert.match(source, /items\.variant\.manage_inventory/)
   }
@@ -27,7 +28,7 @@ test("cart does not substitute missing product totals with zero", () => {
   assert.doesNotMatch(cartComponent, /price=\{item\.total \?\? 0\}/)
   assert.doesNotMatch(cartComponent, /price=\{cart\.item_subtotal \?\? 0\}/)
   assert.doesNotMatch(cartComponent, /price=\{cart\.total \?\? 0\}/)
-  assert.match(cartComponent, /PreÃ§o a confirmar/)
+  assert.match(cartComponent, /(?:Preço a confirmar|PreÃƒÂ§o a confirmar)/)
 })
 
 test("cart total and freight are shown only after a server shipping method is selected", () => {

@@ -27,7 +27,8 @@ export const Route = createFileRoute("/$countryCode/")({
         listProducts({
           query_params: {
             limit: 4,
-            order: "-created_at",
+            // This Medusa schema does not expose Product.created_at for ordering.
+            order: "-id",
           },
           region_id: region.id,
         }),

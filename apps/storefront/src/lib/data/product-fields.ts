@@ -1,5 +1,5 @@
 export const PUBLIC_PRODUCT_CARD_FIELDS =
-  "+metadata,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*categories,*images,*variants.options"
+  "id,title,subtitle,description,handle,thumbnail,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*categories,*images,*variants.options"
 
 export const PUBLIC_PRODUCT_DETAIL_FIELDS =
-  "+metadata,*variants,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,+variants.calculated_price,*images,*options,*options.values,*collection,*tags"
+  "id,title,subtitle,description,handle,thumbnail,variants.id,variants.title,variants.sku,variants.barcode,variants.ean,variants.upc,+variants.allow_backorder,+variants.manage_inventory,+variants.inventory_quantity,+variants.calculated_price,*variants.options,*images,*options,*options.values,*collection,*tags"

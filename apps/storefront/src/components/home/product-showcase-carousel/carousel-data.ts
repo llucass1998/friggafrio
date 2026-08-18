@@ -2,43 +2,36 @@ import { ShowcaseSlide } from "@/components/home/product-showcase-carousel/types
 
 export const showcaseSlides: ShowcaseSlide[] = [
   {
-    id: "cobre",
-    title: "Tubos de Cobre",
-    description: "Materiais para instalações e manutenção de sistemas frigoríficos.",
-    ctaText: "Ver categoria",
-    ctaLink: "/br/store?category=instalacao-isolamento",
-    imageFilename: "carrosel1.png",
+    id: "promo-eos-r22",
+    title: "Promoção FriggaFrio - Gás Refrigerante EOS R22",
+    description: "",
+    ctaText: "",
+    ctaLink: "/br/categories", // Safe fallback
+    imageFilename: "eos-r22.png",
+    isPromotionalImage: true,
+    hideOverlayContent: true,
+    imageFit: "contain"
   },
   {
-    id: "ferramentas",
-    title: "Ferramentas para Refrigeração",
-    description: "Bombas de vácuo, manifolds e ferramentas para instalação e manutenção.",
-    ctaText: "Ver categoria",
-    ctaLink: "/br/store?category=ferramentas-equipamentos",
-    imageFilename: "carrosel2.png",
+    id: "promo-bomba-dreno",
+    title: "Promoção FriggaFrio - Bombas de Dreno Friven",
+    description: "",
+    ctaText: "",
+    ctaLink: "/br/categories", // Safe fallback
+    imageFilename: "bomba-dreno.png",
+    isPromotionalImage: true,
+    hideOverlayContent: true,
+    imageFit: "contain"
   },
   {
-    id: "isolamentos",
-    title: "Tubos e Isolamentos",
-    description: "Materiais para proteção térmica e instalação de sistemas de refrigeração.",
-    ctaText: "Ver categoria",
-    ctaLink: "/br/store?category=instalacao-isolamento",
-    imageFilename: "carrosel3.png",
-  },
-  {
-    id: "cilindros",
-    title: "Cilindros para Recolhimento",
-    description: "Equipamentos para recolhimento e armazenamento técnico de fluidos refrigerantes.",
-    ctaText: "Ver categoria",
-    ctaLink: "/br/store?category=cilindros-recolhimento",
-    imageFilename: "carrosel4.png",
-  },
-  {
-    id: "gases",
-    title: "Gases Refrigerantes",
-    description: "Soluções para diferentes aplicações de refrigeração comercial, industrial e doméstica.",
-    ctaText: "Ver categoria",
-    ctaLink: "/br/store?category=gases-refrigerantes",
-    imageFilename: "carrosel5.png",
+    id: "promo-forc-teto",
+    title: "Promoção FriggaFrio - Forçador de Teto Elgin",
+    description: "",
+    ctaText: "",
+    ctaLink: "/br/categories", // Safe fallback
+    imageFilename: "forc-teto.png",
+    isPromotionalImage: true,
+    hideOverlayContent: true,
+    imageFit: "contain"
   }
 ]

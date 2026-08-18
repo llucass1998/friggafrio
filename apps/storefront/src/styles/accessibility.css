@@ -4,8 +4,6 @@
 :root {
   --a11y-font-scale: 1;
   --a11y-contrast: normal;
-  --a11y-spacing-letter: normal;
-  --a11y-spacing-line: 1.5;
   --a11y-saturate: 100%;
 }
 
@@ -33,22 +31,97 @@ html {
   filter: saturate(var(--a11y-saturate));
 }
 
-p, span, h1, h2, h3, h4, h5, h6, a, button, li, label, input, textarea, select {
-  letter-spacing: var(--a11y-spacing-letter) !important;
-  line-height: var(--a11y-spacing-line) !important;
+/* Keep the storefront's type scale intact until a user opts into spacing changes. */
+:root[data-a11y-line-spacing="comfortable"] p,
+:root[data-a11y-line-spacing="comfortable"] span,
+:root[data-a11y-line-spacing="comfortable"] h1,
+:root[data-a11y-line-spacing="comfortable"] h2,
+:root[data-a11y-line-spacing="comfortable"] h3,
+:root[data-a11y-line-spacing="comfortable"] h4,
+:root[data-a11y-line-spacing="comfortable"] h5,
+:root[data-a11y-line-spacing="comfortable"] h6,
+:root[data-a11y-line-spacing="comfortable"] a,
+:root[data-a11y-line-spacing="comfortable"] button,
+:root[data-a11y-line-spacing="comfortable"] li,
+:root[data-a11y-line-spacing="comfortable"] label,
+:root[data-a11y-line-spacing="comfortable"] input,
+:root[data-a11y-line-spacing="comfortable"] textarea,
+:root[data-a11y-line-spacing="comfortable"] select {
+  line-height: 1.75 !important;
+}
+
+:root[data-a11y-line-spacing="wide"] p,
+:root[data-a11y-line-spacing="wide"] span,
+:root[data-a11y-line-spacing="wide"] h1,
+:root[data-a11y-line-spacing="wide"] h2,
+:root[data-a11y-line-spacing="wide"] h3,
+:root[data-a11y-line-spacing="wide"] h4,
+:root[data-a11y-line-spacing="wide"] h5,
+:root[data-a11y-line-spacing="wide"] h6,
+:root[data-a11y-line-spacing="wide"] a,
+:root[data-a11y-line-spacing="wide"] button,
+:root[data-a11y-line-spacing="wide"] li,
+:root[data-a11y-line-spacing="wide"] label,
+:root[data-a11y-line-spacing="wide"] input,
+:root[data-a11y-line-spacing="wide"] textarea,
+:root[data-a11y-line-spacing="wide"] select {
+  line-height: 2 !important;
+}
+
+:root[data-a11y-letter-spacing="comfortable"] p,
+:root[data-a11y-letter-spacing="comfortable"] span,
+:root[data-a11y-letter-spacing="comfortable"] h1,
+:root[data-a11y-letter-spacing="comfortable"] h2,
+:root[data-a11y-letter-spacing="comfortable"] h3,
+:root[data-a11y-letter-spacing="comfortable"] h4,
+:root[data-a11y-letter-spacing="comfortable"] h5,
+:root[data-a11y-letter-spacing="comfortable"] h6,
+:root[data-a11y-letter-spacing="comfortable"] a,
+:root[data-a11y-letter-spacing="comfortable"] button,
+:root[data-a11y-letter-spacing="comfortable"] li,
+:root[data-a11y-letter-spacing="comfortable"] label,
+:root[data-a11y-letter-spacing="comfortable"] input,
+:root[data-a11y-letter-spacing="comfortable"] textarea,
+:root[data-a11y-letter-spacing="comfortable"] select {
+  letter-spacing: 0.04em !important;
+}
+
+:root[data-a11y-letter-spacing="wide"] p,
+:root[data-a11y-letter-spacing="wide"] span,
+:root[data-a11y-letter-spacing="wide"] h1,
+:root[data-a11y-letter-spacing="wide"] h2,
+:root[data-a11y-letter-spacing="wide"] h3,
+:root[data-a11y-letter-spacing="wide"] h4,
+:root[data-a11y-letter-spacing="wide"] h5,
+:root[data-a11y-letter-spacing="wide"] h6,
+:root[data-a11y-letter-spacing="wide"] a,
+:root[data-a11y-letter-spacing="wide"] button,
+:root[data-a11y-letter-spacing="wide"] li,
+:root[data-a11y-letter-spacing="wide"] label,
+:root[data-a11y-letter-spacing="wide"] input,
+:root[data-a11y-letter-spacing="wide"] textarea,
+:root[data-a11y-letter-spacing="wide"] select {
+  letter-spacing: 0.08em !important;
 }
 
 /* FASE 7: TYPOGRAPHY SCALING */
 /* Scale typography elements without affecting layout containers/icons */
-p, span:not(.lucide), a, button:not(.icon-only), label, li, td, th {
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) p,
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) span:not(.lucide),
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) a,
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) button:not(.icon-only),
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) label,
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) li,
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) td,
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) th {
   font-size: calc(1rem * var(--a11y-font-scale));
 }
-h1 { font-size: calc(2.25rem * var(--a11y-font-scale)); }
-h2 { font-size: calc(1.875rem * var(--a11y-font-scale)); }
-h3 { font-size: calc(1.5rem * var(--a11y-font-scale)); }
-h4 { font-size: calc(1.25rem * var(--a11y-font-scale)); }
-h5 { font-size: calc(1.125rem * var(--a11y-font-scale)); }
-h6 { font-size: calc(1rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h1 { font-size: calc(2.25rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h2 { font-size: calc(1.875rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h3 { font-size: calc(1.5rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h4 { font-size: calc(1.25rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h5 { font-size: calc(1.125rem * var(--a11y-font-scale)); }
+:root[data-a11y-font-scale]:not([data-a11y-font-scale="1"]) h6 { font-size: calc(1rem * var(--a11y-font-scale)); }
 
 /* Ensure high contrast outlines for Focus */
 *:focus-visible {

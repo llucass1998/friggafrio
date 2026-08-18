@@ -7,7 +7,7 @@ import {
   sendDeleteRequest 
 } from "@/lib/data/custom"
 
-const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.product,+items.variant.product.metadata,+items.variant.metadata,+items.variant.inventory_quantity,+items.variant.manage_inventory,+items.variant.allow_backorder,shipping_methods.name"
+const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,shipping_methods.name"
 
 /**
  * Retrieves a cart by ID or from stored ID. Returns null if no cart is found.
@@ -24,7 +24,7 @@ const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,*items.variant.produ
  * // Get specific cart by ID
  * const specificCart = await retrieveCart({ 
  *   cart_id: 'cart_123',
- *   fields: '*items, *items.variant, *items.variant.product'
+ *   fields: '*items, items.variant.product.title, items.variant.product.thumbnail'
  * });
  * 
  * // Get cart with minimal fields
@@ -137,7 +137,7 @@ export const updateCart = async ({
  *   variant_id: 'variant_123',
  *   quantity: 2,
  *   country_code: 'us',
- *   fields: '*items, *items.variant, *items.variant.product'
+ *   fields: '*items, items.variant.product.title, items.variant.product.thumbnail'
  * });
  * 
  * // Add item with minimal response

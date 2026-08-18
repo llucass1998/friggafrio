@@ -12,7 +12,7 @@ export function FloatingWhatsAppButton() {
   // The new accessibility button is at bottom-24 (96px). So we put whatsapp at bottom-6 (24px) for desktop,
   // leaving space between them. For mobile we keep it at bottom-safe-area+1rem.
   return (
-    <div className="fixed z-40 left-4 sm:left-6 bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:bottom-6 flex group">
+    <div className="fixed z-40 left-4 hidden sm:left-6 bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:flex group">
       <a
         href={whatsappUrl}
         target="_blank"

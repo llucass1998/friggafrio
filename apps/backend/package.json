@@ -15,6 +15,7 @@
   "scripts": {
     "build": "medusa build",
     "db:migrate:safe": "medusa db:migrate --all-or-nothing --execute-safe-links --concurrency 1",
+    "preseed": "node ../../scripts/worktree-guard.mjs",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "seed:shipping:v1": "medusa exec ./src/scripts/seed-commercial-shipping-v1.ts",
     "smoke:shipping:v1": "medusa exec ./src/scripts/smoke-commercial-shipping-v1.ts",
@@ -25,7 +26,9 @@
     "catalog:commercial:reconcile": "medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
     "catalog:commercial:reconcile:apply": "cross-env STOREFRONT_COMMERCIAL_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
     "seed:validate": "medusa exec ./src/scripts/validate-commercial-defaults.ts",
+    "prestart": "node ../../scripts/worktree-guard.mjs",
     "start": "medusa start",
+    "predev": "node ../../scripts/worktree-guard.mjs",
     "dev": "medusa develop",
     "lint": "medusa lint",
     "test": "pnpm test:unit",

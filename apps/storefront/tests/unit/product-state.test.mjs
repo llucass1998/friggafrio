@@ -27,9 +27,9 @@ test("positive explicit inventory is purchasable", () => {
   assert.equal(state.status, "purchasable")
 })
 
-test("public Card and PDP selections request metadata and explicit inventory", () => {
+test("public Card and PDP selections avoid internal metadata and request explicit inventory", () => {
   for (const fields of [PUBLIC_PRODUCT_CARD_FIELDS, PUBLIC_PRODUCT_DETAIL_FIELDS]) {
-    assert.match(fields, /\+metadata/)
+    assert.doesNotMatch(fields, /\+metadata/)
     assert.match(fields, /\+variants\.inventory_quantity/)
     assert.match(fields, /\+variants\.manage_inventory/)
     assert.match(fields, /\+variants\.allow_backorder/)
