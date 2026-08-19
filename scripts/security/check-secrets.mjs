@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const repoRoot = process.cwd()
+const isEnvironmentFile = (file) => /(^|\\|\/)\.env(?:\.|$)/.test(file)
+const isEnvironmentTemplate = (file) => /(^|\\|\/)\.env\.(?:example|template)$/.test(file)
 const runGit = (args, options = {}) =>
   execFileSync("git", args, {
     cwd: repoRoot,
@@ -30,7 +32,7 @@ const untrackedFiles = runGit(["ls-files", "--others", "--exclude-standard", "-z
   .filter(Boolean)
 const readWorkspaceContent = (files) => files
   .filter((file) =>
-    !/(^|\\|\/)\.env(?:\.|$)/.test(file) || /\.env\.(?:example|template|test|production)$/.test(file)
+    !isEnvironmentFile(file) || isEnvironmentTemplate(file)
   )
   .map((file) => {
     try {
@@ -115,7 +117,7 @@ const exactCurrentInHistory = exactValues.filter(([, value]) =>
   exactMatches(value, rawHistorySource)
 )
 const forbiddenTrackedEnv = trackedFiles.filter((file) =>
-  /(^|\\|\/)\.env(?:\.|$)/.test(file) && !/\.env\.(?:example|template|test|production)$/.test(file)
+  isEnvironmentFile(file) && !isEnvironmentTemplate(file)
 )
 const privateKeyFiles = [...new Set([...trackedFiles, ...untrackedFiles])].filter((file) =>
   /(^|\\|\/)(?:id_(?:rsa|dsa|ecdsa|ed25519)|.*\.(?:pem|key|p12|pfx))$/i.test(file)

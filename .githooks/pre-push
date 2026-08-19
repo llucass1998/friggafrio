@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -eu
+
+# Enforce this before the project scanner so the policy also protects worktrees
+# that have not yet received the versioned scanner update.
+blocked_envs="$(git ls-files | while IFS= read -r file; do
+  case "$file" in
+    .env.example|.env.template|*/.env.example|*/.env.template) ;;
+    .env|.env.*|*/.env|*/.env.*) printf '%s\n' "$file" ;;
+  esac
+done)"
+
+if [ -n "$blocked_envs" ]; then
+  echo "Push blocked: remove environment files from Git tracking (keep only .env.example or .env.template)." >&2
+  echo "$blocked_envs" >&2
+  exit 1
+fi
+
+pnpm security:secrets

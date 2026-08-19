@@ -11,6 +11,8 @@
     "backend:dev": "turbo dev --filter=backend",
     "storefront:dev": "turbo dev --filter=storefront",
     "security:secrets": "node scripts/security/check-secrets.mjs",
+    "setup:githooks": "node scripts/security/configure-git-hooks.mjs",
+    "prepare": "pnpm setup:githooks",
     "worktree:check": "node scripts/worktree-guard.mjs",
     "predev": "node scripts/worktree-guard.mjs",
     "prebackend:dev": "node scripts/worktree-guard.mjs",
