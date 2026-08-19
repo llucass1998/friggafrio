@@ -9,7 +9,10 @@
     "lint": "turbo lint",
     "test": "turbo test",
     "backend:dev": "turbo dev --filter=backend",
-    "storefront:dev": "turbo dev --filter=storefront"
+    "storefront:dev": "turbo dev --filter=storefront",
+    "security:env-files": "node scripts/security/check-no-tracked-env.mjs",
+    "setup:githooks": "node scripts/security/configure-git-hooks.mjs",
+    "prepare": "pnpm setup:githooks"
   },
   "devDependencies": {
     "@medusajs/eslint-plugin": "2.16.0",

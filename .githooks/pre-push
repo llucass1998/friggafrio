@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -eu
+
+node scripts/security/check-no-tracked-env.mjs
