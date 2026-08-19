@@ -108,7 +108,7 @@ jobs:
 
       - name: Upload backend failure reports
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: backend-failure-${{ github.run_id }}
           path: ci-artifacts/
@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload storefront failure reports
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: storefront-failure-${{ github.run_id }}
           path: ci-artifacts/
@@ -250,7 +250,7 @@ jobs:
 
       - name: Upload integration failure reports
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: integration-failure-${{ github.run_id }}
           path: ci-artifacts/
@@ -338,7 +338,7 @@ jobs:
 
       - name: Upload E2E failure reports
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-failure-${{ github.run_id }}
           path: |
@@ -373,7 +373,7 @@ jobs:
 
       - name: Upload secret scan report on failure
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: secret-scan-${{ github.run_id }}
           path: ci-artifacts/gitleaks.sarif
