@@ -25,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CountryCodeIndexRouteImport } from './routes/$countryCode/index'
 import { Route as CountryCodeStoreRouteImport } from './routes/$countryCode/store'
 import { Route as CountryCodeQuotesRouteImport } from './routes/$countryCode/quotes'
+import { Route as CountryCodeFavoritesRouteImport } from './routes/$countryCode/favorites'
 import { Route as CountryCodeEmployeesRouteImport } from './routes/$countryCode/employees'
 import { Route as CountryCodeCheckoutRouteImport } from './routes/$countryCode/checkout'
 import { Route as CountryCodeCategoriesRouteImport } from './routes/$countryCode/categories'
@@ -33,9 +34,12 @@ import { Route as CountryCodeCategoriesIndexRouteImport } from './routes/$countr
 import { Route as CountryCodeAccountIndexRouteImport } from './routes/$countryCode/account/index'
 import { Route as CountryCodeProductsHandleRouteImport } from './routes/$countryCode/products/$handle'
 import { Route as CountryCodeCategoriesHandleRouteImport } from './routes/$countryCode/categories/$handle'
+import { Route as CountryCodeAccountResetPasswordRouteImport } from './routes/$countryCode/account/reset-password'
 import { Route as CountryCodeAccountRegisterRouteImport } from './routes/$countryCode/account/register'
 import { Route as CountryCodeAccountOrdersRouteImport } from './routes/$countryCode/account/orders'
 import { Route as CountryCodeAccountLoginRouteImport } from './routes/$countryCode/account/login'
+import { Route as CountryCodeAccountForgotPasswordRouteImport } from './routes/$countryCode/account/forgot-password'
+import { Route as CountryCodeAccountAddressesRouteImport } from './routes/$countryCode/account/addresses'
 import { Route as CountryCodeAccountAcceptInviteRouteImport } from './routes/$countryCode/account/accept-invite'
 import { Route as CountryCodeOrderOrderIdPaymentRouteImport } from './routes/$countryCode/order/$orderId/payment'
 import { Route as CountryCodeOrderOrderIdConfirmedRouteImport } from './routes/$countryCode/order/$orderId/confirmed'
@@ -120,6 +124,11 @@ const CountryCodeQuotesRoute = CountryCodeQuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => CountryCodeRoute,
 } as any)
+const CountryCodeFavoritesRoute = CountryCodeFavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => CountryCodeRoute,
+} as any)
 const CountryCodeEmployeesRoute = CountryCodeEmployeesRouteImport.update({
   id: '/employees',
   path: '/employees',
@@ -163,6 +172,12 @@ const CountryCodeCategoriesHandleRoute =
     path: '/$handle',
     getParentRoute: () => CountryCodeCategoriesRoute,
   } as any)
+const CountryCodeAccountResetPasswordRoute =
+  CountryCodeAccountResetPasswordRouteImport.update({
+    id: '/account/reset-password',
+    path: '/account/reset-password',
+    getParentRoute: () => CountryCodeRoute,
+  } as any)
 const CountryCodeAccountRegisterRoute =
   CountryCodeAccountRegisterRouteImport.update({
     id: '/account/register',
@@ -180,6 +195,18 @@ const CountryCodeAccountLoginRoute = CountryCodeAccountLoginRouteImport.update({
   path: '/account/login',
   getParentRoute: () => CountryCodeRoute,
 } as any)
+const CountryCodeAccountForgotPasswordRoute =
+  CountryCodeAccountForgotPasswordRouteImport.update({
+    id: '/account/forgot-password',
+    path: '/account/forgot-password',
+    getParentRoute: () => CountryCodeRoute,
+  } as any)
+const CountryCodeAccountAddressesRoute =
+  CountryCodeAccountAddressesRouteImport.update({
+    id: '/account/addresses',
+    path: '/account/addresses',
+    getParentRoute: () => CountryCodeRoute,
+  } as any)
 const CountryCodeAccountAcceptInviteRoute =
   CountryCodeAccountAcceptInviteRouteImport.update({
     id: '/account/accept-invite',
@@ -217,13 +244,17 @@ export interface FileRoutesByFullPath {
   '/$countryCode/categories': typeof CountryCodeCategoriesRouteWithChildren
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
+  '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
+  '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
+  '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
   '/$countryCode/account/orders': typeof CountryCodeAccountOrdersRoute
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
+  '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account/': typeof CountryCodeAccountIndexRoute
@@ -247,13 +278,17 @@ export interface FileRoutesByTo {
   '/$countryCode/cart': typeof CountryCodeCartRoute
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
+  '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/$countryCode': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
+  '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
+  '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
   '/$countryCode/account/orders': typeof CountryCodeAccountOrdersRoute
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
+  '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account': typeof CountryCodeAccountIndexRoute
@@ -280,13 +315,17 @@ export interface FileRoutesById {
   '/$countryCode/categories': typeof CountryCodeCategoriesRouteWithChildren
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
+  '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
+  '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
+  '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
   '/$countryCode/account/login': typeof CountryCodeAccountLoginRoute
   '/$countryCode/account/orders': typeof CountryCodeAccountOrdersRoute
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
+  '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account/': typeof CountryCodeAccountIndexRoute
@@ -314,13 +353,17 @@ export interface FileRouteTypes {
     | '/$countryCode/categories'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
+    | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/$countryCode/'
     | '/$countryCode/account/accept-invite'
+    | '/$countryCode/account/addresses'
+    | '/$countryCode/account/forgot-password'
     | '/$countryCode/account/login'
     | '/$countryCode/account/orders'
     | '/$countryCode/account/register'
+    | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account/'
@@ -344,13 +387,17 @@ export interface FileRouteTypes {
     | '/$countryCode/cart'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
+    | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/$countryCode'
     | '/$countryCode/account/accept-invite'
+    | '/$countryCode/account/addresses'
+    | '/$countryCode/account/forgot-password'
     | '/$countryCode/account/login'
     | '/$countryCode/account/orders'
     | '/$countryCode/account/register'
+    | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account'
@@ -376,13 +423,17 @@ export interface FileRouteTypes {
     | '/$countryCode/categories'
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
+    | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/$countryCode/'
     | '/$countryCode/account/accept-invite'
+    | '/$countryCode/account/addresses'
+    | '/$countryCode/account/forgot-password'
     | '/$countryCode/account/login'
     | '/$countryCode/account/orders'
     | '/$countryCode/account/register'
+    | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account/'
@@ -521,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryCodeQuotesRouteImport
       parentRoute: typeof CountryCodeRoute
     }
+    '/$countryCode/favorites': {
+      id: '/$countryCode/favorites'
+      path: '/favorites'
+      fullPath: '/$countryCode/favorites'
+      preLoaderRoute: typeof CountryCodeFavoritesRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
     '/$countryCode/employees': {
       id: '/$countryCode/employees'
       path: '/employees'
@@ -577,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryCodeCategoriesHandleRouteImport
       parentRoute: typeof CountryCodeCategoriesRoute
     }
+    '/$countryCode/account/reset-password': {
+      id: '/$countryCode/account/reset-password'
+      path: '/account/reset-password'
+      fullPath: '/$countryCode/account/reset-password'
+      preLoaderRoute: typeof CountryCodeAccountResetPasswordRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
     '/$countryCode/account/register': {
       id: '/$countryCode/account/register'
       path: '/account/register'
@@ -596,6 +661,20 @@ declare module '@tanstack/react-router' {
       path: '/account/login'
       fullPath: '/$countryCode/account/login'
       preLoaderRoute: typeof CountryCodeAccountLoginRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
+    '/$countryCode/account/forgot-password': {
+      id: '/$countryCode/account/forgot-password'
+      path: '/account/forgot-password'
+      fullPath: '/$countryCode/account/forgot-password'
+      preLoaderRoute: typeof CountryCodeAccountForgotPasswordRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
+    '/$countryCode/account/addresses': {
+      id: '/$countryCode/account/addresses'
+      path: '/account/addresses'
+      fullPath: '/$countryCode/account/addresses'
+      preLoaderRoute: typeof CountryCodeAccountAddressesRouteImport
       parentRoute: typeof CountryCodeRoute
     }
     '/$countryCode/account/accept-invite': {
@@ -642,13 +721,17 @@ interface CountryCodeRouteChildren {
   CountryCodeCategoriesRoute: typeof CountryCodeCategoriesRouteWithChildren
   CountryCodeCheckoutRoute: typeof CountryCodeCheckoutRoute
   CountryCodeEmployeesRoute: typeof CountryCodeEmployeesRoute
+  CountryCodeFavoritesRoute: typeof CountryCodeFavoritesRoute
   CountryCodeQuotesRoute: typeof CountryCodeQuotesRoute
   CountryCodeStoreRoute: typeof CountryCodeStoreRoute
   CountryCodeIndexRoute: typeof CountryCodeIndexRoute
   CountryCodeAccountAcceptInviteRoute: typeof CountryCodeAccountAcceptInviteRoute
+  CountryCodeAccountAddressesRoute: typeof CountryCodeAccountAddressesRoute
+  CountryCodeAccountForgotPasswordRoute: typeof CountryCodeAccountForgotPasswordRoute
   CountryCodeAccountLoginRoute: typeof CountryCodeAccountLoginRoute
   CountryCodeAccountOrdersRoute: typeof CountryCodeAccountOrdersRoute
   CountryCodeAccountRegisterRoute: typeof CountryCodeAccountRegisterRoute
+  CountryCodeAccountResetPasswordRoute: typeof CountryCodeAccountResetPasswordRoute
   CountryCodeProductsHandleRoute: typeof CountryCodeProductsHandleRoute
   CountryCodeAccountIndexRoute: typeof CountryCodeAccountIndexRoute
   CountryCodeOrderOrderIdConfirmedRoute: typeof CountryCodeOrderOrderIdConfirmedRoute
@@ -660,13 +743,17 @@ const CountryCodeRouteChildren: CountryCodeRouteChildren = {
   CountryCodeCategoriesRoute: CountryCodeCategoriesRouteWithChildren,
   CountryCodeCheckoutRoute: CountryCodeCheckoutRoute,
   CountryCodeEmployeesRoute: CountryCodeEmployeesRoute,
+  CountryCodeFavoritesRoute: CountryCodeFavoritesRoute,
   CountryCodeQuotesRoute: CountryCodeQuotesRoute,
   CountryCodeStoreRoute: CountryCodeStoreRoute,
   CountryCodeIndexRoute: CountryCodeIndexRoute,
   CountryCodeAccountAcceptInviteRoute: CountryCodeAccountAcceptInviteRoute,
+  CountryCodeAccountAddressesRoute: CountryCodeAccountAddressesRoute,
+  CountryCodeAccountForgotPasswordRoute: CountryCodeAccountForgotPasswordRoute,
   CountryCodeAccountLoginRoute: CountryCodeAccountLoginRoute,
   CountryCodeAccountOrdersRoute: CountryCodeAccountOrdersRoute,
   CountryCodeAccountRegisterRoute: CountryCodeAccountRegisterRoute,
+  CountryCodeAccountResetPasswordRoute: CountryCodeAccountResetPasswordRoute,
   CountryCodeProductsHandleRoute: CountryCodeProductsHandleRoute,
   CountryCodeAccountIndexRoute: CountryCodeAccountIndexRoute,
   CountryCodeOrderOrderIdConfirmedRoute: CountryCodeOrderOrderIdConfirmedRoute,

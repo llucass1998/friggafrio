@@ -1,13 +1,12 @@
-import { Link, useLoaderData, useNavigate, useSearch } from "@tanstack/react-router"
+import { Link, useLoaderData, useNavigate, useRouterState, useSearch } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
 import { PublicProductCard } from "@/components/public-product-card"
 import { OptionsPicker } from "@/components/options-picker"
-import { MagnifyingGlass, Funnel, Spinner, XMark } from "@medusajs/icons"
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { MagnifyingGlass, Funnel, XMark } from "@medusajs/icons"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useCategories } from "@/lib/hooks/use-categories"
-import { useProducts } from "@/lib/hooks/use-products"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
-import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
+import { clampPage, paginationItems, PRODUCTS_PER_PAGE, totalPagesFor } from "@/lib/utils/pagination"
 
 interface StorePageData {
   products: HttpTypes.StoreProduct[]
@@ -23,6 +22,8 @@ type StoreSearch = {
   category?: string
   page?: number
   [OPTION_VALUE_QUERY_KEY]?: string | string[]
+  q?: string
+  sort?: "-id" | "id" | "title" | "-title"
 }
 
 export function StorePage({
@@ -31,9 +32,16 @@ export function StorePage({
   hideOptionsPicker?: boolean
 } = {}) {
   const loaderData = useLoaderData({ strict: false }) as StorePageData | undefined
-  const { region, countryCode = "br", products: loaderProducts = [], page: loaderPage = 1 } = loaderData || {}
+  const {
+    countryCode = "br",
+    products: loaderProducts = [],
+    count = 0,
+    page: loaderPage = 1,
+    pageSize = PRODUCTS_PER_PAGE,
+  } = loaderData || {}
   const searchParams = useSearch({ strict: false }) as StoreSearch | undefined
   const navigate = useNavigate()
+  const isNavigating = useRouterState({ select: (state) => state.status === "pending" })
 
   const optionValueIds = useMemo<string[]>(() => {
     const raw = searchParams?.[OPTION_VALUE_QUERY_KEY]
@@ -78,16 +86,22 @@ export function StorePage({
     [navigate, optionValueIds]
   )
 
-  const [searchInput, setSearchInput] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [searchInput, setSearchInput] = useState(searchParams?.q ?? "")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams?.category ?? null)
-  const [sortOrder, setSortOrder] = useState("-id")
+  const sortOrder = searchParams?.sort ?? "-id"
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const currentPage = Math.max(1, Number((searchParams as StoreSearch & { page?: number })?.page ?? loaderPage))
+  const currentPage = clampPage(searchParams?.page ?? loaderPage, count, pageSize)
+  const totalPages = totalPagesFor(count, pageSize)
+  const catalogRef = useRef<HTMLDivElement>(null)
+  const previousPageRef = useRef(currentPage)
 
   useEffect(() => {
     setSelectedCategory(searchParams?.category ?? null)
   }, [searchParams?.category])
+
+  useEffect(() => {
+    setSearchInput(searchParams?.q ?? "")
+  }, [searchParams?.q])
 
   const updateCategory = useCallback(
     (nextCategory: string | null) => {
@@ -107,13 +121,25 @@ export function StorePage({
     [navigate],
   )
 
-  // Debounce search input for server-side queries
+  // Debounce search input into the URL so filtering remains server-side.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput)
+      const nextQuery = searchInput.trim()
+      if (nextQuery === (searchParams?.q ?? "")) return
+      navigate({
+        to: ".",
+        search: (prev: StoreSearch | undefined) => {
+          const next: StoreSearch = { ...(prev ?? {}) }
+          if (nextQuery) next.q = nextQuery
+          else delete next.q
+          delete next.page
+          return next
+        },
+        replace: false,
+      })
     }, 400)
     return () => clearTimeout(timer)
-  }, [searchInput])
+  }, [navigate, searchInput, searchParams?.q])
 
   // Fetch categories dynamically
   const { data: categories = [] } = useCategories({
@@ -122,64 +148,37 @@ export function StorePage({
     },
   })
 
-  const selectedCategoryId = selectedCategory
-    ? categories.find((category) => category.id === selectedCategory || category.handle === selectedCategory)?.id
-      ?? (selectedCategory.startsWith("pcat_") ? selectedCategory : "__missing_category__")
-    : undefined
-
-  // Use infinite query for everyone
-  const {
-    data: infiniteData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: isLoadingProducts,
-  } = useProducts({
-    query_params: {
-      limit: 24,
-      fields: PUBLIC_PRODUCT_CARD_FIELDS,
-      order: sortOrder,
-      ...(selectedCategoryId && { category_id: [selectedCategoryId] }),
-      ...(debouncedSearch && { q: debouncedSearch }),
-      ...(optionValueIds.length > 0 && { option_value_id: optionValueIds }),
-    },
-    region_id: region?.id,
-    initial_page: currentPage,
-  })
-
-  // Keep the SSR snapshot visible until the client query has its first page.
-  // TanStack Query creates an empty pages array during hydration, which must
-  // not briefly replace the server-rendered catalog with an empty state.
-  const fetchedProducts = infiniteData?.pages.flatMap((page) => page.products) ?? []
-  const allProducts = fetchedProducts.length > 0 || loaderProducts.length === 0
-    ? fetchedProducts
-    : loaderProducts
-
-  // Infinite scroll observer
-  const loadMoreRef = useRef<HTMLDivElement>(null)
-
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage()
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage]
-  )
-
   useEffect(() => {
-    const element = loadMoreRef.current
-    if (!element) return
+    if (previousPageRef.current === currentPage) return
+    previousPageRef.current = currentPage
+    if (!catalogRef.current || typeof window === "undefined") return
+    const top = catalogRef.current.getBoundingClientRect().top + window.scrollY - 96
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+  }, [currentPage])
 
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-      rootMargin: "100px",
+  const allProducts = loaderProducts
+
+  const updateSort = (nextSort: StoreSearch["sort"]) => {
+    navigate({
+      to: ".",
+      search: (prev: StoreSearch | undefined) => ({
+        ...(prev ?? {}),
+        sort: nextSort,
+        page: undefined,
+      }),
+      replace: false,
     })
+  }
 
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [handleObserver])
+  const goToPage = useCallback((nextPage: number) => {
+    const target = Math.min(Math.max(1, nextPage), totalPages)
+    if (target === currentPage) return
+    navigate({
+      to: ".",
+      search: (prev: StoreSearch | undefined) => ({ ...(prev ?? {}), page: target }),
+      replace: false,
+    })
+  }, [currentPage, navigate, totalPages])
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -203,7 +202,7 @@ export function StorePage({
             </p>
           </div>
           <div className="text-sm font-medium text-[var(--color-text-muted)]">
-            {allProducts.length} resultados encontrados
+            {count} resultados encontrados
           </div>
         </div>
       </div>
@@ -304,7 +303,7 @@ export function StorePage({
         </aside>
 
         {/* Listagem Principal */}
-        <div className="flex-1 min-w-0 flex flex-col gap-6">
+        <div ref={catalogRef} className="flex-1 min-w-0 flex flex-col gap-6">
 
           {/* Search & Sort Bar */}
           <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm">
@@ -332,7 +331,7 @@ export function StorePage({
               <div className="flex-1 sm:flex-initial min-w-[160px]">
                 <select
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
+                  onChange={(e) => updateSort(e.target.value as StoreSearch["sort"])}
                   className="w-full px-4 py-2.5 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-button)] text-sm font-medium text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent cursor-pointer"
                 >
                   <option value="-id">Mais recentes</option>
@@ -346,7 +345,7 @@ export function StorePage({
           </div>
 
           {/* Product Grid */}
-          {isLoadingProducts && allProducts.length === 0 ? (
+          {isNavigating ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden animate-pulse">
@@ -371,19 +370,22 @@ export function StorePage({
                 ))}
               </div>
 
-              {/* Infinite scroll trigger */}
-              <div ref={loadMoreRef} className="mt-8 flex justify-center">
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2 text-[var(--color-primary)]">
-                    <Spinner className="w-5 h-5 animate-spin" />
-                    <span className="text-sm font-medium">Carregando mais produtos...</span>
+              {totalPages > 1 && (
+                <nav aria-label="Paginação do catálogo" className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center" data-testid="catalog-pagination">
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1 || isNavigating} aria-label="Página anterior" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">‹</button>
+                    <div className="hidden items-center gap-1 sm:flex">
+                      {paginationItems(currentPage, totalPages).map((item, index) => item === "ellipsis" ? (
+                        <span key={`ellipsis-${index}`} className="px-2 text-sm text-[var(--color-text-muted)]" aria-hidden="true">…</span>
+                      ) : (
+                        <button key={item} type="button" onClick={() => goToPage(item)} aria-current={item === currentPage ? "page" : undefined} aria-label={`Página ${item}`} disabled={isNavigating} className={`min-w-9 rounded-[var(--radius-button-sm)] border px-3 py-2 text-sm font-semibold transition-colors ${item === currentPage ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white" : "border-[var(--color-border)] bg-white text-[var(--color-navy)] hover:border-[var(--color-primary)]"}`}>{item}</button>
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium text-[var(--color-text-muted)] sm:hidden">Página {currentPage} de {totalPages}</span>
+                    <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages || isNavigating} aria-label="Próxima página" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">›</button>
                   </div>
-                ) : hasNextPage ? (
-                  <p className="text-sm text-[var(--color-text-muted)]">Role para carregar mais</p>
-                ) : (
-                  <p className="text-sm text-[var(--color-text-muted)]">Você chegou ao fim da lista.</p>
-                )}
-              </div>
+                </nav>
+              )}
             </>
           ) : (
             <div className="text-center py-20 bg-white rounded-[var(--radius-card)] border border-[var(--color-border)]">
@@ -401,7 +403,6 @@ export function StorePage({
                 <button
                   onClick={() => {
                     setSearchInput("")
-                    setDebouncedSearch("")
                     updateCategory(null)
                     updateOptionValueIds([])
                   }}

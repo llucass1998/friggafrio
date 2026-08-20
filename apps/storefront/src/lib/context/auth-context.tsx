@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback, ReactNode } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { sdk } from "@/lib/medusa"
 import { HttpTypes } from "@medusajs/types"
 import { getMe, Employee } from "@/lib/data/me"
 import { AuthContext } from "@/lib/context/auth-context-value"
+import { resetFavoritesForLogout } from "@/lib/hooks/use-favorites"
+import { clearGuestCep } from "@/lib/cep"
 
 // This is only a local hint. The backend remains the authority for the session.
 const AUTH_STATE_KEY = "auth_state"
@@ -29,18 +32,20 @@ const writeAuthHint = (authenticated: boolean): void => {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   // SSR-safe state initialization without relying on window/sessionStorage during render
   // This ensures the server and initial client render always match
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
   const [employee, setEmployee] = useState<Employee | null>(null)
+  const [isAdminSession, setIsAdminSession] = useState(false)
 
-  const fetchCustomer = useCallback(async () => {
+  const fetchCustomer = useCallback(async (): Promise<boolean> => {
     try {
       // Fetch basic customer data
       const { customer } = await sdk.store.customer.retrieve({
-        fields: "id,email,first_name,last_name,phone,has_account"
+        fields: "id,email,first_name,last_name,phone,has_account,default_shipping_address_id,addresses.*"
       })
 
       // Fetch employee data before updating any state so the layout
@@ -61,14 +66,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // the complete picture (customer + employee + authenticated).
       setCustomer(customer)
       setEmployee(employeeData)
+      setIsAdminSession(false)
       setIsAuthenticated(true)
       writeAuthHint(true)
+      return true
     } catch {
       setCustomer(null)
       setEmployee(null)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const fetchAdminSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
+        "/store/auth/session",
+        { method: "GET" },
+      )
+      if (session.redirect_to !== "/app") {
+        return false
+      }
+      setCustomer(null)
+      setEmployee(null)
+      setIsAdminSession(true)
+      setIsAuthenticated(true)
+      writeAuthHint(true)
+      return true
+    } catch {
+      setIsAdminSession(false)
       setIsAuthenticated(false)
-      // A stale/expired marker must not cause a 401 loop on every navigation.
       writeAuthHint(false)
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -82,32 +112,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    void fetchCustomer()
-  }, [fetchCustomer])
+    void (async () => {
+      if (!(await fetchCustomer())) {
+        await fetchAdminSession()
+      }
+    })()
+  }, [fetchAdminSession, fetchCustomer])
 
-  const login = async (email: string, password: string) => {
-    const response = await sdk.auth.login("customer", "emailpass", { email, password })
-    if (typeof response !== "string") {
-      throw new Error("O login requer uma etapa adicional de autenticação.")
-    }
-    await fetchCustomer()
-  }
-
-  const loginWithGoogle = async (credential: string) => {
-    // Post token to Medusa backend for validation and session creation
-    const response = await fetch(`${import.meta.env.VITE_MEDUSA_BACKEND_URL}/auth/customer/google`, {
+  const login = async (email: string, password: string): Promise<"customer" | "admin"> => {
+    await sdk.client.fetch("/auth/unified/emailpass", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ credential }),
+      body: { email, password },
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || "Erro ao fazer login com Google")
+    if (await fetchAdminSession()) {
+      return "admin"
     }
 
-    await fetchCustomer()
+    if (!(await fetchCustomer())) {
+      throw new Error("Não foi possível validar a sessão de cliente.")
+    }
+    return "customer"
   }
 
   const logout = async () => {
@@ -117,10 +142,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       await sdk.auth.logout()
     } finally {
+      resetFavoritesForLogout()
+      clearGuestCep()
+      // Private account responses must never be reused by the next session.
+      queryClient.clear()
       // Update cached state so navigation doesn't show loading
       writeAuthHint(false)
       setCustomer(null)
       setEmployee(null)
+      setIsAdminSession(false)
       setIsAuthenticated(false)
       setIsLoading(false)
     }
@@ -129,7 +159,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refetch = async () => {
     // Don't set isLoading to true on refetch - it causes full-page spinner
     // Components should handle their own loading states for refetch scenarios
-    await fetchCustomer()
+    if (!(await fetchCustomer())) {
+      await fetchAdminSession()
+    }
   }
 
   return (
@@ -139,9 +171,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         customer,
         employee,
-        isAdmin: employee?.is_admin ?? false,
+        isAdmin: isAdminSession || (employee?.is_admin ?? false),
         login,
-        loginWithGoogle,
         logout,
         refetch,
       }}

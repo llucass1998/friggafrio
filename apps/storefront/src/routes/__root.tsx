@@ -4,7 +4,6 @@ import { listRegions } from "@/lib/data/regions"
 import { CartProvider } from "@/lib/context/cart"
 import { AuthProvider } from "@/lib/context/auth-context"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { GoogleOAuthProvider } from "@react-oauth/google"
 import {
   HeadContent,
   Scripts,
@@ -57,25 +56,21 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext()
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "test-client-id"
-
   return (
     <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
       <body>
-        <GoogleOAuthProvider clientId={googleClientId}>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <CartProvider>
-                <ErrorBoundary>
-                  <Layout />
-                </ErrorBoundary>
-              </CartProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </GoogleOAuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <CartProvider>
+              <ErrorBoundary>
+                <Layout />
+              </ErrorBoundary>
+            </CartProvider>
+          </AuthProvider>
+        </QueryClientProvider>
         <Toaster
           position="top-right"
           offset={{ top: "1rem", right: "1rem" }}

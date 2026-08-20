@@ -1,203 +1,144 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Hero Carousel Display and Animations", () => {
-  const viewports = [
-    { width: 1440, height: 900 },
-    { width: 1665, height: 1080 },
-    { width: 1920, height: 1080 },
-  ]
+// Three full autoplay cycles need more than Playwright's default 30 seconds.
+test.setTimeout(60_000)
 
-  for (const vp of viewports) {
-    test(`hero carousel uses the approved desktop width at ${vp.width}px`, async ({ page }) => {
-      await page.setViewportSize(vp)
-      await page.goto("/br")
+const viewports = [
+  { width: 390, height: 844, minHeight: 240, maxHeight: 300 },
+  { width: 768, height: 1024, minHeight: 320, maxHeight: 380 },
+  { width: 1024, height: 900, minHeight: 340, maxHeight: 420 },
+  { width: 1440, height: 900, minHeight: 400, maxHeight: 460 },
+  { width: 1920, height: 1080, minHeight: 400, maxHeight: 460 },
+]
 
-      const measurement = await page
-        .getByTestId("home-hero-carousel")
-        .evaluate((element) => {
-          const rect = element.getBoundingClientRect()
-          return {
-            viewport: window.innerWidth,
-            width: rect.width,
-            percentage: rect.width / window.innerWidth,
-            left: rect.left,
-            right: rect.right,
-          }
-        })
+test.describe("Hero promocional", () => {
+  for (const viewport of viewports) {
+    test(`preserva a arte e usa altura controlada em ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport)
+      await page.goto("/br", { waitUntil: "networkidle" })
 
-      console.log(`Viewport: ${vp.width}px -> Carousel Width: ${measurement.width}px (${(measurement.percentage * 100).toFixed(2)}%)`)
+      const hero = page.getByTestId("home-hero-carousel")
+      const measurement = await hero.evaluate((element) => {
+        const stage = element.querySelector<HTMLElement>(".ff-hero-slide-stage")
+        const images = [...element.querySelectorAll<HTMLImageElement>(".carousel-slide-img")]
+        const slideControls = [...element.querySelectorAll<HTMLButtonElement>('button[aria-label*="slide"]')]
+        const previous = slideControls[0]?.getBoundingClientRect()
+        const next = slideControls[slideControls.length - 1]?.getBoundingClientRect()
+        const stageRect = stage?.getBoundingClientRect()
+        const indicator = element.querySelector<HTMLElement>(".carousel-indicator-bar")?.parentElement?.parentElement?.getBoundingClientRect()
+        const documentOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth
+        return {
+          heroWidth: element.getBoundingClientRect().width,
+          heroHeight: stageRect?.height ?? 0,
+          imageCount: images.length,
+          loadedImages: images.filter((image) => image.complete && image.naturalWidth > 0).length,
+          objectFit: images[0] ? getComputedStyle(images[0]).objectFit : "",
+          overlayTitles: element.querySelectorAll(".carousel-title, .carousel-desc, .carousel-cta").length,
+          dots: element.querySelectorAll(".carousel-indicator-bar").length,
+          arrowsInsideStage: Boolean(
+            stageRect &&
+              previous &&
+              next &&
+              previous.left >= stageRect.left &&
+              next.right <= stageRect.right &&
+              previous.top >= stageRect.top &&
+              next.bottom <= stageRect.bottom,
+          ),
+          arrowsClearIndicators: Boolean(
+            previous &&
+              next &&
+              indicator &&
+              (previous.bottom <= indicator.top || previous.top >= indicator.bottom) &&
+              (next.bottom <= indicator.top || next.top >= indicator.bottom),
+          ),
+          documentOverflow,
+        }
+      })
 
-      expect(measurement.percentage).toBeGreaterThanOrEqual(0.98)
-      expect(measurement.percentage).toBeLessThanOrEqual(1.0)
-
-      if (vp.width === 1665) {
-        expect(measurement.width).toBeGreaterThanOrEqual(1600)
-      }
+      expect(measurement.heroWidth / viewport.width).toBeGreaterThanOrEqual(0.98)
+      expect(measurement.heroHeight).toBeGreaterThanOrEqual(viewport.minHeight)
+      expect(measurement.heroHeight).toBeLessThanOrEqual(viewport.maxHeight)
+      expect(measurement.imageCount).toBe(3)
+      expect(measurement.loadedImages).toBe(3)
+      expect(measurement.objectFit).toBe("contain")
+      expect(measurement.overlayTitles).toBe(0)
+      expect(measurement.dots).toBe(3)
+      expect(measurement.arrowsInsideStage).toBe(true)
+      expect(measurement.arrowsClearIndicators).toBe(true)
+      expect(measurement.documentOverflow).toBe(0)
     })
   }
 
-  test("hero carousel animations function correctly", async ({ page }) => {
-    // Definimos a viewport normal desktop
+  test("setas e dots navegam pelos três slides", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto("/br")
-    
-    // Pegar todos os slides e identificar o ativo
-    const slides = page.locator('.carousel-slide')
-    await slides.first().waitFor({ state: 'attached' })
-    
-    // Obter index do ativo atual (esperado ser o 0 no load inicial)
-    let activeIndex = await page.evaluate(() => {
-      const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
-      return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
-    })
-    
-    // Obter elemento e avaliar transform e opacity
-    const activeSlide = slides.nth(activeIndex)
-    
-    const styles = await activeSlide.evaluate((el) => {
-      const img = el.querySelector('.carousel-slide-img')
-      const title = el.querySelector('.carousel-title')
-      
-      return {
-        imgTransform: img ? window.getComputedStyle(img).transform : null,
-        titleOpacity: title ? window.getComputedStyle(title).opacity : null,
-        titleTransition: title ? window.getComputedStyle(title).transitionDuration : null,
-      }
-    })
-    
-    expect(styles.titleTransition).not.toBe("0s")
-    
-    // Clicar para ir para o próximo slide
-    const nextBtn = page.getByRole('button', { name: /Ver próximo slide/i })
-    await nextBtn.click()
-    
-    // Esperar um tempinho para a transição inicializar
-    await page.waitForTimeout(1500)
-    
-    // Identificar novo ativo
-    const newActiveIndex = await page.evaluate(() => {
-      const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
-      return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
-    })
-    
-    expect(newActiveIndex).not.toBe(activeIndex)
-    
-    const newActiveSlide = slides.nth(newActiveIndex)
-    
-    // Comprovar estilos aplicados durante a animação
-    const newStyles = await newActiveSlide.evaluate((el) => {
-      const title = el.querySelector('.carousel-title')
-      const progress = el.parentElement?.parentElement?.querySelector('.carousel-indicator-active .carousel-indicator-progress')
-      
-      return {
-        titleOpacity: title ? window.getComputedStyle(title).opacity : null,
-        progressAnim: progress ? window.getComputedStyle(progress).animationName : null,
-      }
-    })
-    
-    expect(newStyles.progressAnim).not.toBe("none")
+    await page.goto("/br", { waitUntil: "networkidle" })
+
+    const slides = page.locator(".carousel-slide")
+    const dots = page.locator(".carousel-indicator-bar")
+    await expect(slides).toHaveCount(3)
+    await expect(dots).toHaveCount(3)
+
+    const next = page.locator('button[aria-label*="slide"]').last()
+    await next.click()
+    await expect(slides.nth(1)).toHaveAttribute("data-active", "true")
+
+    await dots.nth(2).click()
+    await expect(slides.nth(2)).toHaveAttribute("data-active", "true")
+
+    const previous = page.locator('button[aria-label*="slide"]').first()
+    await previous.click()
+    await expect(slides.nth(1)).toHaveAttribute("data-active", "true")
   })
-})
 
-test("hero carousel dots click and select correctly", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto("/br")
-  
-  const slides = page.locator('.carousel-slide')
-  await slides.first().waitFor({ state: 'attached' })
-  
-  // Verify first slide is active
-  let activeIndex = await page.evaluate(() => {
-    const allSlides = Array.from(document.querySelectorAll('.carousel-slide'))
-    return allSlides.findIndex(el => el.getAttribute('data-active') === 'true')
+  test("mantem semantica acessivel e transicao ao trocar slide", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto("/br", { waitUntil: "networkidle" })
+
+    const carousel = page.getByTestId("home-hero-carousel")
+    await expect(carousel).toHaveAttribute("aria-roledescription", "carousel")
+    await expect(carousel).toHaveAttribute("aria-label", /Destaques/)
+
+    const controls = page.locator('button[aria-label*="slide"]')
+    await expect(controls).toHaveCount(2)
+    await expect(controls.first()).toHaveAttribute("type", "button")
+    await expect(controls.last()).toHaveAttribute("type", "button")
+
+    const initialIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
+      [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
+    )
+    await controls.last().click()
+    await page.waitForTimeout(700)
+
+    const nextIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
+      [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
+    )
+    expect(nextIndex).not.toBe(initialIndex)
+
+    const transition = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => ({
+      slideTransition: getComputedStyle(slide).transitionDuration,
+      progressAnimation: getComputedStyle(slide.closest("[aria-roledescription=carousel]")?.querySelector(".carousel-indicator-active .carousel-indicator-progress") as HTMLElement).animationName,
+    }))
+    expect(transition.slideTransition).not.toBe("0s")
+    expect(transition.progressAnimation).not.toBe("none")
   })
-  expect(activeIndex).toBe(0)
 
-  // Click on the 3rd dot (index 2)
-  await page.waitForTimeout(2000);
-  const dot3 = page.locator('button[aria-label="Ir para o destaque 3 de 5"]')
-  await dot3.click({ force: true })
+  test("autoplay percorre o loop sem slide vazio", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto("/br", { waitUntil: "networkidle" })
 
-  // Wait for the slide to become active (Playwright will auto-retry)
-  await expect(slides.nth(2)).toHaveAttribute('data-active', 'true', { timeout: 5000 })
-})
+    const activeIndexes: number[] = []
+    for (let index = 0; index < 7; index += 1) {
+      activeIndexes.push(await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
+        const slides = [...document.querySelectorAll(".carousel-slide")]
+        return slides.indexOf(slide)
+      }))
+      await page.waitForTimeout(5000)
+    }
 
-function rectanglesIntersect(
-  first: { x: number; y: number; width: number; height: number },
-  second: { x: number; y: number; width: number; height: number }
-) {
-  return !(
-    first.x + first.width <= second.x ||
-    second.x + second.width <= first.x ||
-    first.y + first.height <= second.y ||
-    second.y + second.height <= first.y
-  )
-}
-
-test.describe("Hero Carousel UI Overlap Avoidance", () => {
-  const overlapViewports = [
-    { width: 390, height: 844 },
-    { width: 768, height: 1024 },
-    { width: 1440, height: 900 },
-    { width: 1920, height: 1080 },
-  ]
-  
-  for (const vp of overlapViewports) {
-    test(`hero controls should not overlap content text boxes at ${vp.width}x${vp.height}`, async ({ page }) => {
-      await page.setViewportSize(vp)
-      await page.goto("/br")
-      
-      // Wait for components to attach
-      await page.locator('.carousel-slide[data-active="true"]').waitFor({ state: 'attached' })
-      
-      const prevBtn = page.getByRole('button', { name: /Ver slide anterior/i })
-      const nextBtn = page.getByRole('button', { name: /Ver próximo slide/i })
-      
-      const activeTitle = page.locator('.carousel-slide[data-active="true"] .carousel-title')
-      const activeDesc = page.locator('.carousel-slide[data-active="true"] .carousel-desc')
-      const activeCta = page.locator('.carousel-slide[data-active="true"] a').filter({ hasText: 'Ver categoria' })
-      
-      const prevRect = await prevBtn.boundingBox()
-      const nextRect = await nextBtn.boundingBox()
-      
-      const titleRect = await activeTitle.boundingBox()
-      const descRect = await activeDesc.boundingBox()
-      const ctaRect = await activeCta.boundingBox()
-      
-      expect(prevRect).not.toBeNull()
-      expect(nextRect).not.toBeNull()
-      expect(titleRect).not.toBeNull()
-      expect(descRect).not.toBeNull()
-      expect(ctaRect).not.toBeNull()
-      
-      const results = {
-        VIEWPORT: `${vp.width}x${vp.height}`,
-        PREVIOUS_BUTTON_RECT: prevRect,
-        NEXT_BUTTON_RECT: nextRect,
-        TITLE_RECT: titleRect,
-        DESCRIPTION_RECT: descRect,
-        CTA_RECT: ctaRect,
-        INTERSECTS_TITLE_PREV: rectanglesIntersect(prevRect!, titleRect!),
-        INTERSECTS_DESCRIPTION_PREV: rectanglesIntersect(prevRect!, descRect!),
-        INTERSECTS_CTA_PREV: rectanglesIntersect(prevRect!, ctaRect!),
-        INTERSECTS_TITLE_NEXT: rectanglesIntersect(nextRect!, titleRect!),
-        INTERSECTS_DESCRIPTION_NEXT: rectanglesIntersect(nextRect!, descRect!),
-        INTERSECTS_CTA_NEXT: rectanglesIntersect(nextRect!, ctaRect!)
-      }
-      
-      console.log(JSON.stringify(results, null, 2))
-
-      // In smaller viewports, it's acceptable for controls to overlap text
-      // due to space constraints and the dark gradient overlay providing contrast
-      if (vp.width >= 1440) {
-        expect(results.INTERSECTS_TITLE_PREV).toBe(false)
-        expect(results.INTERSECTS_DESCRIPTION_PREV).toBe(false)
-        expect(results.INTERSECTS_CTA_PREV).toBe(false)
-
-        expect(results.INTERSECTS_TITLE_NEXT).toBe(false)
-        expect(results.INTERSECTS_DESCRIPTION_NEXT).toBe(false)
-        expect(results.INTERSECTS_CTA_NEXT).toBe(false)
-      }
-    })
-  }
+    expect(activeIndexes).toEqual(expect.arrayContaining([0, 1, 2]))
+    const activeImageWidth = await page
+      .locator('.carousel-slide[data-active="true"] .carousel-slide-img')
+      .evaluate((image: HTMLImageElement) => image.naturalWidth)
+    expect(activeImageWidth).toBeGreaterThan(0)
+  })
 })

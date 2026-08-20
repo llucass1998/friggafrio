@@ -10,15 +10,18 @@ interface CheckoutSummaryProps {
 const CheckoutSummary = ({ cart, prepared }: CheckoutSummaryProps) => {
   if (!prepared || prepared.cartId !== cart.id) {
     return (
-      <div className="h-fit sticky lg:top-20 rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600" role="status">
-        Os valores finais serao confirmados pelo servidor antes de liberar o pagamento.
+      <div className="h-fit rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-600 shadow-sm lg:sticky lg:top-20" role="status">
+        <h2 className="text-base font-bold text-zinc-900">Resumo do pedido</h2>
+        <p className="mt-3 leading-6">Os valores finais serao confirmados pelo servidor antes de liberar o pagamento.</p>
+        <div className="mt-4 border-t border-zinc-100 pt-4 text-xs leading-5 text-zinc-500">O frete so e definido depois que voce seleciona um endereco e uma opcao de entrega.</div>
       </div>
     )
   }
 
   return (
-    <div className="h-fit sticky lg:top-20">
-      <div className="flex flex-col gap-6">
+    <div className="h-fit rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-20">
+      <h2 className="text-base font-bold text-zinc-900">Resumo confirmado</h2>
+      <div className="mt-5 flex flex-col gap-6">
         <div className="space-y-3">
           {prepared.items.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-3 text-sm">

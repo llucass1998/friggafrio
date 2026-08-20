@@ -36,31 +36,31 @@ function getStatusConfig(status: string) {
   switch (status) {
     case "pending_merchant":
       return {
-        label: "Pending Review",
+        label: "Em análise",
         icon: Clock,
         bgClass: "bg-amber-100 text-amber-700",
       }
     case "pending_customer":
       return {
-        label: "Awaiting Your Response",
+        label: "Aguardando sua resposta",
         icon: Clock,
         bgClass: "bg-blue-100 text-blue-700",
       }
     case "accepted":
       return {
-        label: "Accepted",
+        label: "Aceitado",
         icon: CheckCircleSolid,
         bgClass: "bg-green-100 text-green-700",
       }
     case "customer_rejected":
       return {
-        label: "Declined by You",
+        label: "Recusado por você",
         icon: XCircleSolid,
         bgClass: "bg-red-100 text-red-700",
       }
     case "merchant_rejected":
       return {
-        label: "Declined by Merchant",
+        label: "Recusado pela FriggaFrio",
         icon: XCircleSolid,
         bgClass: "bg-gray-100 text-gray-700",
       }
@@ -137,7 +137,7 @@ function QuoteDetailModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Quote Details
+              Detalhes do orçamento
             </h2>
             <p className="text-sm text-gray-500">
               {draftOrder?.display_id
@@ -163,7 +163,7 @@ function QuoteDetailModal({
               {statusConfig.label}
             </span>
             <div className="text-sm text-gray-500">
-              Created: {formatDate(quote.created_at)}
+              Criado em: {formatDate(quote.created_at)}
             </div>
           </div>
 
@@ -178,21 +178,21 @@ function QuoteDetailModal({
                 <>
                   {hasSavings && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Original Total</span>
+                      <span className="text-gray-500">Total original</span>
                       <span className="text-gray-400 line-through">
                         {formatCurrency(originalTotal, currencyCode)}
                       </span>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-700">Quote Total</span>
+                    <span className="font-medium text-gray-700">Total do orçamento</span>
                     <span className="text-xl font-bold text-gray-900">
                       {formatCurrency(displayTotal, currencyCode)}
                     </span>
                   </div>
                   {hasSavings && (
                     <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="font-medium text-green-700">Your Savings</span>
+                      <span className="font-medium text-green-700">Sua economia</span>
                       <span className="font-bold text-green-600">
                         {formatCurrency(totalSavings, currencyCode)}
                       </span>
@@ -206,7 +206,7 @@ function QuoteDetailModal({
           {/* Items */}
           {displayItems.length > 0 && (
             <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Items</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Itens</h3>
               {isLoadingPreview && (canRespond || quote.status === "accepted") ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-teal-600/30 border-t-teal-600 rounded-full animate-spin" />
@@ -217,13 +217,13 @@ function QuoteDetailModal({
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Product
+                          Produto
                         </th>
                         <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Qty
+                          Qtd.
                         </th>
                         <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Unit Price
+                          Preço unitário
                         </th>
                       </tr>
                     </thead>
@@ -270,7 +270,7 @@ function QuoteDetailModal({
                                   )}
                                   {hasDiscount && (
                                     <div className="text-xs text-green-600 font-medium mt-0.5">
-                                      Save {formatCurrency(itemSavings, currencyCode)}
+                                      Economize {formatCurrency(itemSavings, currencyCode)}
                                     </div>
                                   )}
                                 </div>
@@ -312,7 +312,7 @@ function QuoteDetailModal({
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
-            Close
+            Fechar
           </button>
           {canRespond && (
             <>
@@ -321,22 +321,22 @@ function QuoteDetailModal({
                 disabled={isResponding}
                 className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Decline
+                Recusar
               </button>
               <button
                 onClick={onAccept}
                 disabled={isResponding}
-                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isResponding ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processing...
+                    Processando...
                   </>
                 ) : (
                   <>
                     <CheckCircleSolid className="w-4 h-4" />
-                    Accept Quote
+                    Aceitar orçamento
                   </>
                 )}
               </button>
@@ -345,10 +345,10 @@ function QuoteDetailModal({
           {isAccepted && onViewOrder && (
             <button
               onClick={onViewOrder}
-              className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg transition-colors flex items-center gap-2"
             >
               <ShoppingBag className="w-4 h-4" />
-              View Order
+              Ver pedido
             </button>
           )}
         </div>
@@ -379,11 +379,11 @@ export default function QuotesPage() {
   const handleAccept = (quoteId: string) => {
     acceptMutation.mutate(quoteId, {
       onSuccess: () => {
-        toast.success("Quote accepted successfully")
+        toast.success("Orçamento aceito com sucesso")
         setSelectedQuote(null)
       },
       onError: (error: Error) => {
-        toast.error(error.message || "Failed to accept quote")
+        toast.error(error.message || "Não foi possível aceitar o orçamento")
       },
     })
   }
@@ -391,11 +391,11 @@ export default function QuotesPage() {
   const handleReject = (quoteId: string) => {
     rejectMutation.mutate(quoteId, {
       onSuccess: () => {
-        toast.success("Quote declined")
+        toast.success("Orçamento recusado")
         setSelectedQuote(null)
       },
       onError: (error: Error) => {
-        toast.error(error.message || "Failed to decline quote")
+        toast.error(error.message || "Não foi possível recusar o orçamento")
       },
     })
   }
@@ -423,7 +423,7 @@ export default function QuotesPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-gray-500">Please log in to view your quotes.</p>
+          <p className="text-gray-500">Entre para consultar seus orçamentos.</p>
         </div>
       </div>
     )
@@ -434,18 +434,18 @@ export default function QuotesPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Quotes</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Orçamentos</h1>
           <p className="text-gray-600">
-            {isAdmin ? "View and manage all company quote requests." : "View and manage your price quote requests."}
+            {isAdmin ? "Visualize e gerencie as solicitações de orçamento da empresa." : "Visualize e gerencie suas solicitações de orçamento."}
           </p>
         </div>
         <Link
           to="/$countryCode/store"
           params={{ countryCode }}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-medium rounded-lg transition-colors"
         >
           <DocumentText className="w-5 h-5" />
-          Request Quote
+          Solicitar orçamento
         </Link>
       </div>
 
@@ -457,18 +457,18 @@ export default function QuotesPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Quote
+                    Orçamento
                   </th>
                   {isAdmin && (
                     <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                      Requested By
+                      Solicitado por
                     </th>
                   )}
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
                     Status
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Items
+                    Itens
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
                     Total
@@ -522,18 +522,18 @@ export default function QuotesPage() {
           <div className="p-12 text-center">
             <DocumentText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No quotes yet
+              Nenhum orçamento ainda
             </h3>
             <p className="text-gray-500 mb-6">
-              Request a quote from the product catalog to get custom pricing for
-              your equipment needs.
+              Solicite um orçamento a partir do catálogo de produtos para receber
+              valores personalizados conforme sua necessidade.
             </p>
             <Link
               to="/$countryCode/store"
               params={{ countryCode }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-medium rounded-lg transition-colors"
             >
-              Browse Products
+              Explorar produtos
             </Link>
           </div>
         ) : (
@@ -542,18 +542,18 @@ export default function QuotesPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Quote
+                    Orçamento
                   </th>
                   {isAdmin && (
                     <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                      Requested By
+                      Solicitado por
                     </th>
                   )}
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
                     Status
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Items
+                    Itens
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
                     Total
@@ -586,7 +586,7 @@ export default function QuotesPage() {
 
                   const actionItems: ActionMenuItem[] = [
                     {
-                      label: "View Details",
+                      label: "Ver detalhes",
                       icon: Eye,
                       onClick: () => setSelectedQuote(quote),
                     },
@@ -594,7 +594,7 @@ export default function QuotesPage() {
 
                   if (quote.status === "accepted" && quote.draft_order_id) {
                     actionItems.push({
-                      label: "View Order",
+                      label: "Ver pedido",
                       icon: ShoppingBag,
                       onClick: () => handleViewOrder(quote.draft_order_id),
                       variant: "primary",
@@ -655,7 +655,7 @@ export default function QuotesPage() {
                               {formatCurrency(quotedTotal, currencyCode)}
                             </div>
                             <div className="text-xs text-green-600 font-medium">
-                              Save {formatCurrency(savings, currencyCode)}
+                              Economize {formatCurrency(savings, currencyCode)}
                             </div>
                           </div>
                         ) : (

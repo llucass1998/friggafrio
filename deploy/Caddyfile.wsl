@@ -1,0 +1,16 @@
+# Set FRIGGAFRIO_DOMAIN on the Caddy host to the public DNS name, for example:
+# export FRIGGAFRIO_DOMAIN=loja.example.com
+# The WSL OpenVPN address is deliberately private and used only as upstream.
+
+{$FRIGGAFRIO_DOMAIN} {
+	encode zstd gzip
+
+	@backend path /store/* /auth/* /health /health/* /uploads/*
+	handle @backend {
+		reverse_proxy http://172.25.20.159:9000
+	}
+
+	handle {
+		reverse_proxy http://172.25.20.159:5173
+	}
+}

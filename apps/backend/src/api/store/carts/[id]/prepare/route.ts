@@ -32,6 +32,10 @@ import {
   type CheckoutPreparationMarker,
   type CheckoutValidationError,
 } from "../../../../../utils/checkout-preparation"
+import {
+  assertCheckoutCartOwnership,
+  authenticatedCheckoutCustomerId,
+} from "../../../../../utils/checkout-customer-authorization"
 
 type CheckoutItem = CartInventoryLine & CommercialLine & {
   title?: string | null
@@ -149,22 +153,18 @@ const toAddressSummary = (address?: CheckoutAddress) => address ? {
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const cartId = String(req.params.id || "")
   if (!cartId) return blockedResponse(res, cartId, [safeError("INVALID_CART", "Cart id is required.")])
+  const customerId = authenticatedCheckoutCustomerId(req)
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
-  const initialResult = await query.graph({ entity: "cart", fields: ["id", "completed_at", "customer_id"], filters: { id: cartId } })
+  const initialResult = await query.graph({
+    entity: "cart",
+    fields: ["id", "completed_at", "customer_id"],
+    filters: { id: cartId, customer_id: customerId },
+  })
   const initialCart = initialResult.data[0] as Pick<PreparationCart, "id" | "completed_at" | "customer_id"> | undefined
-  if (!initialCart) return blockedResponse(res, cartId, [safeError("CART_NOT_FOUND", "Cart not found.")])
+  if (!initialCart) throw new MedusaError(MedusaError.Types.NOT_FOUND, "Cart not found")
+  assertCheckoutCartOwnership(customerId, initialCart.customer_id)
   if (initialCart.completed_at) return blockedResponse(res, cartId, [safeError("CART_COMPLETED", "Completed carts cannot be prepared again.")])
-
-  const actorId = (req as MedusaRequest & { auth_context?: { actor_id?: string } }).auth_context?.actor_id
-  if (initialCart.customer_id && actorId !== initialCart.customer_id) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Cart does not belong to the authenticated customer")
-  }
-  // A logged-in actor cannot turn an unassigned guest cart into an arbitrary
-  // bearer reservation. Guest checkout remains available without auth.
-  if (!initialCart.customer_id && actorId) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Guest cart requires its original browser session")
-  }
 
   // Medusa's refresh workflow is the authoritative pricing/tax/promotion
   // recalculation boundary. Never trust the unit_price projection from an
@@ -175,9 +175,14 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     })
   }
 
-  const cartResult = await query.graph({ entity: "cart", fields: CART_FIELDS, filters: { id: cartId } })
+  const cartResult = await query.graph({
+    entity: "cart",
+    fields: CART_FIELDS,
+    filters: { id: cartId, customer_id: customerId },
+  })
   const cart = cartResult.data[0] as PreparationCart | undefined
-  if (!cart) return blockedResponse(res, cartId, [safeError("CART_NOT_FOUND", "Cart not found.")])
+  if (!cart) throw new MedusaError(MedusaError.Types.NOT_FOUND, "Cart not found")
+  assertCheckoutCartOwnership(customerId, cart.customer_id)
   if (cart.completed_at) return blockedResponse(res, cartId, [safeError("CART_COMPLETED", "Completed carts cannot be prepared again.")])
 
   const errors: CheckoutValidationError[] = [

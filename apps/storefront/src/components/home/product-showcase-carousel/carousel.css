@@ -22,6 +22,47 @@
   transform: scale(1.075);
 }
 
+.carousel-slide[data-promotional="true"] .carousel-slide-img {
+  transform: none !important;
+  transition: none !important;
+}
+
+.ff-hero-slide-stage {
+  height: clamp(220px, 64vw, 270px);
+}
+
+.ff-hero-slide-stage .carousel-slide-img {
+  object-fit: contain;
+}
+
+.ff-hero-stage-backdrop {
+  position: absolute;
+  inset: -24px;
+  background-position: center;
+  background-size: cover;
+  filter: blur(22px);
+  opacity: 0.42;
+  transform: scale(1.06);
+}
+
+@media (min-width: 640px) {
+.ff-hero-slide-stage {
+    height: clamp(280px, 42vw, 330px);
+  }
+}
+
+@media (min-width: 1024px) {
+.ff-hero-slide-stage {
+    height: clamp(340px, 30vw, 400px);
+  }
+}
+
+@media (min-width: 1440px) {
+.ff-hero-slide-stage {
+    height: clamp(400px, 28vw, 440px);
+}
+}
+
 .carousel-category {
   opacity: 0;
   transform: translateY(12px);

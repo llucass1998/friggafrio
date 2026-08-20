@@ -1,4 +1,5 @@
 import {
+  authenticate,
   validateAndTransformBody,
   validateAndTransformQuery,
   MiddlewareRoute,
@@ -10,11 +11,12 @@ export const storeQuotesMiddlewares: MiddlewareRoute[] = [
   {
     matcher: "/store/customers/me/quotes",
     methods: ["POST"],
-    middlewares: [validateAndTransformBody(CreateQuote)],
+    middlewares: [authenticate("customer", ["session"]), validateAndTransformBody(CreateQuote)],
   },
   {
     matcher: "/store/customers/me/quotes*",
     middlewares: [
+      authenticate("customer", ["session"]),
       validateAndTransformQuery(GetQuoteParams, listStoreQuoteQueryConfig),
     ],
   },

@@ -25,12 +25,12 @@ const response = () => {
 
 describe("checkout preparation middleware", () => {
   it("rejects completion without an unexpired server marker", async () => {
-    const query = { graph: jest.fn().mockResolvedValue({ data: [{ id: "cart_1", metadata: {} }] }) }
+    const query = { graph: jest.fn().mockResolvedValue({ data: [{ id: "cart_1", customer_id: "customer_1", metadata: {} }] }) }
     const scope = { resolve: (key: unknown) => key === ContainerRegistrationKeys.QUERY ? query : undefined }
     const res = response()
     const next = jest.fn()
 
-    await requireCheckoutPreparation({ params: { id: "cart_1" }, scope } as never, res as never, next)
+    await requireCheckoutPreparation({ params: { id: "cart_1" }, auth_context: { actor_id: "customer_1" }, scope } as never, res as never, next)
 
     expect(res.statusCode).toBe(409)
     expect(next).not.toHaveBeenCalled()
@@ -39,6 +39,7 @@ describe("checkout preparation middleware", () => {
   it("allows completion with a valid marker and clears it before cart mutation", async () => {
     const cart = {
       id: "cart_1",
+      customer_id: "customer_1",
       email: "guest@example.com",
       currency_code: "brl",
       shipping_address: {
@@ -48,6 +49,7 @@ describe("checkout preparation middleware", () => {
         city: "Sao Paulo",
         postal_code: "01310-100",
         country_code: "br",
+        province: "SP",
       },
       items: [{ id: "li_1", quantity: 1, unit_price: 100, variant: { id: "variant_1", manage_inventory: false } }],
       shipping_methods: [{ shipping_option_id: "so_1", amount: 0 }],
@@ -76,7 +78,7 @@ describe("checkout preparation middleware", () => {
     const res = response()
     const next = jest.fn()
 
-    await requireCheckoutPreparation({ params: { id: "cart_1" }, scope } as never, res as never, next)
+    await requireCheckoutPreparation({ params: { id: "cart_1" }, auth_context: { actor_id: "customer_1" }, scope } as never, res as never, next)
     await invalidateCartCheckoutPreparation({ params: { id: "cart_1" }, scope } as never, res as never, next)
 
     expect(next).toHaveBeenCalledTimes(2)

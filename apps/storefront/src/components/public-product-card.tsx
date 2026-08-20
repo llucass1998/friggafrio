@@ -18,9 +18,10 @@ interface PublicProductCardProps {
   product: HttpTypes.StoreProduct
   isNew?: boolean
   badgeText?: string
+  compact?: boolean
 }
 
-export function PublicProductCard({ product, badgeText }: PublicProductCardProps) {
+export function PublicProductCard({ product, badgeText, compact = false }: PublicProductCardProps) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -109,8 +110,16 @@ export function PublicProductCard({ product, badgeText }: PublicProductCardProps
     handleBuy(e)
   }
 
+  const imageClassName = compact
+    ? "relative block aspect-[16/10] overflow-hidden bg-[var(--color-surface-soft)] p-2 focus-visible:outline-none sm:p-3"
+    : "relative block aspect-[4/3] overflow-hidden bg-[var(--color-surface-soft)] p-3 focus-visible:outline-none sm:p-4"
+  const contentClassName = compact ? "flex flex-1 flex-col p-3" : "flex flex-1 flex-col p-4"
+  const titleClassName = compact
+    ? "line-clamp-3 min-h-[3rem] text-[0.9rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] sm:text-[0.95rem]"
+    : "line-clamp-3 min-h-[3.75rem] text-[0.95rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] sm:text-base"
+
   return (
-    <div data-testid="public-product-card" className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white transition-[transform,box-shadow,border-color] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
+    <div data-testid="public-product-card" className="group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white transition-[box-shadow,border-color] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] hover:border-[var(--color-primary)] hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
       <FavoriteButton
         productId={product.id}
         productTitle={productTitle}
@@ -120,7 +129,7 @@ export function PublicProductCard({ product, badgeText }: PublicProductCardProps
       <Link
         to={"/$countryCode/products/$handle" as string}
         params={{ countryCode, handle: product.handle }}
-        className="relative block aspect-[4/3] overflow-hidden bg-[var(--color-surface-soft)] p-3 focus-visible:outline-none sm:p-4"
+        className={imageClassName}
       >
         {badgeText && (
           <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-800 shadow-sm">
@@ -149,26 +158,26 @@ export function PublicProductCard({ product, badgeText }: PublicProductCardProps
       </Link>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className={contentClassName}>
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
           {brand}
         </div>
 
         {/* Title */}
         <Link to={"/$countryCode/products/$handle" as string} params={{ countryCode, handle: product.handle }} className="mb-1.5 rounded-sm focus-visible:outline-none">
-          <h3 className="line-clamp-3 min-h-[3.75rem] text-[0.95rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] sm:text-base">
+          <h3 className={titleClassName}>
             {productTitle}
           </h3>
         </Link>
 
         {/* SKU */}
-        <p className="mb-3 w-fit rounded bg-[var(--color-background)] px-2 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)] sm:text-xs">
+        <p className={`${compact ? "mb-2" : "mb-3"} w-fit rounded bg-[var(--color-background)] px-2 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)] sm:text-xs`}>
           Ref: {sku}
         </p>
 
         {/* Actions - Bottom aligned */}
-        <div className="mt-auto border-t border-[var(--color-border)] pt-3">
-          <div className="mb-3 flex min-h-[52px] flex-col justify-end gap-1">
+        <div className={`mt-auto border-t border-[var(--color-border)] ${compact ? "pt-2" : "pt-3"}`}>
+          <div className={`${compact ? "mb-2 min-h-[46px]" : "mb-3 min-h-[52px]"} flex flex-col justify-end gap-1`}>
              {purchaseState.status === "quote_only" ? (
                <>
                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
@@ -215,7 +224,7 @@ export function PublicProductCard({ product, badgeText }: PublicProductCardProps
             onClick={handleActionClick}
             disabled={(buttonDisabled && purchaseState.status !== "select_variant") || addToCartMutation.isPending || isSuccess}
             aria-label={`${buttonText} ${productTitle}`}
-            className={`box-border inline-flex w-full min-h-[42px] min-w-0 max-w-full items-center justify-center rounded-[var(--radius-button-sm)] px-2 py-2 text-center text-xs font-semibold leading-snug transition-[background-color,border-color,box-shadow,transform] duration-[var(--motion-duration-interaction)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] sm:text-sm ${
+            className={`box-border inline-flex w-full ${compact ? "min-h-[40px]" : "min-h-[42px]"} min-w-0 max-w-full items-center justify-center rounded-[var(--radius-button-sm)] px-2 py-2 text-center text-xs font-semibold leading-snug transition-[background-color,border-color,box-shadow,transform] duration-[var(--motion-duration-interaction)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] sm:text-sm ${
               buttonDisabled && purchaseState.status !== "select_variant"
                 ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"
                 : isSuccess

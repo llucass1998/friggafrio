@@ -15,6 +15,8 @@ import { companyMiddlewares } from "./store/company/middlewares";
 import { employeesMiddlewares } from "./store/employees/middlewares";
 import { customersMiddlewares } from "./store/customers/middlewares";
 import { googleMiddlewares } from "./store/google/middlewares";
+import { meMiddlewares } from "./store/me/middlewares";
+import { storeQuotesMiddlewares } from "./store/quotes/middlewares";
 import {
   blockOrderCompletionUntilGate8,
   blockPaymentsWhenDisabled,
@@ -22,8 +24,15 @@ import {
 } from "./middlewares/payment-containment";
 import {
   protectSessionMutation,
+  requireTrustedCustomerOrigin,
   requireTrustedAuthOrigin,
 } from "../lib/auth/session-security";
+import { wishlistMiddlewares } from "./store/wishlists/middlewares";
+import { forceBrazilCheckoutCountry } from "./middlewares/force-brazil-checkout-country";
+import { ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
+import { adminCompaniesMiddlewares } from "./admin/companies/middlewares";
+import { adminQuotesMiddlewares } from "./admin/quotes/middlewares";
+import { requireOwnedCheckoutCart } from "./middlewares/require-owned-checkout-cart";
 
 export default defineMiddlewares({
   routes: [
@@ -41,8 +50,18 @@ export default defineMiddlewares({
       middlewares: [protectSessionMutation],
     },
     {
+      // Customer sessions cannot authorize custom Admin API routes.
+      matcher: ADMIN_API_MATCHER,
+      middlewares: [authenticate("user", ["session", "bearer"])],
+    },
+    {
       matcher: /^\/auth\/(?:session|token\/refresh)$/,
       methods: ["POST", "DELETE"],
+      middlewares: [requireTrustedCustomerOrigin, authRateLimit],
+    },
+    {
+      matcher: "/auth/unified/emailpass",
+      method: "POST",
       middlewares: [requireTrustedAuthOrigin, authRateLimit],
     },
     {
@@ -98,17 +117,24 @@ export default defineMiddlewares({
     {
       method: "POST",
       matcher: "/store/carts/:id/complete",
-      middlewares: [blockOrderCompletionUntilGate8, blockPaymentsWhenDisabled, requireCheckoutPreparation, validateDemoPriceCheckout],
+      middlewares: [
+        authenticate("customer", ["session", "bearer"]),
+        requireOwnedCheckoutCart,
+        blockOrderCompletionUntilGate8,
+        blockPaymentsWhenDisabled,
+        requireCheckoutPreparation,
+        validateDemoPriceCheckout,
+      ],
     },
     {
       method: "POST",
       matcher: "/store/carts/:id/prepare",
-      middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+      middlewares: [authenticate("customer", ["session", "bearer"])],
     },
     {
       method: "POST",
       matcher: "/store/carts/:id/checkout-ready",
-      middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+      middlewares: [authenticate("customer", ["session", "bearer"])],
     },
     {
       method: "POST",
@@ -128,7 +154,7 @@ export default defineMiddlewares({
     {
       method: "POST",
       matcher: "/store/carts/:id",
-      middlewares: [invalidateCartCheckoutPreparation],
+      middlewares: [forceBrazilCheckoutCountry, invalidateCartCheckoutPreparation],
     },
     {
       method: "POST",
@@ -158,6 +184,11 @@ export default defineMiddlewares({
     ...companyMiddlewares,
     ...employeesMiddlewares,
     ...customersMiddlewares,
+    ...meMiddlewares,
+    ...storeQuotesMiddlewares,
+    ...wishlistMiddlewares,
+    ...adminCompaniesMiddlewares,
+    ...adminQuotesMiddlewares,
     ...googleMiddlewares,
   ],
 });

@@ -31,7 +31,7 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
         >
           {images.map((image, index) => {
             const isFirstImage = index === 0
-            const isCriticalImage = index <= 1
+            const isCriticalImage = index === 0
             
             return (
               <div
@@ -95,6 +95,8 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
               key={image.id}
               type="button"
               onClick={() => setCurrentIndex(index)}
+              aria-label={`Selecionar imagem ${index + 1}`}
+              aria-current={index === currentIndex ? "true" : undefined}
               className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                 index === currentIndex 
                   ? "border-accent ring-2 ring-accent/30" 

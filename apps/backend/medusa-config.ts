@@ -41,6 +41,9 @@ const paymentProviders =
 
 module.exports = defineConfig({
   admin: {
+    // Production storefront nodes can omit the Admin bundle entirely.
+    // Local development keeps it enabled unless this environment flag is set.
+    disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
     vite: () => {
       let hmrServer;
       if (process.env.HMR_BIND_HOST) {
@@ -87,6 +90,13 @@ module.exports = defineConfig({
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
+      // Public email/password login is actor-neutral through the BFF route.
+      // Google remains customer-only and is enabled only with provider config.
+      authMethodsPerActor: {
+        user: ["emailpass"],
+        // Google has no registered auth provider in this deployment yet.
+        customer: ["emailpass"],
+      },
       jwtSecret: process.env.JWT_SECRET,
       cookieSecret: process.env.COOKIE_SECRET,
     },
@@ -112,6 +122,12 @@ module.exports = defineConfig({
     },
     {
       resolve: backendPath("src/modules/product-sales-policy"),
+    },
+    {
+      resolve: backendPath("src/modules/wishlist"),
+    },
+    {
+      resolve: backendPath("src/modules/password-reset-token"),
     },
     {
       resolve: "@medusajs/medusa/payment",

@@ -8,50 +8,43 @@ import "@/components/home/product-showcase-carousel/carousel.css"
 
 export function ProductShowcaseCarousel() {
   const autoplayRef = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true })
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true }),
   )
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "center", skipSnaps: false },
-    [autoplayRef.current]
+    [autoplayRef.current],
   )
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [canScrollPrev, setCanScrollPrev] = useState(false)
-  const [canScrollNext, setCanScrollNext] = useState(false)
   const [direction, setDirection] = useState<"next" | "prev">("next")
   const [isPlaying, setIsPlaying] = useState(true)
 
   const scrollPrev = useCallback(() => {
-    if (emblaApi) {
-      setDirection("prev")
-      emblaApi.scrollPrev()
-      emblaApi.plugins().autoplay?.reset()
-    }
+    if (!emblaApi) return
+    setDirection("prev")
+    emblaApi.scrollPrev()
+    emblaApi.plugins().autoplay?.reset()
   }, [emblaApi])
 
   const scrollNext = useCallback(() => {
-    if (emblaApi) {
-      setDirection("next")
-      emblaApi.scrollNext()
-      emblaApi.plugins().autoplay?.reset()
-    }
+    if (!emblaApi) return
+    setDirection("next")
+    emblaApi.scrollNext()
+    emblaApi.plugins().autoplay?.reset()
   }, [emblaApi])
 
   const scrollTo = useCallback(
     (index: number) => {
-      if (emblaApi) {
-        setDirection(index > selectedIndex ? "next" : "prev")
-        emblaApi.scrollTo(index)
-        emblaApi.plugins().autoplay?.reset()
-      }
+      if (!emblaApi) return
+      setDirection(index > selectedIndex ? "next" : "prev")
+      emblaApi.scrollTo(index)
+      emblaApi.plugins().autoplay?.reset()
     },
-    [emblaApi, selectedIndex]
+    [emblaApi, selectedIndex],
   )
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
     setSelectedIndex(emblaApi.selectedScrollSnap())
-    setCanScrollPrev(emblaApi.canScrollPrev())
-    setCanScrollNext(emblaApi.canScrollNext())
   }, [emblaApi])
 
   useEffect(() => {
@@ -74,10 +67,9 @@ export function ProductShowcaseCarousel() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (document.activeElement?.closest('[aria-roledescription="carousel"]')) {
-        if (event.key === "ArrowLeft") scrollPrev()
-        if (event.key === "ArrowRight") scrollNext()
-      }
+      if (!document.activeElement?.closest('[aria-roledescription="carousel"]')) return
+      if (event.key === "ArrowLeft") scrollPrev()
+      if (event.key === "ArrowRight") scrollNext()
     }
     window.addEventListener("keydown", handleKeyDown)
 
@@ -105,19 +97,19 @@ export function ProductShowcaseCarousel() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
-    if (mediaQuery.matches) {
-      emblaApi?.plugins()?.autoplay?.stop()
-      setIsPlaying(false)
-    }
+    if (!mediaQuery.matches) return
+    emblaApi?.plugins()?.autoplay?.stop()
+    setIsPlaying(false)
   }, [emblaApi])
 
   return (
     <div
-      className="relative w-full group"
+      data-testid="home-hero-carousel"
+      className="group relative w-full"
       aria-roledescription="carousel"
-      aria-label="Destaques de Equipamentos Friggafrio"
+      aria-label="Destaques de Equipamentos FriggaFrio"
     >
-      <div className="overflow-hidden md:rounded-none px-2 sm:px-4 md:px-0" ref={emblaRef}>
+      <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
           {showcaseSlides.map((slide, index) => (
             <ProductShowcaseSlide
@@ -131,39 +123,40 @@ export function ProductShowcaseCarousel() {
       </div>
 
       <button
+        type="button"
         onClick={scrollPrev}
-        disabled={!canScrollPrev}
-        className="absolute left-2 top-4 h-11 w-11 translate-y-0 bg-black/25 hover:bg-black/45 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:left-0 md:top-1/2 md:h-24 md:w-16 md:-translate-y-1/2 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:h-11 sm:w-11 md:left-6"
         aria-label="Ver slide anterior"
       >
-        <ChevronLeft className="h-5 w-5 md:h-8 md:w-8" />
+        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </button>
 
       <button
+        type="button"
         onClick={scrollNext}
-        disabled={!canScrollNext}
-        className="absolute right-2 top-4 h-11 w-11 translate-y-0 bg-black/25 hover:bg-black/45 backdrop-blur-md flex items-center justify-center text-white transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 disabled:opacity-0 disabled:cursor-not-allowed z-40 focus-visible:outline-2 focus-visible:outline-white active:scale-95 md:right-0 md:top-1/2 md:h-24 md:w-16 md:-translate-y-1/2 md:bg-white/20 md:hover:bg-white/40"
+        className="absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:h-11 sm:w-11 md:right-6"
         aria-label="Ver próximo slide"
       >
-        <ChevronRight className="h-5 w-5 md:h-8 md:w-8" />
+        <ChevronRight className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center z-40">
+      <div className="flex items-center justify-center bg-white py-3">
         <div className="flex gap-2">
           {showcaseSlides.map((_, index) => {
             const active = index === selectedIndex
             return (
               <button
                 key={index}
+                type="button"
                 onClick={() => scrollTo(index)}
-                className={`carousel-indicator-bar relative h-2.5 rounded-full overflow-hidden focus-visible:outline-2 focus-visible:outline-white ${
-                  active ? "carousel-indicator-active w-12 bg-white/30" : "w-2.5 bg-white/50 hover:bg-white/80"
+                className={`carousel-indicator-bar relative h-2.5 overflow-hidden rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
+                  active ? "carousel-indicator-active w-12 bg-[var(--color-border)]" : "w-2.5 bg-[var(--color-border)] hover:bg-[var(--color-primary)]"
                 }`}
                 aria-label={`Ir para o destaque ${index + 1} de ${showcaseSlides.length}`}
                 aria-current={active ? "true" : "false"}
                 data-playing={isPlaying}
               >
-                {active && <div className="carousel-indicator-progress absolute inset-y-0 left-0 bg-white" />}
+                {active && <div className="carousel-indicator-progress absolute inset-y-0 left-0 bg-[var(--color-primary)]" />}
               </button>
             )
           })}

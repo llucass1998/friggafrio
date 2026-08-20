@@ -8,10 +8,13 @@ import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
 import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
+import { clampPage, normalizePage, offsetForPage, PRODUCTS_PER_PAGE } from "@/lib/utils/pagination"
 
 const storeSearchSchema = z.object({
   category: z.string().optional(),
-  page: z.coerce.number().int().min(1).default(1),
+  q: z.string().trim().optional(),
+  sort: z.enum(["-id", "id", "title", "-title"]).optional(),
+  page: z.preprocess((value) => normalizePage(value), z.number().int().min(1)).optional(),
   [OPTION_VALUE_QUERY_KEY]: z
     .union([z.string(), z.array(z.string())])
     .optional(),
@@ -22,6 +25,8 @@ export const Route = createFileRoute("/$countryCode/store")({
   loaderDeps: ({ search }) => ({
     optionValueIds: search[OPTION_VALUE_QUERY_KEY],
     category: search.category,
+    q: search.q,
+    sort: search.sort,
     page: search.page,
   }),
   loader: async ({ params, context, deps }) => {
@@ -29,7 +34,9 @@ export const Route = createFileRoute("/$countryCode/store")({
     const { queryClient } = context
     const rawOptionValueIds = deps.optionValueIds
     const category = deps.category
-    const page = deps.page ?? 1
+    const requestedPage = deps.page ?? 1
+    const q = deps.q
+    const sort = deps.sort ?? "-id"
     const optionValueIds = Array.isArray(rawOptionValueIds)
       ? rawOptionValueIds
       : rawOptionValueIds
@@ -60,23 +67,37 @@ export const Route = createFileRoute("/$countryCode/store")({
         })
       : undefined
 
-    const { products, count } = await queryClient.ensureQueryData({
+    const queryParams = {
+      limit: PRODUCTS_PER_PAGE,
+      offset: offsetForPage(requestedPage, PRODUCTS_PER_PAGE),
+      // Medusa's created_at ordering is not a total order: equal timestamps
+      // can move rows between offsets and duplicate pagination pages.
+      order: sort,
+      fields: PUBLIC_PRODUCT_CARD_FIELDS,
+      ...(q ? { q } : {}),
+      ...(optionValueIds.length > 0 ? { option_value_id: optionValueIds } : {}),
+      ...(categoryId ? { category_id: [categoryId] } : category ? { category_id: ["__missing_category__"] } : {}),
+    }
+
+    const firstPage = await queryClient.ensureQueryData({
       // Keep every server-side filter in the key so a category navigation
       // cannot reuse the unfiltered catalog snapshot during hydration.
-      queryKey: ["products", { region_id: region.id, category: categoryId, optionValueIds, page }],
-      queryFn: () => listProducts({
-        queryParams: {
-          limit: 24,
-          offset: (page - 1) * 24,
-          // Medusa's created_at ordering is not a total order: equal timestamps
-          // can move rows between offsets and duplicate pagination pages.
-          order: "-id",
-          fields: PUBLIC_PRODUCT_CARD_FIELDS,
-          ...(categoryId ? { category_id: [categoryId] } : category ? { category_id: ["__missing_category__"] } : {}),
-        },
-        regionId: region.id,
-      }),
+      queryKey: ["products", { region_id: region.id, category: categoryId, optionValueIds, q, sort, page: requestedPage }],
+      queryFn: () => listProducts({ queryParams, regionId: region.id }),
     })
+
+    // A stale/shared link may point past the end of the catalog. Fetch the
+    // deterministic last page rather than rendering a confusing empty grid.
+    const page = clampPage(requestedPage, firstPage.count, PRODUCTS_PER_PAGE)
+    const { products, count } = page === requestedPage
+      ? firstPage
+      : await queryClient.ensureQueryData({
+          queryKey: ["products", { region_id: region.id, category: categoryId, optionValueIds, q, sort, page }],
+          queryFn: () => listProducts({
+            queryParams: { ...queryParams, offset: offsetForPage(page, PRODUCTS_PER_PAGE) },
+            regionId: region.id,
+          }),
+        })
 
     return sanitize({
       countryCode,
@@ -84,8 +105,8 @@ export const Route = createFileRoute("/$countryCode/store")({
       products: products as HttpTypes.StoreProduct[],
       count,
       page,
-      pageSize: 24,
-      optionValueIds: optionValueIds as any,
+      pageSize: PRODUCTS_PER_PAGE,
+      optionValueIds,
       category,
       categoryId,
     })

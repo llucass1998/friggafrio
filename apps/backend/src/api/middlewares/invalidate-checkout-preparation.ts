@@ -17,6 +17,10 @@ import {
   type ExistingCartInventoryReservation,
 } from "../../utils/cart-inventory-reservation"
 import { validateCartCommercialEligibility, type CommercialLine } from "../../utils/cart-commercial-eligibility"
+import {
+  assertCheckoutCartOwnership,
+  authenticatedCheckoutCustomerId,
+} from "../../utils/checkout-customer-authorization"
 
 /** Commercial cart mutations invalidate READY_FOR_PAYMENT before mutation. */
 export const invalidateCartCheckoutPreparation = async (
@@ -45,11 +49,13 @@ export const requireCheckoutPreparation = async (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ) => {
+  const customerId = authenticatedCheckoutCustomerId(req)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const result = await query.graph({
     entity: "cart",
     fields: [
       "id",
+      "customer_id",
       "completed_at",
       "sales_channel_id",
       "metadata",
@@ -77,15 +83,20 @@ export const requireCheckoutPreparation = async (
       "discount_total",
       "total",
     ],
-    filters: { id: req.params.id },
+    filters: { id: req.params.id, customer_id: customerId },
   })
   const cart = result.data[0] as {
     id: string
+    customer_id?: unknown
     completed_at?: string | Date | null
     sales_channel_id?: string | null
     metadata?: Record<string, unknown> | null
     items?: Array<Record<string, unknown>>
   } | undefined
+  if (!cart) {
+    assertCheckoutCartOwnership(customerId, undefined)
+  }
+  assertCheckoutCartOwnership(customerId, cart?.customer_id)
   const marker = cart?.metadata?.[CHECKOUT_PREPARATION_METADATA_KEY]
   const snapshot = cart ? checkoutSnapshotFromCart(cart as never) : null
   if (

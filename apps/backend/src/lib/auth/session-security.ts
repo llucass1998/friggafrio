@@ -33,20 +33,30 @@ const normalizeOrigin = (value: string): string | null => {
 export const getSessionCookieName = (): string =>
   process.env.SESSION_COOKIE_NAME?.trim() || DEFAULT_SESSION_COOKIE_NAME;
 
-export const getTrustedAuthOrigins = (): ReadonlySet<string> => {
-  const configuredOrigins = [
-    process.env.STORE_CORS,
-    process.env.ADMIN_CORS,
-    process.env.AUTH_CORS,
-  ]
+const configuredOrigins = (
+  values: Array<string | undefined>,
+): ReadonlySet<string> => {
+  const origins = values
     .flatMap((value) => value?.split(",") ?? [])
     .map((value) => value.trim())
     .filter((value) => value.length > 0)
     .map(normalizeOrigin)
     .filter((value): value is string => value !== null);
 
-  return new Set(configuredOrigins);
+  return new Set(origins);
 };
+
+// Customer store mutations must never trust the Admin application origin.
+export const getTrustedStoreOrigins = (): ReadonlySet<string> =>
+  configuredOrigins([process.env.STORE_CORS]);
+
+// Medusa's generic /auth session endpoints are shared by customer and Admin.
+export const getTrustedAuthOrigins = (): ReadonlySet<string> =>
+  configuredOrigins([
+    process.env.STORE_CORS,
+    process.env.ADMIN_CORS,
+    process.env.AUTH_CORS,
+  ]);
 
 const hasSessionCookie = (
   cookieHeader: string | undefined,
@@ -113,6 +123,7 @@ export const validateSessionRequestOrigin = (
 const validateRequest = (
   req: MedusaRequest,
   requireOriginWithoutSession: boolean,
+  trustedOrigins: ReadonlySet<string>,
 ): SessionOriginValidationResult =>
   validateSessionRequestOrigin(
     {
@@ -129,7 +140,7 @@ const validateRequest = (
           ? req.headers["sec-fetch-site"]
           : undefined,
     },
-    getTrustedAuthOrigins(),
+    trustedOrigins,
     getSessionCookieName(),
     requireOriginWithoutSession,
   );
@@ -150,7 +161,7 @@ export const protectSessionMutation = (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ): void => {
-  const result = validateRequest(req, false);
+  const result = validateRequest(req, false, getTrustedStoreOrigins());
   if (!result.allowed) {
     rejectUntrustedRequest(res, result);
     return;
@@ -164,7 +175,21 @@ export const requireTrustedAuthOrigin = (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ): void => {
-  const result = validateRequest(req, true);
+  const result = validateRequest(req, true, getTrustedAuthOrigins());
+  if (!result.allowed) {
+    rejectUntrustedRequest(res, result);
+    return;
+  }
+
+  next();
+};
+
+export const requireTrustedCustomerOrigin = (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction,
+): void => {
+  const result = validateRequest(req, true, getTrustedStoreOrigins());
   if (!result.allowed) {
     rejectUntrustedRequest(res, result);
     return;

@@ -21,3 +21,34 @@ export function createWhatsAppUrl(rawNumber?: string): string | null {
     WHATSAPP_DEFAULT_MESSAGE
   )}`
 }
+
+export function createProductWhatsAppUrl({
+  title,
+  reference,
+  quantity = 1,
+  price,
+  url,
+  rawNumber,
+}: {
+  title: string
+  reference?: string
+  quantity?: number
+  price?: string
+  url?: string
+  rawNumber?: string
+}): string | null {
+  const baseUrl = createWhatsAppUrl(rawNumber)
+  if (!baseUrl) return null
+
+  const message = [
+    "Olá! Tenho interesse neste produto da FriggaFrio:",
+    `Produto: ${title}`,
+    reference ? `Referência: ${reference}` : null,
+    `Quantidade: ${quantity}`,
+    price ? `Preço exibido: ${price}` : null,
+    url ? `Link: ${url}` : null,
+    "Gostaria de mais informações sobre disponibilidade e compra.",
+  ].filter(Boolean).join("\n")
+
+  return `${baseUrl.split("?")[0]}?text=${encodeURIComponent(message)}`
+}

@@ -105,6 +105,7 @@ export const GET = async (
     "customer_id",
     "email",
     "currency_code",
+    "fulfillment_status",
     // Computed total fields
     "total",
     "subtotal",
@@ -120,6 +121,8 @@ export const GET = async (
     "billing_address.*",
     "shipping_methods.*",
     "payment_collections.*",
+    "fulfillments.*",
+    "fulfillments.labels.*",
   ]
 
   // Query orders for all relevant customers

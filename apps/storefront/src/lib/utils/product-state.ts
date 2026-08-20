@@ -20,7 +20,9 @@ export function getProductPurchaseState(product: HttpTypes.StoreProduct): Produc
   const purchaseEnabled = product.metadata?.purchase_enabled !== false
   const isQuoteOnly =
     product.metadata?.is_quote_only === true ||
-    product.metadata?.commercial_status === "QUOTE_ONLY"
+    product.metadata?.commercial_status === "QUOTE_ONLY" ||
+    product.metadata?.is_on_demand === true ||
+    product.metadata?.commercial_status === "ON_DEMAND"
 
   if (isQuoteOnly) {
     return { status: "quote_only", reason: "Produto disponível somente sob consulta" }

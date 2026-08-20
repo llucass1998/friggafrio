@@ -70,6 +70,11 @@ test("Store API QUOTE_ONLY remains visible when direct purchase is disabled", ()
   assert.equal(state.status, "quote_only")
 })
 
+test("on-demand metadata uses the consultative quote path", () => {
+  const state = getProductPurchaseState(makeProduct(makeVariant(), { is_on_demand: true }))
+  assert.equal(state.status, "quote_only")
+})
+
 test("Store API price_pending metadata blocks direct purchase", () => {
   const state = getProductPurchaseState(makeProduct(makeVariant(), { price_pending: true }))
   assert.equal(state.status, "price_pending")

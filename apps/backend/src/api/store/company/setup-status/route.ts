@@ -38,7 +38,7 @@ const BASE_STEP_DEFINITIONS: StepDefinition[] = [
     label: "Default Shipping Address",
     description:
       "Add a shipping address and mark it as the default for your company.",
-    link: "/settings?tab=addresses",
+    link: "/account?tab=addresses",
     blocks_checkout: true,
   },
   {
@@ -46,7 +46,7 @@ const BASE_STEP_DEFINITIONS: StepDefinition[] = [
     label: "Default Billing Address",
     description:
       "Add a billing address and mark it as the default for your company.",
-    link: "/settings?tab=addresses",
+    link: "/account?tab=addresses",
     blocks_checkout: true,
   },
   {
@@ -63,7 +63,7 @@ const PAYMENT_METHOD_STEP: StepDefinition = {
   label: "Payment Method",
   description:
     "Add a saved payment method so your team can place orders.",
-  link: "/settings?tab=payment_methods",
+  link: "/account?tab=payment_methods",
   blocks_checkout: true,
 }
 

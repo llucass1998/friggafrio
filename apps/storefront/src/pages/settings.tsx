@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useSearch } from "@tanstack/react-router"
+import { Link, useParams, useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { useFavorites } from "@/lib/hooks/use-favorites"
+import { useCustomerOrders } from "@/lib/hooks/use-orders"
+import { getOrderTracking } from "@/lib/utils/order-tracking"
 import { sdk } from "@/lib/medusa"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -9,6 +12,7 @@ import { Camera, Buildings, Plus, XMark, CreditCard, MapPin, PencilSquare } from
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { formatCep, lookupCep } from "@/lib/cep"
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null
@@ -187,13 +191,13 @@ function AddCardForm({ onSuccess, onCancelar }: { onSuccess: () => void; onCance
   )
 }
 
-function PaymentMethodsSection({ companyData }: { companyData: Company }) {
+function PaymentMethodsSection({ companyData, customerId }: { companyData: Company; customerId: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const { data: paymentMethods, isLoading: isLoadingMethods, refetch: refetchMethods } = useQuery({
-    queryKey: ["company-payment-methods"],
+    queryKey: ["company-payment-methods", customerId, companyData.id],
     queryFn: async () => {
       const response = await sdk.client.fetch<{ payment_methods: SavedPaymentMethod[] }>(
         "/store/company/payment-methods",
@@ -394,10 +398,12 @@ function PaymentMethodsSection({ companyData }: { companyData: Company }) {
   )
 }
 
-function AddressesSection({ companyData }: { companyData: Company }) {
+function AddressesSection({ companyData, customerId }: { companyData: Company; customerId: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<CompanyAddressData | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isCepLoading, setIsCepLoading] = useState(false)
+  const [cepMessage, setCepMessage] = useState<string | null>(null)
 
   const emptyForm = {
     name: "",
@@ -418,7 +424,7 @@ function AddressesSection({ companyData }: { companyData: Company }) {
   const [formData, setFormData] = useState(emptyForm)
 
   const { data: addresses, isLoading, refetch: refetchAddresses } = useQuery({
-    queryKey: ["company-addresses"],
+    queryKey: ["company-addresses", customerId, companyData.id],
     queryFn: async () => {
       const response = await sdk.client.fetch<{ addresses: CompanyAddressData[] }>(
         "/store/company/addresses",
@@ -550,6 +556,45 @@ function AddressesSection({ companyData }: { companyData: Company }) {
     setIsModalOpen(false)
     setEditingAddress(null)
     setFormData(emptyForm)
+  }
+
+  const handleCepLookup = async () => {
+    const postalCode = formatCep(formData.postal_code)
+    setFormData((current) => ({ ...current, postal_code: postalCode }))
+    setCepMessage(null)
+
+    if (postalCode.replace(/\D/g, "").length !== 8) {
+      setCepMessage("Digite um CEP válido com 8 números.")
+      return
+    }
+
+    try {
+      setIsCepLoading(true)
+      const address = await lookupCep(postalCode)
+      if (!address) {
+      setCepMessage("CEP não encontrado.")
+        return
+      }
+
+      setFormData((current) => {
+        // Ignore a response for a CEP the user has already replaced.
+        if (formatCep(current.postal_code) !== postalCode) return current
+        return {
+          ...current,
+          postal_code: postalCode,
+          address_1: current.address_1 || address.street,
+          address_2: current.address_2 || address.neighborhood,
+          city: current.city || address.city,
+          province: current.province || address.state,
+          country_code: DEFAULT_COUNTRY_CODE,
+        }
+      })
+      setCepMessage("Endereço preenchido com o CEP. Complete o número e revise os dados.")
+    } catch (error) {
+      setCepMessage(error instanceof Error ? error.message : "Não foi possível consultar o CEP.")
+    } finally {
+      setIsCepLoading(false)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -814,14 +859,19 @@ function AddressesSection({ companyData }: { companyData: Company }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Postal Code</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">CEP</label>
                 <input
                   type="text"
                   value={formData.postal_code}
-                  onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, postal_code: formatCep(e.target.value) })}
+                  onBlur={() => void handleCepLookup()}
+                  inputMode="numeric"
+                  autoComplete="postal-code"
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                  placeholder="Postal code"
+                  placeholder="00000-000"
                 />
+                {isCepLoading && <p className="mt-1 text-xs text-slate-500">Consultando CEP...</p>}
+                {cepMessage && <p className="mt-1 text-xs text-slate-500" role="status">{cepMessage}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -913,9 +963,17 @@ function AddressesSection({ companyData }: { companyData: Company }) {
 
 export default function SettingsPage() {
   const { customer, refetch, isLoading: isCustomerLoading, isAdmin, employee } = useAuth()
+  const { favoriteCount } = useFavorites()
+  const { countryCode: routeCountryCode } = useParams({ strict: false })
+  const countryCode = routeCountryCode || DEFAULT_COUNTRY_CODE
+  const { data: customerOrders } = useCustomerOrders()
+  const customerId = customer?.id
   const searchParams = useSearch({ strict: false }) as { tab?: string } | undefined
-  const initialTab = (searchParams?.tab as "profile" | "company" | "addresses" | "payment_methods") || "profile"
-  const [activeTab, setActiveTab] = useState<"profile" | "company" | "addresses" | "payment_methods">(initialTab)
+  const requestedTab = searchParams?.tab
+  const initialTab = (requestedTab === "company" || requestedTab === "addresses" || requestedTab === "payment_methods"
+    ? requestedTab
+    : requestedTab === "profile" ? "profile" : "overview") as "overview" | "profile" | "company" | "addresses" | "payment_methods"
+  const [activeTab, setActiveTab] = useState<"overview" | "profile" | "company" | "addresses" | "payment_methods">(initialTab)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingCompany, setIsEditingCompany] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
@@ -937,15 +995,23 @@ export default function SettingsPage() {
   })
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
 
+  useEffect(() => {
+    if (requestedTab === "company" || requestedTab === "addresses" || requestedTab === "payment_methods" || requestedTab === "profile") {
+      setActiveTab(requestedTab)
+    } else {
+      setActiveTab("overview")
+    }
+  }, [requestedTab])
+
   const { data: companyData, isLoading: isCompanyLoading, refetch: refetchCompany } = useQuery({
-    queryKey: ["company", employee?.company_id],
+    queryKey: ["company", customerId, employee?.company_id],
     queryFn: async () => {
       const response = await sdk.client.fetch<{ company: Company }>("/store/company", {
         method: "GET",
       })
       return response.company
     },
-    enabled: isAdmin && !!employee?.company_id,
+    enabled: isAdmin && !!customerId && !!employee?.company_id,
   })
 
   useEffect(() => {
@@ -1123,42 +1189,71 @@ export default function SettingsPage() {
     setIsEditingCompany(false)
   }
 
-  const tabs = [
-    { id: "profile" as const, label: "Perfil" },
-    ...(isAdmin ? [
-      { id: "company" as const, label: "Empresa" },
-      { id: "addresses" as const, label: "Endereços" },
-      ...(stripePublishableKey ? [{ id: "payment_methods" as const, label: "Formas de Pagamento" }] : []),
-    ] : []),
-  ]
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
-          <p className="text-slate-500 mt-1">Gerencie as configurações e preferências da sua conta</p>
+          <h1 className="text-2xl font-bold text-slate-900">{activeTab === "overview" ? "Minha Conta" : activeTab === "profile" ? "Perfil" : "Minha Conta"}</h1>
+          <p className="text-slate-500 mt-1">
+            {activeTab === "overview"
+              ? "Gerencie seus pedidos, favoritos, endereços e dados da conta."
+              : activeTab === "profile"
+                ? "Gerencie suas informações pessoais."
+                : "Gerencie os dados da sua conta."}
+          </p>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-slate-200">
-          <nav className="flex gap-8" aria-label="Abas de configuração">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`pb-4 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? "border-accent text-accent"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+        {activeTab === "overview" && (
+          <section aria-labelledby="account-overview-title" className="space-y-6">
+            <div>
+              <h2 id="account-overview-title" className="text-xl font-semibold text-slate-900">
+                Olá, {customer?.first_name || customer?.email || "cliente"}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">Acompanhe seus pedidos, produtos salvos e informações da conta.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {customerOrders && (
+                <Link to="/$countryCode/account/orders" params={{ countryCode }} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-accent/40 hover:shadow-md">
+                  <p className="text-sm font-medium text-slate-500">Pedidos</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{customerOrders.length}</p>
+                  <span className="mt-3 inline-block text-sm font-semibold text-accent">Ver pedidos</span>
+                </Link>
+              )}
+              {customerOrders && (() => {
+                const inProgress = customerOrders.filter((order) => getOrderTracking(order).isInProgress)
+                return (
+                  <Link to="/$countryCode/account/orders" params={{ countryCode }} search={{ filter: "in_progress" } as never} className="rounded-xl border border-blue-100 bg-blue-50 p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md">
+                    <p className="text-sm font-medium text-blue-900">Em andamento</p>
+                    <p className="mt-2 text-2xl font-bold text-blue-950">{inProgress.length}</p>
+                    <span className="mt-3 inline-block text-sm font-semibold text-blue-800">{inProgress.length ? "Acompanhar entrega" : "Nenhuma entrega em andamento"}</span>
+                  </Link>
+                )
+              })()}
+              <Link to="/$countryCode/favorites" params={{ countryCode }} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-accent/40 hover:shadow-md">
+                <p className="text-sm font-medium text-slate-500">Favoritos</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{favoriteCount}</p>
+                <span className="mt-3 inline-block text-sm font-semibold text-accent">Ver favoritos</span>
+              </Link>
+            </div>
+            {customerOrders && customerOrders.length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-lg font-semibold text-slate-900">Pedidos recentes</h2>
+                  <Link to="/$countryCode/account/orders" params={{ countryCode }} className="text-sm font-semibold text-accent">Ver todos</Link>
+                </div>
+                <ul className="mt-4 divide-y divide-slate-100">
+                  {customerOrders.slice(0, 3).map((order) => (
+                    <li key={order.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                      <span className="font-medium text-slate-900">Pedido #{order.display_id ?? order.id}</span>
+                      <span className="text-slate-500">{order.status || "Em processamento"}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Profile Tab Content */}
         {activeTab === "profile" && (
@@ -1591,7 +1686,7 @@ export default function SettingsPage() {
           isCompanyLoading ? (
             <CardSkeleton rows={3} />
           ) : companyData ? (
-            <AddressesSection companyData={companyData} />
+            <AddressesSection companyData={companyData} customerId={customerId!} />
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
               <p className="text-sm text-slate-500">Company data not available.</p>
@@ -1604,7 +1699,7 @@ export default function SettingsPage() {
           isCompanyLoading ? (
             <CardSkeleton rows={3} />
           ) : companyData ? (
-            <PaymentMethodsSection companyData={companyData} />
+            <PaymentMethodsSection companyData={companyData} customerId={customerId!} />
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
               <p className="text-sm text-slate-500">Company data not available.</p>

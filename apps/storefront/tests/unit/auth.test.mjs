@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import fs from "node:fs";
 import {
   defaultAuthenticatedPath,
   normalizeReturnTo,
@@ -29,4 +30,11 @@ test("returnTo rejects paths containing control characters", () => {
 test("the authenticated fallback normalizes invalid country codes", () => {
   assert.equal(defaultAuthenticatedPath("BR"), "/br");
   assert.equal(defaultAuthenticatedPath("../admin"), "/br");
+});
+
+test("public login source contains no administrative UI or copy", () => {
+  const source = fs.readFileSync(new URL("../../src/pages/login.tsx", import.meta.url), "utf8");
+  for (const phrase of ["Painel administrativo", "Acesso administrativo", "Ir para o acesso administrativo", "Medusa", "ADMIN_ACCESS_URL"]) {
+    assert.equal(source.includes(phrase), false, `unexpected public admin text: ${phrase}`);
+  }
 });

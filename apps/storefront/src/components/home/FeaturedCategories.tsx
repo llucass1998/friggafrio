@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
 import { listCategories } from "@/lib/data/categories"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
+import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
 
 const CATEGORY_ASSET_HANDLES = new Set([
   "bombas-de-vacuo",
@@ -55,141 +54,43 @@ export function FeaturedCategories() {
   const isLoading = !hydrated || categoriesQuery.isPending
   const categories = categoriesQuery.data || []
   const ignoredHandles = ["attachments", "forklift-parts", "material-handling", "operator-accessories", "safety-equipment", "warehouse-equipment"]
-  const isTechnicalFallback = (category: (typeof categories)[number]) => {
-    const handle = category.handle?.trim().toLowerCase()
-    const name = category.name?.trim().toLowerCase()
-    return handle === "outros" || name === "outros"
-  }
   const mainCategories = categories
     .filter((category) => category.handle && !category.parent_category_id)
     .filter((category) => !ignoredHandles.includes(category.handle))
     .filter((category) => category.metadata?.featured === true)
-    .filter((category) => !isTechnicalFallback(category))
+    .filter((category) => category.handle !== "outros" && category.name?.trim().toLowerCase() !== "outros")
     .slice(0, 12)
 
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [scrollState, setScrollState] = useState({ canPrevious: false, canNext: false })
-
-  const updateScrollState = () => {
-    const track = trackRef.current
-    if (!track) return
-    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth)
-    const currentScrollLeft = Math.max(0, track.scrollLeft)
-    setScrollState({
-      canPrevious: currentScrollLeft > 1,
-      canNext: maxScrollLeft - currentScrollLeft > 1,
-    })
-  }
-
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    updateScrollState()
-    const observer = new ResizeObserver(updateScrollState)
-    observer.observe(track)
-    window.addEventListener("resize", updateScrollState)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener("resize", updateScrollState)
-    }
-  }, [mainCategories.length, isLoading])
-
-  const scrollToCategory = (direction: "previous" | "next") => {
-    const track = trackRef.current
-    if (!track) return
-    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth)
-    const nextIndex = Math.max(0, Math.min(mainCategories.length - 1, activeIndex + (direction === "next" ? 1 : -1)))
-    const child = track.children.item(nextIndex) as HTMLElement | null
-    if (!child) return
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    track.scrollTo({
-      left: Math.min(maxScrollLeft, Math.max(0, child.offsetLeft)),
-      behavior: reduceMotion ? "auto" : "smooth",
-    })
-    setActiveIndex(nextIndex)
-    updateScrollState()
-  }
-
-  const syncActiveIndex = () => {
-    const track = trackRef.current
-    if (!track || track.children.length === 0) return
-    let nearestIndex = 0
-    let nearestDistance = Number.POSITIVE_INFINITY
-    Array.from(track.children).forEach((child, index) => {
-      const distance = Math.abs((child as HTMLElement).offsetLeft - track.scrollLeft)
-      if (distance < nearestDistance) {
-        nearestDistance = distance
-        nearestIndex = index
-      }
-    })
-    setActiveIndex(nearestIndex)
-    updateScrollState()
-  }
-
+  const { viewportRef, hasOverflow, scrollPrev, scrollNext } = useInfiniteCarousel()
   const showEmptyState = !isLoading && !categoriesQuery.isError && mainCategories.length === 0
 
   return (
-    <section className="bg-[var(--color-background)] py-16">
+    <section className="bg-[var(--color-background)] py-10 md:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <header className="mb-8 flex items-end justify-between gap-6">
-          <div>
-            <h2 className="mb-2 text-2xl font-bold text-[var(--color-navy)] md:text-3xl">Categorias em Destaque</h2>
-            <p className="text-sm text-[var(--color-text-muted)] md:text-base">Navegue pelas principais linhas de produtos</p>
-          </div>
-          <div className="hidden shrink-0 items-center gap-3 sm:flex">
+        <CarouselSectionHeader
+          title="Categorias em Destaque"
+          description="Navegue pelas principais linhas de produtos"
+          hasOverflow={hasOverflow}
+          onPrevious={scrollPrev}
+          onNext={scrollNext}
+          previousLabel="Categoria anterior"
+          nextLabel="Próxima categoria"
+          action={(
             <Link
               to={"/$countryCode/categories" as string}
               params={{ countryCode }}
-              className="text-sm font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+              className="hidden text-sm font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:inline-flex"
             >
               Ver todas as categorias
             </Link>
-            <div className="flex items-center gap-1" aria-label="Navegação das categorias">
-              <button
-                type="button"
-                data-testid="featured-category-previous"
-                aria-label="Categoria anterior"
-                className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={!scrollState.canPrevious}
-                onClick={() => scrollToCategory("previous")}
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                data-testid="featured-category-next"
-                aria-label="Próxima categoria"
-                className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={!scrollState.canNext}
-                onClick={() => scrollToCategory("next")}
-              >
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </header>
+          )}
+        />
 
-        <div
-          className="relative"
-          role="region"
-          aria-label="Categorias em destaque"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowRight") {
-              event.preventDefault()
-              scrollToCategory("next")
-            }
-            if (event.key === "ArrowLeft") {
-              event.preventDefault()
-              scrollToCategory("previous")
-            }
-          }}
-        >
-          <div ref={trackRef} onScroll={syncActiveIndex} className="flex gap-5 overflow-x-auto overscroll-x-contain px-1 pb-2 scroll-smooth snap-x snap-mandatory scrollbar-hide focus:outline-none">
+        <div ref={viewportRef} className="ff-carousel-viewport" data-carousel-viewport="true" role="region" aria-label="Categorias em destaque">
+          <div className="ff-carousel-track" data-carousel-track="true">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="flex w-[136px] flex-shrink-0 snap-start flex-col items-center p-3 text-center md:w-[148px]">
+                <div key={index} className="flex flex-[0_0_136px] flex-col items-center text-center md:flex-[0_0_148px]">
                   <div className="mb-3 h-[76px] w-[104px] rounded-md bg-gray-200" />
                   <div className="h-4 w-3/4 rounded bg-gray-200" />
                 </div>
@@ -210,7 +111,8 @@ export function FeaturedCategories() {
                   to={"/$countryCode/categories/$handle" as string}
                   params={{ countryCode, handle: category.handle }}
                   data-testid="featured-category-item"
-                  className="group flex min-h-[136px] w-[136px] flex-shrink-0 snap-start flex-col items-center justify-start p-2 text-center transition-transform duration-[var(--motion-duration-card)] hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] md:w-[148px]"
+                  className="ff-carousel-slide ff-category-slide group flex min-h-[136px] flex-col items-center justify-start text-center transition-transform duration-[var(--motion-duration-card)] hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+                  data-carousel-slide="true"
                 >
                   <CategoryIllustration handle={category.handle} name={category.name} />
                   <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-tight text-[var(--color-navy)]">{category.name}</h3>

@@ -16,29 +16,32 @@ const CheckoutProgress = ({
   className,
 }: CheckoutProgressProps) => {
   return (
-    <div className={clsx("flex flex-wrap gap-4 items-center", className)}>
+    <nav aria-label="Etapas do checkout" className={clsx("rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm", className)}>
+      <ol className="grid grid-cols-3 gap-1">
       {steps.map((step, index) => (
-        <div key={step.key} className="flex items-center gap-4">
+        <li key={step.key} className="min-w-0">
           <Button
             onClick={() => handleStepChange(step.key)}
             variant={"ghost"}
             className={clsx(
-              "p-0 hover:bg-transparent",
-              index !== currentStepIndex &&
-                "text-zinc-600 hover:text-zinc-500",
-              index === currentStepIndex &&
-                "text-zinc-900 hover:text-zinc-600"
+              "h-auto w-full justify-start gap-2 rounded-xl px-2.5 py-2.5 text-left text-xs font-semibold sm:px-4 sm:text-sm",
+              index < currentStepIndex && "text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900",
+              index > currentStepIndex && "text-zinc-400",
+              index === currentStepIndex && "bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white"
             )}
             disabled={index > currentStepIndex}
+            aria-current={index === currentStepIndex ? "step" : undefined}
           >
-            {step.title}
+            <span className={clsx(
+              "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]",
+              index === currentStepIndex ? "bg-white/20" : index < currentStepIndex ? "bg-emerald-100" : "bg-zinc-100",
+            )}>{index < currentStepIndex ? "✓" : index + 1}</span>
+            <span className="truncate">{step.title}</span>
           </Button>
-          {index < steps.length - 1 && (
-            <div className="w-8 h-px bg-zinc-200" />
-          )}
-        </div>
+        </li>
       ))}
-    </div>
+      </ol>
+    </nav>
   )
 }
 

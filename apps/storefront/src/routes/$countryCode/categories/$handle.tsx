@@ -7,10 +7,11 @@ import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
 import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
+import { clampPage, normalizePage, offsetForPage, PRODUCTS_PER_PAGE } from "@/lib/utils/pagination"
 
 export const Route = createFileRoute("/$countryCode/categories/$handle")({
   validateSearch: z.object({
-    page: z.coerce.number().int().min(1).default(1),
+    page: z.preprocess((value) => normalizePage(value), z.number().int().min(1)).optional(),
   }),
   loaderDeps: ({ search }) => ({ page: search.page }),
   loader: async ({ params, context, deps }) => {
@@ -43,14 +44,14 @@ export const Route = createFileRoute("/$countryCode/categories/$handle")({
       throw notFound()
     }
 
-    const pageSize = 24
+    const pageSize = PRODUCTS_PER_PAGE
     const page = deps.page ?? 1
-    const productPage = await queryClient.ensureQueryData({
+    const firstPage = await queryClient.ensureQueryData({
       queryKey: ["products", { region_id: region.id, category_id: category.id, page }],
       queryFn: () => listProducts({
         query_params: {
           limit: pageSize,
-          offset: (page - 1) * pageSize,
+          offset: offsetForPage(page, pageSize),
           // Use the canonical Medusa id as a total ordering for stable offsets.
           order: "id",
           category_id: [category.id],
@@ -60,13 +61,30 @@ export const Route = createFileRoute("/$countryCode/categories/$handle")({
       }),
     })
 
+    const normalizedPage = clampPage(page, firstPage.count, pageSize)
+    const productPage = normalizedPage === page
+      ? firstPage
+      : await queryClient.ensureQueryData({
+          queryKey: ["products", { region_id: region.id, category_id: category.id, page: normalizedPage }],
+          queryFn: () => listProducts({
+            query_params: {
+              limit: pageSize,
+              offset: offsetForPage(normalizedPage, pageSize),
+              order: "id",
+              category_id: [category.id],
+              fields: PUBLIC_PRODUCT_CARD_FIELDS,
+            },
+            region_id: region.id,
+          }),
+        })
+
     return sanitize({
       countryCode,
       region,
       category: category as HttpTypes.StoreProductCategory,
       products: productPage.products as HttpTypes.StoreProduct[],
       count: productPage.count,
-      page,
+      page: normalizedPage,
       pageSize,
     })
   },

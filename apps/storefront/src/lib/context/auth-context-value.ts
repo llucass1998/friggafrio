@@ -8,8 +8,7 @@ export interface AuthContextValue {
   customer: HttpTypes.StoreCustomer | null
   employee: Employee | null
   isAdmin: boolean
-  login: (email: string, password: string) => Promise<void>
-  loginWithGoogle: (credential: string) => Promise<void>
+  login: (email: string, password: string) => Promise<"customer" | "admin">
   logout: () => Promise<void>
   refetch: () => Promise<void>
 }

@@ -1,20 +1,23 @@
 import { useState } from "react"
-import { useNavigate, useParams, Link } from "@tanstack/react-router"
+import { useNavigate, useParams, useSearch, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { LockClosedSolid } from "@medusajs/icons"
-import { GoogleLogin } from "@react-oauth/google"
+import { Eye, EyeOff, LockKeyhole } from "lucide-react"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { normalizeReturnTo } from "@/lib/auth/return-to"
+import { configuredAdminOrigin } from "@/lib/auth/admin-origin"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
-  const { login, loginWithGoogle } = useAuth()
+  const search = useSearch({ strict: false }) as { returnTo?: unknown }
+  const { login } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,35 +25,19 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // Authenticate with Medusa using the auth hook
-      await login(email, password)
-      console.log("[LoginPage] login successful, navigating to home")
-
-      // Navigate without full page reload to preserve auth state
-      navigate({ to: "/$countryCode", params: { countryCode } })
-    } catch (err: any) {
-      console.error("Login error:", err)
-      setError("Invalid email or password. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setError("")
-    setIsLoading(true)
-
-    try {
-      if (credentialResponse.credential) {
-        await loginWithGoogle(credentialResponse.credential)
-        console.log("[LoginPage] Google login successful, navigating to home")
-        navigate({ to: "/$countryCode", params: { countryCode } })
-      } else {
-        throw new Error("No credential received from Google")
+      const actor = await login(email, password)
+      if (actor === "admin") {
+        const adminOrigin = configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL)
+        if (!adminOrigin) {
+          throw new Error("Admin origin is not configured")
+        }
+        window.location.assign(`${adminOrigin}/app`)
+        return
       }
-    } catch (err: any) {
-      console.error("Google Login error:", err)
-      setError(err.message || "Falha na autenticação com Google. Tente novamente.")
+      const returnTo = normalizeReturnTo(search.returnTo, countryCode)
+      navigate({ to: returnTo as string })
+    } catch {
+      setError("E-mail ou senha inválidos.")
     } finally {
       setIsLoading(false)
     }
@@ -63,7 +50,7 @@ export default function LoginPage() {
         <div className="bg-surface rounded-2xl shadow-card border border-border p-8">
           {/* Icon */}
           <div className="w-14 h-14 bg-accent-light rounded-xl flex items-center justify-center mx-auto mb-6">
-            <LockClosedSolid className="w-7 h-7 text-accent" />
+            <LockKeyhole className="w-7 h-7 text-accent" aria-hidden="true" />
           </div>
 
           {/* Header */}
@@ -78,28 +65,6 @@ export default function LoginPage() {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
-
-          {/* Google Auth */}
-          <div className="mb-6 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => {
-                console.error("Google Login falhou na inicialização")
-                setError("Falha ao abrir pop-up do Google. Verifique o bloqueador de pop-ups.")
-              }}
-              shape="rectangular"
-              text="continue_with"
-              theme="outline"
-              size="large"
-            />
-          </div>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-[var(--color-border)]"></div>
-            <span className="px-4 text-sm text-[var(--color-text-muted)]">ou</span>
-            <div className="flex-1 border-t border-[var(--color-border)]"></div>
-          </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -119,25 +84,33 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text)] mb-2">
                 Senha
               </label>
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-input)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors text-[var(--color-text)]"
+                className="w-full px-4 py-3 pr-12 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-input)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors text-[var(--color-text)]"
                 placeholder="Digite sua senha"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                className="absolute bottom-3 right-3 rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+              </button>
             </div>
 
             <div className="flex items-center justify-between mt-2 mb-4">
               <Link
-                to="/$countryCode"
+                to="/$countryCode/account/forgot-password"
                 params={{ countryCode }}
                 className="text-sm text-[var(--color-primary)] hover:underline"
               >

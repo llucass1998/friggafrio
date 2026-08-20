@@ -30,6 +30,8 @@ interface AddressFormProps {
   className?: string;
   /** If provided, the country field will be pre-populated with this value and made readonly */
   lockedCountryCode?: string;
+  /** Restricts checkout addresses to a specific state without affecting account forms. */
+  lockedProvince?: string;
 }
 
 const AddressForm = ({
@@ -43,6 +45,7 @@ const AddressForm = ({
   countries: customCountries,
   className,
   lockedCountryCode,
+  lockedProvince,
 }: AddressFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
@@ -55,6 +58,12 @@ const AddressForm = ({
       setAddressFormData((prev: AddressData) => ({ ...prev, country_code: lockedCountryCode }))
     }
   }, [lockedCountryCode, addressFormData.country_code, setAddressFormData])
+
+  useEffect(() => {
+    if (lockedProvince && addressFormData.province !== lockedProvince) {
+      setAddressFormData((prev: AddressData) => ({ ...prev, province: lockedProvince }))
+    }
+  }, [lockedProvince, addressFormData.province, setAddressFormData])
 
   const handleChange = (field: string, value: string) => {
     setAddressFormData((prev: AddressData) => ({ ...prev, [field]: value }))
@@ -90,10 +99,14 @@ const AddressForm = ({
       newErrors.postal_code = "CEP é obrigatório"
     if (!addressFormData.country_code?.trim())
       newErrors.country_code = "País é obrigatório"
-    const countryCodeExists = countriesInput.some(
-      (country) => country.code === addressFormData.country_code
-    )
+    const countryCodeExists = lockedCountryCode
+      ? addressFormData.country_code?.toLowerCase() === lockedCountryCode.toLowerCase()
+      : countriesInput.some((country) => country.code === addressFormData.country_code)
     if (!countryCodeExists) newErrors.country_code = "País inválido"
+
+    if (lockedProvince && addressFormData.province?.toLowerCase() !== lockedProvince.toLowerCase()) {
+      newErrors.province = "Estado invalido"
+    }
 
     setErrors(newErrors)
     const isValid = Object.keys(newErrors).length === 0
@@ -268,11 +281,15 @@ const AddressForm = ({
             value={addressFormData.province ?? ""}
             onChange={(e) => handleChange("province", e.target.value)}
             placeholder="Ex: SP"
+            readOnly={!!lockedProvince}
+            aria-readonly={!!lockedProvince}
+            className={lockedProvince ? "bg-zinc-50 text-zinc-700" : undefined}
           />
+          {lockedProvince && <p className="text-xs text-zinc-500">Entregas disponiveis somente em Sao Paulo.</p>}
         </div>
       </div>
 
-      {/* Country */}
+      {!lockedCountryCode && (
       <div className="flex flex-col gap-2">
         <label
           htmlFor="country_code"
@@ -317,6 +334,7 @@ const AddressForm = ({
           </div>
         )}
       </div>
+      )}
 
       {/* Phone */}
       <div className="flex flex-col gap-2">

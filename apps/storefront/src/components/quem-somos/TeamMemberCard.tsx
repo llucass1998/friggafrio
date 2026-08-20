@@ -7,7 +7,7 @@ interface TeamMemberCardProps {
 
 export function TeamMemberCard({ member }: TeamMemberCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-[#bae6fd] shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 motion-safe:hover:-translate-y-1 focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
+    <div className="w-full bg-white rounded-xl border border-[#bae6fd] shadow-sm overflow-hidden hover:shadow-md transition-[box-shadow,border-color] duration-300 focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
       <div className="aspect-[3/4] w-full bg-[#f1f5f9] relative">
         {member.imageSrc ? (
           <img

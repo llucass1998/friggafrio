@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint src",
     "test": "pnpm test:unit",
-    "test:unit": "tsx --test tests/unit/cart.test.mjs tests/unit/cart-commercial-ui.test.mjs tests/unit/auth.test.mjs tests/unit/locale.test.mjs tests/unit/product-state.test.mjs tests/unit/product-commercial-ui.test.mjs tests/unit/store-locations.test.ts tests/unit/header-navigation.test.ts tests/unit/motion.test.ts tests/unit/shipping-state.test.mjs tests/unit/checkout-ready.test.ts tests/unit/checkout-prepare.test.ts",
+    "test:unit": "tsx --test tests/unit/cart.test.mjs tests/unit/cart-commercial-ui.test.mjs tests/unit/auth.test.mjs tests/unit/security-routes.test.mjs tests/unit/account-shell.test.ts tests/unit/favorites.test.ts tests/unit/cep.test.ts tests/unit/pagination.test.ts tests/unit/locale.test.mjs tests/unit/product-state.test.mjs tests/unit/product-whatsapp.test.ts tests/unit/product-commercial-ui.test.mjs tests/unit/store-locations.test.ts tests/unit/header-navigation.test.ts tests/unit/motion.test.ts tests/unit/shipping-state.test.mjs tests/unit/checkout-ready.test.ts tests/unit/checkout-prepare.test.ts tests/unit/order-tracking.test.ts",
     "typecheck": "tsc --noEmit",
     "serve": "vite preview",
     "preview": "vite preview",

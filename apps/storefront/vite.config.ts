@@ -8,8 +8,17 @@ import viteTsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
+  const allowedHosts = ["friggafrio.istigestao.com.br"];
 
   return {
+    server: {
+      allowedHosts,
+    },
+
+    preview: {
+      allowedHosts,
+    },
+
     plugins: [
       Terminal({ console: "terminal", output: ["terminal"] }),
       viteTsConfigPaths({ projects: ["./tsconfig.json"] }),

@@ -10,7 +10,7 @@ type FavoriteButtonProps = {
 export function FavoriteButton({ productId, productTitle = "produto", className = "" }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const active = isFavorite(productId)
-  const actionLabel = active ? "Remover aos favoritos" : "Adicionar aos favoritos"
+  const actionLabel = active ? "Remover dos favoritos" : "Adicionar aos favoritos"
 
   return (
     <button

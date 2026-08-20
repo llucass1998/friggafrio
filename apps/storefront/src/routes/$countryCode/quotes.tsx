@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router"
 import QuotesPage from "@/pages/quotes"
+import AccountShell from "@/components/account-shell"
 
 export const Route = createFileRoute("/$countryCode/quotes")({
-  component: QuotesPage,
+  component: () => (
+    <AccountShell>
+      <QuotesPage />
+    </AccountShell>
+  ),
   head: () => {
     return {
       meta: [

@@ -18,12 +18,14 @@ describe("checkout preparation contract", () => {
       city: "Sao Paulo",
       postal_code: "01310-100",
       country_code: "BR",
+      province: "SP",
     })
     expect(normalized.errors).toEqual([])
     expect(normalized.address).toMatchObject({ country_code: "br", postal_code: "01310-100" })
 
-    const foreign = normalizeBrazilAddress({ country_code: "us", postal_code: "00000" })
+    const foreign = normalizeBrazilAddress({ country_code: "us", province: "rj", postal_code: "00000" })
     expect(foreign.errors.map((error) => error.code)).toContain("INVALID_COUNTRY")
+    expect(foreign.errors.map((error) => error.code)).toContain("INVALID_PROVINCE")
     expect(foreign.errors.map((error) => error.code)).toContain("INVALID_POSTAL_CODE")
   })
 

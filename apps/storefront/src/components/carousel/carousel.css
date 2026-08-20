@@ -1,0 +1,114 @@
+:root {
+  --ff-carousel-gap: 16px;
+}
+
+.ff-carousel-section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 16px;
+}
+
+.ff-carousel-section-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ff-carousel-viewport {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ff-carousel-track {
+  display: flex;
+  /* Keep spacing on each slide so Embla preserves it when loop slides are
+     moved across the DOM boundary. A track-level gap can disappear at that
+     seam during circular repositioning. */
+  gap: 0;
+  min-width: 0;
+}
+
+.ff-carousel-slide {
+  min-width: 0;
+  flex: 0 0 100%;
+  margin-inline-end: var(--ff-carousel-gap);
+}
+
+.ff-product-slide {
+  flex-basis: 100%;
+}
+
+.ff-team-slide {
+  flex-basis: 100%;
+}
+
+/* Keep the card itself aligned to the slide width. Without this, flex items
+   fall back to their intrinsic content width and create uneven gaps. */
+.ff-product-slide > *,
+.ff-team-slide > *,
+.ff-brand-slide > * {
+  width: 100%;
+}
+
+.ff-brand-slide {
+  flex-basis: calc((100% - (var(--ff-carousel-gap) * 2)) / 2);
+}
+
+.ff-category-slide {
+  flex: 0 0 136px;
+}
+
+@media (min-width: 640px) {
+  .ff-product-slide,
+  .ff-team-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 2)) / 2);
+  }
+
+  .ff-brand-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 3)) / 3);
+  }
+}
+
+@media (min-width: 768px) {
+  .ff-category-slide {
+    flex-basis: 148px;
+  }
+
+  .ff-team-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 2)) / 3);
+  }
+
+  .ff-brand-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 4)) / 4);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ff-product-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 3)) / 3);
+  }
+
+  .ff-team-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 4)) / 4);
+  }
+}
+
+@media (min-width: 1280px) {
+  .ff-product-slide {
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 4)) / 4);
+  }
+
+  .ff-brand-slide {
+    /* Add a subpixel-safe fraction so the next loop item cannot leak through
+       the clipped viewport after fractional layout rounding. */
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 5) + 0.5px) / 5);
+  }
+}
+
+@media (max-width: 639px) {
+  .ff-carousel-section-header__actions {
+    gap: 8px;
+  }
+}

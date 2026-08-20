@@ -23,3 +23,15 @@ test("Nossa Loja uses one consolidated location component without selection UX",
   assert.match(cardSource, /GoogleStoreMap/)
   assert.match(cardSource, /StoreStreetView/)
 })
+
+test("Street View only renders from verified coordinates", () => {
+  const streetViewSource = readFileSync(
+    new URL("../../src/components/store-locations/StoreStreetView.tsx", import.meta.url),
+    "utf8"
+  )
+
+  assert.match(streetViewSource, /Number\.isFinite\(location\.latitude\)/)
+  assert.match(streetViewSource, /Number\.isFinite\(location\.longitude\)/)
+  assert.match(streetViewSource, /location=\$\{location\.latitude\},\$\{location\.longitude\}/)
+  assert.doesNotMatch(streetViewSource, /place_id=/)
+})

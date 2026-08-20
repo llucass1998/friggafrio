@@ -6,6 +6,10 @@ import {
   isAuthenticCheckoutPreparationMarker,
   stableCheckoutHash,
 } from "../../../../../utils/checkout-preparation"
+import {
+  assertCheckoutCartOwnership,
+  authenticatedCheckoutCustomerId,
+} from "../../../../../utils/checkout-customer-authorization"
 
 /**
  * Legacy compatibility endpoint. Inventory reservation and readiness now live
@@ -13,6 +17,7 @@ import {
  * marker and never creates a reservation on its own.
  */
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  const customerId = authenticatedCheckoutCustomerId(req)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
     entity: "cart",
@@ -35,26 +40,20 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       "shipping_methods.shipping_option_id",
       "shipping_methods.amount",
     ],
-    filters: { id: req.params.id },
+    filters: { id: req.params.id, customer_id: customerId },
   })
 
   const cart = data[0] as Record<string, unknown> | undefined
   if (!cart) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Cart not found")
   }
+  assertCheckoutCartOwnership(customerId, cart.customer_id)
   if (cart.completed_at) {
     return res.status(409).json({
       checkout_ready: false,
       code: "cart_completed",
       message: "Completed carts cannot be prepared again.",
     })
-  }
-  const actorId = (req as MedusaRequest & { auth_context?: { actor_id?: string } }).auth_context?.actor_id
-  if (cart.customer_id && actorId !== cart.customer_id) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Cart does not belong to the authenticated customer")
-  }
-  if (!cart.customer_id && actorId) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Guest cart requires its original browser session")
   }
   const marker = (cart.metadata as Record<string, unknown> | null | undefined)?.[CHECKOUT_PREPARATION_METADATA_KEY]
   const snapshot = checkoutSnapshotFromCart(cart as never)

@@ -24,7 +24,7 @@ export interface QuoteWithRequestedBy extends Quote {
 }
 
 export function useQuotes() {
-  const { employee } = useAuth()
+  const { employee, isAuthenticated, isLoading } = useAuth()
   const isAdmin = employee?.is_admin === true
 
   return useQuery({
@@ -43,6 +43,7 @@ export function useQuotes() {
         return quotes
       }
     },
+    enabled: isAuthenticated && !isLoading,
   })
 }
 

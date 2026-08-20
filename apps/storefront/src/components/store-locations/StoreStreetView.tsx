@@ -7,8 +7,11 @@ interface StoreStreetViewProps {
 
 export function StoreStreetView({ location }: StoreStreetViewProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY
+  const hasCoordinates = Number.isFinite(location.latitude) && Number.isFinite(location.longitude)
 
-  if (!apiKey) {
+  // Street View Embed requires a verified panorama or latitude/longitude pair.
+  // Do not send an unverified address string as though it were a panorama location.
+  if (!apiKey || !hasCoordinates) {
     return (
       <div data-testid="store-streetview-fallback" className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center lg:min-h-[360px]">
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--color-primary)] shadow-sm">
@@ -32,9 +35,7 @@ export function StoreStreetView({ location }: StoreStreetViewProps) {
     )
   }
 
-  const queryParam = location.placeId
-    ? `place_id=${location.placeId}`
-    : `location=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
+  const queryParam = `location=${location.latitude},${location.longitude}`
 
   const embedUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&${queryParam}`
 

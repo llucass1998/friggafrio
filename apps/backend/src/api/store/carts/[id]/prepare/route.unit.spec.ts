@@ -42,7 +42,7 @@ const makeResponse = () => {
 const makeCart = (overrides: Record<string, unknown> = {}) => ({
   id: "cart_prepare_1",
   completed_at: null,
-  customer_id: null,
+  customer_id: "customer_owner",
   email: "guest@example.com",
   currency_code: "brl",
   sales_channel_id: "sc_br",
@@ -108,6 +108,17 @@ const makeScope = (cart: Record<string, unknown>) => {
   }
 }
 
+const request = (
+  scope: ReturnType<typeof makeScope>["scope"],
+  body: Record<string, unknown> = {},
+  actorId = "customer_owner",
+) => ({
+  params: { id: "cart_prepare_1" },
+  body,
+  auth_context: { actor_id: actorId },
+  scope,
+})
+
 describe("cart prepare boundary", () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -122,7 +133,7 @@ describe("cart prepare boundary", () => {
     const { scope, updateCarts } = makeScope(makeCart())
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, response as never)
+    await POST(request(scope) as never, response as never)
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({ cart_id: "cart_prepare_1", checkout_state: "READY_FOR_PAYMENT", total: 100 })
@@ -138,7 +149,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(invalidCart)
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: { shipping_amount: 999 }, scope } as never, response as never)
+    await POST(request(scope, { shipping_amount: 999 }) as never, response as never)
 
     expect(response.statusCode).toBe(400)
     expect(response.body).toMatchObject({ checkout_state: "BLOCKED", validation: { valid: false } })
@@ -151,7 +162,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(makeCart())
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: { shipping_amount: 10 }, scope } as never, response as never)
+    await POST(request(scope, { shipping_amount: 10 }) as never, response as never)
 
     expect(response.statusCode).toBe(400)
     expect((response.body?.validation as { errors: Array<{ code: string }> }).errors.map((error) => error.code))
@@ -184,7 +195,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(cart)
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, response as never)
+    await POST(request(scope) as never, response as never)
 
     expect(response.statusCode).toBe(400)
     expect((response.body?.validation as { errors: Array<{ code: string }> }).errors.map((error) => error.code))
@@ -197,8 +208,8 @@ describe("cart prepare boundary", () => {
     const first = makeResponse()
     const second = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, first as never)
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, second as never)
+    await POST(request(scope) as never, first as never)
+    await POST(request(scope) as never, second as never)
 
     expect(first.statusCode).toBe(200)
     expect(second.statusCode).toBe(200)
@@ -252,8 +263,8 @@ describe("cart prepare boundary", () => {
     const first = makeResponse()
     const second = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, first as never)
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, second as never)
+    await POST(request(scope) as never, first as never)
+    await POST(request(scope) as never, second as never)
 
     expect(first.statusCode).toBe(200)
     expect(second.statusCode).toBe(200)
@@ -271,7 +282,7 @@ describe("cart prepare boundary", () => {
     const first = makeResponse()
     const second = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, first as never)
+    await POST(request(scope) as never, first as never)
 
     const item = (cart.items as Array<{ quantity: number }>)[0]
     item.quantity = 2
@@ -279,7 +290,7 @@ describe("cart prepare boundary", () => {
     cart.subtotal = 200
     cart.total = 200
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, second as never)
+    await POST(request(scope) as never, second as never)
 
     expect(first.statusCode).toBe(200)
     expect(second.statusCode).toBe(200)
@@ -294,7 +305,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(makeCart({ item_subtotal: 99, total: 99 }))
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, response as never)
+    await POST(request(scope) as never, response as never)
 
     expect(response.statusCode).toBe(400)
     expect((response.body?.validation as { errors: Array<{ code: string }> }).errors.map((error) => error.code))
@@ -322,7 +333,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(cart)
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, response as never)
+    await POST(request(scope) as never, response as never)
 
     expect(response.statusCode).toBe(200)
     expect(refreshRun).toHaveBeenCalledWith({ input: {
@@ -337,7 +348,7 @@ describe("cart prepare boundary", () => {
     const { scope } = makeScope(makeCart())
     const response = makeResponse()
 
-    await POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, response as never)
+    await POST(request(scope) as never, response as never)
 
     expect(response.statusCode).toBe(400)
     expect(response.body).toMatchObject({ checkout_state: "BLOCKED" })
@@ -345,14 +356,25 @@ describe("cart prepare boundary", () => {
       .toBe("INVENTORY_UNAVAILABLE")
   })
 
-  it("enforces authenticated cart ownership and does not allow bearer actors to prepare guest carts", async () => {
-    const owned = makeScope(makeCart({ customer_id: "customer_owner" }))
+  it("denies guest checkout preparation before cart lookup", async () => {
+    const { scope, graph } = makeScope(makeCart())
+
+    await expect(POST({ params: { id: "cart_prepare_1" }, body: {}, scope } as never, makeResponse() as never))
+      .rejects.toMatchObject({ type: "unauthorized" })
+    expect(graph).not.toHaveBeenCalled()
+  })
+
+  it("returns the same non-enumerating result for cross-customer and guest carts", async () => {
+    const owned = makeScope(makeCart({
+      customer_id: "customer_owner",
+      completed_at: new Date().toISOString(),
+    }))
     await expect(POST({
       params: { id: "cart_prepare_1" },
       body: {},
       auth_context: { actor_id: "customer_other" },
       scope: owned.scope,
-    } as never, makeResponse() as never)).rejects.toMatchObject({ type: "unauthorized" })
+    } as never, makeResponse() as never)).rejects.toMatchObject({ type: "not_found", message: "Cart not found" })
 
     const guest = makeScope(makeCart({ customer_id: null }))
     await expect(POST({
@@ -360,6 +382,30 @@ describe("cart prepare boundary", () => {
       body: {},
       auth_context: { actor_id: "customer_actor" },
       scope: guest.scope,
-    } as never, makeResponse() as never)).rejects.toMatchObject({ type: "unauthorized" })
+    } as never, makeResponse() as never)).rejects.toMatchObject({ type: "not_found", message: "Cart not found" })
+  })
+
+  it("ignores a tampered customer_id and uses only the authenticated customer", async () => {
+    const { scope, graph } = makeScope(makeCart({ customer_id: "customer_owner" }))
+
+    await expect(POST(request(scope, { customer_id: "customer_owner" }, "customer_other") as never, makeResponse() as never))
+      .rejects.toMatchObject({ type: "not_found", message: "Cart not found" })
+    expect(graph).toHaveBeenCalledWith(expect.objectContaining({
+      filters: { id: "cart_prepare_1", customer_id: "customer_other" },
+    }))
+  })
+
+  it("allows a customer-owned BR/SP cart and rejects US/RJ addresses", async () => {
+    const allowed = makeScope(makeCart({ shipping_address: { ...makeCart().shipping_address, country_code: "BR", province: "SP" } }))
+    const allowedResponse = makeResponse()
+    await POST(request(allowed.scope) as never, allowedResponse as never)
+    expect(allowedResponse.statusCode).toBe(200)
+
+    const rejected = makeScope(makeCart({ shipping_address: { ...makeCart().shipping_address, country_code: "US", province: "RJ" } }))
+    const rejectedResponse = makeResponse()
+    await POST(request(rejected.scope) as never, rejectedResponse as never)
+    expect(rejectedResponse.statusCode).toBe(400)
+    expect((rejectedResponse.body?.validation as { errors: Array<{ code: string }> }).errors.map((error) => error.code))
+      .toEqual(expect.arrayContaining(["INVALID_COUNTRY", "INVALID_PROVINCE"]))
   })
 })

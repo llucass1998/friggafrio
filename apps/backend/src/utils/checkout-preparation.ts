@@ -50,10 +50,14 @@ export const normalizeBrazilAddress = (
 ): { address?: CheckoutAddress; errors: CheckoutValidationError[] } => {
   const input = value && typeof value === "object" ? value as Record<string, unknown> : {}
   const country = text(input.country_code).toLowerCase()
+  const province = text(input.province).toLowerCase()
   const errors: CheckoutValidationError[] = []
 
   if (country !== "br") {
     errors.push({ code: "INVALID_COUNTRY", field: "shipping_address.country_code", message: "Delivery address must be in Brazil." })
+  }
+  if (province !== "sp" && province !== "br-sp") {
+    errors.push({ code: "INVALID_PROVINCE", field: "shipping_address.province", message: "Delivery address must be in Sao Paulo." })
   }
 
   const firstName = text(input.first_name)
@@ -84,7 +88,7 @@ export const normalizeBrazilAddress = (
       address_2: text(input.address_2) || undefined,
       city,
       postal_code: `${postalDigits.slice(0, 5)}-${postalDigits.slice(5)}`,
-      province: text(input.province) || undefined,
+      province: province === "br-sp" ? "br-sp" : "SP",
       country_code: "br",
       phone: text(input.phone) || undefined,
     },

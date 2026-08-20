@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input"
 import { useSetCartAddresses } from "@/lib/hooks/use-checkout"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
-import { getStoredCountryCode } from "@/lib/utils/region"
 import { AddressFormData } from "@/lib/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { useQuery } from "@tanstack/react-query"
@@ -35,6 +34,9 @@ interface AddressStepProps {
   onNext: () => void;
 }
 
+const CHECKOUT_COUNTRY_CODE = "br"
+const CHECKOUT_PROVINCE = "SP"
+
 function applyCompanyAddress(
   addr: CompanyAddressData,
   setter: React.Dispatch<React.SetStateAction<AddressFormData>>
@@ -47,8 +49,8 @@ function applyCompanyAddress(
     address_2: addr.address_2 || "",
     city: addr.city,
     postal_code: addr.postal_code,
-    province: addr.province || "",
-    country_code: addr.country_code,
+    province: CHECKOUT_PROVINCE,
+    country_code: CHECKOUT_COUNTRY_CODE,
     phone: addr.phone || "",
   })
 }
@@ -62,7 +64,6 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   const [isBillingAddressValid, setIsBillingAddressValid] = useState(false)
   const [email, setEmail] = useState(cart.email || "")
   const [emailTouched, setEmailTouched] = useState(Boolean(cart.email))
-  const storedCountryCode = getStoredCountryCode()
   const [mutationError, setMutationError] = useState<string | null>(null)
 
   const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(null)
@@ -96,9 +97,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     address_2: cart.shipping_address?.address_2 || "",
     city: cart.shipping_address?.city || "",
     postal_code: cart.shipping_address?.postal_code || "",
-    province: cart.shipping_address?.province || "",
-    country_code:
-      cart.shipping_address?.country_code || storedCountryCode || "",
+    province: CHECKOUT_PROVINCE,
+    country_code: CHECKOUT_COUNTRY_CODE,
     phone: cart.shipping_address?.phone || "",
   })
   const [billingAddress, setBillingAddress] = useState<AddressFormData>({
@@ -109,8 +109,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     address_2: cart.billing_address?.address_2 || "",
     city: cart.billing_address?.city || "",
     postal_code: cart.billing_address?.postal_code || "",
-    province: cart.billing_address?.province || "",
-    country_code: cart.billing_address?.country_code || storedCountryCode || "",
+    province: CHECKOUT_PROVINCE,
+    country_code: CHECKOUT_COUNTRY_CODE,
     phone: cart.billing_address?.phone || "",
   })
 
@@ -203,33 +203,15 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   }
 
   useEffect(() => {
-    if (!cart.region) {
-      return
-    }
-
-    const isValidShippingAddressCountry = cart.region.countries?.some(
-      (country) => country.iso_2 === shippingAddress.country_code
-    )
-    if (!isValidShippingAddressCountry && !hasCompanyAddresses) {
-      setShippingAddress((prev) => ({
-        ...prev,
-        country_code: storedCountryCode || "",
-      }))
-    }
-
-    const isValidBillingAddressCountry = cart.region.countries?.some(
-      (country) => country.iso_2 === billingAddress.country_code
-    )
-    if (!isValidBillingAddressCountry && !hasCompanyAddresses) {
-      setBillingAddress((prev) => ({
-        ...prev,
-        country_code: storedCountryCode || "",
-      }))
-    }
-  }, [cart.region, storedCountryCode, shippingAddress.country_code, billingAddress.country_code, hasCompanyAddresses])
+    setShippingAddress((previous) => previous.country_code === CHECKOUT_COUNTRY_CODE ? previous : { ...previous, country_code: CHECKOUT_COUNTRY_CODE })
+    setBillingAddress((previous) => previous.country_code === CHECKOUT_COUNTRY_CODE ? previous : { ...previous, country_code: CHECKOUT_COUNTRY_CODE })
+  }, [])
 
   return (
     <div className="flex flex-col gap-8">
+      <div className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm leading-5 text-teal-950">
+        Informe um endereco para entrega em Sao Paulo. O frete sera calculado na proxima etapa.
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         {/* Shipping Address */}
         <div className="flex flex-col gap-2">
@@ -248,12 +230,14 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
               setAddressFormData={setShippingAddress}
               countries={cart.region?.countries}
               setIsFormValid={setIsShippingAddressValid}
+              lockedCountryCode={CHECKOUT_COUNTRY_CODE}
+              lockedProvince={CHECKOUT_PROVINCE}
             />
           )}
         </div>
 
         {/* Billing Address Checkbox */}
-        <div className="flex items-center gap-x-2">
+        <div className="flex items-start gap-x-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
           <Checkbox
             id="same_as_billing"
             type="checkbox"
@@ -266,7 +250,7 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
               }
             }}
           />
-          <label htmlFor="same_as_billing" className="text-sm">
+          <label htmlFor="same_as_billing" className="text-sm leading-5">
             O endereço de cobrança é o mesmo da entrega
           </label>
         </div>
@@ -289,6 +273,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
                 setAddressFormData={setBillingAddress}
                 countries={cart.region?.countries}
                 setIsFormValid={setIsBillingAddressValid}
+                lockedCountryCode={CHECKOUT_COUNTRY_CODE}
+                lockedProvince={CHECKOUT_PROVINCE}
               />
             )}
           </div>
@@ -329,8 +315,9 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
           </div>
         )}
 
-        <div className="flex">
-          <Button type="submit" disabled={!isFormValid() || isSubmitting} className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
+        <div className="flex flex-col gap-3 border-t border-zinc-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs leading-5 text-zinc-500">Voce podera confirmar a opcao de entrega antes de continuar.</p>
+          <Button type="submit" disabled={!isFormValid() || isSubmitting} className="w-full motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] sm:w-auto">
             Próximo
           </Button>
         </div>

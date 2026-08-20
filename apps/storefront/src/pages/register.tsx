@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { BuildingsSolid, User } from "@medusajs/icons"
 import { Eye, EyeOff } from "lucide-react"
-import { GoogleLogin } from "@react-oauth/google"
 import {
   personRegistrationSchema,
   companyRegistrationSchema,
@@ -21,7 +20,7 @@ export default function RegisterPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || "br"
-  const { login, loginWithGoogle } = useAuth()
+  const { login } = useAuth()
 
   const [registerType, setRegisterType] = useState<"PERSON" | "COMPANY">("PERSON")
   const [showPassword, setShowPassword] = useState(false)
@@ -163,26 +162,6 @@ export default function RegisterPage() {
       } else {
         setServerError("Não foi possível concluir o cadastro. Revise os dados e tente novamente.")
       }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setServerError("")
-    setIsLoading(true)
-
-    try {
-      if (credentialResponse.credential) {
-        await loginWithGoogle(credentialResponse.credential)
-        console.log("[RegisterPage] Google login/register successful, navigating to home")
-        navigate({ to: "/$countryCode", params: { countryCode } })
-      } else {
-        throw new Error("No credential received from Google")
-      }
-    } catch (err: any) {
-      console.error("Google Login error:", err)
-      setServerError(err.message || "Falha na autenticação com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -637,25 +616,25 @@ export default function RegisterPage() {
               </form>
             </div>
 
-            {/* Separator & OAuth */}
+            {/* Google is intentionally unavailable until a Medusa provider is registered. */}
             <div className="my-8 flex items-center">
               <div className="flex-1 border-t border-[var(--color-border)]"></div>
               <span className="px-4 text-sm text-[var(--color-text-muted)] font-medium">ou</span>
               <div className="flex-1 border-t border-[var(--color-border)]"></div>
             </div>
 
-            <div className="flex justify-center mb-6">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => {
-                  console.error("Google Login falhou na inicializacao")
-                  setServerError("Falha ao abrir pop-up do Google. Verifique o bloqueador de pop-ups.")
-                }}
-                shape="rectangular"
-                text="continue_with"
-                theme="outline"
-                size="large"
-              />
+            <div className="mb-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 text-center">
+              <button
+                type="button"
+                disabled
+                aria-describedby="google-register-unavailable"
+                className="w-full cursor-not-allowed rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-3 font-medium text-[var(--color-text-muted)] opacity-70"
+              >
+                Continuar com Google (indisponivel)
+              </button>
+              <p id="google-register-unavailable" className="mt-2 text-sm text-[var(--color-text-muted)]">
+                O cadastro com Google esta temporariamente indisponivel. Cadastre-se com e-mail e senha.
+              </p>
             </div>
 
             {/* Login Link */}

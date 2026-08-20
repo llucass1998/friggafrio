@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   FAVORITES_STORAGE_KEY,
+  customerFavoritesStorageKey,
+  mergeFavoriteIds,
   parseFavoriteIds,
   toggleFavoriteId,
 } from "../../src/lib/hooks/use-favorites.ts"
@@ -17,6 +19,14 @@ test("favorite ids parse safely and remove duplicates", () => {
   )
   assert.deepEqual(parseFavoriteIds("not-json"), [])
   assert.deepEqual(parseFavoriteIds(JSON.stringify({ id: "prod-1" })), [])
+})
+
+test("customer favorites use an isolated storage bucket and merge without duplicates", () => {
+  assert.equal(customerFavoritesStorageKey("cus_123"), "friggafrio:favorites:cus_123")
+  assert.deepEqual(
+    mergeFavoriteIds(["prod-1", "prod-2"], [" prod-2 ", "prod-3"], [""]),
+    ["prod-1", "prod-2", "prod-3"],
+  )
 })
 
 test("toggleFavoriteId adds and removes a product id", () => {

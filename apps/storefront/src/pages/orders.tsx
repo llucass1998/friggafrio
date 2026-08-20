@@ -21,6 +21,8 @@ import {
 import type { HttpTypes } from "@medusajs/types"
 import { paymentAvailability } from "@/lib/config/payment-availability"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { getOrderTracking } from "@/lib/utils/order-tracking"
+import { OrderTrackingTimeline, OrderTrackingBadge } from "@/components/order-tracking"
 
 function formatDate(dateValue: string | Date | undefined | null): string {
   if (!dateValue) return "-"
@@ -36,25 +38,25 @@ function getOrderStatusConfig(status: string) {
   switch (status) {
     case "pending":
       return {
-        label: "Pending",
+        label: "Pendente",
         icon: Clock,
         bgClass: "bg-amber-100 text-amber-700",
       }
     case "completed":
       return {
-        label: "Completed",
+        label: "Concluído",
         icon: CheckCircleSolid,
         bgClass: "bg-green-100 text-green-700",
       }
     case "canceled":
       return {
-        label: "Canceled",
+        label: "Cancelado",
         icon: XCircleSolid,
         bgClass: "bg-red-100 text-red-700",
       }
     case "requires_action":
       return {
-        label: "Requires Action",
+        label: "Requer ação",
         icon: Clock,
         bgClass: "bg-blue-100 text-blue-700",
       }
@@ -71,43 +73,43 @@ function getPaymentStatusConfig(status: string | undefined) {
   switch (status) {
     case "not_paid":
       return {
-        label: "Awaiting Payment",
+        label: "Aguardando pagamento",
         bgClass: "bg-amber-100 text-amber-700",
         showPayButton: paymentAvailability.processingEnabled,
       }
     case "awaiting":
       return {
-        label: "Processing",
+        label: "Processando",
         bgClass: "bg-blue-100 text-blue-700",
         showPayButton: false,
       }
     case "captured":
       return {
-        label: "Paid",
+        label: "Pago",
         bgClass: "bg-green-100 text-green-700",
         showPayButton: false,
       }
     case "refunded":
       return {
-        label: "Refunded",
+        label: "Reembolsado",
         bgClass: "bg-gray-100 text-gray-700",
         showPayButton: false,
       }
     case "partially_refunded":
       return {
-        label: "Partially Refunded",
+        label: "Reembolsado parcialmente",
         bgClass: "bg-gray-100 text-gray-700",
         showPayButton: false,
       }
     case "canceled":
       return {
-        label: "Canceled",
+        label: "Cancelado",
         bgClass: "bg-red-100 text-red-700",
         showPayButton: false,
       }
     default:
       return {
-        label: status || "Unknown",
+        label: status || "Desconhecido",
         bgClass: "bg-gray-100 text-gray-700",
         showPayButton: false,
       }
@@ -141,10 +143,10 @@ function OrderDetailModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Order {formatOrderId(String(order.display_id ?? order.id ?? ""))}
+              Pedido {formatOrderId(String(order.display_id ?? order.id ?? ""))}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Placed on {formatDate(order.created_at!)}
+              Realizado em {formatDate(order.created_at!)}
             </p>
           </div>
           <button
@@ -173,6 +175,8 @@ function OrderDetailModal({
             </span>
           </div>
 
+          <OrderTrackingTimeline order={order} />
+
           {/* Payment Required Banner */}
           {paymentStatusConfig.showPayButton && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -183,7 +187,7 @@ function OrderDetailModal({
                   </div>
                   <div>
                     <h4 className="font-medium text-amber-800">
-                      Payment Required
+                      Pagamento necessário
                     </h4>
                     <p className="text-sm text-amber-600">
                       Pagamento temporariamente indisponível
@@ -194,7 +198,7 @@ function OrderDetailModal({
                   to={"/$countryCode/order/$orderId/payment" as string} params={{ countryCode, orderId: order.id }}
                   className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
                 >
-                  Pay Now
+                  Pagar agora
                 </Link>
               </div>
             </div>
@@ -202,16 +206,16 @@ function OrderDetailModal({
 
           {/* Order Items */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Items</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Itens</h3>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                      Product
+                      Produto
                     </th>
                     <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">
-                      Qty
+                      Qtd.
                     </th>
                     <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
                       Total
@@ -267,7 +271,7 @@ function OrderDetailModal({
               />
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Shipping</span>
+              <span className="text-gray-600">Frete</span>
               <Price
                 price={order.shipping_total}
                 currencyCode={order.currency_code}
@@ -275,7 +279,7 @@ function OrderDetailModal({
             </div>
             {order.discount_total !== undefined && order.discount_total > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Discount</span>
+                <span className="text-gray-600">Desconto</span>
                 <Price
                   price={order.discount_total}
                   currencyCode={order.currency_code}
@@ -284,7 +288,7 @@ function OrderDetailModal({
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Tax</span>
+                <span className="text-gray-600">Impostos</span>
               <Price
                 price={order.tax_total}
                 currencyCode={order.currency_code}
@@ -301,19 +305,19 @@ function OrderDetailModal({
           {order.shipping_address && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-4">
-                Shipping Information
+                Informações de entrega
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-600 mb-2">
-                    Shipping Address
+                    Endereço de entrega
                   </h4>
                   <Address address={order.shipping_address} />
                 </div>
                 {order.shipping_methods?.[0] && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-gray-600 mb-2">
-                      Shipping Method
+                      Método de entrega
                     </h4>
                     <p className="text-gray-900">
                       {order.shipping_methods[0].name}
@@ -333,7 +337,7 @@ function OrderDetailModal({
           {order.billing_address && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-4">
-                Billing Information
+                Informações de cobrança
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <Address address={order.billing_address} />
@@ -348,7 +352,7 @@ function OrderDetailModal({
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
           >
-            Close
+            Fechar
           </button>
           <button
             onClick={() => onReorder(order.id)}
@@ -360,14 +364,14 @@ function OrderDetailModal({
             ) : (
               <ArrowPath className="w-4 h-4" />
             )}
-            Reorder
+            Comprar novamente
           </button>
           {paymentStatusConfig.showPayButton && (
             <Link
               to={"/$countryCode/order/$orderId/payment" as string} params={{ countryCode, orderId: order.id }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              Pay Now
+              Pagar agora
             </Link>
           )}
         </div>
@@ -388,7 +392,7 @@ interface OrderWithPlacedBy extends HttpTypes.StoreOrder {
 
 export default function OrdersPage() {
   const { countryCode } = useParams({ strict: false })
-  const search = useSearch({ strict: false }) as { orderId?: string }
+  const search = useSearch({ strict: false }) as { orderId?: string; filter?: "all" | "in_progress" | "delivered" | "canceled" }
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading, employee } = useAuth()
   const isAdmin = employee?.is_admin === true
@@ -396,10 +400,11 @@ export default function OrdersPage() {
     null
   )
   const [reorderingId, setReorderingId] = useState<string | null>(null)
+  const [filter, setFilter] = useState<"all" | "in_progress" | "delivered" | "canceled">(search.filter || "all")
 
   const { data: orders, isLoading: ordersLoading } = useCustomerOrders({
-    fields:
-      "+item_subtotal,+shipping_total,*items,*items.variant,*items.product,*shipping_address,*billing_address,*shipping_methods,*payment_collections",
+      fields:
+      "+item_subtotal,+shipping_total,+fulfillment_status,*items,*items.variant,*items.product,*shipping_address,*billing_address,*shipping_methods,*payment_collections,*fulfillments,*fulfillments.labels",
   }) as { data: OrderWithPlacedBy[] | undefined; isLoading: boolean }
 
   const reorderMutation = useReorder()
@@ -438,27 +443,34 @@ export default function OrdersPage() {
   }
 
   const isLoading = authLoading || ordersLoading
+  const visibleOrders = (orders ?? []).filter((order) => {
+    const tracking = getOrderTracking(order)
+    if (filter === "in_progress") return tracking.isInProgress
+    if (filter === "delivered") return tracking.status === "delivered"
+    if (filter === "canceled") return tracking.status === "canceled"
+    return true
+  })
 
   if (!isAuthenticated && !authLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
-          <p className="text-gray-500 mt-1">View and manage your orders.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Histórico de pedidos</h1>
+          <p className="text-gray-500 mt-1">Consulte e acompanhe seus pedidos.</p>
         </div>
         <div className="text-center py-12">
           <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Please log in to view your orders
+            Entre para consultar seus pedidos
           </h3>
           <p className="text-gray-500 mb-6">
-            You need to be logged in to access your order history.
+            Você precisa estar conectado para acessar seu histórico de pedidos.
           </p>
           <Link
             to={"/$countryCode/account/login" as string} params={{ countryCode }}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Sign In
+            Entrar
           </Link>
         </div>
       </div>
@@ -468,10 +480,22 @@ export default function OrdersPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Histórico de pedidos</h1>
         <p className="text-gray-500 mt-1">
-          {isAdmin ? "View and manage all company orders." : "View and manage your orders."}
+          {isAdmin ? "Consulte e gerencie os pedidos da empresa." : "Consulte e acompanhe seus pedidos."}
         </p>
+      </div>
+      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos">
+        {([
+          ["all", "Todos"],
+          ["in_progress", "Em andamento"],
+          ["delivered", "Entregues"],
+          ["canceled", "Cancelados"],
+        ] as const).map(([value, label]) => (
+          <button key={value} type="button" onClick={() => setFilter(value)} className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${filter === value ? "border-blue-800 bg-blue-800 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>
+            {label}
+          </button>
+        ))}
       </div>
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -481,17 +505,22 @@ export default function OrdersPage() {
         <div className="text-center py-12">
           <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No orders yet
+            Nenhum pedido ainda
           </h3>
           <p className="text-gray-500 mb-6">
-            When you place orders, they will appear here.
+            Quando você fizer um pedido, ele aparecerá aqui.
           </p>
           <Link
             to={"/$countryCode/store" as string} params={{ countryCode }}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Browse Products
+            Explorar produtos
           </Link>
+        </div>
+      ) : visibleOrders.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 bg-white py-12 text-center">
+          <h3 className="text-lg font-semibold text-slate-900">Nenhum pedido encontrado</h3>
+          <p className="mt-2 text-sm text-slate-500">Tente outro filtro para consultar seu histórico.</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -500,11 +529,11 @@ export default function OrdersPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Order
+                    Pedido
                   </th>
                   {isAdmin && (
                     <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                      Placed By
+                      Solicitado por
                     </th>
                   )}
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
@@ -514,7 +543,7 @@ export default function OrdersPage() {
                     Status
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                    Payment
+                    Pagamento
                   </th>
                   <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900">
                     Total
@@ -525,7 +554,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {orders.map((order) => {
+                {visibleOrders.map((order) => {
                   const statusConfig = getOrderStatusConfig(
                     order.status || "pending"
                   )
@@ -533,14 +562,15 @@ export default function OrdersPage() {
                   const paymentStatus = order.payment_collections?.[0]?.status
                   const paymentStatusConfig = getPaymentStatusConfig(paymentStatus)
 
+                  const tracking = getOrderTracking(order)
                   const actionItems: ActionMenuItem[] = [
                     {
-                      label: "View Details",
+                      label: tracking.isInProgress ? "Acompanhar entrega" : "Ver detalhes",
                       icon: Eye,
                       onClick: () => setSelectedOrder(order),
                     },
                     {
-                      label: "Reorder",
+                      label: "Comprar novamente",
                       icon: ArrowPath,
                       onClick: () => handleReorder(order.id),
                       disabled: reorderingId === order.id,
@@ -550,7 +580,7 @@ export default function OrdersPage() {
 
                   if (paymentStatusConfig.showPayButton) {
                     actionItems.push({
-                      label: "Pay Now",
+                      label: "Pagar agora",
                       icon: CurrencyDollar,
                       onClick: () => {
                         const orderId = order.id
@@ -605,12 +635,13 @@ export default function OrdersPage() {
                         {formatDate(order.created_at!)}
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bgClass}`}
-                        >
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusConfig.label}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.bgClass}`}>
+                            <StatusIcon className="w-3.5 h-3.5" />
+                            {statusConfig.label}
+                          </span>
+                          <OrderTrackingBadge order={order} />
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span

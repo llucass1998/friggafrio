@@ -1,17 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { Loader2, MapPin, Truck } from "lucide-react"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { estimateShipping, type ShippingEstimateResponse } from "@/lib/data/shipping-estimate"
 import { getStoredCart } from "@/lib/utils/cart"
-
-const POSTAL_CODE_KEY = "friggafrio:postal-code"
-const DELIVERY_ADDRESS_KEY = "friggafrio:delivery-address"
+import { formatCep, readGuestCep, setGuestCep, subscribeGuestCep } from "@/lib/cep"
+import { useAuth } from "@/lib/hooks/use-auth"
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 8)
-const formatPostalCode = (value: string) => {
-  const digits = digitsOnly(value)
-  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
-}
+const formatPostalCode = formatCep
 
 const reasonCopy: Record<string, string> = {
   ADDRESS_NOT_RESOLVABLE: "Informe endereço e cidade para localizar a entrega.",
@@ -24,24 +20,17 @@ export function ShippingEstimate() {
   const [postalCode, setPostalCode] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
-  const [province, setProvince] = useState("SP")
+  const province = "SP"
   const [result, setResult] = useState<ShippingEstimateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { customer } = useAuth()
+  const guestCep = useSyncExternalStore(subscribeGuestCep, readGuestCep, () => "")
+  const customerCep = customer?.addresses?.find((address) => address.id === customer.default_shipping_address_id)?.postal_code || customer?.addresses?.[0]?.postal_code || ""
 
   useEffect(() => {
-    setPostalCode(formatPostalCode(localStorage.getItem(POSTAL_CODE_KEY) || ""))
-    const stored = localStorage.getItem(DELIVERY_ADDRESS_KEY)
-    if (!stored) return
-    try {
-      const value = JSON.parse(stored) as { address?: string; city?: string; province?: string }
-      setAddress(value.address || "")
-      setCity(value.city || "")
-      setProvince(value.province || "SP")
-    } catch {
-      localStorage.removeItem(DELIVERY_ADDRESS_KEY)
-    }
-  }, [])
+    setPostalCode(formatPostalCode(customer?.id ? customerCep : guestCep))
+  }, [customer?.id, customerCep, guestCep])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -57,12 +46,7 @@ export function ShippingEstimate() {
     }
 
     const normalizedPostalCode = formatPostalCode(postalCode)
-    localStorage.setItem(POSTAL_CODE_KEY, normalizedPostalCode)
-    localStorage.setItem(DELIVERY_ADDRESS_KEY, JSON.stringify({
-      address: address.trim(),
-      city: city.trim(),
-      province: province.trim() || "SP",
-    }))
+    if (!customer?.id) setGuestCep(normalizedPostalCode)
 
     setIsLoading(true)
     try {
@@ -115,7 +99,7 @@ export function ShippingEstimate() {
             value={address}
             onChange={(event) => setAddress(event.target.value)}
             autoComplete="street-address"
-            placeholder="Endereco e numero"
+            placeholder="Endereço e número"
             className="min-h-11 w-full rounded-md border border-[var(--color-border)] px-3 text-sm text-[var(--color-navy)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
           />
         </div>

@@ -2,284 +2,220 @@ import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
 import { useCartDrawer } from "@/lib/context/cart"
 import { useAddToCart } from "@/lib/hooks/use-cart"
+import { createProductWhatsAppUrl } from "@/lib/whatsapp"
 import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
-import { HttpTypes } from "@medusajs/types"
-import { useLocation } from "@tanstack/react-router"
+import { CheckoutStepKey } from "@/lib/types/global"
+import type { HttpTypes } from "@medusajs/types"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { isEqual } from "lodash-es"
 import { memo, useEffect, useMemo, useState } from "react"
-import { Loader2, ShoppingCart, Check } from "lucide-react"
+import { Loader2, ShoppingCart, Check, MessageCircle, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
 type ProductActionsProps = {
-  product: HttpTypes.StoreProduct;
-  region: HttpTypes.StoreRegion;
-  disabled?: boolean;
-};
+  product: HttpTypes.StoreProduct
+  region: HttpTypes.StoreRegion
+  disabled?: boolean
+}
 
-const ProductActions = memo(function ProductActions({
-  product,
-  region,
-  disabled,
-}: ProductActionsProps) {
+const ProductActions = memo(function ProductActions({ product, region, disabled }: ProductActionsProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | undefined>>({})
-  const [isSuccess, setIsSuccess] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isBuyingNow, setIsBuyingNow] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const countryCode = getCountryCodeFromPath(location.pathname) || "br"
-
-  const addToCartMutation = useAddToCart({
-    fields: DEFAULT_CART_DROPDOWN_FIELDS,
-  })
-  const { openCart } = useCartDrawer()
   const queryClient = useQueryClient()
+  const { openCart } = useCartDrawer()
+  const addToCartMutation = useAddToCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
 
   useEffect(() => {
     setSelectedOptions({})
     setQuantity(1)
-  }, [product?.handle])
+  }, [product.handle])
 
-  // If there is only 1 variant, preselect the options
   useEffect(() => {
-    const variants = product?.variants
-    if (variants?.length === 1) {
-      const firstVariant = variants[0]
-      const optionsKeymap = getVariantOptionsKeymap(firstVariant?.options ?? [])
-      setSelectedOptions(optionsKeymap ?? {})
-    }
-  }, [product?.variants])
+    if (product.variants?.length !== 1) return
+    setSelectedOptions(getVariantOptionsKeymap(product.variants[0]?.options ?? []) ?? {})
+  }, [product.variants])
 
-  const selectedVariant = useMemo(() => {
-    if (!product?.variants || product?.variants.length === 0) return
-
-    if (product?.variants.length === 1 && (!product?.options || product?.options.length === 0)) {
-      return product?.variants[0]
-    }
-
-    return product?.variants.find((v) => {
-      const optionsKeymap = getVariantOptionsKeymap(v?.options ?? [])
-      return isEqual(optionsKeymap, selectedOptions)
-    })
-  }, [product?.variants, product?.options, selectedOptions])
-
-  // check if the selected options produce a valid variant
-  const isValidVariant = useMemo(() => {
-    return product?.variants?.some((v) => {
-      const optionsKeymap = getVariantOptionsKeymap(v?.options ?? [])
-      return isEqual(optionsKeymap, selectedOptions)
-    })
-  }, [product?.variants, selectedOptions])
-
-  const setOptionValue = (optionId: string, value: string) => {
-    setSelectedOptions((prev) => ({ ...prev, [optionId]: value }))
-  }
-
-  // --- Purchase Logic Block ---
   const purchaseState = getProductPurchaseState(product)
-  const publicProductTitle = decodeProductText(product.title)
+  const productTitle = decodeProductText(product.title)
+  const selectedVariant = useMemo(() => {
+    if (!product.variants?.length) return undefined
+    if (product.variants.length === 1 && !product.options?.length) return product.variants[0]
+    return product.variants.find((variant) => isEqual(getVariantOptionsKeymap(variant.options ?? []), selectedOptions))
+  }, [product.options, product.variants, selectedOptions])
 
-  // Validates if the selected variant matches purchasing rules
   const canBuySelected = useMemo(() => {
     if (!selectedVariant) return false
-    if (purchaseState.status === "unavailable" || purchaseState.status === "quote_only" || purchaseState.status === "price_pending" || purchaseState.status === "out_of_stock") return false
-
-    const isApprovedVariant = purchaseState.status === "purchasable"
+    if (purchaseState.status !== "purchasable" && purchaseState.status !== "select_variant") return false
+    const approved = purchaseState.status === "purchasable"
       ? purchaseState.variant.id === selectedVariant.id
       : purchaseState.variants.some((variant) => variant.id === selectedVariant.id)
-    if (!isApprovedVariant || !isVariantInStock(selectedVariant)) return false
-
-    const available = selectedVariant.manage_inventory === true
-      ? selectedVariant.inventory_quantity
-      : undefined
-    if (quantity < 1 || (typeof available === "number" && quantity > available)) return false
-
-    const amount = selectedVariant.calculated_price?.calculated_amount
-    if (typeof amount !== "number" || amount <= 0) return false
-
-    return true
-  }, [selectedVariant, purchaseState, quantity])
+    if (!approved || !isVariantInStock(selectedVariant)) return false
+    const available = selectedVariant.manage_inventory === true ? selectedVariant.inventory_quantity : undefined
+    return quantity >= 1 && (typeof available !== "number" || quantity <= available)
+  }, [purchaseState, quantity, selectedVariant])
 
   const displayPrice = selectedVariant?.calculated_price?.calculated_amount
     ?? (purchaseState.status === "purchasable" ? purchaseState.price : undefined)
+  const currencyCode = selectedVariant?.calculated_price?.currency_code || region.currency_code || "brl"
+  const formattedPrice = typeof displayPrice === "number" && displayPrice > 0
+    ? formatCurrencyAmount({ amount: displayPrice, currencyCode })
+    : undefined
+  const reference = product.variants?.[0]?.sku || undefined
+  const whatsappUrl = createProductWhatsAppUrl({
+    title: productTitle,
+    reference,
+    quantity,
+    price: formattedPrice,
+    url: typeof window !== "undefined" ? window.location.href : undefined,
+  })
+  const isBusy = addToCartMutation.isPending || isBuyingNow
 
-
-  const handleAddToCart = async () => {
-    if (!selectedVariant?.id || !canBuySelected) return null
-
-    addToCartMutation.mutateAsync(
-      {
+  const handleCartAction = async (buyNow: boolean) => {
+    if (!selectedVariant?.id || !canBuySelected || isBusy) return
+    setIsBuyingNow(buyNow)
+    try {
+      await addToCartMutation.mutateAsync({
         variant_id: selectedVariant.id,
         quantity,
         country_code: countryCode,
         product,
         variant: selectedVariant,
         region,
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["cart"] })
-          setIsSuccess(true)
-          openCart()
-          toast.success(`${publicProductTitle} adicionado ao carrinho`)
-          setTimeout(() => setIsSuccess(false), 2000)
-        },
-        onError: () => {
-          // Error telemetry could go here
-          toast.error("Não foi possível adicionar o produto ao carrinho")
-        }
+      })
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
+      if (buyNow) {
+        await navigate({
+          to: "/$countryCode/checkout",
+          params: { countryCode },
+          search: { step: CheckoutStepKey.ADDRESSES },
+        })
+      } else {
+        setIsSuccess(true)
+        openCart()
+        toast.success(`${productTitle} adicionado ao carrinho`)
+        window.setTimeout(() => setIsSuccess(false), 2000)
       }
-    )
+    } catch {
+      toast.error("Não foi possível adicionar o produto ao carrinho")
+    } finally {
+      setIsBuyingNow(false)
+    }
   }
 
-  // Generate Button Text
-  let buttonText = "Adicionar ao carrinho"
-  let buttonDisabled = true
-
-  if (purchaseState.status === "unavailable") {
-    buttonText = "Indisponível"
-  } else if (purchaseState.status === "quote_only") {
-    buttonText = "Solicitar cotação"
-  } else if (purchaseState.status === "price_pending") {
-    buttonText = "Preço indisponível"
-  } else if (!selectedVariant) {
-    buttonText = "Selecione uma opção"
-  } else if (!isValidVariant || !canBuySelected) {
-    buttonText = "Sem estoque"
-  } else {
-    buttonDisabled = false
-  }
+  const quoteState = purchaseState.status === "quote_only" || purchaseState.status === "price_pending"
+  const statusCopy = purchaseState.status === "quote_only"
+    ? "Este produto é vendido mediante orçamento."
+    : purchaseState.status === "price_pending"
+      ? "Consulte o preço e a disponibilidade com nossa equipe."
+      : purchaseState.status === "out_of_stock"
+        ? "Indisponível no momento"
+        : purchaseState.status === "unavailable"
+          ? "Compra indisponível para este produto"
+          : null
 
   return (
-    <div className="flex flex-col gap-y-4">
-      {/* Dynamic Price Display */}
-      <div className="flex flex-col gap-1 mb-2">
-         {purchaseState.status === "quote_only" ? (
-           <>
-             <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
-               Sob cotação
-             </span>
-             <span className="text-xl font-medium text-[var(--color-text-muted)]">Consulte condições comerciais</span>
-           </>
-         ) : purchaseState.status === "price_pending" ? (
-           <>
-             <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded w-fit mb-1 border border-amber-200">
-               Valor em configuração
-             </span>
-             <span className="text-xl font-medium text-[var(--color-text-muted)]">Consulte o valor</span>
-           </>
-         ) : displayPrice ? (
-             <span className="text-3xl md:text-4xl font-bold text-[var(--color-navy)] tracking-tight">
-               {formatCurrencyAmount({ amount: displayPrice, currencyCode: countryCode === "br" ? "BRL" : (selectedVariant as any)?.calculated_price?.currency_code || (product.variants?.[0] as any)?.calculated_price?.currency_code || "BRL" })}
-             </span>
-         ) : (
-            <span className="text-xl font-medium text-[var(--color-text-muted)] italic">Consulte o valor</span>
-         )}
+    <div className="flex flex-col gap-5" aria-live="polite">
+      <div>
+        {quoteState ? (
+          <>
+            <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+              {purchaseState.status === "quote_only" ? "Sob orçamento" : "Preço sob consulta"}
+            </span>
+            <p className="mt-2 text-lg font-medium text-[var(--color-text-muted)]">{statusCopy}</p>
+          </>
+        ) : formattedPrice ? (
+          <p className="text-3xl font-bold tracking-tight text-[var(--color-navy)] md:text-4xl">{formattedPrice}</p>
+        ) : statusCopy ? (
+          <p className="text-lg font-medium text-[var(--color-text-muted)]">{statusCopy}</p>
+        ) : null}
       </div>
 
       {(product.variants?.length ?? 0) > 1 && (
-        <div className="flex flex-col gap-y-4 border-t border-[var(--color-border)] pt-4 mt-2">
+        <div className="space-y-4 border-t border-[var(--color-border)] pt-4">
           {(product.options || []).map((option) => (
-            <div key={option.id}>
-              <ProductOptionSelect
-                option={option}
-                current={selectedOptions[option.id]}
-                updateOption={setOptionValue}
-                data-testid="product-options"
-                disabled={!!disabled || addToCartMutation.isPending}
-                product={product}
-              />
-            </div>
+            <ProductOptionSelect
+              key={option.id}
+              option={option}
+              current={selectedOptions[option.id]}
+              updateOption={(optionId, value) => setSelectedOptions((current) => ({ ...current, [optionId]: value }))}
+              data-testid="product-options"
+              disabled={!!disabled || isBusy}
+              product={product}
+            />
           ))}
         </div>
       )}
 
-      {(purchaseState.status === "purchasable" || selectedVariant) && (
+      {canBuySelected && (
         <div className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4">
-          <label htmlFor="product-quantity" className="text-sm font-semibold text-[var(--color-navy)]">
-            Quantidade
-          </label>
+          <label htmlFor="product-quantity" className="text-sm font-semibold text-[var(--color-navy)]">Quantidade</label>
           <div className="flex items-center rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white">
-            <button
-              type="button"
-              aria-label="Diminuir quantidade"
-              onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-              disabled={buttonDisabled || quantity <= 1 || addToCartMutation.isPending}
-              className="h-10 w-10 text-lg text-[var(--color-navy)] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              -
-            </button>
+            <button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={isBusy || quantity <= 1} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">−</button>
             <input
               id="product-quantity"
               type="number"
               min={1}
               max={selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : undefined}
-              step={1}
               value={quantity}
               onChange={(event) => {
                 const next = Number(event.target.value)
                 if (!Number.isInteger(next)) return
-                const available = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number"
-                  ? selectedVariant.inventory_quantity
-                  : Number.MAX_SAFE_INTEGER
-                setQuantity(Math.min(available, Math.max(1, next)))
+                const max = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : Number.MAX_SAFE_INTEGER
+                setQuantity(Math.min(max, Math.max(1, next)))
               }}
-              disabled={buttonDisabled || addToCartMutation.isPending}
-              className="h-10 w-14 border-x border-[var(--color-border)] text-center text-sm font-semibold text-[var(--color-navy)] focus:outline-none"
+              disabled={isBusy}
+              className="h-11 w-14 border-x border-[var(--color-border)] text-center text-sm font-semibold text-[var(--color-navy)] focus:outline-none"
               aria-label="Quantidade do produto"
             />
-            <button
-              type="button"
-              aria-label="Aumentar quantidade"
-              onClick={() => setQuantity((value) => {
-                const available = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number"
-                  ? selectedVariant.inventory_quantity
-                  : value + 1
-                return Math.min(available, value + 1)
-              })}
-              disabled={buttonDisabled || addToCartMutation.isPending || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)}
-              className="h-10 w-10 text-lg text-[var(--color-navy)] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              +
-            </button>
+            <button type="button" aria-label="Aumentar quantidade" onClick={() => setQuantity((value) => value + 1)} disabled={isBusy || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">+</button>
           </div>
         </div>
       )}
 
-      <button
-        onClick={handleAddToCart}
-        disabled={buttonDisabled || !!disabled || addToCartMutation.isPending || isSuccess}
-        aria-label={`${buttonText} ${publicProductTitle}`}
-        className={`mt-4 flex items-center justify-center w-full min-h-[56px] px-6 py-4 text-base font-bold rounded-[var(--radius-button)] transition-all duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] active:scale-[0.98] ${
-          buttonDisabled
-            ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200 shadow-none"
-            : isSuccess
-              ? "bg-green-600 text-white hover:bg-green-700 shadow-md"
-              : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] shadow-lg shadow-blue-900/20 motion-interactive"
-        }`}
-      >
-        {addToCartMutation.isPending ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processando...
-          </span>
-        ) : isSuccess ? (
-          <span className="flex items-center gap-2">
-            <Check className="w-5 h-5" />
-            Adicionado
-          </span>
-        ) : !buttonDisabled ? (
-          <span className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            {buttonText}
-          </span>
-        ) : (
-          buttonText
-        )}
-      </button>
+      {canBuySelected && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button type="button" onClick={() => void handleCartAction(true)} disabled={isBusy} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-wait disabled:opacity-60">
+            {isBuyingNow ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            Comprar agora
+          </button>
+          <button type="button" onClick={() => void handleCartAction(false)} disabled={isBusy || isSuccess} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] border px-5 py-3 text-sm font-bold transition ${isSuccess ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-[var(--color-primary)] bg-white text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)]"} disabled:cursor-wait disabled:opacity-60`}>
+            {isSuccess ? <Check className="h-4 w-4" aria-hidden="true" /> : <ShoppingCart className="h-4 w-4" aria-hidden="true" />}
+            {isSuccess ? "Adicionado" : "Adicionar ao carrinho"}
+          </button>
+        </div>
+      )}
+
+      {purchaseState.status === "select_variant" && !selectedVariant && <p className="text-sm font-medium text-amber-700">Selecione uma opção para continuar.</p>}
+      {purchaseState.status === "out_of_stock" && <p className="text-sm font-medium text-rose-700">Sem estoque para compra imediata.</p>}
+
+      {quoteState && whatsappUrl && (
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)]">
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          Solicitar orçamento
+        </a>
+      )}
+
+      {whatsappUrl && (
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-primary)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-surface-soft)]">
+          <MessageCircle className="h-4 w-4 text-[#25D366]" aria-hidden="true" />
+          {quoteState ? "Falar com um especialista" : "Comprar via WhatsApp"}
+        </a>
+      )}
+
+      <div className="grid gap-2 border-t border-[var(--color-border)] pt-4 text-xs text-[var(--color-text-muted)] sm:grid-cols-2">
+        <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[var(--color-primary)]" aria-hidden="true" /> Compra segura</span>
+        <span className="inline-flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[var(--color-primary)]" aria-hidden="true" /> Atendimento especializado</span>
+      </div>
     </div>
   )
 })

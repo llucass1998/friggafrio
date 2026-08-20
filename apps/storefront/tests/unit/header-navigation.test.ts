@@ -22,6 +22,10 @@ const productPageSource = readFileSync(
   new URL("../../src/pages/product.tsx", import.meta.url),
   "utf8"
 )
+const productActionsSource = readFileSync(
+  new URL("../../src/components/product-actions.tsx", import.meta.url),
+  "utf8"
+)
 const helpPageSource = readFileSync(
   new URL("../../src/pages/support/ajuda.tsx", import.meta.url),
   "utf8"
@@ -65,8 +69,15 @@ test("desktop products menu has a usable trigger and canonical store route", () 
 })
 
 test("WhatsApp links use the canonical configured number", () => {
-  for (const source of [accessibilityTopBarSource, productsMenuSource, productPageSource, helpPageSource]) {
+  for (const source of [accessibilityTopBarSource, productsMenuSource, helpPageSource]) {
     assert.match(source, /storeConfig\.whatsappNumber/)
     assert.doesNotMatch(source, /wa\.me\/55\$\{storeConfig\.phone/)
   }
+
+  // Product actions delegate URL construction to the shared helper instead of
+  // duplicating the configured WhatsApp number in the page component.
+  assert.match(productPageSource, /ProductActions/)
+  assert.match(productActionsSource, /createProductWhatsAppUrl/)
+  assert.match(productActionsSource, /const whatsappUrl = createProductWhatsAppUrl/)
+  assert.doesNotMatch(productActionsSource, /wa\.me\/55\$\{storeConfig\.phone/)
 })

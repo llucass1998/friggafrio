@@ -17,6 +17,8 @@ interface OrderWithPlacedBy {
   billing_address?: any
   shipping_methods?: any[]
   payment_collections?: any[]
+  fulfillments?: any[]
+  fulfillment_status?: string
   customer_id?: string
   placed_by?: {
     id: string
@@ -28,7 +30,7 @@ interface OrderWithPlacedBy {
 }
 
 export const useCustomerOrders = ({ fields }: { fields?: string } = {}) => {
-  const { employee } = useAuth()
+  const { employee, isAuthenticated, isLoading } = useAuth()
   const isAdmin = employee?.is_admin === true
 
   return useQuery({
@@ -40,16 +42,17 @@ export const useCustomerOrders = ({ fields }: { fields?: string } = {}) => {
           `/store/company/orders`,
           {
             method: "GET",
-            query: { fields: fields || "+item_subtotal,+shipping_total,*items,*items.variant,*items.product,*shipping_address,*billing_address,*shipping_methods,*payment_collections" },
+            query: { fields: fields || "+item_subtotal,+shipping_total,+fulfillment_status,*items,*items.variant,*items.product,*shipping_address,*billing_address,*shipping_methods,*payment_collections,*fulfillments,*fulfillments.labels" },
           }
         )
         return response.orders
       } else {
         // Regular employee: fetch only their orders
-        const { orders } = await sdk.store.order.list({ fields })
+        const { orders } = await sdk.store.order.list({ fields: fields || "+fulfillment_status,*fulfillments,*fulfillments.labels" })
         return orders as OrderWithPlacedBy[]
       }
     },
+    enabled: isAuthenticated && !isLoading,
   })
 }
 

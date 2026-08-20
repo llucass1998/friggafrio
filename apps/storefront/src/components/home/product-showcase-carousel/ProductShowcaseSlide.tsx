@@ -13,7 +13,7 @@ export function ProductShowcaseSlide({ slide, isActive, direction = "next" }: Pr
   const imageFitClass = slide.imageFit === "contain" ? "object-contain" : "object-cover"
 
   // Fundo gradiente institucional da FriggaFrio para promoções
-  const promoBg = "bg-gradient-to-r from-[#021024] via-[#05254A] to-[#021024]"
+  const promoBg = slide.id === "promo-eos-r22" ? "bg-[#021024]" : "bg-[#edf7fd]"
   const defaultBg = "bg-[var(--color-surface)]"
 
   return (
@@ -24,15 +24,24 @@ export function ProductShowcaseSlide({ slide, isActive, direction = "next" }: Pr
       aria-label={slide.title}
       data-active={isActive ? "true" : "false"}
       data-direction={direction}
+      data-promotional={isPromotional ? "true" : "false"}
     >
-      <div className={`relative w-full rounded-[var(--radius-card-lg)] md:rounded-none overflow-hidden flex flex-col items-start justify-end group h-[clamp(400px,110vw,500px)] sm:h-[clamp(330px,34vw,410px)] lg:h-[clamp(340px,22vw,440px)] ${isPromotional ? promoBg : defaultBg}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className={`ff-hero-slide-stage group relative w-full overflow-hidden ${isPromotional ? promoBg : defaultBg}`}
+        data-slide-id={slide.id}
+      >
+        <div
+          className="ff-hero-stage-backdrop"
+          aria-hidden="true"
+          style={{ backgroundImage: `url(/images/carousel/${slide.imageFilename})` }}
+        />
+        <div className="relative z-10 flex h-full items-center justify-center">
           <picture className={`w-full h-full flex items-center justify-center ${isPromotional ? "" : "bg-slate-900"}`}>
             <img
               src={`/images/carousel/${slide.imageFilename}`}
               alt={slide.title}
-              className={`carousel-slide-img w-full h-full z-10 ${imageFitClass} ${isPromotional ? "p-2 md:p-0" : ""}`}
-              loading={isActive ? "eager" : "lazy"}
+              className={`carousel-slide-img z-10 h-full w-full ${imageFitClass}`}
+              loading={isPromotional || isActive ? "eager" : "lazy"}
               onError={(event) => {
                 event.currentTarget.style.display = "none"
                 event.currentTarget.parentElement?.classList.add("show-placeholder")
