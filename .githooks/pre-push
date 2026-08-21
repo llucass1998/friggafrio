@@ -17,3 +17,4 @@ if [ -n "$blocked_envs" ]; then
 fi
 
 pnpm security:secrets
+pnpm policy:check

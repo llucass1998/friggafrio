@@ -1,0 +1,21 @@
+{
+  "project": "friggafrio",
+  "canonicalBranch": "Maestro",
+  "remoteBranch": "origin/Maestro",
+  "windowsSource": "C:/Users/lluca/orca/workspaces/projeto friggagafrio/Maestro",
+  "wslSource": "/home/srv/friggafrio/Maestro",
+  "wslDeploy": "/home/srv/friggafrio/Maestro-deploy",
+  "deploymentPlatform": "wsl",
+  "productionRuntime": "systemd",
+  "ports": {
+    "storefront": 5173,
+    "backend": 9000
+  },
+  "services": {
+    "backend": "friggafrio-backend.service",
+    "storefront": "friggafrio-storefront.service"
+  },
+  "publicOrigin": "https://friggafrio.istigestao.com.br",
+  "productionAdminPath": "/app",
+  "forbiddenCanonicalPorts": [5174, 9001, 9002]
+}

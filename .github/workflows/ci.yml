@@ -53,6 +53,9 @@ jobs:
       - name: Reject tracked generated or sensitive artifacts
         run: node scripts/ci/check-forbidden-artifacts.mjs
 
+      - name: Validate FriggaFrio project policy
+        run: pnpm policy:check
+
       - name: Validate workflow and repository formatting
         run: pnpm exec prettier --check .github/workflows/ci.yml
 
