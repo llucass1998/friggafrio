@@ -33,12 +33,17 @@ import { ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
 import { adminCompaniesMiddlewares } from "./admin/companies/middlewares";
 import { adminQuotesMiddlewares } from "./admin/quotes/middlewares";
 import { requireOwnedCheckoutCart } from "./middlewares/require-owned-checkout-cart";
+import { allowLocalDevelopmentCors } from "./middlewares/local-development-cors";
 
 export default defineMiddlewares({
   routes: [
     {
       matcher: /.*/,
       middlewares: [secureHeaders],
+    },
+    {
+      matcher: /.*/,
+      middlewares: [allowLocalDevelopmentCors],
     },
     {
       matcher: "^/store(?:/|$)",
