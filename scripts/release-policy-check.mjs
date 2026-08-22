@@ -25,6 +25,7 @@ export function main() {
   const results = [
     run("WORKTREE_GUARD", process.execPath, ["scripts/worktree-guard.mjs"]),
     run("PROJECT_POLICY", "node", ["scripts/project-policy-check.mjs"]),
+    run("SOURCE_SYNC_POLICY", "node", ["scripts/source-sync-policy-check.mjs"]),
     run("DIFF_CHECK", "git", ["diff", "--check"]),
     run("ENV_TRACKING", "node", ["scripts/project-policy-check.mjs"]),
   ];

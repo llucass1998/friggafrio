@@ -87,6 +87,21 @@ export function parsePolicy(raw) {
   ) {
     throw new Error("POLICY_FORBIDDEN_PORTS_INVALID");
   }
+  const sourceSynchronization = policy.sourceSynchronization;
+  if (
+    sourceSynchronization?.mode !== "git-only" ||
+    sourceSynchronization?.canonicalPath !==
+      "Windows Maestro -> origin/Maestro -> WSL Maestro" ||
+    sourceSynchronization?.manualCopyForbidden !== true ||
+    sourceSynchronization?.wslDeployOnly !== true ||
+    sourceSynchronization?.wslDeployEntrypoint !== "deploy/wsl-deploy.sh" ||
+    sourceSynchronization?.deployCloneImmutable !== true ||
+    sourceSynchronization?.requireCleanDeployClone !== true ||
+    sourceSynchronization?.requirePublicVerification !== true ||
+    sourceSynchronization?.stabilityWindowSeconds !== 300
+  ) {
+    throw new Error("POLICY_SOURCE_SYNC_INVALID");
+  }
   return policy;
 }
 

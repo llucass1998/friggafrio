@@ -14,6 +14,7 @@ import {
   parseSsListeners,
 } from "./runtime-policy-check.mjs";
 import { shaMatch } from "./release-policy-check.mjs";
+import { evaluateSyncState } from "./source-sync-policy-check.mjs";
 
 const root = join(fileURLToPath(new URL("..", import.meta.url)));
 
@@ -27,6 +28,27 @@ test("accepts the canonical policy JSON", () => {
   assert.throws(
     () => parsePolicy('{"project":"wrong"}'),
     /POLICY_IDENTITY_INVALID/,
+  );
+});
+
+test("requires Git-only Windows to WSL source synchronization", () => {
+  const policy = parsePolicy(
+    readFileSync(join(root, "config/project-runtime-policy.json"), "utf8"),
+  );
+  assert.deepEqual(policy.sourceSynchronization, {
+    mode: "git-only",
+    canonicalPath: "Windows Maestro -> origin/Maestro -> WSL Maestro",
+    manualCopyForbidden: true,
+    wslDeployOnly: true,
+    wslDeployEntrypoint: "deploy/wsl-deploy.sh",
+    deployCloneImmutable: true,
+    requireCleanDeployClone: true,
+    requirePublicVerification: true,
+    stabilityWindowSeconds: 300,
+  });
+  assert.throws(
+    () => parsePolicy(JSON.stringify({ ...policy, sourceSynchronization: { mode: "copy" } })),
+    /POLICY_SOURCE_SYNC_INVALID/,
   );
 });
 
@@ -91,13 +113,47 @@ test("requires equal release SHAs", () => {
   assert.equal(shaMatch("a", "b", "a"), false);
 });
 
+test("source sync is fail-closed for dirty or divergent WSL state", () => {
+  const base = {
+    platform: "wsl",
+    currentPath: "/home/srv/friggafrio/Maestro",
+    expectedPath: "/home/srv/friggafrio/Maestro",
+    branch: "Maestro",
+    sourceSha: "same",
+    remoteSha: "same",
+    sourceDirty: false,
+    trackedEnvironmentFiles: [],
+    wslHead: "same",
+    wslClean: "YES",
+    deployClean: "YES",
+    requireWsl: true,
+  };
+  assert.equal(evaluateSyncState(base).ready, true);
+  assert.match(
+    evaluateSyncState({ ...base, wslHead: "different" }).reasons.join(","),
+    /WSL_REMOTE_SHA_MISMATCH/,
+  );
+  assert.match(
+    evaluateSyncState({ ...base, deployClean: "NO" }).reasons.join(","),
+    /WSL_DEPLOY_CLONE_DIRTY/,
+  );
+});
+
 test("deploy script contains the WSL, lock, dirty and SHA guards", () => {
   const script = readFileSync(join(root, "deploy/wsl-deploy.sh"), "utf8");
-  assert.match(script, /DEPLOYMENT_PLATFORM_DENIED/);
-  assert.match(script, /DEPLOY_ALREADY_RUNNING/);
-  assert.match(script, /git status --porcelain/);
-  assert.match(script, /SOURCE_SHA/);
-  assert.match(script, /SOURCE_REMOTE_SHA_MISMATCH/);
-  assert.match(script, /flock -n 9/);
+  const guard = readFileSync(join(root, "deploy/wsl-guard-lib.sh"), "utf8");
+  const preflight = readFileSync(join(root, "deploy/wsl-preflight.sh"), "utf8");
+  const hostGuard = readFileSync(join(root, "scripts/deploy/require-wsl-host.mjs"), "utf8");
+  const deploymentPolicy = `${script}\n${guard}\n${preflight}`;
+  assert.match(guard, /DEPLOYMENT_PLATFORM_DENIED/);
+  assert.match(hostGuard, /DEPLOYMENT_PLATFORM_DENIED/);
+  assert.match(guard, /DEPLOY_ALREADY_RUNNING/);
+  assert.match(deploymentPolicy, /git.*status --porcelain/);
+  assert.match(deploymentPolicy, /SOURCE_SHA/);
+  assert.match(deploymentPolicy, /SOURCE_REMOTE_SHA_MISMATCH/);
+  assert.match(deploymentPolicy, /source-sync-policy-check\.mjs" --deploy/);
+  assert.match(guard, /flock -n 9/);
   assert.match(script, /systemctl restart friggafrio-backend\.service/);
+  assert.match(guard, /DEPLOY_BLOCKED_WSL_UNSTABLE/);
+  assert.doesNotMatch(deploymentPolicy, /down\s+-v|\bdocker\s+prune\b|\bvolume\s+rm\b/);
 });

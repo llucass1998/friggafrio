@@ -46,6 +46,9 @@ friggafrio.istigestao.com.br
 4. A second manual Medusa process must never compete with the systemd backend.
 5. Production `.env`, database, Redis, uploads, Caddy and DNS remain machine-owned and are not copied through Git.
 6. The only production entrypoint is `deploy/wsl-deploy.sh`, executed inside WSL.
+7. Source synchronization is Git-only: `Windows Maestro -> origin/Maestro -> WSL Maestro`.
+8. Manual source copies in either direction, rsync, shared-folder mirrors, and direct edits in `Maestro-deploy` are forbidden.
+9. `pnpm source:sync:check` is fail-closed: it validates the canonical source location, branch, Git identity, and, for a deployment check, the WSL-only release context.
 
 ## Guard commands
 
@@ -53,6 +56,7 @@ friggafrio.istigestao.com.br
 pnpm worktree:check
 pnpm policy:check
 pnpm runtime:check
+pnpm source:sync:check
 pnpm release:check
 ```
 
@@ -64,4 +68,4 @@ The first three are read-only checks. `release:check` validates source hygiene a
 - If a `.env` is tracked, remove it from Git tracking through an explicitly reviewed change; never print or copy its values.
 - If a forbidden port or Admin origin is detected, correct the environment/configuration rather than disabling production services.
 - If `DUPLICATE_RUNTIME_DETECTED` appears, identify the exact process owner before taking any runtime action. Never kill processes by a generic name.
-- If a release SHA differs, stop and synchronize through `origin/Maestro`; never copy source files manually.
+- If a release SHA differs, stop and synchronize through `origin/Maestro`; never copy source files manually. A deployment must be initiated only inside WSL with `pnpm source:sync:check -- --deploy` followed by the reviewed WSL release procedure.

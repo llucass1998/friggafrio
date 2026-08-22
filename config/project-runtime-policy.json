@@ -5,6 +5,17 @@
   "windowsSource": "C:/Users/lluca/orca/workspaces/projeto friggagafrio/Maestro",
   "wslSource": "/home/srv/friggafrio/Maestro",
   "wslDeploy": "/home/srv/friggafrio/Maestro-deploy",
+  "sourceSynchronization": {
+    "mode": "git-only",
+    "canonicalPath": "Windows Maestro -> origin/Maestro -> WSL Maestro",
+    "manualCopyForbidden": true,
+    "wslDeployOnly": true,
+    "wslDeployEntrypoint": "deploy/wsl-deploy.sh",
+    "deployCloneImmutable": true,
+    "requireCleanDeployClone": true,
+    "requirePublicVerification": true,
+    "stabilityWindowSeconds": 300
+  },
   "deploymentPlatform": "wsl",
   "productionRuntime": "systemd",
   "ports": {
