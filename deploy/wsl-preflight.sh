@@ -8,7 +8,13 @@ source "$SCRIPT_DIR/wsl-guard-lib.sh"
 require_wsl
 require_expected_paths
 for command_name in git node pnpm systemctl curl docker; do require_command "$command_name"; done
-docker compose version >/dev/null 2>&1 || deploy_fail "DEPLOY_BLOCKED_DOCKER_COMPOSE_UNAVAILABLE"
+if docker compose version >/dev/null 2>&1; then
+  echo "DOCKER_COMPOSE=PLUGIN"
+elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
+  echo "DOCKER_COMPOSE=V1"
+else
+  deploy_fail "DEPLOY_BLOCKED_DOCKER_COMPOSE_UNAVAILABLE"
+fi
 require_clean_git_dir "WSL_SOURCE" "$FRIGGAFRIO_SOURCE_DIR"
 require_clean_git_dir "WSL_DEPLOY_CLONE" "$FRIGGAFRIO_DEPLOY_DIR"
 [[ "$(git -C "$FRIGGAFRIO_SOURCE_DIR" branch --show-current)" == "$FRIGGAFRIO_BRANCH" ]] || deploy_fail "WSL_SOURCE_BRANCH_MISMATCH"

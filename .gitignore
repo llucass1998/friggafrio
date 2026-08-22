@@ -4,6 +4,7 @@
 **/dist-ssr/
 **/build/
 **/coverage/
+apps/backend/public/admin/
 **/playwright-report/
 **/test-results/
 **/.cache/

@@ -1,4 +1,10 @@
-import { defineConfig } from "eslint/config"
+import { defineConfig, globalIgnores } from "eslint/config"
 import medusa from "@medusajs/eslint-plugin"
 
-export default defineConfig([...medusa.configs.recommended])
+export default defineConfig([
+  globalIgnores([
+    ".medusa/**",
+    "public/admin/**",
+  ]),
+  ...medusa.configs.recommended,
+])
