@@ -11,6 +11,7 @@
     "backend:dev": "turbo dev --filter=backend",
     "storefront:dev": "turbo dev --filter=storefront",
     "security:secrets": "node scripts/security/check-secrets.mjs",
+    "security:secrets:test": "node --test scripts/security/check-secrets.test.mjs",
     "policy:check": "node scripts/project-policy-check.mjs",
     "source:sync:check": "node scripts/source-sync-policy-check.mjs",
     "runtime:check": "node scripts/runtime-policy-check.mjs",
