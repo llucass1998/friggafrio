@@ -4,7 +4,7 @@ export function HeroSection() {
   return (
     <section
       aria-label="Destaques da FriggaFrio"
-      className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)] w-full overflow-hidden"
+      className="relative w-full overflow-hidden bg-[var(--color-surface)]"
     >
       <div className="w-full relative z-10 mx-auto">
         <ProductShowcaseCarousel />

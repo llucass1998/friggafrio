@@ -17,7 +17,7 @@
 
   --motion-duration-dropdown-open: 160ms;
   --motion-duration-dropdown-close: 120ms;
-  --motion-duration-menu-open: 220ms;
+  --motion-duration-menu-open: 1500ms;
   --motion-duration-menu-close: 180ms;
   --motion-duration-cart-open: 260ms;
   --motion-duration-cart-close: 210ms;

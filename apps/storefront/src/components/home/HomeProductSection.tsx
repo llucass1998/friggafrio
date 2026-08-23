@@ -38,7 +38,7 @@ export function HomeProductSection({
   sectionId,
   showAllProductsLink = false,
 }: HomeProductSectionProps) {
-  const { viewportRef, hasOverflow, scrollPrev, scrollNext } = useInfiniteCarousel()
+  const { viewportRef, hasOverflow, scrollPrev, scrollNext } = useInfiniteCarousel([], false)
 
   return (
     <section data-testid={sectionId} className="relative w-full bg-white py-8 md:py-10">
@@ -75,7 +75,6 @@ export function HomeProductSection({
                 <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
                   <PublicProductCard
                     product={product}
-                    badgeText={sectionId === "home-best-sellers" ? "Mais vendido" : undefined}
                     compact
                   />
                 </div>

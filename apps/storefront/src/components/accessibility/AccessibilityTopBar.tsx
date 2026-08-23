@@ -28,7 +28,7 @@ export function AccessibilityTopBar() {
             htmlFor="a11y-toggle-top" 
             className="text-[var(--color-navy)] font-medium cursor-pointer select-none"
           >
-            {preferences.panelEnabled ? "Acessibilidade ativada" : "Ativar acessibilidade"}
+            {preferences.panelEnabled ? "Acessibilidade ativada" : "Acessibilidade"}
           </label>
         </div>
 

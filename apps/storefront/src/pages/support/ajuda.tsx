@@ -146,7 +146,7 @@ export default function AjudaPage() {
       </section>
 
       {/* Main Content */}
-      <section className="max-w-4xl mx-auto px-4 py-12 md:py-16 -mt-10 relative z-20">
+      <section className="relative z-20 mx-auto flex max-w-4xl flex-col px-4 py-12 md:py-16 -mt-10">
 
         {filteredData.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center shadow-lg border border-[var(--color-border)]">
@@ -165,7 +165,7 @@ export default function AjudaPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="order-2 space-y-12">
             {filteredData.map((category, catIndex) => (
               <div key={category.category} className="bg-white rounded-[24px] shadow-sm border border-[var(--color-border)] p-6 md:p-10">
                 <h2 className="text-2xl font-bold text-[var(--color-navy)] mb-8 flex items-center gap-4">
@@ -221,7 +221,7 @@ export default function AjudaPage() {
         )}
 
         {/* Contact Block Modernizado */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="order-1 mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="bg-gradient-to-br from-[var(--color-navy)] to-blue-950 rounded-[24px] p-8 md:p-10 text-white relative overflow-hidden group shadow-lg">
             <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-700 ease-in-out"></div>
             <MessageCircle className="w-12 h-12 text-[var(--color-accent)] mb-6" />

@@ -37,7 +37,8 @@
 }
 
 .ff-product-slide {
-  flex-basis: 100%;
+  /* Keep two mobile cards readable while exposing the next item as a cue. */
+  flex-basis: 48%;
 }
 
 .ff-team-slide {

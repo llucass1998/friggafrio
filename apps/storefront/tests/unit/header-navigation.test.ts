@@ -30,6 +30,38 @@ const helpPageSource = readFileSync(
   new URL("../../src/pages/support/ajuda.tsx", import.meta.url),
   "utf8"
 )
+const accessibilityButtonSource = readFileSync(
+  new URL("../../src/components/accessibility/AccessibilityFloatingButton.tsx", import.meta.url),
+  "utf8"
+)
+const accessibilityProviderSource = readFileSync(
+  new URL("../../src/components/accessibility/AccessibilityProvider.tsx", import.meta.url),
+  "utf8"
+)
+const accessibilityPanelSource = readFileSync(
+  new URL("../../src/components/accessibility/AccessibilityPanel.tsx", import.meta.url),
+  "utf8"
+)
+const newsletterSource = readFileSync(
+  new URL("../../src/components/newsletter-signup.tsx", import.meta.url),
+  "utf8"
+)
+const publicLayoutSource = readFileSync(
+  new URL("../../src/components/public-layout.tsx", import.meta.url),
+  "utf8"
+)
+const publicHomeSource = readFileSync(
+  new URL("../../src/pages/public-home.tsx", import.meta.url),
+  "utf8"
+)
+const productCardSource = readFileSync(
+  new URL("../../src/components/public-product-card.tsx", import.meta.url),
+  "utf8"
+)
+const fullHeaderSource = readFileSync(
+  new URL("../../src/components/header/FullStoreHeader.tsx", import.meta.url),
+  "utf8"
+)
 
 test("mobile navigation exposes an accessible open/close flow", () => {
   assert.match(mobileDrawerSource, /aria-expanded=\{isOpen\}/)
@@ -69,10 +101,13 @@ test("desktop products menu has a usable trigger and canonical store route", () 
 })
 
 test("WhatsApp links use the canonical configured number", () => {
-  for (const source of [accessibilityTopBarSource, productsMenuSource, helpPageSource]) {
+  for (const source of [accessibilityTopBarSource, helpPageSource]) {
     assert.match(source, /storeConfig\.whatsappNumber/)
     assert.doesNotMatch(source, /wa\.me\/55\$\{storeConfig\.phone/)
   }
+
+  assert.match(productsMenuSource, /Ver todos/)
+  assert.doesNotMatch(productsMenuSource, /Falar com especialista/)
 
   // Product actions delegate URL construction to the shared helper instead of
   // duplicating the configured WhatsApp number in the page component.
@@ -80,4 +115,43 @@ test("WhatsApp links use the canonical configured number", () => {
   assert.match(productActionsSource, /createProductWhatsAppUrl/)
   assert.match(productActionsSource, /const whatsappUrl = createProductWhatsAppUrl/)
   assert.doesNotMatch(productActionsSource, /wa\.me\/55\$\{storeConfig\.phone/)
+})
+
+test("floating accessibility control opens and closes the persistent panel", () => {
+  assert.match(accessibilityButtonSource, /onClick=\{togglePanel\}/)
+  assert.match(accessibilityButtonSource, /aria-expanded=\{preferences\.panelEnabled\}/)
+  assert.match(accessibilityButtonSource, /aria-controls="a11y-panel-drawer"/)
+  assert.match(accessibilityProviderSource, /const setPanelOpen = useCallback/)
+  assert.match(accessibilityProviderSource, /setPanelOpen,/)
+  assert.match(accessibilityProviderSource, /localStorage\.setItem\(STORAGE_KEY/)
+  assert.match(accessibilityPanelSource, /onOpenChange=\{setPanelOpen\}/)
+  assert.doesNotMatch(accessibilityPanelSource, /onOpenChange=\{togglePanel\}/)
+})
+
+test("newsletter uses the persistent endpoint and is rendered only by Home", () => {
+  assert.match(newsletterSource, /subscribeToNewsletter/)
+  assert.match(newsletterSource, /confirmation_pending/)
+  assert.match(newsletterSource, /validation_error/)
+  assert.match(newsletterSource, /consent/)
+  assert.match(newsletterSource, /Política de Privacidade/)
+  assert.match(newsletterSource, /Quero receber novidades/)
+  assert.doesNotMatch(publicLayoutSource, /NewsletterSignup/)
+  assert.match(publicHomeSource, /import \{ NewsletterSignup \}/)
+  assert.match(publicHomeSource, /<NewsletterSignup \/>/)
+})
+
+test("listing product cards navigate to the PDP without a cart CTA", () => {
+  assert.match(productCardSource, /data-testid="product-card-link"/)
+  assert.match(productCardSource, /<FavoriteButton/)
+  assert.match(productCardSource, /const sku = .*\|\| null/)
+  assert.match(productCardSource, /\{sku && \(/)
+  assert.doesNotMatch(productCardSource, /Adicionar ao carrinho/)
+  assert.doesNotMatch(productCardSource, /useAddToCart/)
+  assert.doesNotMatch(productCardSource, /Mais vendido/)
+})
+
+test("mobile header remains sticky without restoring the accessibility top bar", () => {
+  assert.match(fullHeaderSource, /sticky top-0/)
+  assert.match(fullHeaderSource, /lg:relative/)
+  assert.doesNotMatch(fullHeaderSource, /<AccessibilityTopBar/)
 })

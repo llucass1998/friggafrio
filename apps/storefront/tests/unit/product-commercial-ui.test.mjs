@@ -5,17 +5,18 @@ import { readFileSync } from "node:fs"
 const card = readFileSync(new URL("../../src/components/public-product-card.tsx", import.meta.url), "utf8")
 const detail = readFileSync(new URL("../../src/components/product-actions.tsx", import.meta.url), "utf8")
 
-test("Product Card renders quote-only and pending states as non-purchasable", () => {
+test("Product Card renders quote-only and pending states as factual PDP links", () => {
   assert.match(card, /purchaseState\.status === "quote_only"/)
   assert.match(card, /Sob cota/)
   assert.match(card, /purchaseState\.status === "price_pending"/)
   assert.match(card, /Valor em configura/)
   assert.match(card, /Consulte o valor/)
-  assert.match(card, /disabled=/)
+  assert.doesNotMatch(card, /Adicionar ao carrinho/)
+  assert.doesNotMatch(card, /useAddToCart/)
 })
 
 test("Product Card does not render a pending calculated price", () => {
-  const pendingBranch = card.match(/purchaseState\.status === "price_pending" \? \([\s\S]*?\) : displayPrice/)
+  const pendingBranch = card.match(/purchaseState\.status === "price_pending" \? \([\s\S]*?\) : purchaseState\.status === "out_of_stock"/)
   assert.ok(pendingBranch, "expected an explicit price_pending presentation branch")
   assert.doesNotMatch(pendingBranch[0], /formatCurrencyAmount/)
 })

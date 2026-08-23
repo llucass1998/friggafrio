@@ -6,7 +6,6 @@ import { CartDropdown } from "@/components/cart"
 import { useLocation } from "@tanstack/react-router"
 import {
   AccessibilityProvider,
-  AccessibilityTopBar,
   AccessibilityPanel,
   AccessibilityFloatingButton,
   SkipLinks,
@@ -29,11 +28,9 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <SkipLinks />
         <LiveRegion />
 
-        <AccessibilityTopBar />
         <PublicHeader />
 
         {/* Ajuste de espaçamento pro header: h-16 (mobile) + top bar h-8 (desktop) + header md h-20 */}
-        {/* Adicionado padding para compensar a AccessibilityTopBar */}
         <main
           id="main-content"
           tabIndex={-1}

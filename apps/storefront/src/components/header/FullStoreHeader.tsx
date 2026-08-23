@@ -7,23 +7,18 @@ import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 
 export function FullStoreHeader() {
   return (
-    <header className="w-full bg-[var(--color-background)] border-b border-[var(--color-border)] relative z-40">
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-background)] lg:relative">
       {/* O Top bar com telefone e infos extras foi migrado para o AccessibilityTopBar para unificar a acessibilidade e layout
           conforme as instruções da Fase 2 */}
 
       {/* Main Header Area */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-4 lg:gap-8">
+        <div className="flex h-20 items-center justify-between gap-3 lg:h-24 lg:gap-8">
 
           {/* Mobile Menu & Logo */}
-          <div className="flex items-center gap-2 lg:gap-0">
-            <HeaderMobileDrawer />
-            <div className="hidden sm:block lg:block">
-              <HeaderLogo />
-            </div>
-            <div className="block sm:hidden">
-              <HeaderLogo compact />
-            </div>
+          <div className="min-w-0 shrink">
+            <div className="lg:hidden"><HeaderLogo /></div>
+            <div className="hidden lg:block"><HeaderLogo /></div>
           </div>
 
           {/* Search (Desktop) */}
@@ -34,7 +29,10 @@ export function FullStoreHeader() {
           <HeaderPostalCode />
 
           {/* Actions */}
-          <HeaderActions />
+          <div className="flex shrink-0 items-center gap-1">
+            <HeaderActions />
+            <HeaderMobileDrawer />
+          </div>
         </div>
       </div>
 

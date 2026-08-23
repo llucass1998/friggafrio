@@ -6,11 +6,11 @@ import "@/components/carousel/carousel.css"
 type EmblaPlugins = Parameters<typeof useEmblaCarousel>[1]
 const EMPTY_PLUGINS: EmblaPlugins = []
 
-export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS) {
+export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS, loop = true) {
   const [viewportRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
-    loop: true,
+    loop,
     skipSnaps: false,
   }, plugins)
   const [hasOverflow, setHasOverflow] = useState(false)

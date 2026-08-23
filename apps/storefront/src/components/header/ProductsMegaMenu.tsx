@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { storeConfig } from "@/config/store"
 import { useCategories } from "@/lib/hooks/use-categories"
 
 export function ProductsMegaMenu() {
@@ -103,15 +102,6 @@ export function ProductsMegaMenu() {
               Ver todos
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-            <a
-              href={`https://wa.me/${storeConfig.whatsappNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={closeMenu}
-              className="hidden items-center gap-1 text-xs font-semibold text-[#16803c] hover:underline sm:inline-flex"
-            >
-              Falar com especialista
-            </a>
           </div>
 
           {isLoading ? (

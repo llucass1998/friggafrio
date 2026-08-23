@@ -2,8 +2,6 @@ import { Link } from "@tanstack/react-router"
 import { companyTeam } from "@/config/company-team"
 import { TeamMemberCard } from "@/components/quem-somos/TeamMemberCard"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
-import { storeConfig } from "@/config/store"
-import { PhoneCall } from "lucide-react"
 
 export function QuemSomosPage() {
   const founders = companyTeam.filter(m => m.group === "founder" && m.active)
@@ -140,33 +138,6 @@ export function QuemSomosPage() {
           </div>
         </section>
       )}
-
-      {/* Chamadas para ação */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto bg-[var(--color-navy)] rounded-2xl p-8 md:p-12 text-center text-white shadow-xl">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">Pronto para encontrar o que precisa?</h2>
-          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-            Nossa equipe técnica está à disposição para auxiliar no dimensionamento e na escolha correta dos componentes para o seu projeto de refrigeração.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe técnica.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3 px-8 rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <PhoneCall className="w-5 h-5" />
-              Fale pelo WhatsApp
-            </a>
-            <Link
-              to="/nossa-loja"
-              className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-white hover:bg-white hover:text-[var(--color-navy)] text-white font-bold py-3 px-8 rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              Conheça nossas lojas
-            </Link>
-          </div>
-        </div>
-      </section>
 
     </div>
   )

@@ -155,7 +155,7 @@ export function HeaderMobileDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Menu principal"
-        className={`motion-mobile-drawer absolute inset-y-0 left-0 flex w-[min(85vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
+        className={`motion-mobile-drawer absolute inset-y-0 right-0 flex w-[min(85vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}`}
         data-state={isOpen ? "open" : "closed"}
         data-testid="mobile-navigation-drawer"
         onTransitionEnd={handleDrawerTransitionEnd}
@@ -293,7 +293,7 @@ export function HeaderMobileDrawer() {
       <button
         ref={triggerRef}
         type="button"
-        className="-ml-2 flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
         onClick={openDrawer}
         aria-label="Abrir menu mobile"
         aria-expanded={isOpen}

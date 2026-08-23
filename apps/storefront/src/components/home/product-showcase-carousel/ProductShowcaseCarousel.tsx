@@ -125,7 +125,7 @@ export function ProductShowcaseCarousel() {
       <button
         type="button"
         onClick={scrollPrev}
-        className="absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:h-11 sm:w-11 md:left-6"
+        className="absolute left-2 top-1/2 z-40 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:flex sm:h-11 sm:w-11 md:left-6"
         aria-label="Ver slide anterior"
       >
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -134,13 +134,13 @@ export function ProductShowcaseCarousel() {
       <button
         type="button"
         onClick={scrollNext}
-        className="absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:h-11 sm:w-11 md:right-6"
+        className="absolute right-2 top-1/2 z-40 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:flex sm:h-11 sm:w-11 md:right-6"
         aria-label="Ver próximo slide"
       >
         <ChevronRight className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="flex items-center justify-center bg-white py-3">
+      <div className="hidden items-center justify-center bg-white py-3 sm:flex">
         <div className="flex gap-2">
           {showcaseSlides.map((_, index) => {
             const active = index === selectedIndex
