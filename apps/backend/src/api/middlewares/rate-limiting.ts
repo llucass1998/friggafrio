@@ -1,5 +1,8 @@
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { createHash } from "node:crypto";
+import Redis from "ioredis";
+import type { NextFunction, Request, Response } from "express";
 
 /**
  * Helmet adds secure HTTP headers.
@@ -39,6 +42,74 @@ export const registerRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+const NEWSLETTER_RATE_WINDOW_MS = 15 * 60 * 1000;
+const NEWSLETTER_RATE_MAX = 10;
+let newsletterRedis: Redis | undefined;
+
+const opaqueIdentifier = (value: string): string =>
+  createHash("sha256").update(value, "utf8").digest("hex");
+
+const newsletterRedisClient = (): Redis | null => {
+  const url = process.env.REDIS_URL?.trim();
+  if (!url) return null;
+  if (!newsletterRedis) {
+    newsletterRedis = new Redis(url, {
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 750,
+    });
+  }
+  return newsletterRedis;
+};
+
+const incrementNewsletterWindow = async (client: Redis, key: string): Promise<number> => {
+  const value = await client.eval(
+    "local count=redis.call('INCR',KEYS[1]); if count==1 then redis.call('PEXPIRE',KEYS[1],ARGV[1]) end; return count",
+    1,
+    key,
+    String(NEWSLETTER_RATE_WINDOW_MS),
+  );
+  return Number(value);
+};
+
+/**
+ * Subscriber creation is distributed-rate-limited through the configured
+ * Redis instance. Requests fail closed if that security dependency is absent
+ * or unavailable; neither e-mail addresses nor IP addresses are stored as
+ * Redis key material.
+ */
+export const newsletterRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const client = newsletterRedisClient();
+  if (!client) {
+    res.status(503).json({ message: "Newsletter temporarily unavailable", type: "rate_limit_unavailable" });
+    return;
+  }
+
+  try {
+    if (client.status === "wait") await client.connect();
+    const requestBody = req.body as { email?: unknown } | undefined;
+    const email = typeof requestBody?.email === "string" ? requestBody.email.trim().toLowerCase() : "";
+    const identity = `${req.ip || "unknown"}:${email || "no-email"}`;
+    const [ipCount, emailCount] = await Promise.all([
+      incrementNewsletterWindow(client, `newsletter:subscribe:ip:${opaqueIdentifier(req.ip || "unknown")}`),
+      incrementNewsletterWindow(client, `newsletter:subscribe:identity:${opaqueIdentifier(identity)}`),
+    ]);
+
+    res.setHeader("RateLimit-Limit", String(NEWSLETTER_RATE_MAX));
+    if (Math.max(ipCount, emailCount) > NEWSLETTER_RATE_MAX) {
+      res.status(429).json({
+        message: "Muitas tentativas de cadastro. Tente novamente mais tarde.",
+        type: "rate_limit_exceeded",
+      });
+      return;
+    }
+    next();
+  } catch {
+    res.status(503).json({ message: "Newsletter temporarily unavailable", type: "rate_limit_unavailable" });
+  }
+};
 
 /**
  * Rate limiter padrão para a API (evitar Data Scraping Massivo)

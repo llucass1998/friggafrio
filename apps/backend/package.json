@@ -35,7 +35,7 @@
     "test:integration": "pnpm test:integration:http",
     "typecheck": "tsc --noEmit",
     "dev:tee": "medusa develop 2>&1 | tee -a ../backend.log",
-    "test:integration:http": "cross-env NODE_OPTIONS=--experimental-vm-modules NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 TEST_TYPE=integration:http jest --silent=false --runInBand",
+    "test:integration:http": "cross-env NODE_OPTIONS=--experimental-vm-modules NO_PROXY=* no_proxy=* TEST_TYPE=integration:http jest --silent=false --runInBand",
     "test:integration:modules": "cross-env TEST_TYPE=integration:modules jest --silent --runInBand",
     "test:unit": "cross-env TEST_TYPE=unit jest --silent --runInBand",
     "email:dev": "email-preview --dir ./src/email-templates --port 9004 --hostname 0.0.0.0"
@@ -63,11 +63,13 @@
     "date-fns": "^4.1.0",
     "express-rate-limit": "^8.6.0",
     "helmet": "^8.3.0",
+    "ioredis": "5.9.3",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.22.0",
     "react-hook-form": "^7.71.1",
     "react-i18next": "13.5.0",
     "react-router-dom": "6.30.4",
+    "svix": "1.76.1",
     "zod": "4.2.0"
   },
   "devDependencies": {

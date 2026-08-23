@@ -147,6 +147,9 @@ module.exports = defineConfig({
       resolve: backendPath("src/modules/product-review"),
     },
     {
+      resolve: backendPath("src/modules/newsletter-subscription"),
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       options: {
         // Mercado Pago remains quarantined until its provider and webhook are

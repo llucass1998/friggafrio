@@ -2,6 +2,7 @@ import {
   authRateLimit,
   registerRateLimit,
   globalApiRateLimit,
+  newsletterRateLimit,
   secureHeaders,
 } from "./middlewares/rate-limiting";
 import { authenticate, defineMiddlewares } from "@medusajs/medusa";
@@ -73,6 +74,17 @@ export default defineMiddlewares({
       matcher: "/auth/customer/google",
       method: "POST",
       middlewares: [requireTrustedAuthOrigin, authRateLimit],
+    },
+    {
+      matcher: "/store/newsletter/subscriptions",
+      method: "POST",
+      middlewares: [newsletterRateLimit],
+    },
+    {
+      // Svix signs the exact byte sequence, so retain the body for verification.
+      matcher: "/webhooks/resend",
+      method: "POST",
+      bodyParser: { preserveRawBody: true },
     },
     {
       method: "POST",
