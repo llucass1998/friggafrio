@@ -31,6 +31,16 @@ const writeAuthHint = (authenticated: boolean): void => {
   localStorage.setItem(AUTH_STATE_KEY, value)
 }
 
+/** A repeated logout may legitimately race with an already-cleared session. */
+export const isAlreadyLoggedOutError = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return false
+  }
+
+  const status = (error as { status?: unknown }).status
+  return status === 401 || status === 404
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   // SSR-safe state initialization without relying on window/sessionStorage during render
@@ -141,6 +151,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("medusa_auth_token")
       }
       await sdk.auth.logout()
+    } catch (error) {
+      if (!isAlreadyLoggedOutError(error)) {
+        throw error
+      }
     } finally {
       resetFavoritesForLogout()
       clearGuestCep()

@@ -36,6 +36,11 @@ test("account shell has explicit desktop sidebar and compact mobile navigation s
   assert.match(source, /aria-current=\{active \? "page" : undefined\}/)
 })
 
+test("customer logout replaces history with the validated public home", () => {
+  assert.match(source, /window\.location\.replace\(defaultAuthenticatedPath\(countryCode\)\)/)
+  assert.doesNotMatch(source, /account\/login/)
+})
+
 test("account overview and orders preserve their existing pages inside the shell", () => {
   assert.match(accountRouteSource, /<AccountShell>\s*<SettingsPage \/>\s*<\/AccountShell>/)
   assert.match(ordersRouteSource, /<AccountShell>\s*<OrdersPage \/>\s*<\/AccountShell>/)

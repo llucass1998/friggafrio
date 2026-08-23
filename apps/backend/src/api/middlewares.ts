@@ -24,12 +24,11 @@ import {
 } from "./middlewares/payment-containment";
 import {
   protectSessionMutation,
-  requireTrustedCustomerOrigin,
   requireTrustedAuthOrigin,
 } from "../lib/auth/session-security";
 import { wishlistMiddlewares } from "./store/wishlists/middlewares";
 import { forceBrazilCheckoutCountry } from "./middlewares/force-brazil-checkout-country";
-import { ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
+import { ADMIN_API_AUTH_METHODS, ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
 import { adminCompaniesMiddlewares } from "./admin/companies/middlewares";
 import { adminQuotesMiddlewares } from "./admin/quotes/middlewares";
 import { requireOwnedCheckoutCart } from "./middlewares/require-owned-checkout-cart";
@@ -57,12 +56,13 @@ export default defineMiddlewares({
     {
       // Customer sessions cannot authorize custom Admin API routes.
       matcher: ADMIN_API_MATCHER,
+      methods: ADMIN_API_AUTH_METHODS,
       middlewares: [authenticate("user", ["session", "bearer"])],
     },
     {
       matcher: /^\/auth\/(?:session|token\/refresh)$/,
       methods: ["POST", "DELETE"],
-      middlewares: [requireTrustedCustomerOrigin, authRateLimit],
+      middlewares: [requireTrustedAuthOrigin, authRateLimit],
     },
     {
       matcher: "/auth/unified/emailpass",

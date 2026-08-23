@@ -3,6 +3,7 @@ import { z } from "zod"
 import LoginPage from "@/pages/login"
 import { sdk } from "@/lib/medusa"
 import { normalizeReturnTo } from "@/lib/auth/return-to"
+import { ADMIN_ACCESS_URL } from "@/lib/auth/admin-access"
 
 const loginSearchSchema = z.object({
   returnTo: z.string().optional(),
@@ -22,6 +23,18 @@ export const Route = createFileRoute("/$countryCode/account/login")({
       if (error?.to || error?.href) throw error
       // Unauthorized errors are expected for login page - ignore them
       // Any other errors we also silently ignore to allow showing login page
+    }
+
+    try {
+      const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
+        "/store/auth/session",
+        { method: "GET" },
+      )
+      if (session.redirect_to === "/app") {
+        throw redirect({ href: ADMIN_ACCESS_URL ?? "/app" })
+      }
+    } catch (error: any) {
+      if (error?.to || error?.href) throw error
     }
   },
   validateSearch: loginSearchSchema,

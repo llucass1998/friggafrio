@@ -79,4 +79,24 @@ describe("unified emailpass login", () => {
     expect(request.session.auth_context).toMatchObject({ actor_id: "user_1", actor_type: "user" })
     expect(response.payload).toEqual({ authenticated: true })
   })
+
+  it("rotates an existing session before establishing an authenticated actor", async () => {
+    const identity = {
+      id: "auth_user_2",
+      app_metadata: { user_id: "user_2" },
+      provider_identities: [{ provider: "emailpass", entity_id: "admin2@example.com", user_metadata: {} }],
+    }
+    const regenerate = jest.fn((callback: (error?: Error | null) => void) => callback())
+    const auth = {
+      listProviderIdentities: jest.fn().mockResolvedValue([{ provider: "emailpass", entity_id: "admin2@example.com", auth_identity: identity }]),
+      authenticate: jest.fn().mockResolvedValue({ success: true, authIdentity: identity }),
+    }
+    const request = makeRequest({ email: "admin2@example.com", password: "secret" }, auth) as any
+    request.session.regenerate = regenerate
+
+    await POST(request, makeResponse() as never)
+
+    expect(regenerate).toHaveBeenCalledTimes(1)
+    expect(request.session.auth_context).toMatchObject({ actor_id: "user_2", actor_type: "user" })
+  })
 })

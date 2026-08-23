@@ -1,4 +1,4 @@
-import { validateSessionRequestOrigin } from "../lib/auth/session-security";
+import { getTrustedAuthOrigins, validateSessionRequestOrigin } from "../lib/auth/session-security";
 
 const trustedOrigins = new Set([
   "https://www.friggafrio.com.br",
@@ -87,5 +87,25 @@ describe("session request origin validation", () => {
         true,
       ),
     ).toEqual({ allowed: false, reason: "untrusted-origin" });
+  });
+});
+
+describe("shared auth origin allowlist", () => {
+  const originalStoreCors = process.env.STORE_CORS;
+  const originalAdminCors = process.env.ADMIN_CORS;
+  const originalAuthCors = process.env.AUTH_CORS;
+
+  afterAll(() => {
+    process.env.STORE_CORS = originalStoreCors;
+    process.env.ADMIN_CORS = originalAdminCors;
+    process.env.AUTH_CORS = originalAuthCors;
+  });
+
+  it("allows the configured Admin origin to end a shared session", () => {
+    process.env.STORE_CORS = "https://store.example";
+    process.env.ADMIN_CORS = "https://admin.example";
+    process.env.AUTH_CORS = "https://auth.example";
+
+    expect(validateSessionRequestOrigin({ method: "DELETE", cookieHeader: "frigga.sid=session-id", originHeader: "https://admin.example" }, getTrustedAuthOrigins(), "frigga.sid")).toEqual({ allowed: true });
   });
 });

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/react-router"
+import { Link, useLocation, useParams } from "@tanstack/react-router"
 import {
   Building2,
   Heart,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { defaultAuthenticatedPath } from "@/lib/auth/return-to"
 
 type AccountTab = "profile" | "company"
 
@@ -121,7 +122,6 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const { countryCode: routeCountryCode } = useParams({ strict: false })
   const countryCode = routeCountryCode || DEFAULT_COUNTRY_CODE
   const location = useLocation()
-  const navigate = useNavigate()
   const { customer, employee, logout } = useAuth()
   const isAdmin = employee?.is_admin === true
 
@@ -138,10 +138,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
   const handleLogout = async () => {
     await logout()
-    await navigate({
-      to: "/$countryCode/account/login",
-      params: { countryCode },
-    })
+    window.location.replace(defaultAuthenticatedPath(countryCode))
   }
 
   return (

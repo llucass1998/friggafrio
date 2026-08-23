@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from "@medusajs/framework/utils";
 import { resolve as resolvePath } from "node:path";
 import { getPaymentAvailability } from "./src/utils/payment-availability";
 import { getSessionCookieName } from "./src/lib/auth/session-security";
+import { getConfiguredStorefrontOrigin } from "./src/lib/auth/storefront-origin";
 
 // Resolve the backend env beside this config instead of depending on the
 // directory used by pnpm, Turbo, Docker, or a manually launched process.
@@ -11,9 +12,16 @@ const backendPath = (relativePath: string) => resolvePath(__dirname, relativePat
 const nodeEnv = process.env.NODE_ENV || "development";
 const isSecureSessionEnvironment = ["production", "staging"].includes(nodeEnv);
 const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 10 * 60 * 60 * 1000);
+const storefrontOrigin = getConfiguredStorefrontOrigin();
 
 if (!Number.isSafeInteger(sessionTtlMs) || sessionTtlMs <= 0) {
   throw new Error("SESSION_TTL_MS must be a positive integer.");
+}
+
+if (!storefrontOrigin) {
+  throw new Error(
+    "STOREFRONT_URL must be an HTTP(S) origin explicitly listed in STORE_CORS.",
+  );
 }
 
 if (isSecureSessionEnvironment && !process.env.REDIS_URL) {
@@ -44,6 +52,7 @@ module.exports = defineConfig({
     // Production storefront nodes can omit the Admin bundle entirely.
     // Local development keeps it enabled unless this environment flag is set.
     disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
+    storefrontUrl: storefrontOrigin,
     vite: () => {
       let hmrServer;
       if (process.env.HMR_BIND_HOST) {
@@ -59,6 +68,11 @@ module.exports = defineConfig({
       }
 
       return {
+        // Inject only the validated, fixed public origin into the Admin bundle.
+        // The logout widget constructs its own fixed /br destination from this.
+        define: {
+          __STOREFRONT_URL__: JSON.stringify(storefrontOrigin),
+        },
         server: {
           allowedHosts,
           hmr: {

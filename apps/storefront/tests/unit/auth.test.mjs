@@ -38,3 +38,21 @@ test("public login source contains no administrative UI or copy", () => {
     assert.equal(source.includes(phrase), false, `unexpected public admin text: ${phrase}`);
   }
 });
+
+test("login route resumes an existing Admin session at /app", () => {
+  const source = fs.readFileSync(
+    new URL("../../src/routes/$countryCode/account/login.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /\/store\/auth\/session/);
+  assert.match(source, /session\.redirect_to === ["']\/app["']/);
+  assert.match(source, /ADMIN_ACCESS_URL \?\? ["']\/app["']/);
+});
+
+test("logout treats an already-cleared session as idempotent", () => {
+  const source = fs.readFileSync(
+    new URL("../../src/lib/context/auth-context.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /status === 401 \|\| status === 404/);
+});

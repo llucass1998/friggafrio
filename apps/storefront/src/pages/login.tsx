@@ -5,6 +5,7 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 import { normalizeReturnTo } from "@/lib/auth/return-to"
 import { configuredAdminOrigin } from "@/lib/auth/admin-origin"
+import { MEDUSA_BACKEND_URL } from "@/config/env"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -27,7 +28,9 @@ export default function LoginPage() {
     try {
       const actor = await login(email, password)
       if (actor === "admin") {
-        const adminOrigin = configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL)
+        const adminOrigin =
+          configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL) ??
+          (import.meta.env.DEV ? configuredAdminOrigin(MEDUSA_BACKEND_URL) : null)
         if (!adminOrigin) {
           throw new Error("Admin origin is not configured")
         }
