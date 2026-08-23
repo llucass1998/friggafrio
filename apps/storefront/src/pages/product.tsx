@@ -11,6 +11,7 @@ import { Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
+import ProductReviews from "@/components/product-reviews"
 
 interface ProductPageData {
   product: HttpTypes.StoreProduct
@@ -256,6 +257,7 @@ export function ProductPage() {
           </div>
         </div>
       </div>
+      <ProductReviews productId={product.id} productTitle={productTitle} />
     </div>
   )
 }

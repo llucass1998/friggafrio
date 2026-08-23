@@ -39,13 +39,13 @@ test("public login source contains no administrative UI or copy", () => {
   }
 });
 
-test("login route resumes an existing Admin session at /app", () => {
+test("login route resumes an existing Admin session through the safe session status endpoint", () => {
   const source = fs.readFileSync(
     new URL("../../src/routes/$countryCode/account/login.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /\/store\/auth\/session/);
-  assert.match(source, /session\.redirect_to === ["']\/app["']/);
+  assert.match(source, /\/store\/auth\/status/);
+  assert.match(source, /status\.redirect_to === ["']\/app["']/);
   assert.match(source, /ADMIN_ACCESS_URL \?\? ["']\/app["']/);
 });
 
@@ -54,5 +54,19 @@ test("logout treats an already-cleared session as idempotent", () => {
     new URL("../../src/lib/context/auth-context.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /status === 401 \|\| status === 404/);
+  assert.match(source, /isAlreadyLoggedOutError/);
+  assert.match(source, /\.status === 401/);
+  assert.match(source, /\.status === 404/);
+});
+
+test("public bootstrap coalesces StrictMode status checks and protects Customer Me", () => {
+  const source = fs.readFileSync(
+    new URL("../../src/lib/context/auth-context.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /let authStatusInFlight/);
+  assert.match(source, /getSafeAuthStatus/);
+  assert.match(source, /status\.actor === "user"/);
+  assert.match(source, /return \(await fetchCustomer\(\)\) \? "customer" : null/);
+  assert.doesNotMatch(source, /\/store\/auth\/session/);
 });

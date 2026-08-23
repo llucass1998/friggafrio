@@ -1,50 +1,45 @@
-import { useState, useEffect, useCallback, ReactNode } from "react"
+import { useState, useEffect, useCallback, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { sdk } from "@/lib/medusa"
-import { HttpTypes } from "@medusajs/types"
-import { getMe, Employee } from "@/lib/data/me"
+import type { HttpTypes } from "@medusajs/types"
+import { getMe, type Employee } from "@/lib/data/me"
 import { AuthContext } from "@/lib/context/auth-context-value"
 import { resetFavoritesForLogout } from "@/lib/hooks/use-favorites"
 import { clearGuestCep } from "@/lib/cep"
 
-// This is only a local hint. The backend remains the authority for the session.
+// This remains only a UX hint; the server is always the session authority.
 const AUTH_STATE_KEY = "auth_state"
 
-const readAuthHint = (): boolean => {
-  if (typeof window === "undefined") {
-    return false
-  }
-
-  return (
-    sessionStorage.getItem(AUTH_STATE_KEY) === "authenticated" ||
-    localStorage.getItem(AUTH_STATE_KEY) === "authenticated"
-  )
-}
-
 const writeAuthHint = (authenticated: boolean): void => {
-  if (typeof window === "undefined") {
-    return
-  }
-
+  if (typeof window === "undefined") return
   const value = authenticated ? "authenticated" : "unauthenticated"
   sessionStorage.setItem(AUTH_STATE_KEY, value)
   localStorage.setItem(AUTH_STATE_KEY, value)
 }
 
+type AuthStatus =
+  | { authenticated: false; actor: null }
+  | { authenticated: true; actor: "customer" }
+  | { authenticated: true; actor: "user"; redirect_to: "/app" }
+
+let authStatusInFlight: Promise<AuthStatus> | null = null
+
+const getSafeAuthStatus = (): Promise<AuthStatus> => {
+  if (!authStatusInFlight) {
+    authStatusInFlight = sdk.client.fetch<AuthStatus>("/store/auth/status", { method: "GET" })
+      .finally(() => { authStatusInFlight = null })
+  }
+  return authStatusInFlight
+}
+
 /** A repeated logout may legitimately race with an already-cleared session. */
 export const isAlreadyLoggedOutError = (error: unknown): boolean => {
-  if (typeof error !== "object" || error === null || !("status" in error)) {
-    return false
-  }
-
-  const status = (error as { status?: unknown }).status
-  return status === 401 || status === 404
+  if (typeof error !== "object" || error === null || !("status" in error)) return false
+  return (error as { status?: unknown }).status === 401 || (error as { status?: unknown }).status === 404
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
-  // SSR-safe state initialization without relying on window/sessionStorage during render
-  // This ensures the server and initial client render always match
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
@@ -53,28 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchCustomer = useCallback(async (): Promise<boolean> => {
     try {
-      // Fetch basic customer data
-      const { customer } = await sdk.store.customer.retrieve({
-        fields: "id,email,first_name,last_name,phone,has_account,default_shipping_address_id,addresses.*"
+      const { customer: currentCustomer } = await sdk.store.customer.retrieve({
+        fields: "id,email,first_name,last_name,phone,has_account,default_shipping_address_id,addresses.*",
       })
-
-      // Fetch employee data before updating any state so the layout
-      // never sees isAuthenticated=true with employee still null.
-      // This prevents the dashboard from flashing before the pending
-      // review screen when a company hasn't been activated yet.
       let employeeData: Employee | null = null
       try {
         const { customer: customerWithEmployee } = await getMe()
-        if (customerWithEmployee.employee) {
-          employeeData = customerWithEmployee.employee
-        }
+        employeeData = customerWithEmployee.employee || null
       } catch {
-        // Not a B2B customer or error fetching employee data
+        // An absent B2B profile is valid for a standard Customer session.
       }
-
-      // Batch all state updates together so React renders once with
-      // the complete picture (customer + employee + authenticated).
-      setCustomer(customer)
+      setCustomer(currentCustomer)
       setEmployee(employeeData)
       setIsAdminSession(false)
       setIsAuthenticated(true)
@@ -83,84 +67,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       setCustomer(null)
       setEmployee(null)
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  const fetchAdminSession = useCallback(async (): Promise<boolean> => {
-    try {
-      const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
-        "/store/auth/session",
-        { method: "GET" },
-      )
-      if (session.redirect_to !== "/app") {
-        return false
-      }
-      setCustomer(null)
-      setEmployee(null)
-      setIsAdminSession(true)
-      setIsAuthenticated(true)
-      writeAuthHint(true)
-      return true
-    } catch {
       setIsAdminSession(false)
       setIsAuthenticated(false)
       writeAuthHint(false)
       return false
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    // Guest pages do not need an authenticated customer request. Only probe
-    // the protected endpoint when a prior successful login left a local hint.
-    if (!readAuthHint()) {
-      setIsLoading(false)
-      return
-    }
-
-    void (async () => {
-      if (!(await fetchCustomer())) {
-        await fetchAdminSession()
+  const bootstrapSession = useCallback(async (): Promise<"customer" | "admin" | null> => {
+    try {
+      const status = await getSafeAuthStatus()
+      if (!status.authenticated) {
+        setCustomer(null)
+        setEmployee(null)
+        setIsAdminSession(false)
+        setIsAuthenticated(false)
+        writeAuthHint(false)
+        return null
       }
-    })()
-  }, [fetchAdminSession, fetchCustomer])
+      if (status.actor === "user") {
+        setCustomer(null)
+        setEmployee(null)
+        setIsAdminSession(true)
+        setIsAuthenticated(true)
+        writeAuthHint(true)
+        return "admin"
+      }
+      return (await fetchCustomer()) ? "customer" : null
+    } catch {
+      setCustomer(null)
+      setEmployee(null)
+      setIsAdminSession(false)
+      setIsAuthenticated(false)
+      writeAuthHint(false)
+      return null
+    } finally {
+      setIsLoading(false)
+    }
+  }, [fetchCustomer])
+
+  useEffect(() => {
+    // Public boot makes exactly one optional-auth request. Customer Me remains
+    // protected and is reached only after the server identifies a customer.
+    void bootstrapSession()
+  }, [bootstrapSession])
 
   const login = async (email: string, password: string): Promise<"customer" | "admin"> => {
     await sdk.client.fetch("/auth/unified/emailpass", {
       method: "POST",
       body: { email, password },
     })
-
-    if (await fetchAdminSession()) {
-      return "admin"
-    }
-
-    if (!(await fetchCustomer())) {
-      throw new Error("Não foi possível validar a sessão de cliente.")
-    }
-    return "customer"
+    const actor = await bootstrapSession()
+    if (!actor) throw new Error("Não foi possível validar a sessão.")
+    return actor
   }
 
   const logout = async () => {
     try {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("medusa_auth_token")
-      }
+      if (typeof window !== "undefined") localStorage.removeItem("medusa_auth_token")
       await sdk.auth.logout()
     } catch (error) {
-      if (!isAlreadyLoggedOutError(error)) {
-        throw error
-      }
+      if (!isAlreadyLoggedOutError(error)) throw error
     } finally {
       resetFavoritesForLogout()
       clearGuestCep()
-      // Private account responses must never be reused by the next session.
       queryClient.clear()
-      // Update cached state so navigation doesn't show loading
       writeAuthHint(false)
       setCustomer(null)
       setEmployee(null)
@@ -171,11 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refetch = async () => {
-    // Don't set isLoading to true on refetch - it causes full-page spinner
-    // Components should handle their own loading states for refetch scenarios
-    if (!(await fetchCustomer())) {
-      await fetchAdminSession()
-    }
+    await bootstrapSession()
   }
 
   return (

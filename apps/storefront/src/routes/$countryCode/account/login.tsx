@@ -11,30 +11,23 @@ const loginSearchSchema = z.object({
 
 export const Route = createFileRoute("/$countryCode/account/login")({
   beforeLoad: async ({ params, search }) => {
-    // Check if already authenticated, redirect to the validated destination.
+    // This public status endpoint keeps anonymous login navigation free of
+    // expected 401 responses from protected Customer/Admin endpoints.
     try {
-      await sdk.store.customer.retrieve()
-      // If successful, user is already logged in, redirect to proper country code
+      const status = await sdk.client.fetch<{
+        authenticated: boolean
+        actor: "customer" | "user" | null
+        redirect_to?: "/app"
+      }>("/store/auth/status", { method: "GET" })
       const countryCode = params.countryCode || "br"
-      const returnTo = normalizeReturnTo(search.returnTo, countryCode)
-      throw redirect({ href: returnTo })
-    } catch (error: any) {
-      // Re-throw redirect
-      if (error?.to || error?.href) throw error
-      // Unauthorized errors are expected for login page - ignore them
-      // Any other errors we also silently ignore to allow showing login page
-    }
-
-    try {
-      const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
-        "/store/auth/session",
-        { method: "GET" },
-      )
-      if (session.redirect_to === "/app") {
+      if (status.authenticated && status.actor === "user" && status.redirect_to === "/app") {
         throw redirect({ href: ADMIN_ACCESS_URL ?? "/app" })
       }
-    } catch (error: any) {
-      if (error?.to || error?.href) throw error
+      if (status.authenticated && status.actor === "customer") {
+        throw redirect({ href: normalizeReturnTo(search.returnTo, countryCode) })
+      }
+    } catch (error: unknown) {
+      if (typeof error === "object" && error !== null && ("to" in error || "href" in error)) throw error
     }
   },
   validateSearch: loginSearchSchema,
