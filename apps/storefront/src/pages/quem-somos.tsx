@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router"
 import { companyTeam } from "@/config/company-team"
 import { TeamMemberCard } from "@/components/quem-somos/TeamMemberCard"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
