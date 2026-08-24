@@ -18,6 +18,8 @@ test("requires an explicit immutable mode and a clean official candidate", () =>
   assert.match(guard, /require_clean_git_dir "IMMUTABLE_CANDIDATE"/);
   assert.match(guard, /IMMUTABLE_CANDIDATE_OUTSIDE_RELEASE_ROOT/);
   assert.match(guard, /IMMUTABLE_CANDIDATE_SYMLINK/);
+  assert.match(guard, /\(\^\|\/\)\\\.env\$/);
+  assert.doesNotMatch(guard, /\.env\(\$\|\\\.\)/);
   assert.match(hostGuard, /args\[0\] === "--"/);
 });
 

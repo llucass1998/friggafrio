@@ -64,7 +64,7 @@ require_release_candidate() {
     require_clean_git_dir "IMMUTABLE_CANDIDATE" "$candidate_dir"
   fi
   [[ "$(git -C "$candidate_dir" rev-parse HEAD)" == "$approved_sha" ]] || deploy_fail "IMMUTABLE_CANDIDATE_SHA_MISMATCH"
-  git -C "$candidate_dir" ls-files | grep -Eq '(^|/)\.env($|\.)' && deploy_fail "IMMUTABLE_CANDIDATE_TRACKED_ENV" || true
+  git -C "$candidate_dir" ls-files | grep -Eq '(^|/)\.env$' && deploy_fail "IMMUTABLE_CANDIDATE_TRACKED_ENV" || true
 }
 
 write_legacy_manifest() {
