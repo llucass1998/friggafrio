@@ -8,6 +8,7 @@
 | Health probe immediately refused after restart | Backend had not opened its port | 60-second monotonic readiness polling with three consecutive 200s | Wait for readiness, do not roll back on initial refusal |
 | Dirty legacy release | In-place sync cannot safely overwrite release-only clone | Explicit immutable replacement with manifest and atomic rename | Build a new official candidate |
 | Public `/app` 404 and internal `/app` 200 | External ingress lacks Admin route | Public Admin ingress preflight and regression test | Correct the loaded external proxy config before swap |
+| Public `/admin/*` falls through to Storefront | External catch-all masks the Admin API | Storefront server-side Admin proxy with unit coverage preserves method, query, cookies, and upstream status | Deploy the proxy fallback, then require anonymous `401 JSON` |
 | Caddy WSL failed while domain responds | WSL Caddy is not public ingress | Ingress ownership rule in `AGENTS.md` and runbook | Identify external proxy host and operator |
 | Resend missing | External runtime configuration absent | Fail-closed integration behavior | Configure values through approved secret management |
 
