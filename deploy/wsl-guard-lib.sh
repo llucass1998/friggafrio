@@ -200,3 +200,29 @@ read_publishable_key() {
   done
   return 1
 }
+
+verify_public_admin_ingress() {
+  local public_health public_storefront public_admin internal_admin header_file body_file ingress_header
+  public_health="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$FRIGGAFRIO_PUBLIC_ORIGIN/health" || true)"
+  [[ "$public_health" == "200" ]] || deploy_fail "DEPLOY_BLOCKED_PUBLIC_HEALTHCHECK"
+  public_storefront="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$FRIGGAFRIO_PUBLIC_ORIGIN/br" || true)"
+  [[ "$public_storefront" == "200" ]] || deploy_fail "DEPLOY_BLOCKED_PUBLIC_STOREFRONT"
+
+  header_file="$(mktemp)"
+  body_file="$(mktemp)"
+  public_admin="$(curl --silent --dump-header "$header_file" --output "$body_file" --write-out '%{http_code}' --max-time 20 "$FRIGGAFRIO_PUBLIC_ORIGIN/app" || true)"
+  ingress_header="$(awk 'BEGIN { IGNORECASE=1 } /^(via|server):/ { sub(/\r$/, ""); print; exit }' "$header_file")"
+  rm -f -- "$header_file" "$body_file"
+  internal_admin="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 http://127.0.0.1:9000/app || true)"
+
+  echo "PUBLIC_INGRESS_HEALTH=$public_health"
+  echo "PUBLIC_INGRESS_STOREFRONT=$public_storefront"
+  echo "PUBLIC_ADMIN_ROUTE_STATUS=$public_admin"
+  [[ -z "$ingress_header" ]] || echo "PUBLIC_INGRESS_HEADER=$ingress_header"
+  echo "INTERNAL_ADMIN_ROUTE_STATUS=$internal_admin"
+  if [[ "$internal_admin" == "200" && "$public_admin" != "200" ]]; then
+    deploy_fail "DEPLOY_BLOCKED_PUBLIC_ADMIN_INGRESS_ROUTE_MISSING"
+  fi
+  [[ "$public_admin" == "200" ]] || deploy_fail "DEPLOY_BLOCKED_PUBLIC_ADMIN_ROUTE_UNVERIFIABLE"
+  echo "PUBLIC_ADMIN_ROUTE=PASS"
+}
