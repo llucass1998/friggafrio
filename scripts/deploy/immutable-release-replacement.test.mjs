@@ -8,6 +8,7 @@ const root = join(fileURLToPath(new URL("../..", import.meta.url)));
 const deploy = readFileSync(join(root, "deploy/wsl-deploy.sh"), "utf8");
 const preflight = readFileSync(join(root, "deploy/wsl-preflight.sh"), "utf8");
 const guard = readFileSync(join(root, "deploy/wsl-guard-lib.sh"), "utf8");
+const hostGuard = readFileSync(join(root, "scripts/deploy/require-wsl-host.mjs"), "utf8");
 
 test("requires an explicit immutable mode and a clean official candidate", () => {
   assert.match(deploy, /--immutable/);
@@ -17,6 +18,7 @@ test("requires an explicit immutable mode and a clean official candidate", () =>
   assert.match(guard, /require_clean_git_dir "IMMUTABLE_CANDIDATE"/);
   assert.match(guard, /IMMUTABLE_CANDIDATE_OUTSIDE_RELEASE_ROOT/);
   assert.match(guard, /IMMUTABLE_CANDIDATE_SYMLINK/);
+  assert.match(hostGuard, /args\[0\] === "--"/);
 });
 
 test("requires backup, legacy manifest, runtime contract, and reversible rename", () => {
@@ -25,6 +27,7 @@ test("requires backup, legacy manifest, runtime contract, and reversible rename"
   assert.match(deploy, /systemctl cat friggafrio-backend\.service/);
   assert.match(deploy, /mv "\$FRIGGAFRIO_DEPLOY_DIR" "\$legacy_dir"/);
   assert.match(deploy, /IMMUTABLE_RELEASE_VERIFY_FAILED_ROLLED_BACK/);
+  assert.match(deploy, /chown -R --reference="\$FRIGGAFRIO_DEPLOY_DIR" "\$candidate_dir"/);
   assert.match(preflight, /LEGACY_MANIFEST_MISSING/);
   assert.match(preflight, /OLD_UNIT_BACKUP_MISSING/);
 });

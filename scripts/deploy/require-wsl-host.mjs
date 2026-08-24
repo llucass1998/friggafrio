@@ -28,7 +28,9 @@ if (!scripts[command]) {
   console.error("DEPLOYMENT_PLATFORM_DENIED: Production deployment is WSL-only.");
   process.exitCode = 1;
 } else {
-  const result = spawnSync("bash", [scripts[command], ...process.argv.slice(3)], {
+  const args = process.argv.slice(3);
+  if (args[0] === "--") args.shift();
+  const result = spawnSync("bash", [scripts[command], ...args], {
     cwd: root,
     stdio: "inherit",
   });

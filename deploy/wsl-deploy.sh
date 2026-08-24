@@ -58,6 +58,10 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   install_medusa_runtime_dependencies "$candidate_dir"
   pnpm --dir "$candidate_dir" --filter storefront build
   verify_medusa_runtime_contract "$candidate_dir" --require-runtime-dependencies
+  # Root-run WSL automation must leave the immutable runtime readable by srv.
+  if [[ "$(id -u)" == "0" ]]; then
+    chown -R --reference="$FRIGGAFRIO_DEPLOY_DIR" "$candidate_dir"
+  fi
   backup_dir="$FRIGGAFRIO_BACKUP_ROOT/$timestamp-$SOURCE_SHA"
   [[ ! -e "$backup_dir" ]] || deploy_fail "IMMUTABLE_BACKUP_PATH_EXISTS"
   mkdir -p "$backup_dir"
