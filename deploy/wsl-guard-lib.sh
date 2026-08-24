@@ -9,6 +9,9 @@ FRIGGAFRIO_DEPLOY_DIR="${FRIGGAFRIO_DEPLOY_TARGET:-/home/srv/friggafrio/Maestro-
 FRIGGAFRIO_LOCK_FILE="${FRIGGAFRIO_DEPLOY_LOCK:-/var/lock/friggafrio-deploy.lock}"
 FRIGGAFRIO_BACKUP_ROOT="${FRIGGAFRIO_DEPLOY_BACKUP:-/var/backups/friggafrio}"
 FRIGGAFRIO_PUBLIC_ORIGIN="${FRIGGAFRIO_PUBLIC_ORIGIN:-https://friggafrio.istigestao.com.br}"
+FRIGGAFRIO_RELEASE_ROOT="${FRIGGAFRIO_RELEASE_ROOT:-/home/srv/friggafrio/releases}"
+FRIGGAFRIO_DEPLOY_MODE="${FRIGGAFRIO_DEPLOY_MODE:-IN_PLACE_SYNC}"
+FRIGGAFRIO_OFFICIAL_ORIGIN="https://github.com/llucass1998/friggafrio.git"
 
 deploy_fail() {
   echo "$1" >&2
@@ -35,6 +38,70 @@ require_clean_git_dir() {
 require_expected_paths() {
   [[ "$(realpath "$FRIGGAFRIO_SOURCE_DIR")" == "/home/srv/friggafrio/Maestro" ]] || deploy_fail "WSL_SOURCE_PATH_MISMATCH"
   [[ "$(realpath "$FRIGGAFRIO_DEPLOY_DIR")" == "/home/srv/friggafrio/Maestro-deploy" ]] || deploy_fail "WSL_DEPLOY_PATH_MISMATCH"
+}
+
+require_deploy_mode() {
+  [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IN_PLACE_SYNC" || "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]] || deploy_fail "DEPLOY_MODE_INVALID"
+}
+
+require_official_origin() {
+  local directory="$1"
+  [[ "$(git -C "$directory" remote get-url origin)" == "$FRIGGAFRIO_OFFICIAL_ORIGIN" ]] || deploy_fail "RELEASE_ORIGIN_INVALID"
+}
+
+require_release_candidate() {
+  local candidate_dir="$1"
+  local approved_sha="$2"
+  local require_clean="${3:-YES}"
+  [[ -n "$candidate_dir" ]] || deploy_fail "IMMUTABLE_CANDIDATE_REQUIRED"
+  [[ -d "$candidate_dir/.git" ]] || deploy_fail "IMMUTABLE_CANDIDATE_MISSING"
+  [[ ! -L "$candidate_dir" ]] || deploy_fail "IMMUTABLE_CANDIDATE_SYMLINK"
+  [[ "$(realpath "$candidate_dir")" == "$(realpath "$FRIGGAFRIO_RELEASE_ROOT")"/* ]] || deploy_fail "IMMUTABLE_CANDIDATE_OUTSIDE_RELEASE_ROOT"
+  [[ "$(realpath "$candidate_dir")" != "$(realpath "$FRIGGAFRIO_DEPLOY_DIR")" ]] || deploy_fail "IMMUTABLE_CANDIDATE_IS_DEPLOY_DIR"
+  require_official_origin "$candidate_dir"
+  [[ "$require_clean" == "YES" || "$require_clean" == "NO" ]] || deploy_fail "IMMUTABLE_CANDIDATE_CLEAN_STATE_INVALID"
+  if [[ "$require_clean" == "YES" ]]; then
+    require_clean_git_dir "IMMUTABLE_CANDIDATE" "$candidate_dir"
+  fi
+  [[ "$(git -C "$candidate_dir" rev-parse HEAD)" == "$approved_sha" ]] || deploy_fail "IMMUTABLE_CANDIDATE_SHA_MISMATCH"
+  git -C "$candidate_dir" ls-files | grep -Eq '(^|/)\.env($|\.)' && deploy_fail "IMMUTABLE_CANDIDATE_TRACKED_ENV" || true
+}
+
+write_legacy_manifest() {
+  local legacy_dir="$1"
+  local manifest="$2"
+  [[ -d "$legacy_dir/.git" ]] || deploy_fail "LEGACY_DEPLOY_MISSING"
+  [[ ! -e "$manifest" ]] || deploy_fail "LEGACY_MANIFEST_EXISTS"
+  umask 077
+  {
+    echo "LEGACY_PATH=$legacy_dir"
+    echo "LEGACY_HEAD=$(git -C "$legacy_dir" rev-parse HEAD)"
+    echo "LEGACY_BRANCH=$(git -C "$legacy_dir" branch --show-current || true)"
+    echo "LEGACY_ORIGIN=$(git -C "$legacy_dir" remote get-url origin || true)"
+    echo "TRACKED_MODIFIED_PATHS_BEGIN"
+    git -C "$legacy_dir" diff --name-only
+    echo "TRACKED_MODIFIED_PATHS_END"
+    echo "UNTRACKED_PATHS_BEGIN"
+    git -C "$legacy_dir" ls-files --others --exclude-standard
+    echo "UNTRACKED_PATHS_END"
+    echo "UNTRACKED_COUNT=$(git -C "$legacy_dir" ls-files --others --exclude-standard | wc -l)"
+    echo "CONTENT_SHA256_BEGIN"
+    (cd "$legacy_dir" && find . -type f -print0 | sort -z | xargs -0 -r sha256sum)
+    echo "CONTENT_SHA256_END"
+  } > "$manifest"
+}
+
+copy_runtime_file_if_untracked() {
+  local legacy_dir="$1"
+  local candidate_dir="$2"
+  local relative_path="$3"
+  local source="$legacy_dir/$relative_path"
+  local destination="$candidate_dir/$relative_path"
+  [[ -f "$source" ]] || return 0
+  git -C "$legacy_dir" ls-files --error-unmatch -- "$relative_path" >/dev/null 2>&1 && deploy_fail "LEGACY_RUNTIME_FILE_TRACKED=$relative_path"
+  install -D -m "$(stat -c '%a' "$source")" "$source" "$destination"
+  chown --reference="$source" "$destination"
+  [[ "$(sha256sum "$source" | awk '{print $1}')" == "$(sha256sum "$destination" | awk '{print $1}')" ]] || deploy_fail "RUNTIME_CONFIG_COPY_CHECKSUM_MISMATCH"
 }
 
 require_no_recent_wsl_poweroff() {

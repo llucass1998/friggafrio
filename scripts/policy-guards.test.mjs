@@ -139,6 +139,20 @@ test("source sync is fail-closed for dirty or divergent WSL state", () => {
   );
 });
 
+test("immutable replacement is explicit and preserves the in-place dirty guard", () => {
+  const script = readFileSync(join(root, "deploy/wsl-deploy.sh"), "utf8");
+  const preflight = readFileSync(join(root, "deploy/wsl-preflight.sh"), "utf8");
+  const guard = readFileSync(join(root, "deploy/wsl-guard-lib.sh"), "utf8");
+  assert.match(script, /--immutable/);
+  assert.match(script, /IMMUTABLE_RELEASE_REPLACEMENT/);
+  assert.match(preflight, /FRIGGAFRIO_DEPLOY_MODE.*IN_PLACE_SYNC/);
+  assert.match(preflight, /require_clean_git_dir "WSL_DEPLOY_CLONE"/);
+  assert.match(guard, /IMMUTABLE_CANDIDATE_OUTSIDE_RELEASE_ROOT/);
+  assert.match(guard, /IMMUTABLE_CANDIDATE_SYMLINK/);
+  assert.match(guard, /LEGACY_MANIFEST/);
+  assert.doesNotMatch(script, /--force/);
+});
+
 test("deploy script contains the WSL, lock, dirty and SHA guards", () => {
   const script = readFileSync(join(root, "deploy/wsl-deploy.sh"), "utf8");
   const guard = readFileSync(join(root, "deploy/wsl-guard-lib.sh"), "utf8");
