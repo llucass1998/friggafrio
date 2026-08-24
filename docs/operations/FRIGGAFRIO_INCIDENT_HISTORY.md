@@ -7,13 +7,13 @@
 - Sanitized signature: internal `GET /app` = 200 and public `GET /app` = 404, with public `Via: Caddy`.
 - Proven cause: the active public Caddy is external (`177.70.8.202:443`), while WSL has no public TLS listener and its failed Caddy unit is not the serving ingress.
 - Non-working action avoided: editing `/etc/caddy/Caddyfile` in WSL without ownership proof.
-- Definitive correction: add `/app` and `/app/*` ahead of the Storefront fallback in the externally active Caddy, using the same backend upstream as `/health`.
+- Definitive correction: add `/app` and `/app/*` ahead of the Storefront fallback in the externally active Caddy, using the same backend upstream as `/health`. The deployed Storefront also has a narrow server-side `/admin` fallback that proxies only that namespace to local Medusa if an external catch-all misses the Admin API.
 - Early detection: `verify_public_admin_ingress` runs in WSL preflight and blocks before the release swap when internal Admin is 200 but public Admin is not.
 - Regression coverage: `scripts/deploy/public-admin-ingress.test.mjs`.
 - Rollback: restore the external ingress configuration backup and gracefully reload it; release rollback remains available independently.
 - Last approved gate: candidate build, runtime materialization, Admin assets, immutable preflight, backup, swap, and backend readiness.
-- Resume gate: obtain authorized admin access to `177.70.8.202`, validate and reload the active Caddy route, then run the immutable deployment from the latest approved SHA.
-- Status: external pending; prevention versioned.
+- Resume gate: run the standard immutable workflow from a new approved SHA; retain external route validation and the Storefront Admin fallback test.
+- Status: resolved in release `867780f6c01aedb096c77f8f3e4ac4da41e5e770`; prevention versioned.
 
 ## Imported proven deployment knowledge
 

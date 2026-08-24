@@ -12,4 +12,4 @@
 | Caddy WSL failed while domain responds | WSL Caddy is not public ingress | Ingress ownership rule in `AGENTS.md` and runbook | Identify external proxy host and operator |
 | Resend missing | External runtime configuration absent | Fail-closed integration behavior | Configure values through approved secret management |
 
-An entry is `LEARNED_AND_PREVENTED` only when its prevention is executable or testable in the repository. The public Admin ingress incident is covered by the preflight guard and regression test, but remediation still requires authorized access to the external host.
+An entry is `LEARNED_AND_PREVENTED` only when its prevention is executable or testable in the repository. The public Admin ingress incident is covered by the preflight guard, regression test, and the narrow Storefront Admin fallback deployed in `867780f6c01aedb096c77f8f3e4ac4da41e5e770`.

@@ -1,11 +1,11 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `ad7b34b921fc63b75e94579d5121b89448296f85`.
-- Latest versioned candidate SHA: `26c019e0a812f8c2c07eef493799c5464079246f`.
-- Candidate status: runtime validated internally; not published after external public Admin ingress returned 404.
-- WSL source mirror: synchronized to the latest candidate SHA before the failed public validation.
-- Production database: no migration or restore was performed during the failed attempt.
-- Preserved failed candidate: `/home/srv/friggafrio/Maestro-deploy-failed-20260824T135300Z`.
-- Public status at record time: `/health` 200, `/br` 200, `/app` 404.
-- Resume gate: external ingress route validation and graceful reload on `177.70.8.202`, then a new immutable candidate deploy.
+- Production SHA: `867780f6c01aedb096c77f8f3e4ac4da41e5e770`.
+- Release status: published through immutable replacement after frozen install, Medusa runtime materialization, backup validation, and bounded readiness.
+- WSL source mirror: synchronized to the deployed SHA.
+- Production database: backup validated before the release; no migration, seed, or restore was performed.
+- Preserved failed candidate: `/home/srv/friggafrio/Maestro-deploy-failed-20260824T135300Z` remains available for forensics.
+- Public status at record time: `/health` 200, `/br` 200, `/app` and `/app/` 200, Admin assets 200, and anonymous `/admin/products?limit=1` 401 JSON.
+- Admin API resilience: the Storefront now proxies only `/admin` and `/admin/*` to its local Medusa backend when an external catch-all ingress sends those requests to the Storefront.
+- Next deploy gate: use the immutable workflow with a new official candidate and retain public route validation.
 - External configuration: Resend API and webhook values remain pending; this does not block independent site functionality.
