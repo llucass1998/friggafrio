@@ -70,7 +70,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   write_legacy_manifest "$FRIGGAFRIO_DEPLOY_DIR" "$legacy_manifest"
   systemctl cat friggafrio-backend.service > "$old_unit_backup"
   old_unit_checksum="$(sha256sum "$old_unit_backup" | awk '{print $1}')"
-  database_url="$(awk -F= '/^DATABASE_URL=/{sub(/^DATABASE_URL=/, ""); print; exit}' "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.env")"
+  database_url="$(awk -F= '/^DATABASE_URL=/{sub(/^DATABASE_URL=/, ""); sub(/\r$/, ""); print; exit}' "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.env")"
   [[ -n "$database_url" ]] || deploy_fail "DATABASE_BACKUP_URL_MISSING"
   database_backup="$backup_dir/postgresql-before-$SOURCE_SHA.dump"
   pg_dump --format=custom --file="$database_backup" "$database_url"

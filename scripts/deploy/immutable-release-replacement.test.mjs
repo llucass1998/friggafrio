@@ -30,6 +30,7 @@ test("requires backup, legacy manifest, runtime contract, and reversible rename"
   assert.match(deploy, /mv "\$FRIGGAFRIO_DEPLOY_DIR" "\$legacy_dir"/);
   assert.match(deploy, /IMMUTABLE_RELEASE_VERIFY_FAILED_ROLLED_BACK/);
   assert.match(deploy, /chown -R --reference="\$FRIGGAFRIO_DEPLOY_DIR" "\$candidate_dir"/);
+  assert.match(deploy, /sub\(\/\\r\$\//);
   assert.match(preflight, /LEGACY_MANIFEST_MISSING/);
   assert.match(preflight, /OLD_UNIT_BACKUP_MISSING/);
 });
