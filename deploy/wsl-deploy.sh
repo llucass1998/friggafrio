@@ -53,7 +53,9 @@ rollback() {
   git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$OLD_DEPLOY_SHA"
   pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
   pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
+  install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
   pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter storefront build
+  require_backend_service_runtime_contract
   systemctl restart friggafrio-backend.service
   systemctl restart friggafrio-storefront.service
 }
@@ -62,7 +64,9 @@ git -C "$FRIGGAFRIO_DEPLOY_DIR" fetch origin "$FRIGGAFRIO_BRANCH"
 git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$SOURCE_SHA"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
+install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter storefront build
+require_backend_service_runtime_contract
 systemctl restart friggafrio-backend.service
 systemctl restart friggafrio-storefront.service
 

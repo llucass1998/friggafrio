@@ -16,7 +16,9 @@ acquire_deploy_lock
 git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$FRIGGAFRIO_ROLLBACK_SHA"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
+install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter storefront build
+require_backend_service_runtime_contract
 systemctl restart friggafrio-backend.service
 systemctl restart friggafrio-storefront.service
 echo "ROLLED_BACK_COMMIT_SHA=$(git -C "$FRIGGAFRIO_DEPLOY_DIR" rev-parse HEAD)"

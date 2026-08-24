@@ -44,12 +44,53 @@ require_no_recent_wsl_poweroff() {
 }
 
 require_required_env() {
-  local env_file="$FRIGGAFRIO_DEPLOY_DIR/.env"
+  local env_file="$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.env"
   [[ -f "$env_file" ]] || deploy_fail "DEPLOY_BLOCKED_ENV_MISSING"
   local key
   for key in DATABASE_URL REDIS_URL JWT_SECRET COOKIE_SECRET; do
     grep -Eq "^${key}=.+" "$env_file" || deploy_fail "DEPLOY_BLOCKED_ENV_KEY_MISSING=$key"
   done
+}
+
+medusa_runtime_dir() {
+  printf '%s/apps/backend/.medusa/server' "$1"
+}
+
+verify_medusa_runtime_contract() {
+  local release_dir="$1"
+  shift
+  node "$release_dir/scripts/deploy/medusa-runtime-contract.mjs" \
+    --release-dir "$release_dir" \
+    --runtime-dir "$(medusa_runtime_dir "$release_dir")" \
+    "$@"
+}
+
+install_medusa_runtime_dependencies() {
+  local release_dir="$1"
+  local runtime_dir
+  local dependency_stage
+  runtime_dir="$(medusa_runtime_dir "$release_dir")"
+  dependency_stage="$release_dir/apps/backend/.medusa/runtime-dependencies"
+  verify_medusa_runtime_contract "$release_dir"
+  [[ ! -e "$dependency_stage" ]] || deploy_fail "MEDUSA_RUNTIME_DEPENDENCY_STAGE_EXISTS"
+  [[ ! -e "$runtime_dir/node_modules" ]] || deploy_fail "MEDUSA_RUNTIME_DEPENDENCIES_STALE"
+  # Build output has no lockfile. pnpm deploy uses the already frozen workspace
+  # lockfile, then places exactly those production dependencies in the runtime.
+  pnpm --dir "$release_dir" --filter backend --prod deploy "$dependency_stage"
+  [[ -d "$dependency_stage/node_modules" ]] || deploy_fail "MEDUSA_RUNTIME_DEPENDENCY_STAGE_MISSING"
+  mv "$dependency_stage/node_modules" "$runtime_dir/node_modules"
+  verify_medusa_runtime_contract "$release_dir" --require-runtime-dependencies
+}
+
+require_backend_service_runtime_contract() {
+  local expected_runtime
+  expected_runtime="$(medusa_runtime_dir "$FRIGGAFRIO_DEPLOY_DIR")"
+  local working_directory
+  working_directory="$(systemctl show --property=WorkingDirectory --value friggafrio-backend.service)"
+  [[ "$working_directory" == "$expected_runtime" ]] || deploy_fail "BACKEND_SERVICE_RUNTIME_DIRECTORY_MISMATCH"
+  local exec_start
+  exec_start="$(systemctl show --property=ExecStart --value friggafrio-backend.service)"
+  [[ "$exec_start" == *"medusa start"* && "$exec_start" != *"--filter backend"* ]] || deploy_fail "BACKEND_SERVICE_RUNTIME_COMMAND_MISMATCH"
 }
 
 acquire_deploy_lock() {

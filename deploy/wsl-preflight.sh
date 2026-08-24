@@ -24,6 +24,7 @@ REMOTE_SHA="$(git -C "$FRIGGAFRIO_SOURCE_DIR" rev-parse "origin/$FRIGGAFRIO_BRAN
 [[ "$SOURCE_SHA" == "$REMOTE_SHA" ]] || deploy_fail "DEPLOY_BLOCKED_SOURCE_REMOTE_SHA_MISMATCH"
 node "$FRIGGAFRIO_SOURCE_DIR/scripts/source-sync-policy-check.mjs" --deploy
 require_required_env
+require_backend_service_runtime_contract
 require_no_recent_wsl_poweroff
 systemctl is-active --quiet friggafrio-backend.service || deploy_fail "DEPLOY_BLOCKED_BACKEND_UNHEALTHY"
 systemctl is-active --quiet friggafrio-storefront.service || deploy_fail "DEPLOY_BLOCKED_STOREFRONT_UNHEALTHY"

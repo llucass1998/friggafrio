@@ -1,0 +1,18 @@
+[Unit]
+Description=FriggaFrio Medusa backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=srv
+Group=srv
+WorkingDirectory=/home/srv/friggafrio/Maestro-deploy/apps/backend/.medusa/server
+Environment=NODE_ENV=production
+EnvironmentFile=-/home/srv/friggafrio/Maestro-deploy/apps/backend/.env
+ExecStart=/usr/local/bin/pnpm --ignore-workspace exec medusa start --host 0.0.0.0 --port 9000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

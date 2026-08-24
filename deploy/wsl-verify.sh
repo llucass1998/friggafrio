@@ -10,6 +10,8 @@ require_expected_paths
 for command_name in git curl systemctl; do require_command "$command_name"; done
 require_no_recent_wsl_poweroff
 DEPLOYED_COMMIT_SHA="$(git -C "$FRIGGAFRIO_DEPLOY_DIR" rev-parse HEAD)"
+verify_medusa_runtime_contract "$FRIGGAFRIO_DEPLOY_DIR" --require-runtime-dependencies
+require_backend_service_runtime_contract
 systemctl is-active --quiet friggafrio-backend.service || deploy_fail "VERIFY_BACKEND_SERVICE_FAILED"
 systemctl is-active --quiet friggafrio-storefront.service || deploy_fail "VERIFY_STOREFRONT_SERVICE_FAILED"
 curl --fail --silent --show-error --max-time 20 http://127.0.0.1:9000/health >/dev/null || deploy_fail "VERIFY_BACKEND_HEALTH_FAILED"

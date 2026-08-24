@@ -144,6 +144,8 @@ test("deploy script contains the WSL, lock, dirty and SHA guards", () => {
   const guard = readFileSync(join(root, "deploy/wsl-guard-lib.sh"), "utf8");
   const preflight = readFileSync(join(root, "deploy/wsl-preflight.sh"), "utf8");
   const hostGuard = readFileSync(join(root, "scripts/deploy/require-wsl-host.mjs"), "utf8");
+  const runtimeContract = readFileSync(join(root, "scripts/deploy/medusa-runtime-contract.mjs"), "utf8");
+  const backendService = readFileSync(join(root, "deploy/systemd/friggafrio-backend.service"), "utf8");
   const deploymentPolicy = `${script}\n${guard}\n${preflight}`;
   assert.match(guard, /DEPLOYMENT_PLATFORM_DENIED/);
   assert.match(hostGuard, /DEPLOYMENT_PLATFORM_DENIED/);
@@ -154,6 +156,14 @@ test("deploy script contains the WSL, lock, dirty and SHA guards", () => {
   assert.match(deploymentPolicy, /source-sync-policy-check\.mjs" --deploy/);
   assert.match(guard, /flock -n 9/);
   assert.match(script, /systemctl restart friggafrio-backend\.service/);
+  assert.match(script, /install_medusa_runtime_dependencies/);
+  assert.match(guard, /--filter backend --prod deploy/);
+  assert.match(guard, /MEDUSA_RUNTIME_DEPENDENCIES_STALE/);
+  assert.match(preflight, /require_backend_service_runtime_contract/);
+  assert.match(runtimeContract, /MEDUSA_ADMIN_INDEX_MISSING/);
+  assert.match(backendService, /WorkingDirectory=.*\.medusa\/server/);
+  assert.match(backendService, /EnvironmentFile=.*apps\/backend\/\.env/);
+  assert.doesNotMatch(backendService, /DISABLE_MEDUSA_ADMIN=true/);
   assert.match(guard, /DEPLOY_BLOCKED_WSL_UNSTABLE/);
   assert.doesNotMatch(deploymentPolicy, /down\s+-v|\bdocker\s+prune\b|\bvolume\s+rm\b/);
 });
