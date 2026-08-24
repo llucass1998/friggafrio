@@ -56,6 +56,16 @@ medusa_runtime_dir() {
   printf '%s/apps/backend/.medusa/server' "$1"
 }
 
+require_self_contained_node_modules() {
+  local node_modules_dir="$1"
+  local link
+  local target
+  while IFS= read -r -d '' link; do
+    target="$(realpath "$link")"
+    [[ "$target" == "$node_modules_dir"/* ]] || deploy_fail "MEDUSA_RUNTIME_EXTERNAL_SYMLINK"
+  done < <(find "$node_modules_dir" -type l -print0)
+}
+
 verify_medusa_runtime_contract() {
   local release_dir="$1"
   shift
@@ -76,8 +86,17 @@ install_medusa_runtime_dependencies() {
   [[ ! -e "$runtime_dir/node_modules" ]] || deploy_fail "MEDUSA_RUNTIME_DEPENDENCIES_STALE"
   # Build output has no lockfile. pnpm deploy uses the already frozen workspace
   # lockfile, then places exactly those production dependencies in the runtime.
-  pnpm --dir "$release_dir" --filter backend --prod deploy "$dependency_stage"
+  # pnpm 10 requires an explicit legacy deploy for non-injected workspaces.
+  if ! pnpm --dir "$release_dir" --filter backend --prod deploy --legacy "$dependency_stage"; then
+    # This path was verified absent before pnpm created it for this invocation.
+    rm -rf -- "$dependency_stage"
+    deploy_fail "MEDUSA_RUNTIME_DEPENDENCY_INSTALL_FAILED"
+  fi
   [[ -d "$dependency_stage/node_modules" ]] || deploy_fail "MEDUSA_RUNTIME_DEPENDENCY_STAGE_MISSING"
+  # pnpm legacy deploy writes this workspace self-link even though the runtime
+  # never loads its package manifest. It would tie a release to its build tree.
+  rm -f -- "$dependency_stage/node_modules/.pnpm/node_modules/backend"
+  require_self_contained_node_modules "$dependency_stage/node_modules"
   mv "$dependency_stage/node_modules" "$runtime_dir/node_modules"
   verify_medusa_runtime_contract "$release_dir" --require-runtime-dependencies
 }

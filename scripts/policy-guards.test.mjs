@@ -157,7 +157,7 @@ test("deploy script contains the WSL, lock, dirty and SHA guards", () => {
   assert.match(guard, /flock -n 9/);
   assert.match(script, /systemctl restart friggafrio-backend\.service/);
   assert.match(script, /install_medusa_runtime_dependencies/);
-  assert.match(guard, /--filter backend --prod deploy/);
+  assert.match(guard, /--filter backend --prod deploy --legacy/);
   assert.match(guard, /MEDUSA_RUNTIME_DEPENDENCIES_STALE/);
   assert.match(preflight, /require_backend_service_runtime_contract/);
   assert.match(runtimeContract, /MEDUSA_ADMIN_INDEX_MISSING/);

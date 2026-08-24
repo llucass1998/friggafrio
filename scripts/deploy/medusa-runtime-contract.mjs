@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -61,6 +61,28 @@ function assertRuntimeDependencies(runtimeDir) {
   }
 }
 
+function assertSelfContainedDependencies(runtimeDir) {
+  const nodeModules = resolve(runtimeDir, "node_modules");
+  const pending = [nodeModules];
+  while (pending.length) {
+    const directory = pending.pop();
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const candidate = resolve(directory, entry.name);
+      if (entry.isDirectory()) {
+        pending.push(candidate);
+      } else if (entry.isSymbolicLink()) {
+        const target = realpathSync(candidate);
+        if (!isWithin(nodeModules, target)) {
+          throw new MedusaRuntimeContractError(
+            "MEDUSA_RUNTIME_EXTERNAL_SYMLINK",
+            candidate,
+          );
+        }
+      }
+    }
+  }
+}
+
 export function validateMedusaRuntimeContract({
   releaseDir,
   runtimeDir = getMedusaRuntimePaths(releaseDir).runtimeDir,
@@ -104,7 +126,10 @@ export function validateMedusaRuntimeContract({
     requiredFile(assetPath, "MEDUSA_ADMIN_ASSET_MISSING");
   }
 
-  if (requireRuntimeDependencies) assertRuntimeDependencies(paths.runtimeDir);
+  if (requireRuntimeDependencies) {
+    assertRuntimeDependencies(paths.runtimeDir);
+    assertSelfContainedDependencies(paths.runtimeDir);
+  }
 
   return { ...paths, adminAssets };
 }
