@@ -29,6 +29,9 @@ test("requires backup, legacy manifest, runtime contract, and reversible rename"
   assert.match(deploy, /systemctl cat friggafrio-backend\.service/);
   assert.match(deploy, /mv "\$FRIGGAFRIO_DEPLOY_DIR" "\$legacy_dir"/);
   assert.match(deploy, /IMMUTABLE_RELEASE_VERIFY_FAILED_ROLLED_BACK/);
+  assert.match(deploy, /bash "\$SCRIPT_DIR\/wsl-preflight\.sh"/);
+  assert.match(deploy, /bash "\$SCRIPT_DIR\/wsl-install-backend-service\.sh" --apply/);
+  assert.match(deploy, /bash "\$SCRIPT_DIR\/wsl-verify\.sh"/);
   assert.match(deploy, /chown -R --reference="\$FRIGGAFRIO_DEPLOY_DIR" "\$candidate_dir"/);
   assert.match(deploy, /sub\(\/\\r\$\//);
   assert.match(preflight, /LEGACY_MANIFEST_MISSING/);

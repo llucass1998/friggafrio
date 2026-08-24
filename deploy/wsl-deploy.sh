@@ -25,7 +25,7 @@ if [[ "$immutable" == "YES" ]]; then
 fi
 
 if [[ "$apply" != "YES" ]]; then
-  FRIGGAFRIO_DEPLOY_LOCK_HELD=YES FRIGGAFRIO_DEPLOY_MODE="$FRIGGAFRIO_DEPLOY_MODE" "$SCRIPT_DIR/wsl-preflight.sh"
+  FRIGGAFRIO_DEPLOY_LOCK_HELD=YES FRIGGAFRIO_DEPLOY_MODE="$FRIGGAFRIO_DEPLOY_MODE" bash "$SCRIPT_DIR/wsl-preflight.sh"
   echo "DEPLOYMENT_PLAN=VALIDATED_ONLY"
   echo "DEPLOYMENT=DRY_RUN_REQUIRED_FOR_THIS_TASK"
   exit 0
@@ -76,9 +76,9 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   pg_dump --format=custom --file="$database_backup" "$database_url"
   pg_restore --list "$database_backup" >/dev/null
   database_checksum="$(sha256sum "$database_backup" | awk '{print $1}')"
-  FRIGGAFRIO_IMMUTABLE_CANDIDATE="$candidate_dir" FRIGGAFRIO_LEGACY_MANIFEST="$legacy_manifest" FRIGGAFRIO_OLD_UNIT_BACKUP="$old_unit_backup" FRIGGAFRIO_APPROVED_SHA="$SOURCE_SHA" FRIGGAFRIO_DEPLOY_MODE="IMMUTABLE_RELEASE_REPLACEMENT" FRIGGAFRIO_DEPLOY_LOCK_HELD=YES "$SCRIPT_DIR/wsl-preflight.sh"
+  FRIGGAFRIO_IMMUTABLE_CANDIDATE="$candidate_dir" FRIGGAFRIO_LEGACY_MANIFEST="$legacy_manifest" FRIGGAFRIO_OLD_UNIT_BACKUP="$old_unit_backup" FRIGGAFRIO_APPROVED_SHA="$SOURCE_SHA" FRIGGAFRIO_DEPLOY_MODE="IMMUTABLE_RELEASE_REPLACEMENT" FRIGGAFRIO_DEPLOY_LOCK_HELD=YES bash "$SCRIPT_DIR/wsl-preflight.sh"
   old_backend_pid="$(systemctl show --property=MainPID --value friggafrio-backend.service)"
-  "$SCRIPT_DIR/wsl-install-backend-service.sh" --apply
+  bash "$SCRIPT_DIR/wsl-install-backend-service.sh" --apply
   [[ "$(systemctl show --property=MainPID --value friggafrio-backend.service)" == "$old_backend_pid" ]] || { cp "$old_unit_backup" /tmp/friggafrio-backend.service.rollback; sudo install -o root -g root -m 0644 /tmp/friggafrio-backend.service.rollback /etc/systemd/system/friggafrio-backend.service; sudo systemctl daemon-reload; deploy_fail "IMMUTABLE_UNEXPECTED_SERVICE_RESTART"; }
   legacy_dir="/home/srv/friggafrio/Maestro-deploy-legacy-preserved-$timestamp"
   [[ ! -e "$legacy_dir" ]] || deploy_fail "LEGACY_PRESERVATION_PATH_EXISTS"
@@ -96,7 +96,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   verify_medusa_runtime_contract "$FRIGGAFRIO_DEPLOY_DIR" --require-runtime-dependencies
   systemctl restart friggafrio-backend.service
   systemctl restart friggafrio-storefront.service
-  if ! FRIGGAFRIO_DEPLOY_LOCK_HELD=YES "$SCRIPT_DIR/wsl-verify.sh"; then
+  if ! FRIGGAFRIO_DEPLOY_LOCK_HELD=YES bash "$SCRIPT_DIR/wsl-verify.sh"; then
     systemctl stop friggafrio-storefront.service
     systemctl stop friggafrio-backend.service
     failed_dir="/home/srv/friggafrio/Maestro-deploy-failed-$timestamp"
@@ -127,7 +127,7 @@ require_clean_git_dir "WSL_DEPLOY_CLONE" "$FRIGGAFRIO_DEPLOY_DIR"
 # The only allowed source synchronization: a fast-forward Git update from origin.
 git -C "$FRIGGAFRIO_SOURCE_DIR" fetch origin "$FRIGGAFRIO_BRANCH"
 git -C "$FRIGGAFRIO_SOURCE_DIR" pull --ff-only origin "$FRIGGAFRIO_BRANCH"
-FRIGGAFRIO_DEPLOY_LOCK_HELD=YES "$SCRIPT_DIR/wsl-preflight.sh"
+FRIGGAFRIO_DEPLOY_LOCK_HELD=YES bash "$SCRIPT_DIR/wsl-preflight.sh"
 
 SOURCE_SHA="$(git -C "$FRIGGAFRIO_SOURCE_DIR" rev-parse HEAD)"
 REMOTE_SHA="$(git -C "$FRIGGAFRIO_SOURCE_DIR" rev-parse "origin/$FRIGGAFRIO_BRANCH")"
@@ -173,7 +173,7 @@ require_backend_service_runtime_contract
 systemctl restart friggafrio-backend.service
 systemctl restart friggafrio-storefront.service
 
-if ! FRIGGAFRIO_DEPLOY_LOCK_HELD=YES "$SCRIPT_DIR/wsl-verify.sh"; then
+if ! FRIGGAFRIO_DEPLOY_LOCK_HELD=YES bash "$SCRIPT_DIR/wsl-verify.sh"; then
   rollback
   exit 1
 fi
