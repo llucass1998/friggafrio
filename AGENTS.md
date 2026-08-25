@@ -114,6 +114,14 @@ Secrets permanecem machine-specific.
 
 DB, Redis, uploads, `.env`, Caddy e DNS devem ser preservados salvo task explícita que exija alteração.
 
+## P0 recovery guards
+
+- A release must prove runtime SHA/CWD/PID alignment after a service restart; health from an old resident process is not release evidence.
+- File uploads must use a complete S3/R2 configuration or the official local provider with a persistent machine-owned directory and public URL.
+- Vite Maps configuration is build-time input. A deploy preflight must fail before build when Maps is required and `VITE_GOOGLE_MAPS_EMBED_API_KEY` is absent.
+- Upload responses must be validated before product/company image state is mutated; an empty URL is never a valid image.
+- If WSL Git ownership is mixed, fix only the explicitly authorized regular file or use a clean clone as `srv`; never use recursive ownership changes.
+
 ## FRIGGAFRIO_CANONICAL_SYNC_AND_WSL_DEPLOY
 
 This is a fail-closed rule for every human, script, and Codex task:

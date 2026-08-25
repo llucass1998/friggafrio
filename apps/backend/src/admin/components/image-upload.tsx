@@ -23,12 +23,14 @@ export const ImageUpload = ({
   const [isDragging, setIsDragging] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [uploadResponseError, setUploadResponseError] = useState<string | null>(null)
 
   // Reset success indicator when value changes externally
   useEffect(() => {
     if (!value) {
       setShowSuccess(false)
       setUploadedFileName(null)
+      setUploadResponseError(null)
     }
   }, [value])
 
@@ -46,15 +48,20 @@ export const ImageUpload = ({
 
     const file = files[0]
     setUploadedFileName(file.name)
+    setUploadResponseError(null)
     
     uploadMutation.mutate([file], {
       onSuccess: (data) => {
-        if (data.files && data.files.length > 0) {
-          const uploadedUrl = data.files[0].url
-          onChange(uploadedUrl)
-          setShowSuccess(true)
-          setTimeout(() => setShowSuccess(false), 3000)
+        const uploadedUrl = data.files?.[0]?.url
+        if (typeof uploadedUrl !== "string" || !uploadedUrl.trim()) {
+          setUploadedFileName(null)
+          setUploadResponseError("Upload response did not include a valid image URL.")
+          return
         }
+
+        onChange(uploadedUrl)
+        setShowSuccess(true)
+        setTimeout(() => setShowSuccess(false), 3000)
       },
       onError: () => {
         setUploadedFileName(null)
@@ -86,6 +93,7 @@ export const ImageUpload = ({
     onChange(null)
     setUploadedFileName(null)
     setShowSuccess(false)
+    setUploadResponseError(null)
   }
 
   return (
@@ -162,11 +170,21 @@ export const ImageUpload = ({
       )}
 
       {uploadMutation.isError && (
-        <span className="text-ui-fg-error text-small">Failed to upload image. Please try again.</span>
+        <span role="alert" aria-live="polite" className="text-ui-fg-error text-small">
+          Failed to upload image. Please try again.
+        </span>
+      )}
+
+      {uploadResponseError && (
+        <span role="alert" aria-live="polite" className="text-ui-fg-error text-small">
+          {uploadResponseError}
+        </span>
       )}
 
       {error && (
-        <span className="text-ui-fg-error text-small">{error}</span>
+        <span role="alert" aria-live="polite" className="text-ui-fg-error text-small">
+          {error}
+        </span>
       )}
     </div>
   )

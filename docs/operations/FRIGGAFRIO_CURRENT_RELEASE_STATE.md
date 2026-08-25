@@ -9,3 +9,5 @@
 - Admin API resilience: the Storefront now proxies only `/admin` and `/admin/*` to its local Medusa backend when an external catch-all ingress sends those requests to the Storefront.
 - Next deploy gate: use the immutable workflow with a new official candidate and retain public route validation.
 - External configuration: Resend API and webhook values remain pending; this does not block independent site functionality.
+- P0 recovery branch: `fix/admin-maps-runtime-alignment` is isolated from the payment patch and contains only the provider/upload, Maps build, and runtime guard corrections. It is not deployed yet.
+- Required machine-owned release settings before the next deploy: `FILE_LOCAL_UPLOAD_DIR`, `FILE_LOCAL_BACKEND_URL`, and `VITE_GOOGLE_MAPS_EMBED_API_KEY` (names only; values are never versioned or logged).

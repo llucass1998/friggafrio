@@ -119,6 +119,51 @@ require_required_env() {
   done
 }
 
+require_file_provider_env() {
+  local env_file="$1/apps/backend/.env"
+  [[ -f "$env_file" ]] || deploy_fail "DEPLOY_BLOCKED_ENV_MISSING"
+  local provider
+  provider="$(awk -F= '/^FILE_STORAGE_PROVIDER=/{print tolower($2); exit}' "$env_file" | tr -d '\r\"' )"
+  if [[ -z "$provider" ]]; then
+    if grep -Eq '^R2_FILE_URL=.+' "$env_file" || grep -Eq '^S3_FILE_URL=.+' "$env_file"; then
+      provider="s3"
+    else
+      provider="local"
+    fi
+  fi
+  case "$provider" in
+    local)
+      grep -Eq '^FILE_LOCAL_UPLOAD_DIR=.+' "$env_file" || deploy_fail "DEPLOY_BLOCKED_FILE_LOCAL_UPLOAD_DIR_MISSING"
+      grep -Eq '^FILE_LOCAL_BACKEND_URL=https?://.+' "$env_file" || deploy_fail "DEPLOY_BLOCKED_FILE_LOCAL_BACKEND_URL_MISSING"
+      ;;
+    s3)
+      if ! grep -Eq '^R2_FILE_URL=.+' "$env_file" && ! grep -Eq '^S3_FILE_URL=.+' "$env_file"; then
+        deploy_fail "DEPLOY_BLOCKED_FILE_PROVIDER_CONFIGURATION_MISSING"
+      fi
+      ;;
+    *) deploy_fail "DEPLOY_BLOCKED_FILE_PROVIDER_INVALID" ;;
+  esac
+  echo "FILE_STORAGE_PROVIDER=$provider"
+}
+
+require_storefront_build_env() {
+  local release_dir="$1"
+  node "$release_dir/scripts/deploy/storefront-build-env.mjs" "$release_dir" --require-maps >/dev/null || deploy_fail "DEPLOY_BLOCKED_STOREFRONT_MAPS_ENV"
+}
+
+require_runtime_sha_alignment() {
+  local expected_sha="$1"
+  local runtime_dir
+  runtime_dir="$(medusa_runtime_dir "$FRIGGAFRIO_DEPLOY_DIR")"
+  [[ -f "$runtime_dir/.friggafrio-release-sha" ]] || deploy_fail "BACKEND_RUNTIME_SHA_MARKER_MISSING"
+  [[ "$(tr -d '\r\n' < "$runtime_dir/.friggafrio-release-sha")" == "$expected_sha" ]] || deploy_fail "BACKEND_RUNTIME_SHA_MISMATCH"
+  require_backend_service_runtime_contract
+  local pid
+  pid="$(systemctl show --property=MainPID --value friggafrio-backend.service)"
+  [[ "$pid" =~ ^[0-9]+$ && "$pid" != "0" ]] || deploy_fail "BACKEND_RUNTIME_PID_INVALID"
+  [[ "$(readlink -f "/proc/$pid/cwd")" == "$runtime_dir" ]] || deploy_fail "BACKEND_RUNTIME_CWD_MISMATCH"
+}
+
 medusa_runtime_dir() {
   printf '%s/apps/backend/.medusa/server' "$1"
 }

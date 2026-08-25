@@ -53,10 +53,14 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   copy_runtime_file_if_untracked "$FRIGGAFRIO_DEPLOY_DIR" "$candidate_dir" "apps/backend/.env"
   copy_runtime_file_if_untracked "$FRIGGAFRIO_DEPLOY_DIR" "$candidate_dir" ".env"
   copy_runtime_file_if_untracked "$FRIGGAFRIO_DEPLOY_DIR" "$candidate_dir" "apps/storefront/.env"
+  copy_runtime_file_if_untracked "$FRIGGAFRIO_DEPLOY_DIR" "$candidate_dir" "apps/storefront/.env.local"
+  require_file_provider_env "$candidate_dir"
+  require_storefront_build_env "$candidate_dir"
   pnpm --dir "$candidate_dir" install --frozen-lockfile
   pnpm --dir "$candidate_dir" --filter backend build
   install_medusa_runtime_dependencies "$candidate_dir"
   pnpm --dir "$candidate_dir" --filter storefront build
+  printf '%s\n' "$SOURCE_SHA" > "$candidate_dir/apps/backend/.medusa/server/.friggafrio-release-sha"
   verify_medusa_runtime_contract "$candidate_dir" --require-runtime-dependencies
   # Root-run WSL automation must leave the immutable runtime readable by srv.
   if [[ "$(id -u)" == "0" ]]; then
@@ -165,10 +169,13 @@ rollback() {
 
 git -C "$FRIGGAFRIO_DEPLOY_DIR" fetch origin "$FRIGGAFRIO_BRANCH"
 git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$SOURCE_SHA"
+require_file_provider_env "$FRIGGAFRIO_DEPLOY_DIR"
+require_storefront_build_env "$FRIGGAFRIO_DEPLOY_DIR"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
 install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter storefront build
+printf '%s\n' "$SOURCE_SHA" > "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.medusa/server/.friggafrio-release-sha"
 require_backend_service_runtime_contract
 systemctl restart friggafrio-backend.service
 systemctl restart friggafrio-storefront.service

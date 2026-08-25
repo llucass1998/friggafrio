@@ -18,6 +18,7 @@ pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
 install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter storefront build
+printf '%s\n' "$FRIGGAFRIO_ROLLBACK_SHA" > "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.medusa/server/.friggafrio-release-sha"
 require_backend_service_runtime_contract
 systemctl restart friggafrio-backend.service
 systemctl restart friggafrio-storefront.service

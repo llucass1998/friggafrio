@@ -47,6 +47,45 @@ const paymentProviders =
       ]
     : [];
 
+const hasR2FileProvider = Boolean(
+  process.env.R2_FILE_URL &&
+    process.env.R2_BUCKET &&
+    process.env.R2_ENDPOINT &&
+    process.env.R2_ACCESS_KEY_ID &&
+    process.env.R2_SECRET_ACCESS_KEY,
+);
+const hasS3FileProvider = Boolean(
+  process.env.S3_FILE_URL && process.env.S3_BUCKET && process.env.S3_ENDPOINT,
+);
+const requestedFileProvider = (process.env.FILE_STORAGE_PROVIDER || "").toLowerCase();
+const fileProvider = requestedFileProvider ||
+  (hasR2FileProvider || hasS3FileProvider ? "s3" : "local");
+
+if (!['local', 's3'].includes(fileProvider)) {
+  throw new Error("FILE_STORAGE_PROVIDER must be either local or s3.");
+}
+
+if (fileProvider === "s3" && !hasR2FileProvider && !hasS3FileProvider) {
+  throw new Error(
+    "FILE_STORAGE_PROVIDER=s3 requires a complete R2 or S3 configuration.",
+  );
+}
+
+const localUploadDir = process.env.FILE_LOCAL_UPLOAD_DIR ||
+  (isSecureSessionEnvironment
+    ? ""
+    : resolvePath(__dirname, "../../.runtime/uploads"));
+const localBackendUrl = process.env.FILE_LOCAL_BACKEND_URL ||
+  (isSecureSessionEnvironment
+    ? `${storefrontOrigin.replace(/\/$/u, "")}/uploads`
+    : "http://localhost:9000/uploads");
+
+if (fileProvider === "local" && isSecureSessionEnvironment && !localUploadDir) {
+  throw new Error(
+    "FILE_LOCAL_UPLOAD_DIR is required when the local file provider is used in production or staging.",
+  );
+}
+
 module.exports = defineConfig({
   admin: {
     // Production storefront nodes can omit the Admin bundle entirely.
@@ -176,34 +215,45 @@ module.exports = defineConfig({
       resolve: "@medusajs/medusa/file",
       options: {
         providers: [
-          {
-            id: "s3",
-            resolve: "@medusajs/medusa/file-s3",
-            is_default: true,
-            options: process.env.R2_FILE_URL
-              ? {
-                  file_url: process.env.R2_FILE_URL,
-                  prefix: process.env.R2_PREFIX,
-                  bucket: process.env.R2_BUCKET,
-                  endpoint: process.env.R2_ENDPOINT,
-                  access_key_id: process.env.R2_ACCESS_KEY_ID,
-                  secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
-                  session_token: process.env.R2_SESSION_TOKEN,
-                  region: "auto",
-                  additional_client_config: {
-                    forcePathStyle: false,
-                    requestChecksumCalculation: "WHEN_REQUIRED",
-                  },
-                }
-              : {
-                  authentication_method: "s3-iam-role",
-                  file_url: process.env.S3_FILE_URL,
-                  prefix: process.env.S3_PREFIX,
-                  bucket: process.env.S3_BUCKET,
-                  endpoint: process.env.S3_ENDPOINT,
-                  region: process.env.S3_REGION,
+          fileProvider === "local"
+            ? {
+                id: "local",
+                resolve: "@medusajs/file-local",
+                is_default: true,
+                options: {
+                  upload_dir: localUploadDir,
+                  private_upload_dir: process.env.FILE_LOCAL_PRIVATE_UPLOAD_DIR || localUploadDir,
+                  backend_url: localBackendUrl,
                 },
-          },
+              }
+            : {
+                id: "s3",
+                resolve: "@medusajs/medusa/file-s3",
+                is_default: true,
+                options: hasR2FileProvider
+                  ? {
+                      file_url: process.env.R2_FILE_URL,
+                      prefix: process.env.R2_PREFIX,
+                      bucket: process.env.R2_BUCKET,
+                      endpoint: process.env.R2_ENDPOINT,
+                      access_key_id: process.env.R2_ACCESS_KEY_ID,
+                      secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
+                      session_token: process.env.R2_SESSION_TOKEN,
+                      region: "auto",
+                      additional_client_config: {
+                        forcePathStyle: false,
+                        requestChecksumCalculation: "WHEN_REQUIRED",
+                      },
+                    }
+                  : {
+                      authentication_method: "s3-iam-role",
+                      file_url: process.env.S3_FILE_URL,
+                      prefix: process.env.S3_PREFIX,
+                      bucket: process.env.S3_BUCKET,
+                      endpoint: process.env.S3_ENDPOINT,
+                      region: process.env.S3_REGION,
+                    },
+              },
         ],
       },
     },

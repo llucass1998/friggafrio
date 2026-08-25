@@ -69,6 +69,7 @@ main() {
   DEPLOYED_COMMIT_SHA="$(git -C "$FRIGGAFRIO_DEPLOY_DIR" rev-parse HEAD)"
   verify_medusa_runtime_contract "$FRIGGAFRIO_DEPLOY_DIR" --require-runtime-dependencies
   require_backend_service_runtime_contract
+  require_runtime_sha_alignment "$DEPLOYED_COMMIT_SHA"
   systemctl is-active --quiet friggafrio-storefront.service || deploy_fail "VERIFY_STOREFRONT_SERVICE_FAILED"
   wait_for_backend_readiness
   PUBLISHABLE_KEY="$(read_publishable_key)" || deploy_fail "VERIFY_PUBLISHABLE_KEY_UNAVAILABLE"

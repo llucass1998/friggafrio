@@ -15,6 +15,18 @@
 - Resume gate: run the standard immutable workflow from a new approved SHA; retain external route validation and the Storefront Admin fallback test.
 - Status: resolved in release `867780f6c01aedb096c77f8f3e4ac4da41e5e770`; prevention versioned.
 
+## FF-20260824-P0-RUNTIME-UPLOAD-MAPS
+
+- Date and SHA: 2026-08-24; diagnostic branch based on `8602ff2a2a78ffd768a1948a14b1d7c33702e17f`.
+- Failed stages: Admin upload returned 500; a later product update received an image without `url`; the public Storefront build did not contain the Maps key.
+- Proven causes: no S3/R2 variables were present while `medusa-config.ts` always selected `file-s3`; the upload UI did not reject an empty URL; Vite only injects `VITE_*` during build and the projection script replaced the existing Maps value.
+- Correction: select `@medusajs/file-local` when object storage is not fully configured, serve public local uploads through a traversal-safe `/uploads/:file_key` route, validate upload responses, preserve `VITE_*` values, and add deploy preflights for provider/Maps configuration.
+- Non-working attempt: adding a Maps variable after the build; it cannot change an already generated Vite bundle.
+- Regression coverage: local provider upload smoke, public-upload path unit tests, storefront build-env test, typechecks, builds and route lint.
+- Rollback: restore the previous release and keep machine-owned upload data untouched; no migration is involved.
+- Resume gate: configure machine-owned `FILE_LOCAL_*` and `VITE_GOOGLE_MAPS_EMBED_API_KEY`, then run the immutable WSL deploy and authenticated Admin smoke.
+- Status: code correction validated locally; public deployment validation remains pending the controlled release gates.
+
 ## Imported proven deployment knowledge
 
 - pnpm 10 workspace deployment requires explicit `pnpm deploy --legacy --prod`.
