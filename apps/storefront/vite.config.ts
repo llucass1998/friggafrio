@@ -17,6 +17,16 @@ export default defineConfig(({ mode }) => {
 
     preview: {
       allowedHosts,
+      // Some public ingress paths can land on the storefront preview before
+      // reaching the backend. Keep the Admin API server-to-server in that
+      // case; browser cookies and response status are forwarded unchanged.
+      proxy: {
+        "/admin": {
+          target: "http://127.0.0.1:9000",
+          changeOrigin: false,
+          secure: false,
+        },
+      },
     },
 
     plugins: [
