@@ -74,6 +74,11 @@ module.exports = defineConfig({
       }
 
       return {
+        // Inject only the validated, fixed public origin into the Admin bundle.
+        // The logout widget constructs its own fixed /br destination from this.
+        define: {
+          __STOREFRONT_URL__: JSON.stringify(storefrontOrigin),
+        },
         server: {
           allowedHosts,
         },

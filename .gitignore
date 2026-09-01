@@ -5,6 +5,7 @@
 **/build/
 **/coverage/
 apps/backend/public/admin/
+apps/backend/.medusa/
 **/playwright-report/
 **/test-results/
 **/.cache/

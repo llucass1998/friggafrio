@@ -50,6 +50,7 @@
     "@medusajs/dashboard": "2.18.0",
     "@medusajs/draft-order": "2.18.0",
     "@medusajs/email-preview-server": "^0.0.10",
+    "@medusajs/file-local": "2.18.0",
     "@medusajs/framework": "2.18.0",
     "@medusajs/icons": "^2.18.0",
     "@medusajs/js-sdk": "2.18.0",
@@ -65,11 +66,13 @@
     "date-fns": "^4.1.0",
     "express-rate-limit": "^8.6.0",
     "helmet": "^8.3.0",
+    "ioredis": "5.9.3",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.22.0",
     "react-hook-form": "^7.71.1",
     "react-i18next": "13.5.0",
     "react-router-dom": "6.30.4",
+    "svix": "1.76.1",
     "zod": "4.2.0"
   },
   "devDependencies": {

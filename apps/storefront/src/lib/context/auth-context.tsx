@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, ReactNode } from "react"
+import { useState, useEffect, useCallback, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation } from "@tanstack/react-router"
 import { sdk } from "@/lib/medusa"
-import { HttpTypes } from "@medusajs/types"
-import { getMe, Employee } from "@/lib/data/me"
+import type { HttpTypes } from "@medusajs/types"
+import { getMe, type Employee } from "@/lib/data/me"
 import { AuthContext } from "@/lib/context/auth-context-value"
 import { resetFavoritesForLogout } from "@/lib/hooks/use-favorites"
 import { clearGuestCep } from "@/lib/cep"
@@ -11,14 +11,11 @@ import { clearCheckoutRuntimeState } from "@/lib/utils/checkout-runtime-state"
 import { getStoredCart } from "@/lib/utils/cart"
 import { transferGuestCartToCustomer } from "@/lib/auth/cart-session"
 
-// This is only a local hint. The backend remains the authority for the session.
+// This remains only a UX hint; the server is always the session authority.
 const AUTH_STATE_KEY = "auth_state"
 
 const writeAuthHint = (authenticated: boolean): void => {
-  if (typeof window === "undefined") {
-    return
-  }
-
+  if (typeof window === "undefined") return
   const value = authenticated ? "authenticated" : "unauthenticated"
   sessionStorage.setItem(AUTH_STATE_KEY, value)
   localStorage.setItem(AUTH_STATE_KEY, value)
@@ -52,23 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchCustomer = useCallback(async (): Promise<boolean> => {
     try {
-      // Fetch basic customer data
-      const { customer } = await sdk.store.customer.retrieve({
-        fields: "id,email,first_name,last_name,phone,has_account,default_shipping_address_id,addresses.*"
+      const { customer: currentCustomer } = await sdk.store.customer.retrieve({
+        fields: "id,email,first_name,last_name,phone,has_account,default_shipping_address_id,addresses.*",
       })
-
-      // Fetch employee data before updating any state so the layout
-      // never sees isAuthenticated=true with employee still null.
-      // This prevents the dashboard from flashing before the pending
-      // review screen when a company hasn't been activated yet.
       let employeeData: Employee | null = null
       try {
         const { customer: customerWithEmployee } = await getMe()
-        if (customerWithEmployee.employee) {
-          employeeData = customerWithEmployee.employee
-        }
+        employeeData = customerWithEmployee.employee || null
       } catch {
-        // Not a B2B customer or error fetching employee data
+        // An absent B2B profile is valid for a standard Customer session.
       }
 
       // OAuth callbacks establish the server session through a browser
@@ -194,9 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("medusa_auth_token")
-      }
+      if (typeof window !== "undefined") localStorage.removeItem("medusa_auth_token")
       await sdk.auth.logout()
     } catch (error) {
       // Keep logout idempotent when the server has already invalidated the
@@ -207,7 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       resetFavoritesForLogout()
       clearGuestCep()
-      // Private account responses must never be reused by the next session.
       queryClient.clear()
       // Checkout preparation and method selections are identity-scoped and
       // must not survive a logout or account switch.
@@ -223,11 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refetch = async () => {
-    // Don't set isLoading to true on refetch - it causes full-page spinner
-    // Components should handle their own loading states for refetch scenarios
-    if (!(await fetchCustomer())) {
-      await fetchAdminSession()
-    }
+    await bootstrapSession()
   }
 
   return (

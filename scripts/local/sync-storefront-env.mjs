@@ -50,15 +50,37 @@ try {
   if (!publishableKey) throw new Error("No active publishable key is associated with a sales channel")
 
   const backendUrl = "http://localhost:9000"
-  const storefrontEnv = [
-    `VITE_MEDUSA_BACKEND_URL=${backendUrl}`,
-    `VITE_MEDUSA_PUBLISHABLE_KEY=${publishableKey}`,
-    "VITE_PORT=5173",
-    "VITE_HMR_PORT=5173",
-    `VITE_PAYMENTS_ENABLED=${env.get("PAYMENTS_ENABLED") || "false"}`,
-    `VITE_PAYMENT_PROVIDER_ENABLED=${env.get("PAYMENT_PROVIDER_ENABLED") || "false"}`,
-    "",
-  ].join("\n")
+  const projected = new Map([
+    ["VITE_MEDUSA_BACKEND_URL", backendUrl],
+    ["VITE_MEDUSA_PUBLISHABLE_KEY", publishableKey],
+    ["VITE_PORT", "5173"],
+    ["VITE_HMR_PORT", "5173"],
+    ["VITE_PAYMENTS_ENABLED", env.get("PAYMENTS_ENABLED") || "false"],
+    ["VITE_PAYMENT_PROVIDER_ENABLED", env.get("PAYMENT_PROVIDER_ENABLED") || "false"],
+  ])
+
+  const externalStorefrontEnv = process.env.FRIGGAFRIO_STOREFRONT_ENV
+  if (externalStorefrontEnv) {
+    try {
+      const externalValues = parseEnv(await fs.readFile(externalStorefrontEnv, "utf8"))
+      for (const [key, value] of externalValues) {
+        if (key.startsWith("VITE_")) projected.set(key, value)
+      }
+    } catch (error) {
+      throw new Error(`Unable to read FRIGGAFRIO_STOREFRONT_ENV: ${error.message}`)
+    }
+  }
+
+  const renderStorefrontEnv = (existing) => {
+    const merged = new Map(existing)
+    for (const [key, value] of projected) merged.set(key, value)
+    return [...merged.entries()]
+      .filter(([, value]) => value !== "")
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, value]) => `${key}=${value}`)
+      .concat("")
+      .join("\n")
+  }
 
   const destinations = [path.join(workspace, "apps", "storefront", ".env")]
   const localOverride = path.join(workspace, "apps", "storefront", ".env.local")
@@ -73,12 +95,17 @@ try {
   for (const destination of destinations) {
     await fs.mkdir(path.dirname(destination), { recursive: true })
     let state = "SYNCED"
+    let existing = new Map()
+    let currentContent = null
     try {
-      if ((await fs.readFile(destination, "utf8")) === storefrontEnv) state = "UNCHANGED"
+      currentContent = await fs.readFile(destination, "utf8")
+      existing = parseEnv(currentContent)
     } catch {
       // Missing projection is created below.
     }
-    if (state === "SYNCED") await fs.writeFile(destination, storefrontEnv, { encoding: "utf8" })
+    const nextContent = renderStorefrontEnv(existing)
+    if (currentContent === nextContent) state = "UNCHANGED"
+    else await fs.writeFile(destination, nextContent, { encoding: "utf8" })
     results.push(`${destination}|${state}|PUBLISHABLE_KEY=PRESENT`)
   }
   console.log(results.join("\n"))

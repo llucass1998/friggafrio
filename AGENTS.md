@@ -114,6 +114,14 @@ Secrets permanecem machine-specific.
 
 DB, Redis, uploads, `.env`, Caddy e DNS devem ser preservados salvo task explícita que exija alteração.
 
+## P0 recovery guards
+
+- A release must prove runtime SHA/CWD/PID alignment after a service restart; health from an old resident process is not release evidence.
+- File uploads must use a complete S3/R2 configuration or the official local provider with a persistent machine-owned directory and public URL.
+- Vite Maps configuration is build-time input. A deploy preflight must fail before build when Maps is required and `VITE_GOOGLE_MAPS_EMBED_API_KEY` is absent.
+- Upload responses must be validated before product/company image state is mutated; an empty URL is never a valid image.
+- If WSL Git ownership is mixed, fix only the explicitly authorized regular file or use a clean clone as `srv`; never use recursive ownership changes.
+
 ## FRIGGAFRIO_CANONICAL_SYNC_AND_WSL_DEPLOY
 
 ## FRIGGAFRIO_TWO_ENVIRONMENTS_ONLY
@@ -185,3 +193,16 @@ Windows Maestro -> validation -> commit -> origin/Maestro -> WSL Maestro -> WSL 
 - A recent `InitTerminateInstanceInternal`, WSL poweroff, or unstable backend/storefront is a hard deploy block: `DEPLOY_BLOCKED_WSL_UNSTABLE=YES`.
 - Never delete or reset databases, `.env`, uploads, Docker volumes, or release history. Never use `docker compose down -v`, Docker prune, or volume removal in a release workflow.
 - Every sync/deploy report must state SHA values, backup/rollback state, healthcheck results, and public URL result. Do not claim a deployment completed without public verification.
+
+## Mandatory Operational Learning
+
+Before any WSL source sync, build, migration, service restart, or deployment, read these files in full:
+
+- `docs/operations/FRIGGAFRIO_WSL_DEPLOY_RUNBOOK.md`
+- `docs/operations/FRIGGAFRIO_INCIDENT_HISTORY.md`
+- `docs/operations/FRIGGAFRIO_CURRENT_RELEASE_STATE.md`
+- `docs/operations/FRIGGAFRIO_FAILURE_KNOWLEDGE_BASE.md`
+
+Known incident signatures must be handled through their recorded resume gate instead of reinvestigated. A newly proven failure is only `LEARNED_AND_PREVENTED` after it has a versioned test, guard, preflight, or deploy check and its entry is added to the incident history and knowledge base.
+
+The public ingress can be external to WSL. Never edit the WSL Caddy configuration merely because an external domain fails. Identify the active ingress and prove its configuration ownership first. For Medusa Admin, `GET /app` must return HTTP 200 both internally and from the configured public origin before an immutable release swap. If internal `/app` is 200 and public `/app` is 404, stop before the swap with `DEPLOY_BLOCKED_PUBLIC_ADMIN_INGRESS_ROUTE_MISSING` and require the external ingress operator.

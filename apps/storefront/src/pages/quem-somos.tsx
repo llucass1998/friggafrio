@@ -1,9 +1,6 @@
-import { Link } from "@tanstack/react-router"
 import { companyTeam } from "@/config/company-team"
 import { TeamMemberCard } from "@/components/quem-somos/TeamMemberCard"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
-import { storeConfig } from "@/config/store"
-import { PhoneCall } from "lucide-react"
 
 export function QuemSomosPage() {
   const founders = companyTeam.filter(m => m.group === "founder" && m.active)

@@ -13,7 +13,8 @@ const loginSearchSchema = z.object({
 
 export const Route = createFileRoute("/$countryCode/account/login")({
   beforeLoad: async ({ params, search }) => {
-    // Check if already authenticated, redirect to the validated destination.
+    // This public status endpoint keeps anonymous login navigation free of
+    // expected 401 responses from protected Customer/Admin endpoints.
     try {
       await sdk.store.customer.retrieve()
       const countryCode = params.countryCode || "br"

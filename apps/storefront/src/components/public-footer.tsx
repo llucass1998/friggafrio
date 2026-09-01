@@ -238,6 +238,17 @@ export function PublicFooter() {
               <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">
                 Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
               </p>
+              <p className="pt-2 text-xs text-gray-400">
+                Desenvolvido por{" "}
+                <a
+                  href="https://github.com/llucass1998"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-300 underline decoration-gray-600 underline-offset-2 transition-colors hover:text-white"
+                >
+                  Lucas Souza
+                </a>
+              </p>
             </div>
 
             

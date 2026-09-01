@@ -32,5 +32,11 @@ arguments, then rebuild both the backend and storefront. For a direct WSL
 smoke test, the helper points the admin handoff at the backend origin so
 `/app` remains reachable.
 
+Before the next release, install the versioned backend service contract once:
+
+```sh
+sudo bash deploy/wsl-install-backend-service.sh --apply
+```
+
 The deployment checkout is on the `Maestro` branch, so the existing worktree
 guard continues to validate it without a bypass.

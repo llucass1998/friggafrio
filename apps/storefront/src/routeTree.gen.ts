@@ -22,7 +22,9 @@ import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as CountryCodeRouteImport } from './routes/$countryCode'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as CountryCodeIndexRouteImport } from './routes/$countryCode/index'
+import { Route as AdminSplatRouteImport } from './routes/admin/$'
 import { Route as CountryCodeStoreRouteImport } from './routes/$countryCode/store'
 import { Route as CountryCodeQuotesRouteImport } from './routes/$countryCode/quotes'
 import { Route as CountryCodeFavoritesRouteImport } from './routes/$countryCode/favorites'
@@ -110,10 +112,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CountryCodeIndexRoute = CountryCodeIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CountryCodeRoute,
+} as any)
+const AdminSplatRoute = AdminSplatRouteImport.update({
+  id: '/admin/$',
+  path: '/admin/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CountryCodeStoreRoute = CountryCodeStoreRouteImport.update({
   id: '/store',
@@ -254,7 +266,9 @@ export interface FileRoutesByFullPath {
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
+  '/admin/$': typeof AdminSplatRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
   '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
@@ -289,7 +303,9 @@ export interface FileRoutesByTo {
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
+  '/admin/$': typeof AdminSplatRoute
   '/$countryCode': typeof CountryCodeIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
   '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
@@ -327,7 +343,9 @@ export interface FileRoutesById {
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
+  '/admin/$': typeof AdminSplatRoute
   '/$countryCode/': typeof CountryCodeIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/$countryCode/account/accept-invite': typeof CountryCodeAccountAcceptInviteRoute
   '/$countryCode/account/addresses': typeof CountryCodeAccountAddressesRoute
   '/$countryCode/account/forgot-password': typeof CountryCodeAccountForgotPasswordRoute
@@ -366,7 +384,9 @@ export interface FileRouteTypes {
     | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
+    | '/admin/$'
     | '/$countryCode/'
+    | '/admin/'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/addresses'
     | '/$countryCode/account/forgot-password'
@@ -401,7 +421,9 @@ export interface FileRouteTypes {
     | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
+    | '/admin/$'
     | '/$countryCode'
+    | '/admin'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/addresses'
     | '/$countryCode/account/forgot-password'
@@ -438,7 +460,9 @@ export interface FileRouteTypes {
     | '/$countryCode/favorites'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
+    | '/admin/$'
     | '/$countryCode/'
+    | '/admin/'
     | '/$countryCode/account/accept-invite'
     | '/$countryCode/account/addresses'
     | '/$countryCode/account/forgot-password'
@@ -469,6 +493,8 @@ export interface RootRouteChildren {
   StoreRoute: typeof StoreRoute
   TermosRoute: typeof TermosRoute
   TrocasRoute: typeof TrocasRoute
+  AdminSplatRoute: typeof AdminSplatRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -564,12 +590,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$countryCode/': {
       id: '/$countryCode/'
       path: '/'
       fullPath: '/$countryCode/'
       preLoaderRoute: typeof CountryCodeIndexRouteImport
       parentRoute: typeof CountryCodeRoute
+    }
+    '/admin/$': {
+      id: '/admin/$'
+      path: '/admin/$'
+      fullPath: '/admin/$'
+      preLoaderRoute: typeof AdminSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$countryCode/store': {
       id: '/$countryCode/store'
@@ -800,6 +840,8 @@ const rootRouteChildren: RootRouteChildren = {
   StoreRoute: StoreRoute,
   TermosRoute: TermosRoute,
   TrocasRoute: TrocasRoute,
+  AdminSplatRoute: AdminSplatRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

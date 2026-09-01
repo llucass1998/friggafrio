@@ -45,6 +45,31 @@ const establishSession = async (
   });
 };
 
+type SessionWithRegenerate = {
+  auth_context?: SessionAuthContext
+  save: (callback: (error?: Error | null) => void) => void
+  regenerate?: (callback: (error?: Error | null) => void) => void
+}
+
+const establishSession = async (
+  req: MedusaRequest,
+  authContext: SessionAuthContext,
+): Promise<void> => {
+  const session = req.session as unknown as SessionWithRegenerate
+
+  // Rotate before attaching an authenticated actor to prevent session fixation.
+  if (typeof session.regenerate === "function") {
+    await new Promise<void>((resolve, reject) => {
+      session.regenerate?.((error) => (error ? reject(error) : resolve()))
+    })
+  }
+
+  req.session.auth_context = authContext
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((error) => (error ? reject(error) : resolve()))
+  })
+}
+
 const normalizeEmail = (value: unknown): string | null => {
   if (typeof value !== "string") return null;
   const email = value.trim().toLowerCase();

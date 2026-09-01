@@ -29,8 +29,9 @@ test.describe('Página Quem Somos', () => {
     await expect(page.locator('[aria-label="Diretoria FriggaFrio"] [data-carousel-original="true"]')).toHaveCount(5);
     await expect(page.locator('[aria-label="Diretoria FriggaFrio"] img[alt*="Paulo"]')).toHaveCount(0);
 
-    // Check CTAs
-    await expect(page.locator('text=Fale pelo WhatsApp')).toBeVisible();
-    await expect(page.getByRole('link', { name: /Conhe.*nossas lojas/ })).toBeVisible();
+    // Quem Somos intentionally has no conversion CTA; contact actions live in
+    // the shared footer and institutional navigation.
+    await expect(page.locator('text=Fale pelo WhatsApp')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Conhe.*nossas lojas/ })).toHaveCount(0);
   });
 });

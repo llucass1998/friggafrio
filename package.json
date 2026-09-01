@@ -18,6 +18,7 @@
     "source:integrity:verify": "node scripts/source-integrity-guard.mjs verify",
     "source:integrity:run": "node scripts/source-integrity-guard.mjs run",
     "runtime:check": "node scripts/runtime-policy-check.mjs",
+    "storefront:build-env:check": "node scripts/deploy/storefront-build-env.mjs . --require-maps",
     "release:check": "node scripts/release-policy-check.mjs",
     "deploy:preflight": "node scripts/deploy/require-wsl-host.mjs preflight",
     "deploy:wsl": "node scripts/deploy/require-wsl-host.mjs deploy",
