@@ -36,6 +36,7 @@ import { Route as CountryCodeCategoriesIndexRouteImport } from './routes/$countr
 import { Route as CountryCodeAccountIndexRouteImport } from './routes/$countryCode/account/index'
 import { Route as CountryCodeProductsHandleRouteImport } from './routes/$countryCode/products/$handle'
 import { Route as CountryCodeNewsletterUnsubscribeRouteImport } from './routes/$countryCode/newsletter/unsubscribe'
+import { Route as CountryCodeNewsletterConfirmRouteImport } from './routes/$countryCode/newsletter/confirm'
 import { Route as CountryCodeCategoriesHandleRouteImport } from './routes/$countryCode/categories/$handle'
 import { Route as CountryCodeAccountResetPasswordRouteImport } from './routes/$countryCode/account/reset-password'
 import { Route as CountryCodeAccountRegisterRouteImport } from './routes/$countryCode/account/register'
@@ -185,6 +186,12 @@ const CountryCodeNewsletterUnsubscribeRoute =
     path: '/newsletter/unsubscribe',
     getParentRoute: () => CountryCodeRoute,
   } as any)
+const CountryCodeNewsletterConfirmRoute =
+  CountryCodeNewsletterConfirmRouteImport.update({
+    id: '/newsletter/confirm',
+    path: '/newsletter/confirm',
+    getParentRoute: () => CountryCodeRoute,
+  } as any)
 const CountryCodeCategoriesHandleRoute =
   CountryCodeCategoriesHandleRouteImport.update({
     id: '/$handle',
@@ -277,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
   '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
+  '/$countryCode/newsletter/confirm': typeof CountryCodeNewsletterConfirmRoute
   '/$countryCode/newsletter/unsubscribe': typeof CountryCodeNewsletterUnsubscribeRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account/': typeof CountryCodeAccountIndexRoute
@@ -314,6 +322,7 @@ export interface FileRoutesByTo {
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
   '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
+  '/$countryCode/newsletter/confirm': typeof CountryCodeNewsletterConfirmRoute
   '/$countryCode/newsletter/unsubscribe': typeof CountryCodeNewsletterUnsubscribeRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account': typeof CountryCodeAccountIndexRoute
@@ -354,6 +363,7 @@ export interface FileRoutesById {
   '/$countryCode/account/register': typeof CountryCodeAccountRegisterRoute
   '/$countryCode/account/reset-password': typeof CountryCodeAccountResetPasswordRoute
   '/$countryCode/categories/$handle': typeof CountryCodeCategoriesHandleRoute
+  '/$countryCode/newsletter/confirm': typeof CountryCodeNewsletterConfirmRoute
   '/$countryCode/newsletter/unsubscribe': typeof CountryCodeNewsletterUnsubscribeRoute
   '/$countryCode/products/$handle': typeof CountryCodeProductsHandleRoute
   '/$countryCode/account/': typeof CountryCodeAccountIndexRoute
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/$countryCode/account/register'
     | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
+    | '/$countryCode/newsletter/confirm'
     | '/$countryCode/newsletter/unsubscribe'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account/'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/$countryCode/account/register'
     | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
+    | '/$countryCode/newsletter/confirm'
     | '/$countryCode/newsletter/unsubscribe'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account'
@@ -471,6 +483,7 @@ export interface FileRouteTypes {
     | '/$countryCode/account/register'
     | '/$countryCode/account/reset-password'
     | '/$countryCode/categories/$handle'
+    | '/$countryCode/newsletter/confirm'
     | '/$countryCode/newsletter/unsubscribe'
     | '/$countryCode/products/$handle'
     | '/$countryCode/account/'
@@ -688,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryCodeNewsletterUnsubscribeRouteImport
       parentRoute: typeof CountryCodeRoute
     }
+    '/$countryCode/newsletter/confirm': {
+      id: '/$countryCode/newsletter/confirm'
+      path: '/newsletter/confirm'
+      fullPath: '/$countryCode/newsletter/confirm'
+      preLoaderRoute: typeof CountryCodeNewsletterConfirmRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
     '/$countryCode/categories/$handle': {
       id: '/$countryCode/categories/$handle'
       path: '/$handle'
@@ -792,6 +812,7 @@ interface CountryCodeRouteChildren {
   CountryCodeAccountOrdersRoute: typeof CountryCodeAccountOrdersRoute
   CountryCodeAccountRegisterRoute: typeof CountryCodeAccountRegisterRoute
   CountryCodeAccountResetPasswordRoute: typeof CountryCodeAccountResetPasswordRoute
+  CountryCodeNewsletterConfirmRoute: typeof CountryCodeNewsletterConfirmRoute
   CountryCodeNewsletterUnsubscribeRoute: typeof CountryCodeNewsletterUnsubscribeRoute
   CountryCodeProductsHandleRoute: typeof CountryCodeProductsHandleRoute
   CountryCodeAccountIndexRoute: typeof CountryCodeAccountIndexRoute
@@ -815,6 +836,7 @@ const CountryCodeRouteChildren: CountryCodeRouteChildren = {
   CountryCodeAccountOrdersRoute: CountryCodeAccountOrdersRoute,
   CountryCodeAccountRegisterRoute: CountryCodeAccountRegisterRoute,
   CountryCodeAccountResetPasswordRoute: CountryCodeAccountResetPasswordRoute,
+  CountryCodeNewsletterConfirmRoute: CountryCodeNewsletterConfirmRoute,
   CountryCodeNewsletterUnsubscribeRoute: CountryCodeNewsletterUnsubscribeRoute,
   CountryCodeProductsHandleRoute: CountryCodeProductsHandleRoute,
   CountryCodeAccountIndexRoute: CountryCodeAccountIndexRoute,
