@@ -1,6 +1,7 @@
 import { sdk } from "@/lib/medusa"
 
-export type NewsletterSubscriptionStatus = "subscribed" | "already_registered"
+export type NewsletterSubscriptionStatus = "confirmation_pending"
+export type NewsletterActionStatus = "confirmed" | "unsubscribed" | "invalid" | "invalid_or_expired"
 
 export const subscribeToNewsletter = (input: {
   name: string
@@ -14,3 +15,15 @@ export const subscribeToNewsletter = (input: {
   method: "POST",
   body: input,
 })
+
+export const confirmNewsletterSubscription = (token: string) =>
+  sdk.client.fetch<{ status: NewsletterActionStatus }>("/store/newsletter/confirm", {
+    method: "POST",
+    body: { token },
+  })
+
+export const unsubscribeNewsletter = (token: string) =>
+  sdk.client.fetch<{ status: NewsletterActionStatus }>("/store/newsletter/unsubscribe", {
+    method: "POST",
+    body: { token },
+  })

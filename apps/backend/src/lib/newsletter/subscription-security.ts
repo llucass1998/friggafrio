@@ -1,10 +1,14 @@
 import { createHash, randomBytes } from "node:crypto"
 
 export const NEWSLETTER_CONSENT_VERSION = "2026-08"
+export const NEWSLETTER_CONFIRMATION_TTL_MS = 48 * 60 * 60 * 1000
 
 export const normalizeNewsletterEmail = (value: string): string => value.trim().toLowerCase()
 
 export const createNewsletterToken = (): string => randomBytes(32).toString("base64url")
+
+export const confirmationExpiry = (now = new Date()): Date =>
+  new Date(now.getTime() + NEWSLETTER_CONFIRMATION_TTL_MS)
 
 export const hashNewsletterToken = (token: string): string =>
   createHash("sha256").update(token, "utf8").digest("hex")

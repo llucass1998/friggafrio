@@ -382,16 +382,16 @@ export function StorePage({
               {totalPages > 1 && (
                 <nav aria-label="Paginação do catálogo" className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center" data-testid="catalog-pagination">
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1 || showNavigationPending} aria-label="Página anterior" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">‹</button>
+                    <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1 || isNavigating} aria-label="Página anterior" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">‹</button>
                     <div className="hidden items-center gap-1 sm:flex">
                       {paginationItems(currentPage, totalPages).map((item, index) => item === "ellipsis" ? (
                         <span key={`ellipsis-${index}`} className="px-2 text-sm text-[var(--color-text-muted)]" aria-hidden="true">…</span>
                       ) : (
-                        <button key={item} type="button" onClick={() => goToPage(item)} aria-current={item === currentPage ? "page" : undefined} aria-label={`Página ${item}`} disabled={showNavigationPending} className={`min-w-9 rounded-[var(--radius-button-sm)] border px-3 py-2 text-sm font-semibold transition-colors ${item === currentPage ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white" : "border-[var(--color-border)] bg-white text-[var(--color-navy)] hover:border-[var(--color-primary)]"}`}>{item}</button>
+                        <button key={item} type="button" onClick={() => goToPage(item)} aria-current={item === currentPage ? "page" : undefined} aria-label={`Página ${item}`} disabled={isNavigating} className={`min-w-9 rounded-[var(--radius-button-sm)] border px-3 py-2 text-sm font-semibold transition-colors ${item === currentPage ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white" : "border-[var(--color-border)] bg-white text-[var(--color-navy)] hover:border-[var(--color-primary)]"}`}>{item}</button>
                       ))}
                     </div>
                     <span className="text-sm font-medium text-[var(--color-text-muted)] sm:hidden">Página {currentPage} de {totalPages}</span>
-                    <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages || showNavigationPending} aria-label="Próxima página" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">›</button>
+                    <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages || isNavigating} aria-label="Próxima página" className="rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40">›</button>
                   </div>
                 </nav>
               )}

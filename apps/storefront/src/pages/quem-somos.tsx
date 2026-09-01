@@ -1,3 +1,6 @@
+import { Link } from "@tanstack/react-router"
+import { PhoneCall } from "lucide-react"
+import { storeConfig } from "@/config/store"
 import { companyTeam } from "@/config/company-team"
 import { TeamMemberCard } from "@/components/quem-somos/TeamMemberCard"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"

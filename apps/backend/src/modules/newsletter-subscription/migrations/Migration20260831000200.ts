@@ -12,7 +12,7 @@ export class Migration20260831000200 extends Migration {
     this.addSql(`alter table if exists "newsletter_subscription" add column if not exists "last_email_status" text null;`)
     this.addSql(`update "newsletter_subscription" set "email_normalized" = lower(trim("email")) where "email_normalized" is null and "email" is not null;`)
     this.addSql(`alter table if exists "newsletter_subscription" drop constraint if exists "newsletter_subscription_status_check";`)
-    this.addSql(`alter table if exists "newsletter_subscription" add constraint "newsletter_subscription_status_check" check ("status" in ('active', 'unsubscribed', 'bounced', 'complained'));`)
+    this.addSql(`alter table if exists "newsletter_subscription" add constraint "newsletter_subscription_status_check" check ("status" in ('pending', 'active', 'unsubscribed', 'bounced', 'complained'));`)
     this.addSql(`create index if not exists "IDX_newsletter_subscription_email_normalized" on "newsletter_subscription" ("email_normalized");`)
     this.addSql(`create index if not exists "IDX_newsletter_subscription_status" on "newsletter_subscription" ("status");`)
     this.addSql(`create index if not exists "IDX_newsletter_subscription_unsubscribe_hash" on "newsletter_subscription" ("unsubscribe_token_hash") where "deleted_at" is null;`)

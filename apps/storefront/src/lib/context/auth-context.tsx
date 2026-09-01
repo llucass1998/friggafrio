@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // same idempotent ownership check used by password login covers that
       // path without trusting local storage as an authority.
       try {
-        await transferGuestCartToCustomer(getStoredCart(), customer.id, {
+        await transferGuestCartToCustomer(getStoredCart(), currentCustomer.id, {
           retrieve: async (cartId) => {
             const { cart } = await sdk.store.cart.retrieve(cartId, { fields: "id,customer_id" })
             return { id: cart.id, customer_id: cart.customer_id ?? null }
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Batch all state updates together so React renders once with
       // the complete picture (customer + employee + authenticated).
-      setCustomer(customer)
+      setCustomer(currentCustomer)
       setEmployee(employeeData)
       setIsAdminSession(false)
       setIsAuthenticated(true)
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refetch = async () => {
-    await bootstrapSession()
+    await probeSession()
   }
 
   return (

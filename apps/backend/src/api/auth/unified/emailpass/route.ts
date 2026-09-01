@@ -19,33 +19,6 @@ type SessionAuthContext = {
 };
 
 type SessionWithRegenerate = {
-  auth_context?: SessionAuthContext;
-  save: (callback: (error?: Error | null) => void) => void;
-  regenerate?: (callback: (error?: Error | null) => void) => void;
-};
-
-const establishSession = async (
-  req: MedusaRequest,
-  authContext: SessionAuthContext,
-): Promise<void> => {
-  const session = req.session as unknown as SessionWithRegenerate;
-
-  // Rotate the session identifier before attaching a newly authenticated
-  // actor. The unit-test double does not implement regenerate, so the
-  // fallback keeps the helper usable without weakening the real runtime.
-  if (typeof session.regenerate === "function") {
-    await new Promise<void>((resolve, reject) => {
-      session.regenerate?.((error) => (error ? reject(error) : resolve()));
-    });
-  }
-
-  req.session.auth_context = authContext;
-  await new Promise<void>((resolve, reject) => {
-    req.session.save((error) => (error ? reject(error) : resolve()));
-  });
-};
-
-type SessionWithRegenerate = {
   auth_context?: SessionAuthContext
   save: (callback: (error?: Error | null) => void) => void
   regenerate?: (callback: (error?: Error | null) => void) => void

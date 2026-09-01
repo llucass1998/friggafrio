@@ -1,6 +1,7 @@
 import { model } from "@medusajs/framework/utils"
 
 export enum NewsletterSubscriptionStatus {
+  PENDING = "pending",
   ACTIVE = "active",
   UNSUBSCRIBED = "unsubscribed",
   BOUNCED = "bounced",
