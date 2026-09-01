@@ -12,6 +12,7 @@ const EMPTY_FAVORITES: string[] = []
 const listeners = new Set<() => void>()
 const mutationSequence = new Map<string, number>()
 let nextMutationSequence = 0
+const wishlistSyncRequests = new Map<string, Promise<WishlistResponse>>()
 
 const notify = () => {
   listeners.forEach((listener) => listener())
@@ -116,6 +117,31 @@ const responseProductIds = (response: WishlistResponse): string[] =>
 
 const getMedusaClient = async () => (await import("@/lib/medusa")).sdk
 
+const synchronizeWishlist = (
+  customerId: string,
+  guestProductIds: readonly string[],
+): Promise<WishlistResponse> => {
+  const existing = wishlistSyncRequests.get(customerId)
+  if (existing) return existing
+
+  const request = getMedusaClient().then((sdk) => (
+    guestProductIds.length
+      ? sdk.client.fetch<WishlistResponse>("/store/wishlists/merge", {
+          method: "POST",
+          body: { product_ids: guestProductIds },
+        })
+      : sdk.client.fetch<WishlistResponse>("/store/wishlists", { method: "GET" })
+  ))
+  wishlistSyncRequests.set(customerId, request)
+  const clearRequest = () => {
+    if (wishlistSyncRequests.get(customerId) === request) {
+      wishlistSyncRequests.delete(customerId)
+    }
+  }
+  void request.then(clearRequest, clearRequest)
+  return request
+}
+
 export function useFavorites() {
   const { isAuthenticated, customer } = useAuth()
   const ids = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
@@ -139,15 +165,7 @@ export function useFavorites() {
       const customerStorageKey = customerFavoritesStorageKey(customerId)
 
       try {
-        const sdk = await getMedusaClient()
-        const response = guestProductIds.length
-          ? await sdk.client.fetch<WishlistResponse>("/store/wishlists/merge", {
-              method: "POST",
-              body: { product_ids: guestProductIds },
-            })
-          : await sdk.client.fetch<WishlistResponse>("/store/wishlists", {
-              method: "GET",
-            })
+        const response = await synchronizeWishlist(customerId, guestProductIds)
 
         if (cancelled) return
         writeFavorites(customerStorageKey, responseProductIds(response))
@@ -193,6 +211,9 @@ export function useFavorites() {
       if (wasFavorite) {
         await sdk.client.fetch(`/store/wishlists/items/${encodeURIComponent(normalizedId)}`, {
           method: "DELETE",
+          // The wishlist endpoint intentionally returns 204. Override the
+          // SDK's JSON accept header so it does not parse an empty body.
+          headers: { accept: "*/*" },
         })
         if (mutationSequence.get(normalizedId) === mutationToken) {
           writeFavorites(storageKey, favoriteIds.filter((favoriteId) => favoriteId !== normalizedId))

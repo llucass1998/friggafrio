@@ -2,6 +2,7 @@ import {
   authRateLimit,
   registerRateLimit,
   globalApiRateLimit,
+  newsletterRateLimit,
   secureHeaders,
 } from "./middlewares/rate-limiting";
 import { authenticate, defineMiddlewares } from "@medusajs/medusa";
@@ -24,14 +25,14 @@ import {
 } from "./middlewares/payment-containment";
 import {
   protectSessionMutation,
-  requireTrustedCustomerOrigin,
   requireTrustedAuthOrigin,
 } from "../lib/auth/session-security";
 import { wishlistMiddlewares } from "./store/wishlists/middlewares";
 import { forceBrazilCheckoutCountry } from "./middlewares/force-brazil-checkout-country";
-import { ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
+import { ADMIN_API_AUTH_METHODS, ADMIN_API_MATCHER } from "./middlewares/admin-route-security";
 import { adminCompaniesMiddlewares } from "./admin/companies/middlewares";
 import { adminQuotesMiddlewares } from "./admin/quotes/middlewares";
+import { productReviewAdminMiddlewares } from "./admin/product-reviews/middlewares";
 import { requireOwnedCheckoutCart } from "./middlewares/require-owned-checkout-cart";
 import { allowLocalDevelopmentCors } from "./middlewares/local-development-cors";
 
@@ -57,12 +58,13 @@ export default defineMiddlewares({
     {
       // Customer sessions cannot authorize custom Admin API routes.
       matcher: ADMIN_API_MATCHER,
+      methods: ADMIN_API_AUTH_METHODS,
       middlewares: [authenticate("user", ["session", "bearer"])],
     },
     {
       matcher: /^\/auth\/(?:session|token\/refresh)$/,
       methods: ["POST", "DELETE"],
-      middlewares: [requireTrustedCustomerOrigin, authRateLimit],
+      middlewares: [requireTrustedAuthOrigin, authRateLimit],
     },
     {
       matcher: "/auth/unified/emailpass",
@@ -70,9 +72,45 @@ export default defineMiddlewares({
       middlewares: [requireTrustedAuthOrigin, authRateLimit],
     },
     {
-      matcher: "/auth/customer/google",
+      matcher: "/store/newsletter/subscriptions",
+      method: "POST",
+      middlewares: [newsletterRateLimit],
+    },
+    {
+      matcher: "/store/newsletter/unsubscribe",
+      method: "POST",
+      middlewares: [newsletterRateLimit],
+    },
+    {
+      // Svix verification requires the exact signed request bytes.
+      matcher: "/webhooks/resend",
+      method: "POST",
+      bodyParser: { preserveRawBody: true },
+    },
+    {
+      matcher: /^\/auth\/customer\/google(?:\/|$)/,
       method: "POST",
       middlewares: [requireTrustedAuthOrigin, authRateLimit],
+    },
+    {
+      matcher: /^\/auth\/customer\/google(?:\/|$)/,
+      method: "GET",
+      middlewares: [authRateLimit],
+    },
+    {
+      matcher: "/store/products/:productId/reviews/eligibility",
+      method: "GET",
+      middlewares: [authenticate("customer", ["session", "bearer"])],
+    },
+    {
+      matcher: "/store/products/:productId/reviews",
+      method: "POST",
+      middlewares: [authenticate("customer", ["session", "bearer"])],
+    },
+    {
+      matcher: "/store/products/:productId/reviews/:reviewId",
+      method: "PATCH",
+      middlewares: [authenticate("customer", ["session", "bearer"])],
     },
     {
       method: "POST",
@@ -194,6 +232,7 @@ export default defineMiddlewares({
     ...wishlistMiddlewares,
     ...adminCompaniesMiddlewares,
     ...adminQuotesMiddlewares,
+    ...productReviewAdminMiddlewares,
     ...googleMiddlewares,
   ],
 });

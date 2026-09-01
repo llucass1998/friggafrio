@@ -39,6 +39,13 @@ describe("cart commercial eligibility", () => {
     expect(result).toEqual({ eligible: true, checkoutReady: true, blockingLines: [] })
   })
 
+  it("accepts decimal prices serialized as numeric strings", () => {
+    expect(resolveCommercialState(sellable({ unit_price: "10.00" } as never))).toMatchObject({
+      state: "SELLABLE",
+      reason: "SELLABLE",
+    })
+  })
+
   it("uses persisted inventory and blocks quantity above stock", () => {
     expect(resolveCommercialState(sellable({ quantity: 3 }))).toMatchObject({
       state: "OUT_OF_STOCK",

@@ -41,6 +41,9 @@ lighthouse-report*
 # Temporary screenshots, patches, uploads, and scratch files
 **/screenshots/
 **/uploads/
+/.local-uploads/
+/apps/backend/static/local-uploads/
+/static/local-uploads/
 runtime-logs/
 **/runtime-logs/
 .local-quarantine/

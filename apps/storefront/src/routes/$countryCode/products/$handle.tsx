@@ -1,4 +1,4 @@
-import { listProducts, retrieveProduct } from "@/lib/data/products"
+import { retrieveProduct } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sanitize } from "@/lib/utils/sanitize"
@@ -8,7 +8,10 @@ import { getProductPurchaseState } from "@/lib/utils/product-state"
 import ProductDetails from "@/pages/product"
 import { HttpTypes } from "@medusajs/types"
 import { createFileRoute, notFound } from "@tanstack/react-router"
-import { PUBLIC_PRODUCT_CARD_FIELDS, PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
+import { PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
+import { getProductReviews, type ProductReviewSummary } from "@/lib/data/product-reviews"
+import { getRelatedProducts } from "@/lib/data/related-products"
+import { absoluteSiteUrl, breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/products/$handle")({
   loader: async ({ params, context }) => {
@@ -35,10 +38,15 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
             fields: PUBLIC_PRODUCT_DETAIL_FIELDS,
           })
         } catch {
+          throw notFound()
           // Logging removido em produção throw notFound();
         }
       },
     })
+
+    if (!productData) {
+      throw notFound()
+    }
 
     // Cast as product to handle missing types safely
     const product = productData as unknown as HttpTypes.StoreProduct
@@ -47,27 +55,18 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     // This ensures consistent rendering between server and client
     await queryClient.ensureQueryData({
       queryKey: queryKeys.products.related(product.id, region.id),
+      queryFn: () => getRelatedProducts(product, region.id),
+    })
+
+    const reviewSummary = await queryClient.ensureQueryData<ProductReviewSummary | null>({
+      queryKey: ["product-review-summary", product.id],
       queryFn: async () => {
-        const params: HttpTypes.StoreProductListParams = {
-          fields: `title,handle,*thumbnail,${PUBLIC_PRODUCT_CARD_FIELDS}`,
-          is_giftcard: false,
-          limit: 4,
+        try {
+          const response = await getProductReviews({ productId: product.id, limit: 1 })
+          return response.summary
+        } catch {
+          return null
         }
-
-        if (product.collection_id) {
-          params.collection_id = [product.collection_id]
-        }
-
-        if (product.tags && product.tags.length > 0) {
-          params.tag_id = product.tags.map((tag: any) => tag.id)
-        }
-
-        const { products } = await listProducts({
-          query_params: params,
-          region_id: region.id,
-        })
-
-        return products.filter((p: any) => p.id !== product.id)
       },
     })
 
@@ -75,10 +74,11 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       countryCode,
       region,
       product,
+      reviewSummary,
     })
   },
   head: ({ loaderData }) => {
-    const { product, region } = loaderData || {}
+    const { product, region, countryCode, reviewSummary } = loaderData || {}
 
     if (!product) {
       return {
@@ -101,68 +101,72 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
         ? "https://schema.org/InStock"
         : "https://schema.org/PreOrder"
 
-    // Create structured data for SEO
-    const structuredData = {
+    // Product offers are emitted only when the API supplied a real price.
+    // Pending/quote-only products must not publish an incomplete Offer.
+    const structuredData: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Product",
       name: productName,
       description: productDescription,
-      image: (product.images as any)?.map((img: { url?: string }) => img.url).filter(Boolean) || [],
+      ...(product.images?.length
+        ? { image: product.images.map((image: { url?: string }) => image.url).filter(Boolean) }
+        : product.thumbnail
+          ? { image: [product.thumbnail] }
+          : {}),
+      ...(product.variants?.[0]?.sku ? { sku: product.variants[0].sku } : {}),
+      url: absoluteSiteUrl(`/${countryCode}/products/${product.handle}`),
       brand: {
         "@type": "Brand",
         name: "FriggaFrio",
       },
-      offers: {
-        "@type": "Offer",
-        availability,
-        priceCurrency: region?.currency_code?.toUpperCase(),
-        price: structuredPrice !== null && structuredPrice !== undefined
-          ? formatMoneyAmountForStructuredData(structuredPrice)
-          : undefined,
-      },
+      ...(structuredPrice !== null && structuredPrice !== undefined && region?.currency_code
+        ? {
+            offers: {
+              "@type": "Offer",
+              availability,
+              priceCurrency: region.currency_code.toUpperCase(),
+              price: formatMoneyAmountForStructuredData(structuredPrice),
+              url: absoluteSiteUrl(`/${countryCode}/products/${product.handle}`),
+            },
+          }
+        : {}),
+    }
+
+    if (reviewSummary?.total && reviewSummary.average !== null) {
+      structuredData.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: reviewSummary.average,
+        reviewCount: reviewSummary.total,
+        bestRating: 5,
+        worstRating: 1,
+      }
     }
 
     // Get first product image for preloading (critical for LCP)
     const firstImageUrl = (product.images as any)?.[0]?.url || product.thumbnail
 
+    const metadata = pageMeta({
+      title: `${productName} | FriggaFrio`,
+      description: productDescription || "Confira os detalhes deste produto FriggaFrio.",
+      path: `/${countryCode}/products/${product.handle}`,
+      image: firstImageUrl,
+    })
+
     return {
-      meta: [
-        {
-          title: `${productName} | FriggaFrio`,
-        },
-        {
-          name: "description",
-          content: productDescription || "Detalhes do produto",
-        },
-        {
-          property: "og:title",
-          content: `${productName} | FriggaFrio`,
-        },
-        {
-          property: "og:description",
-          content:
-            productDescription || "Confira este produto na FriggaFrio",
-        },
-        {
-          property: "og:image",
-          content: product.thumbnail || "",
-        },
+      ...metadata,
+      links: [
+        ...(firstImageUrl
+          ? [{ rel: "preload", href: firstImageUrl, as: "image", fetchPriority: "high" as const }]
+          : []),
+        ...metadata.links,
       ],
-      links: firstImageUrl
-        ? [
-            {
-              rel: "preload",
-              href: firstImageUrl,
-              as: "image",
-              fetchPriority: "high",
-            },
-          ]
-        : [],
       scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify(structuredData),
-        },
+        structuredDataScript(structuredData),
+        structuredDataScript(breadcrumbStructuredData([
+          { name: "Home", path: `/${countryCode}` },
+          { name: "Catálogo", path: `/${countryCode}/store` },
+          { name: productName, path: `/${countryCode}/products/${product.handle}` },
+        ])),
       ],
     }
   },

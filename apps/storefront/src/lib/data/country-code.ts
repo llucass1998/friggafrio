@@ -13,8 +13,9 @@ export const getStoredCountryCode = createServerFn().handler(async () => {
 
   let countryCode: string | undefined
 
-  if (headers?.cookie) {
-    const cookies = headers.cookie.split("; ")
+  const cookieHeader = headers?.get("cookie")
+  if (cookieHeader) {
+    const cookies = cookieHeader.split("; ")
     const countryCodeCookie = cookies.find((row: string) =>
       row.startsWith(`${COUNTRY_CODE_KEY}=`)
     )

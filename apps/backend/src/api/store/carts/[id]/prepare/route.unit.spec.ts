@@ -56,6 +56,15 @@ const makeCart = (overrides: Record<string, unknown> = {}) => ({
     province: "br-sp",
     country_code: "br",
   },
+  billing_address: {
+    first_name: "Guest",
+    last_name: "Buyer",
+    address_1: "Rua A, 10",
+    city: "Sao Paulo",
+    postal_code: "01310-100",
+    province: "br-sp",
+    country_code: "br",
+  },
   item_subtotal: 100,
   subtotal: 100,
   shipping_total: 0,
@@ -158,6 +167,19 @@ describe("cart prepare boundary", () => {
     expect(reserve).not.toHaveBeenCalled()
   })
 
+  it("returns a structured 400 for an invalid direct checkout document payload", async () => {
+    const { scope } = makeScope(makeCart())
+    const response = makeResponse()
+
+    await POST(request(scope, {
+      customer: { person_type: "individual", document: "00000000000" },
+    }) as never, response as never)
+
+    expect(response.statusCode).toBe(400)
+    expect((response.body?.validation as { errors: Array<{ code: string; field: string }> }).errors)
+      .toEqual(expect.arrayContaining([expect.objectContaining({ code: "INVALID_CPF", field: "customer.document" })]))
+  })
+
   it("rejects stale shipping amount even when the option id is current", async () => {
     const { scope } = makeScope(makeCart())
     const response = makeResponse()
@@ -242,7 +264,7 @@ describe("cart prepare boundary", () => {
                 location_id: "loc_1",
                 stocked_quantity: 10,
                 reserved_quantity: 1,
-                stock_locations: { id: "loc_1", sales_channels: [{ id: "sc_br" }] },
+                stock_locations: [{ id: "loc_1", sales_channels: [{ id: "sc_br" }] }],
               }],
             },
           }],
@@ -407,5 +429,41 @@ describe("cart prepare boundary", () => {
     expect(rejectedResponse.statusCode).toBe(400)
     expect((rejectedResponse.body?.validation as { errors: Array<{ code: string }> }).errors.map((error) => error.code))
       .toEqual(expect.arrayContaining(["INVALID_COUNTRY", "INVALID_PROVINCE"]))
+  })
+
+  it("prepares pickup without requiring a delivery address", async () => {
+    workflow.mockReturnValue({ run: jest.fn().mockResolvedValue({
+      result: [{ id: "FRIGGAFRIO_PICKUP_STORE_1", name: "Retirada na Loja", amount: 0, currency_code: "brl", data: { commercial_shipping_option: "FRIGGAFRIO_PICKUP_STORE_1" } }],
+    }) })
+    const pickupCart = makeCart({
+      shipping_address: null,
+      billing_address: makeCart().billing_address,
+      shipping_methods: [{ id: "sm_pickup", name: "Retirada na Loja", amount: 0, shipping_option_id: "FRIGGAFRIO_PICKUP_STORE_1" }],
+    })
+    const { scope } = makeScope(pickupCart)
+    const response = makeResponse()
+
+    await POST(request(scope) as never, response as never)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({ checkout_state: "READY_FOR_PAYMENT", address: null, shipping: 0 })
+  })
+
+  it("prepares pickup without inventing a customer billing address", async () => {
+    workflow.mockReturnValue({ run: jest.fn().mockResolvedValue({
+      result: [{ id: "FRIGGAFRIO_PICKUP_STORE_1", name: "Retirada na Loja", amount: 0, currency_code: "brl", data: { commercial_shipping_option: "FRIGGAFRIO_PICKUP_STORE_1" } }],
+    }) })
+    const pickupCart = makeCart({
+      shipping_address: null,
+      billing_address: null,
+      shipping_methods: [{ id: "sm_pickup", name: "Retirada na Loja", amount: 0, shipping_option_id: "FRIGGAFRIO_PICKUP_STORE_1" }],
+    })
+    const { scope } = makeScope(pickupCart)
+    const response = makeResponse()
+
+    await POST(request(scope) as never, response as never)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({ checkout_state: "READY_FOR_PAYMENT", address: null, billing_address: null })
   })
 })

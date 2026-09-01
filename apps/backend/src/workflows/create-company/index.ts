@@ -34,6 +34,11 @@ type CreateCompanyInput = {
   auth_identity_id: string;
 };
 
+type RemoteLinkService = {
+  create(input: Record<string, Record<string, string>>): Promise<unknown>;
+  dismiss(input: Record<string, Record<string, string>>): Promise<unknown>;
+};
+
 const createCompanyStep = createStep(
   "create-company",
   async (input: CreateCompanyInput, { container }) => {
@@ -99,7 +104,9 @@ const linkEmployeeToCustomerStep = createStep(
     input: { employee_id: string; customer_id: string },
     { container }
   ) => {
-    const link = container.resolve(ContainerRegistrationKeys.LINK);
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK,
+    );
 
     await link.create({
       [COMPANY_MODULE]: {
@@ -118,7 +125,9 @@ const linkEmployeeToCustomerStep = createStep(
   async (linkData, { container }) => {
     if (!linkData) return;
 
-    const link = container.resolve(ContainerRegistrationKeys.LINK);
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK,
+    );
 
     await link.dismiss({
       [COMPANY_MODULE]: {
@@ -148,7 +157,7 @@ export const createCompanyWorkflow = createWorkflow(
       },
     });
 
-    const customer = customerResult as unknown as { id: string };
+    const customer = customerResult as { id: string };
 
     // Step 2: Create the company
     const company = createCompanyStep(input);

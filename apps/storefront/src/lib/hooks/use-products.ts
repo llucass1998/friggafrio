@@ -3,6 +3,7 @@ import { HttpTypes } from "@medusajs/types"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sdk } from "@/lib/medusa"
 import { PUBLIC_PRODUCT_CARD_FIELDS, PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
+import { getRelatedProducts } from "@/lib/data/related-products"
 
 type ProductListQueryParams = HttpTypes.StoreProductListParams & {
   option_value_id?: string | string[]
@@ -78,41 +79,16 @@ export const useProduct = ({
 }
 
 export const useRelatedProducts = ({
-  product_id,
+  product,
   region_id,
-  collection_id,
-  tags,
 }: {
-  product_id: string;
+  product: HttpTypes.StoreProduct;
   region_id?: string;
-  collection_id?: string;
-  tags?: string[];
 }) => {
   return useQuery({
-    queryKey: queryKeys.products.related(product_id, region_id),
-    queryFn: async () => {
-      const params: HttpTypes.StoreProductListParams = {
-        fields: `title,handle,*thumbnail,${PUBLIC_PRODUCT_CARD_FIELDS}`,
-        is_giftcard: false,
-        limit: 4
-      }
-
-      if (collection_id) {
-        params.collection_id = [collection_id]
-      }
-
-      if (tags && tags.length > 0) {
-        params.tag_id = tags
-      }
-
-      const response = await sdk.store.product.list({
-        ...params,
-        region_id,
-      })
-
-      return response.products.filter((product) => product.id !== product_id)
-    },
-    enabled: !!product_id && !!region_id,
+    queryKey: queryKeys.products.related(product.id, region_id),
+    queryFn: () => getRelatedProducts(product, region_id!),
+    enabled: Boolean(product.id) && !!region_id,
   })
 }
 

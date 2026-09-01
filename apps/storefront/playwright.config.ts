@@ -35,7 +35,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm exec vite --host 127.0.0.1',
+    command: 'pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort',
     url: 'http://127.0.0.1:5173/@vite/client',
     env: {
       VITE_MEDUSA_BACKEND_URL: 'http://127.0.0.1:9000',
@@ -44,6 +44,6 @@ export default defineConfig({
       NO_PROXY: process.env.NO_PROXY,
       no_proxy: process.env.NO_PROXY,
     },
-    reuseExistingServer: false,
+    reuseExistingServer: true,
   },
 });

@@ -46,14 +46,27 @@ test.describe("final responsive storefront homologation", () => {
       const trigger = page.getByTestId("mobile-navigation-trigger")
       if (mobileViewports.has(viewport.width)) {
         await expect(trigger).toBeVisible()
-        await expect(page.locator('a[aria-label="Minha conta"]:visible')).toHaveCount(1)
+        await expect(page.locator("header").getByText("FriggaFrio", { exact: true })).toBeVisible()
+        await expect(page.locator("header input[placeholder*='Busque por produto']:visible")).toHaveCount(1)
+        await expect(page.locator('a[aria-label="Minha conta"]:visible, a[aria-label="Entrar na conta"]:visible')).toHaveCount(1)
         await expect(page.locator('button[aria-label^="Abrir carrinho com"]:visible')).toHaveCount(1)
+        if (viewport.width < 768) {
+          await expect(page.locator("#a11y-floating-button")).toBeHidden()
+        }
       } else {
         await expect(trigger).toBeHidden()
         await expect(page.getByRole("button", { name: /Produtos/ }).first()).toBeVisible()
       }
+      if (viewport.width >= 768) {
+        await expect(page.locator("#a11y-floating-button")).toBeVisible()
+      }
 
-      expect(consoleErrors.filter((error) => !error.includes("/store/customers/me")).length).toBe(0)
+      const unexpectedConsoleErrors = consoleErrors.filter((error) =>
+        !error.includes("/store/customers/me")
+        && !error.includes("/store/auth/session")
+        && !error.includes("Failed to load resource: the server responded with a status of 401")
+      )
+      expect(unexpectedConsoleErrors).toEqual([])
     })
   }
 
@@ -70,6 +83,7 @@ test.describe("final responsive storefront homologation", () => {
       await expect(drawer).toHaveAttribute("data-state", "open")
       await expect(drawer.getByRole("link", { name: "Produtos", exact: true })).toBeVisible()
       await expect(drawer.getByRole("link", { name: "Nossa Loja", exact: true })).toBeVisible()
+      await expect(drawer.getByRole("button", { name: "Acessibilidade", exact: true })).toBeVisible()
       await expect(drawer.getByText("Unidade selecionada")).toHaveCount(0)
       await expect(page.getByTestId("mobile-navigation-layer")).toHaveCount(1)
 
@@ -95,6 +109,37 @@ test.describe("final responsive storefront homologation", () => {
     })
   }
 
+  test("mobile search exposes canonical suggestions and clear action", async ({ page }) => {
+    await page.route("**/store/products**", async (route) => {
+      const query = new URL(route.request().url()).searchParams.get("q")
+      if (query !== "compressor") {
+        await route.continue()
+        return
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          products: [{ id: "suggestion-1", title: "Compressor de teste", handle: "compressor-de-teste", thumbnail: null }],
+          count: 1,
+          offset: 0,
+          limit: 6,
+        }),
+      })
+    })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto("/br", { waitUntil: "domcontentloaded" })
+    await waitForHydration(page)
+
+    const search = page.locator("header input[placeholder*='Busque por produto']:visible")
+    await search.fill("compressor")
+    await expect(page.getByRole("option", { name: "Compressor de teste", exact: true })).toBeVisible()
+    await expect(search).toHaveAttribute("aria-expanded", "true")
+    await expect(page.getByRole("button", { name: "Limpar busca" })).toBeVisible()
+    await page.getByRole("button", { name: "Limpar busca" }).click()
+    await expect(search).toHaveValue("")
+  })
+
   test("single store, navigation and back/forward flow", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto("/br", { waitUntil: "domcontentloaded" })
@@ -105,7 +150,7 @@ test.describe("final responsive storefront homologation", () => {
     await expect(page).toHaveURL(/\/nossa-loja$/)
     await expect(page.getByTestId("store-location-card")).toHaveCount(1)
     await expect(page.getByText(/Loja 2/)).toHaveCount(0)
-    await expect(page.getByText(/CNPJ:/)).toHaveCount(1)
+    await expect(page.getByTestId("store-location-card").getByText(/CNPJ:/)).toHaveCount(1)
     await assertNoHorizontalOverflow(page)
 
     await page.goBack()

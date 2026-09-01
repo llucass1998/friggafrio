@@ -76,6 +76,10 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setPreferences((prev) => ({ ...prev, panelEnabled: !prev.panelEnabled }))
   }, [])
 
+  const setPanelOpen = useCallback((open: boolean) => {
+    setPreferences((prev) => prev.panelEnabled === open ? prev : { ...prev, panelEnabled: open })
+  }, [])
+
   // Web Speech API
   const speak = useCallback((text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return
@@ -113,6 +117,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         updatePreference,
         resetPreferences,
         togglePanel,
+        setPanelOpen,
         speak,
         pauseSpeech,
         resumeSpeech,

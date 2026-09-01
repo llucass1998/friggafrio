@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router"
 import Cart from "@/pages/cart"
 import { getRegion } from "@/lib/data/regions"
+import { pageMeta } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/cart")({
   loader: async ({ params, context }) => {
@@ -21,5 +22,11 @@ export const Route = createFileRoute("/$countryCode/cart")({
       countryCode,
     }
   },
+  head: ({ params }) => pageMeta({
+    title: "Carrinho | FriggaFrio",
+    description: "Revise os itens do seu carrinho FriggaFrio.",
+    path: `/${params.countryCode}/cart`,
+    indexable: false,
+  }),
   component: Cart,
 })

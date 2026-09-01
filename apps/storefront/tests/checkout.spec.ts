@@ -1,11 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Checkout and Cart Flow', () => {
+  const baseUrl = 'http://127.0.0.1:5173';
   // Increase timeout for this test
   test.setTimeout(60000);
 
   test('Can add item to cart and proceed to checkout', async ({ page }) => {
-    page.on('console', msg => console.log('BROWSER CONSOLE:', msg.type(), msg.text()));
+    const browserDiagnostics: string[] = [];
+    page.on('console', msg => {
+      if (msg.type() === 'warning' || msg.type() === 'error') browserDiagnostics.push(msg.text());
+    });
     page.on('response', async res => {
       if (res.status() >= 400) {
         console.log('API ERROR:', res.url(), res.status(), await res.text().catch(() => 'no body'));
@@ -28,7 +32,7 @@ test.describe('Checkout and Cart Flow', () => {
                   quantity: 1,
                   unit_price: 5000,
                   total: 5000,
-                  thumbnail: "https://via.placeholder.com/150",
+                  thumbnail: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
                   variant: {
                     id: "variant_mock_1",
                     title: "Default Variant"
@@ -45,9 +49,17 @@ test.describe('Checkout and Cart Flow', () => {
       }
     });
 
+    let selectedShippingOptionId = "so_pickup";
+    const cartUpdateBodies: unknown[] = [];
+    const cartUpdateRequests: Array<{ method: string; url: string }> = [];
+
     // Mock cart fetching and updates
     await page.route('**/store/carts/*', async route => {
-      if (route.request().method() === 'GET' || route.request().method() === 'POST') {
+      if (['GET', 'POST', 'PUT', 'PATCH'].includes(route.request().method())) {
+        if (route.request().method() !== 'GET' && !route.request().url().includes('/line-items') && !route.request().url().includes('/shipping-methods') && !route.request().url().includes('/payment-sessions') && !route.request().url().includes('/prepare')) {
+          cartUpdateBodies.push(route.request().postDataJSON());
+          cartUpdateRequests.push({ method: route.request().method(), url: route.request().url() });
+        }
         // Return a cart that already has the item inside and valid shipping/billing
         await route.fulfill({
           status: 200,
@@ -62,7 +74,7 @@ test.describe('Checkout and Cart Flow', () => {
                   quantity: 1,
                   unit_price: 5000,
                   total: 5000,
-                  thumbnail: "https://via.placeholder.com/150",
+                  thumbnail: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
                   variant: {
                     id: "variant_mock_1",
                     title: "Default Variant"
@@ -71,7 +83,7 @@ test.describe('Checkout and Cart Flow', () => {
               ],
               total: 5000,
               currency_code: "brl",
-              shipping_methods: [{ id: "sm_1", name: "Standard", amount: 0 }],
+              shipping_methods: [{ id: "sm_selected", shipping_option_id: selectedShippingOptionId, name: selectedShippingOptionId, amount: selectedShippingOptionId === "so_motoboy" ? 100 : 0 }],
               payment_collection: {
                 id: "pc_123",
                 payment_sessions: [{ id: "ps_1", provider_id: "manual", amount: 5000, status: "pending" }]
@@ -117,7 +129,7 @@ test.describe('Checkout and Cart Flow', () => {
               id: "prod_mock_1",
               title: "Mock Product",
               handle: "mock-product",
-              thumbnail: "https://via.placeholder.com/150",
+              thumbnail: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
               variants: [
                 {
                   id: "variant_mock_1",
@@ -146,11 +158,30 @@ test.describe('Checkout and Cart Flow', () => {
         body: JSON.stringify({
           shipping_options: [
             {
-              id: "so_1",
-              name: "Standard Shipping",
-              amount: 1000,
+              id: "so_pickup",
+              name: "Retirada na Loja 1",
+              amount: 0,
               price_type: "flat_rate",
-              calculated_price: 1000,
+              calculated_price: 0,
+              provider_id: "manual",
+              data: { commercial_shipping_option: "FRIGGAFRIO_PICKUP_STORE_1" },
+              is_return: false
+            },
+            {
+              id: "so_car",
+              name: "Entrega normal - Carro FriggaFrio",
+              amount: 0,
+              price_type: "flat_rate",
+              calculated_price: 0,
+              provider_id: "manual",
+              is_return: false
+            },
+            {
+              id: "so_motoboy",
+              name: "Entrega expressa - Motoboy",
+              amount: 100,
+              price_type: "flat_rate",
+              calculated_price: 100,
               provider_id: "manual",
               is_return: false
             }
@@ -159,15 +190,65 @@ test.describe('Checkout and Cart Flow', () => {
       });
     });
 
+    await page.route('**/store/shipping/estimate', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ready',
+          currency_code: 'brl',
+          region: 'CENTRAL_NEAR',
+          policy_version: '1',
+          options: [{
+            id: 'FRIGGAFRIO_PICKUP_STORE_1',
+            shipping_option_id: 'so_pickup',
+            name: 'Retirada na Loja — FriggaFrio Loja 1',
+            amount: 0,
+            amount_cents: 0,
+            currency_code: 'brl',
+            delivery_estimate: 'Aguardando preparação',
+            modality: 'pickup',
+            vehicle: 'Retirada na Loja 1',
+            available: true,
+          }, {
+            id: 'FRIGGAFRIO_CAR_CENTRAL',
+            shipping_option_id: 'so_car',
+            name: 'Entrega normal - Carro FriggaFrio',
+            amount: 0,
+            amount_cents: 0,
+            currency_code: 'brl',
+            delivery_estimate: 'Ate 3 dias uteis',
+            modality: 'car',
+            vehicle: 'Carro da empresa',
+            available: true,
+          }, {
+            id: 'FRIGGAFRIO_EXPRESS_10_20',
+            shipping_option_id: 'so_motoboy',
+            name: 'Entrega expressa - Motoboy',
+            amount: 100,
+            amount_cents: 10000,
+            currency_code: 'brl',
+            delivery_estimate: 'Ate 6 horas',
+            modality: 'motoboy',
+            vehicle: 'Motoboy',
+            distance_km: 12,
+            available: true,
+          }],
+        }),
+      });
+    });
+
     // Mock cart shipping-methods to avoid backend validation error "Shipping Options are invalid for cart"
     await page.route('**/store/carts/*/shipping-methods*', async route => {
+      const body = route.request().postDataJSON() as { option_id?: string; shipping_option_id?: string } | null;
+      selectedShippingOptionId = body?.option_id ?? body?.shipping_option_id ?? selectedShippingOptionId;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           cart: {
             id: "cart_mock_123",
-            shipping_methods: [{ id: "sm_1", name: "Standard Shipping", amount: 1000 }],
+            shipping_methods: [{ id: "sm_selected", shipping_option_id: selectedShippingOptionId, name: selectedShippingOptionId, amount: selectedShippingOptionId === "so_motoboy" ? 100 : 0 }],
             items: [],
             total: 6000,
             currency_code: "brl"
@@ -328,7 +409,7 @@ test.describe('Checkout and Cart Flow', () => {
     });
 
     // Start at home page
-    await page.goto('http://localhost:5173/br');
+    await page.goto(`${baseUrl}/br`);
 
     // Set the mock cart id in localStorage so that useCart fetches our mock cart
     await page.evaluate(() => {
@@ -364,57 +445,66 @@ test.describe('Checkout and Cart Flow', () => {
 
     // Force navigate if we're not on checkout
     if (!page.url().includes('checkout')) {
-      await page.goto('http://localhost:5173/br/checkout');
+      await page.goto(`${baseUrl}/br/checkout`);
     }
 
     // Wait for checkout page
     await page.waitForURL('**/checkout*');
 
     // Address Step
-    await page.getByLabel(/Nome/i).first().fill('João');
-    await page.getByLabel(/Sobrenome/i).first().fill('Silva');
-    await page.getByLabel(/Endereço/i).first().fill('Rua das Flores 123');
-    await page.getByLabel(/Cidade/i).first().fill('São Paulo');
-    await page.getByLabel(/CEP/i).first().fill('01001-000');
-
-    // Select country
-    const countryCombobox = page.getByRole('combobox').first();
-    if (await countryCombobox.isVisible()) {
-      await countryCombobox.click();
-
-      // For Radix UI Selects, we can type to select or use keyboard nav
-      await page.keyboard.type('Brazil');
-      await page.keyboard.press('Enter');
-    }
-
-    await page.getByLabel(/Telefone/i).first().fill('11999999999');
+    await page.locator('#checkout-first-name').fill('Joao');
+    await page.locator('#checkout-last-name').fill('Silva');
+    await page.locator('#checkout-document').fill('52998224725');
+    await page.locator('#checkout-phone').fill('11999999999');
 
     const emailInput = page.locator('input[type="email"]');
     if (await emailInput.count() > 0) {
        await emailInput.first().fill('joao@example.com');
     }
 
-    await page.getByRole('button', { name: /Próximo|continuar|next/i }).first().click();
+    await expect(page.locator('#checkout-document')).toHaveValue(/529\.982\.247-25/);
+    await expect(page.locator('#checkout-phone')).toHaveValue(/\(11\) 99999-9999/);
+    await page.getByRole('button', { name: 'Continuar para recebimento' }).click();
 
     // Delivery step
-    await page.waitForTimeout(3000); // wait for shipping options to load
+    await expect(page.getByRole('heading', { name: /Como deseja receber/i })).toBeVisible();
 
-    const deliveryNext = page.getByRole('button', { name: /Próximo|continuar|next/i }).nth(1);
-    if (await deliveryNext.isVisible()) {
-        await deliveryNext.click();
-    } else {
-        await page.getByRole('button', { name: /Próximo|continuar|next/i }).last().click();
+    const deliveryOptions = page.getByRole('radio', { name: /Retirada na Loja 1|Carro FriggaFrio|Motoboy/i });
+    await expect(deliveryOptions).toHaveCount(3);
+    await expect(deliveryOptions.nth(0)).toHaveAccessibleName(/Retirada na Loja/i);
+    await expect(deliveryOptions.nth(1)).toHaveAccessibleName(/Carro FriggaFrio/i);
+    await expect(deliveryOptions.nth(2)).toHaveAccessibleName(/Motoboy/i);
+    await expect(deliveryOptions.nth(2)).toBeDisabled();
+
+    await deliveryOptions.nth(0).check({ force: true });
+    await expect(deliveryOptions.nth(0)).toBeChecked();
+    await page.getByRole('button', { name: /Pr[óo]ximo|continuar|next/i }).last().click();
+
+    await page.waitForTimeout(3000);
+
+    await page.waitForTimeout(3000);
+
+    await expect(page.getByText(/total confirmado pelo servidor/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('radio', { name: /Pix/i })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Cart/i })).toBeVisible();
+    await expect(page.getByText(/pagamento fechado/i)).toHaveCount(0);
+    await page.getByRole('radio', { name: /Pix/i }).click();
+    await expect(page.getByTestId('checkout-payment-next')).toBeEnabled();
+    console.log('CART_UPDATE_REQUESTS', cartUpdateRequests.map(({ method, url }) => ({ method, path: new URL(url).pathname })));
+    console.log('CART_UPDATE_KEYS', cartUpdateBodies.map((body) => body && typeof body === 'object' ? Object.keys(body as Record<string, unknown>).sort() : []));
+    // Pickup is intentionally address-free. The cart update must omit both
+    // address properties rather than serializing them as null.
+    for (const body of cartUpdateBodies) {
+      if (body && typeof body === 'object') {
+        const update = body as Record<string, unknown>;
+        expect(Object.hasOwn(update, 'shipping_address')).toBe(false);
+        expect(Object.hasOwn(update, 'billing_address')).toBe(false);
+        expect(JSON.stringify(update)).not.toContain(':null');
+      }
     }
-
-    await page.waitForTimeout(3000);
-
-    await page.getByRole('button', { name: /Próximo|continuar|next/i }).last().click();
-
-    await page.waitForTimeout(3000);
-
-    await expect(page.getByTestId('checkout-ready-for-payment')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/checkout preparado para pagamento/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /continuar para pagamento/i })).toBeDisabled();
+    // A guest session is explicitly represented by Medusa with 401. It is
+    // expected here; all other console warnings/errors remain regressions.
+    expect(browserDiagnostics.filter((message) => !/401 \(Unauthorized\)/.test(message))).toEqual([]);
     return;
 
     // Place order

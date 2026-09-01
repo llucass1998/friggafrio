@@ -1,6 +1,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { getStoredCart } from "@/lib/utils/cart"
 import { updateCart } from "@/lib/data/cart"
+import { buildCheckoutAddressPayload } from "@/lib/utils/checkout-address-payload"
 
 /**
  * Sets shipping and billing addresses for the current cart from form data.
@@ -54,6 +55,7 @@ export const setCartAddresses = async ({
   }
 
   const data = Object.fromEntries(form_data.entries())
+  const pickupOnly = data.pickup_only === "true"
 
   const shippingAddress = {
     first_name: data["shipping_address.first_name"] as string,
@@ -81,14 +83,22 @@ export const setCartAddresses = async ({
     phone: (data["billing_address.phone"] as string) || "",
   }
 
-  const email = data.email as string
-
-  const cart = await updateCart(
-    {
-      shipping_address: shippingAddress,
-      billing_address: billingAddress,
-      email,
-    },
+  const hasShippingAddress = Boolean(
+    String(data["shipping_address.address_1"] || "").trim()
+    && String(data["shipping_address.city"] || "").trim()
+    && String(data["shipping_address.postal_code"] || "").trim(),
   )
+  const hasBillingAddress = Boolean(
+    String(data["billing_address.address_1"] || "").trim()
+    && String(data["billing_address.city"] || "").trim()
+    && String(data["billing_address.postal_code"] || "").trim(),
+  )
+  const payload = buildCheckoutAddressPayload({
+    email: String(data.email || ""),
+    pickupOnly,
+    shippingAddress: hasShippingAddress ? shippingAddress : undefined,
+    billingAddress: hasBillingAddress ? billingAddress : undefined,
+  })
+  const cart = await updateCart(payload as HttpTypes.StoreUpdateCart)
   return cart
 }

@@ -11,9 +11,18 @@ import { countries } from "@/lib/constants/countries"
 import { HttpTypes } from "@medusajs/types"
 import { AddressFormData } from "@/lib/types/global"
 import { clsx } from "clsx"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { formatCep, lookupCep, normalizeCep } from "@/lib/cep"
+import {
+  isValidBrazilPhone,
+  isValidBrazilPostalCode,
+  isValidPersonName,
+  normalizeDigits,
+  normalizePersonName,
+} from "@/lib/validation/checkout"
+import { formatPhone } from "@/lib/utils/formatters"
 
-type AddressData = HttpTypes.StoreCreateCustomerAddress | HttpTypes.StoreAddAddress | AddressFormData;
+type AddressData = (HttpTypes.StoreCreateCustomerAddress | HttpTypes.StoreAddAddress | AddressFormData) & { number?: string; neighborhood?: string };
 
 interface AddressFormProps {
   addressFormData: AddressData;
@@ -32,6 +41,8 @@ interface AddressFormProps {
   lockedCountryCode?: string;
   /** Restricts checkout addresses to a specific state without affecting account forms. */
   lockedProvince?: string;
+  /** Checkout already collects contact data in its first step. */
+  showContactFields?: boolean;
 }
 
 const AddressForm = ({
@@ -46,11 +57,16 @@ const AddressForm = ({
   className,
   lockedCountryCode,
   lockedProvince,
+  showContactFields = true,
 }: AddressFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
     {}
   )
+  const lookupSequence = useRef(0)
+  const isCheckoutAddress = Boolean(lockedCountryCode)
+  const [withoutNumber, setWithoutNumber] = useState(false)
+  const [cepLookupError, setCepLookupError] = useState<string | null>(null)
 
   // If country is locked, ensure the address form data has the locked country code
   useEffect(() => {
@@ -66,6 +82,10 @@ const AddressForm = ({
   }, [lockedProvince, addressFormData.province, setAddressFormData])
 
   const handleChange = (field: string, value: string) => {
+    if (field === "postal_code") value = formatCep(value)
+    if (field === "phone") value = formatPhone(value)
+    if (field === "number") value = normalizeDigits(value, 10)
+    if (field === "first_name" || field === "last_name") value = normalizePersonName(value)
     setAddressFormData((prev: AddressData) => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
@@ -73,6 +93,37 @@ const AddressForm = ({
     }
     setTouchedFields((prev) => ({ ...prev, [field]: true }))
   }
+
+  useEffect(() => {
+    const cep = normalizeCep(String(addressFormData.postal_code ?? ""))
+    setCepLookupError(null)
+    if (cep.length !== 8) return
+    const sequence = ++lookupSequence.current
+    const controller = new AbortController()
+    const timer = setTimeout(async () => {
+      try {
+        const result = await lookupCep(cep, { signal: controller.signal })
+        if (sequence !== lookupSequence.current) return
+        if (!result) {
+          setCepLookupError("Não encontramos esse CEP. Confira ou preencha manualmente.")
+          return
+        }
+        setAddressFormData((previous: AddressData) => ({
+          ...previous,
+          address_1: touchedFields.address_1 ? previous.address_1 : result.street,
+          city: touchedFields.city ? previous.city : result.city,
+          province: touchedFields.province ? previous.province : result.state,
+          neighborhood: touchedFields.neighborhood ? previous.neighborhood : result.neighborhood,
+        }))
+        if (isCheckoutAddress && !touchedFields.number) document.getElementById("address_number")?.focus()
+      } catch (error) {
+        if (sequence !== lookupSequence.current || (error instanceof DOMException && error.name === "AbortError")) return
+        // Manual entry remains available when the lookup provider is unavailable.
+        setCepLookupError("Não foi possível consultar o CEP. Você pode preencher manualmente.")
+      }
+    }, 350)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [addressFormData.postal_code, isCheckoutAddress, setAddressFormData, touchedFields])
 
   const countriesInput = useMemo(() => {
     if (!customCountries) {
@@ -88,15 +139,19 @@ const AddressForm = ({
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {}
 
-    if (!addressFormData.first_name?.trim())
-      newErrors.first_name = "Nome é obrigatório"
-    if (!addressFormData.last_name?.trim())
-      newErrors.last_name = "Sobrenome é obrigatório"
+    if (showContactFields && !isValidPersonName(addressFormData.first_name ?? ""))
+      newErrors.first_name = "Informe um nome válido"
+    if (showContactFields && !isValidPersonName(addressFormData.last_name ?? ""))
+      newErrors.last_name = "Informe um sobrenome válido"
     if (!addressFormData.address_1?.trim())
       newErrors.address_1 = "Endereço é obrigatório"
     if (!addressFormData.city?.trim()) newErrors.city = "Cidade é obrigatória"
-    if (!addressFormData.postal_code?.trim())
-      newErrors.postal_code = "CEP é obrigatório"
+    if (!isValidBrazilPostalCode(addressFormData.postal_code ?? ""))
+      newErrors.postal_code = "Informe um CEP válido"
+    if (isCheckoutAddress && !withoutNumber && !normalizeDigits(addressFormData.number ?? ""))
+      newErrors.number = "Informe o número ou marque sem número"
+    if (showContactFields && !isValidBrazilPhone(addressFormData.phone ?? ""))
+      newErrors.phone = "Informe um telefone válido com DDD"
     if (!addressFormData.country_code?.trim())
       newErrors.country_code = "País é obrigatório"
     const countryCodeExists = lockedCountryCode
@@ -112,7 +167,7 @@ const AddressForm = ({
     const isValid = Object.keys(newErrors).length === 0
     setIsFormValid?.(isValid)
     return isValid
-  }, [addressFormData, countriesInput, setIsFormValid])
+  }, [addressFormData, countriesInput, isCheckoutAddress, lockedCountryCode, lockedProvince, setIsFormValid, showContactFields, withoutNumber])
 
   useEffect(() => {
     validateForm()
@@ -128,8 +183,8 @@ const AddressForm = ({
 
   return (
     <div className={clsx("space-y-4", className)}>
-      {/* Name fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Contact data is collected once in the first checkout step. */}
+      {showContactFields && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="first_name" className="block text-sm font-medium">
             Nome
@@ -172,10 +227,10 @@ const AddressForm = ({
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Company */}
-      <div className="flex flex-col gap-2">
+      {showContactFields && <div className="flex flex-col gap-2">
         <label htmlFor="company" className="block text-sm font-medium">
           Empresa
         </label>
@@ -188,7 +243,7 @@ const AddressForm = ({
           onChange={(e) => handleChange("company", e.target.value)}
           placeholder="Nome da empresa (opcional)"
         />
-      </div>
+      </div>}
 
       {/* CEP */}
       <div className="flex flex-col gap-2">
@@ -199,6 +254,7 @@ const AddressForm = ({
           name="postal_code"
           id="postal_code"
           type="text"
+          inputMode="numeric"
           autoComplete="postal-code"
           value={addressFormData.postal_code ?? ""}
           onChange={(e) => handleChange("postal_code", e.target.value)}
@@ -211,12 +267,13 @@ const AddressForm = ({
             {errors.postal_code}
           </div>
         )}
+        {cepLookupError && <p className="text-rose-900 text-sm" role="status" aria-live="polite">{cepLookupError}</p>}
       </div>
 
       {/* Address fields */}
       <div className="flex flex-col gap-2">
         <label htmlFor="address_1" className="block text-sm font-medium">
-          Endereço e Número
+          {isCheckoutAddress ? "Logradouro" : "Endereço e Número"}
         </label>
         <Input
           name="address_1"
@@ -225,7 +282,7 @@ const AddressForm = ({
           autoComplete="street-address"
           value={addressFormData.address_1 ?? ""}
           onChange={(e) => handleChange("address_1", e.target.value)}
-          placeholder="Ex: Rua das Flores, 123"
+          placeholder={isCheckoutAddress ? "Rua das Flores" : "Ex: Rua das Flores, 123"}
           aria-invalid={!!(errors.address_1 && touchedFields.address_1)}
           aria-describedby={errors.address_1 && touchedFields.address_1 ? "address_1-error" : undefined}
         />
@@ -234,9 +291,14 @@ const AddressForm = ({
         )}
       </div>
 
+      {isCheckoutAddress && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2"><label htmlFor="address_number" className="block text-sm font-medium">Número</label><Input name="address_number" id="address_number" value={withoutNumber ? "" : addressFormData.number ?? ""} onChange={(e) => handleChange("number", e.target.value)} autoComplete="address-line2" inputMode="numeric" placeholder="Número" disabled={withoutNumber} aria-invalid={!!(errors.number && touchedFields.number)} aria-describedby={errors.number && touchedFields.number ? "address_number-error" : undefined} />{errors.number && touchedFields.number && <p id="address_number-error" className="text-sm text-rose-900" aria-live="polite">{errors.number}</p>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={withoutNumber} onChange={(event) => { const checked = event.target.checked; setWithoutNumber(checked); if (checked) handleChange("number", "") }} />Endereço sem número</label></div>
+        <div className="flex flex-col gap-2"><label htmlFor="neighborhood" className="block text-sm font-medium">Bairro</label><Input name="neighborhood" id="neighborhood" value={addressFormData.neighborhood ?? ""} onChange={(e) => handleChange("neighborhood", e.target.value)} autoComplete="address-level3" placeholder="Bairro" /></div>
+      </div>}
+
       <div className="flex flex-col gap-2">
         <label htmlFor="address_2" className="block text-sm font-medium">
-          Complemento / Bairro
+          {isCheckoutAddress ? "Complemento" : "Complemento / Bairro"}
         </label>
         <Input
           name="address_2"
@@ -349,7 +411,11 @@ const AddressForm = ({
           value={addressFormData.phone ?? ""}
           onChange={(e) => handleChange("phone", e.target.value)}
           placeholder="Telefone (com DDD)"
+          inputMode="tel"
+          aria-invalid={!!(errors.phone && touchedFields.phone)}
+          aria-describedby={errors.phone && touchedFields.phone ? "phone-error" : undefined}
         />
+        {errors.phone && touchedFields.phone && <div id="phone-error" className="text-rose-900 text-sm" aria-live="polite">{errors.phone}</div>}
       </div>
 
       {/* Action buttons */}

@@ -19,6 +19,14 @@ export type CheckoutPrepareResponse = {
     postal_code?: unknown
     country_code?: unknown
   } | null
+  billing_address?: {
+    first_name?: unknown
+    last_name?: unknown
+    city?: unknown
+    province?: unknown
+    postal_code?: unknown
+    country_code?: unknown
+  } | null
   selected_shipping?: {
     id?: unknown
     name?: unknown
@@ -43,6 +51,12 @@ export type CheckoutPrepareResponse = {
   readiness?: { token?: unknown; expires_at?: unknown; idempotent?: unknown }
 }
 
+export type CheckoutCustomerPayload = {
+  person_type: "individual" | "business"
+  document: string
+  legal_name?: string
+}
+
 export type CheckoutPreparedItem = {
   id: string
   title: string
@@ -57,6 +71,14 @@ export type CheckoutPreparedSummary = {
   state: "READY_FOR_PAYMENT"
   email: string
   address: {
+    firstName: string
+    lastName: string
+    city: string
+    province: string
+    postalCode: string
+    countryCode: "br"
+  } | null
+  billingAddress: {
     firstName: string
     lastName: string
     city: string
@@ -210,12 +232,21 @@ export const sanitizeCheckoutPrepareResponse = (
     postalCode: textOrEmpty(raw.address.postal_code),
     countryCode: "br" as const,
   } : null
+  const billingAddress = raw.billing_address ? {
+    firstName: textOrEmpty(raw.billing_address.first_name),
+    lastName: textOrEmpty(raw.billing_address.last_name),
+    city: textOrEmpty(raw.billing_address.city),
+    province: textOrEmpty(raw.billing_address.province),
+    postalCode: textOrEmpty(raw.billing_address.postal_code),
+    countryCode: "br" as const,
+  } : null
 
   return {
     cartId,
     state: "READY_FOR_PAYMENT",
     email,
     address,
+    billingAddress,
     shipping: {
       id: shippingId,
       name: shippingName,
@@ -236,6 +267,7 @@ export const sanitizeCheckoutPrepareResponse = (
 
 export const prepareCartForPayment = async (
   shippingOptionId?: string,
+  customer?: CheckoutCustomerPayload,
 ): Promise<CheckoutPreparedSummary> => {
   const cartId = getStoredCart()
   if (!cartId) throw new CheckoutPrepareError("Não foi possível encontrar o carrinho.", { code: "CART_NOT_FOUND" })
@@ -246,7 +278,10 @@ export const prepareCartForPayment = async (
       {
         method: "POST",
         // The server owns all prices, totals, shipping amounts, and inventory decisions.
-        body: shippingOptionId ? { shipping_option_id: shippingOptionId } : {},
+        body: {
+          ...(shippingOptionId ? { shipping_option_id: shippingOptionId } : {}),
+          ...(customer ? { customer } : {}),
+        },
       },
     )
     return sanitizeCheckoutPrepareResponse(response)

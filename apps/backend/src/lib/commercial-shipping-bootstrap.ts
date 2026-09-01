@@ -11,13 +11,12 @@ import {
   COMMERCIAL_SHIPPING_CALIBRATION_DEBT,
   COMMERCIAL_SHIPPING_POLICY_STATUS,
   COMMERCIAL_SHIPPING_RATES,
-  SHIPPING_CURRENCY,
 } from "../utils/commercial-shipping-policy"
 
 const BOOTSTRAP_KEY = "frigga:commercial-shipping:v1"
 const STOCK_LOCATION_NAME = "FriggaFrio - Loja 1 / Matriz"
 const FULFILLMENT_SET_NAME = "FriggaFrio - Entregas SP"
-const PROVIDER_ID = "manual_manual"
+const PROVIDER_ID = "frigga-shipping_frigga-shipping"
 
 type RecordLike = Record<string, unknown>
 
@@ -68,7 +67,7 @@ const optionInput = (
   service_zone_id: serviceZoneId,
   shipping_profile_id: shippingProfileId,
   provider_id: PROVIDER_ID,
-  price_type: "flat",
+  price_type: "calculated",
   type: {
     label: "Entrega FriggaFrio",
     description: rate.estimated_delivery,
@@ -80,12 +79,6 @@ const optionInput = (
       attribute: rate.key,
       operator: "eq",
       value: "true",
-    },
-  ],
-  prices: [
-    {
-      currency_code: SHIPPING_CURRENCY,
-      amount: rate.amount,
     },
   ],
 })
@@ -217,11 +210,15 @@ export const ensureCommercialShippingConfiguration = async (container: MedusaCon
     serviceZone = created[0] as unknown as RecordLike
   }
 
-  // Remove only options created by the superseded Gate 6 policy. The current
-  // policy has no active capital/Grande/Litoral/interior rates.
+  // Remove only FriggaFrio V1 options that are no longer part of the central
+  // policy. Unrelated merchant shipping options remain untouched.
+  const desiredRateKeys = new Set(COMMERCIAL_SHIPPING_RATES.map((rate) => rate.key))
   const obsolete = options.filter((candidate) => {
     const name = String(candidate.name ?? "")
-    return name.startsWith("FriggaFrio V1 - ") && /CAPITAL_LOCAL|GRANDE_SP$|LITORAL_SP|INTERIOR_SP/.test(name)
+    const configuredKey = isRecord(candidate.data) && typeof candidate.data.commercial_shipping_option === "string"
+      ? candidate.data.commercial_shipping_option
+      : undefined
+    return name.startsWith("FriggaFrio V1 - ") && (!configuredKey || !desiredRateKeys.has(configuredKey as (typeof COMMERCIAL_SHIPPING_RATES)[number]["key"]))
   })
   if (obsolete.length) {
     await deleteShippingOptionsWorkflow(container).run({ input: { ids: obsolete.map((option) => String(option.id)) } })

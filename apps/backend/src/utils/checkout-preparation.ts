@@ -45,8 +45,16 @@ export type CheckoutValidationError = {
 const text = (value: unknown): string =>
   typeof value === "string" ? value.trim() : ""
 
+const validName = (value: string): boolean =>
+  value.length >= 2
+  && value.length <= 120
+  && !/[\d<>]/.test(value)
+  && !/[\u0000-\u001f\u007f]/.test(value)
+  && Array.from(value).some((character) => character.toLocaleUpperCase() !== character.toLocaleLowerCase())
+
 export const normalizeBrazilAddress = (
   value: unknown,
+  fieldPrefix = "shipping_address",
 ): { address?: CheckoutAddress; errors: CheckoutValidationError[] } => {
   const input = value && typeof value === "object" ? value as Record<string, unknown> : {}
   const country = text(input.country_code).toLowerCase()
@@ -54,27 +62,34 @@ export const normalizeBrazilAddress = (
   const errors: CheckoutValidationError[] = []
 
   if (country !== "br") {
-    errors.push({ code: "INVALID_COUNTRY", field: "shipping_address.country_code", message: "Delivery address must be in Brazil." })
+    errors.push({ code: "INVALID_COUNTRY", field: `${fieldPrefix}.country_code`, message: "Address must be in Brazil." })
   }
   if (province !== "sp" && province !== "br-sp") {
-    errors.push({ code: "INVALID_PROVINCE", field: "shipping_address.province", message: "Delivery address must be in Sao Paulo." })
+    errors.push({ code: "INVALID_PROVINCE", field: `${fieldPrefix}.province`, message: "Address must be in Sao Paulo." })
   }
 
   const firstName = text(input.first_name)
   const lastName = text(input.last_name)
   const address1 = text(input.address_1)
   const city = text(input.city)
+  const phone = text(input.phone).replace(/\D/g, "")
   const postalDigits = text(input.postal_code).replace(/\D/g, "")
   for (const [field, fieldValue] of [
-    ["shipping_address.first_name", firstName],
-    ["shipping_address.last_name", lastName],
-    ["shipping_address.address_1", address1],
-    ["shipping_address.city", city],
+    [`${fieldPrefix}.first_name`, firstName],
+    [`${fieldPrefix}.last_name`, lastName],
+    [`${fieldPrefix}.address_1`, address1],
+    [`${fieldPrefix}.city`, city],
   ] as const) {
     if (!fieldValue) errors.push({ code: "MISSING_ADDRESS_FIELD", field, message: "Delivery address is incomplete." })
   }
+  if (firstName && !validName(firstName)) errors.push({ code: "INVALID_NAME", field: `${fieldPrefix}.first_name`, message: "Name is invalid." })
+  if (lastName && !validName(lastName)) errors.push({ code: "INVALID_NAME", field: `${fieldPrefix}.last_name`, message: "Name is invalid." })
+  if (address1.length > 180 || city.length > 120) errors.push({ code: "INVALID_ADDRESS", field: `${fieldPrefix}.address_1`, message: "Address is invalid." })
+  if (phone && (phone.length < 10 || phone.length > 11 || /^(\d)\1+$/.test(phone))) errors.push({ code: "INVALID_PHONE", field: `${fieldPrefix}.phone`, message: "Phone is invalid." })
+  const address2 = text(input.address_2)
+  if (address2.length > 180 || /[<>\u0000-\u001f\u007f]/.test(address2)) errors.push({ code: "INVALID_ADDRESS", field: `${fieldPrefix}.address_2`, message: "Address complement is invalid." })
   if (postalDigits.length !== 8) {
-    errors.push({ code: "INVALID_POSTAL_CODE", field: "shipping_address.postal_code", message: "Delivery postal code is invalid." })
+    errors.push({ code: "INVALID_POSTAL_CODE", field: `${fieldPrefix}.postal_code`, message: "Address postal code is invalid." })
   }
 
   if (errors.length) return { errors }
@@ -85,12 +100,12 @@ export const normalizeBrazilAddress = (
       last_name: lastName,
       company: text(input.company) || undefined,
       address_1: address1,
-      address_2: text(input.address_2) || undefined,
+      address_2: address2 || undefined,
       city,
       postal_code: `${postalDigits.slice(0, 5)}-${postalDigits.slice(5)}`,
       province: province === "br-sp" ? "br-sp" : "SP",
       country_code: "br",
-      phone: text(input.phone) || undefined,
+      phone: phone || undefined,
     },
   }
 }
@@ -98,17 +113,23 @@ export const normalizeBrazilAddress = (
 export const validateCheckoutContact = (cart: {
   email?: unknown
   shipping_address?: unknown
+  billing_address?: unknown
+  allow_missing_shipping_address?: boolean
+  allow_missing_billing_address?: boolean
 }): CheckoutValidationError[] => {
   const errors: CheckoutValidationError[] = []
   const email = text(cart.email).toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push({ code: "INVALID_EMAIL", field: "email", message: "A valid checkout email is required." })
   }
-  const address = cart.shipping_address && typeof cart.shipping_address === "object"
-    ? cart.shipping_address as Record<string, unknown>
+  const addressSource = cart.shipping_address && typeof cart.shipping_address === "object"
+    ? cart.shipping_address
+    : cart.billing_address
+  const address = addressSource && typeof addressSource === "object"
+    ? addressSource as Record<string, unknown>
     : {}
-  if (!text(address.first_name) || !text(address.last_name)) {
-    errors.push({ code: "MISSING_CONTACT_NAME", field: "shipping_address", message: "A contact name is required for checkout." })
+  if (!cart.allow_missing_billing_address && !text(address.first_name) || !cart.allow_missing_billing_address && !text(address.last_name)) {
+    errors.push({ code: "MISSING_CONTACT_NAME", field: cart.allow_missing_shipping_address ? "billing_address" : "shipping_address", message: "A contact name is required for checkout." })
   }
   return errors
 }
@@ -167,6 +188,7 @@ export const checkoutSnapshotFromCart = (cart: {
   email?: unknown
   currency_code?: unknown
   shipping_address?: unknown
+  billing_address?: unknown
   items?: Array<{
     id: string
     quantity: number
@@ -190,9 +212,13 @@ export const checkoutSnapshotFromCart = (cart: {
   tax_total?: unknown
   discount_total?: unknown
   total?: unknown
+  allow_missing_shipping_address?: boolean
+  allow_missing_billing_address?: boolean
 }) => {
   const addressResult = normalizeBrazilAddress(cart.shipping_address)
-  if (!addressResult.address) return null
+  const billingAddressResult = normalizeBrazilAddress(cart.billing_address, "billing_address")
+  if (!addressResult.address && !cart.allow_missing_shipping_address) return null
+  if (!billingAddressResult.address && !cart.allow_missing_billing_address) return null
   const method = cart.shipping_methods?.[0]
   const amount = typeof method?.amount === "number" ? method.amount : Number(method?.amount)
   const subtotal = typeof cart.item_subtotal === "number" ? cart.item_subtotal : Number(cart.item_subtotal)
@@ -205,7 +231,8 @@ export const checkoutSnapshotFromCart = (cart: {
     sales_channel_id: String(cart.sales_channel_id ?? ""),
     currency_code: String(cart.currency_code ?? "").toLowerCase(),
     email: String(cart.email ?? "").trim().toLowerCase(),
-    address: addressResult.address,
+    address: addressResult.address ?? null,
+    billing_address: billingAddressResult.address ?? null,
     items: (cart.items ?? []).map((item) => ({
       id: item.id,
       quantity: item.quantity,

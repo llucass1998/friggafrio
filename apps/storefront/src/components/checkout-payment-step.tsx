@@ -1,395 +1,122 @@
-import PaymentContainer from "@/components/payment-container"
-import StripeCardContainer from "@/components/stripe-card-container"
 import { Button } from "@/components/ui/button"
-import {
-  useCartPaymentMethods,
-  useInitiateCartPaymentSession,
-} from "@/lib/hooks/use-checkout"
-import {
-  isStripe as isStripeFunc,
-  getActivePaymentSession,
-  isPaidWithGiftCard,
-} from "@/lib/utils/checkout"
-import { useAuth } from "@/lib/hooks/use-auth"
-import { sdk } from "@/lib/medusa"
-import { getStoredCart } from "@/lib/utils/cart"
-import { queryKeys } from "@/lib/utils/query-keys"
-import { HttpTypes } from "@medusajs/types"
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-import { useCallback, useEffect, useState } from "react"
-import { CreditCard } from "@medusajs/icons"
-import {
-  PAYMENT_UNAVAILABLE_MESSAGE,
-  assertPaymentProcessingEnabled,
-  paymentAvailability,
-} from "@/lib/config/payment-availability"
+import { Price } from "@/components/ui/price"
+import type { CheckoutPreparedSummary } from "@/lib/data/checkout/prepare"
+import { mountMercadoPagoCardBrick, type MercadoPagoBrickErrorCode } from "@/lib/payments/mercado-pago-sdk"
+import type { CheckoutPaymentSelection, PaymentMethodId } from "@/lib/payments/contracts"
+import { isMercadoPagoFrontendConfigured, mercadoPagoPublicKey } from "@/lib/payments/runtime"
+import type { HttpTypes } from "@medusajs/types"
+import { useEffect, useRef, useState } from "react"
 
-interface SavedPaymentMethod {
-  id: string
-  data: {
-    id: string
-    card?: {
-      brand: string
-      last4: string
-      exp_month: number
-      exp_year: number
-    }
-    type?: string
-    [key: string]: unknown
-  }
-}
-
-interface PaymentStepProps {
+type PaymentStepProps = {
   cart: HttpTypes.StoreCart
+  prepared: CheckoutPreparedSummary
+  selection: CheckoutPaymentSelection | null
+  onSelectionChange: (selection: CheckoutPaymentSelection | null) => void
   onNext: () => void
   onBack: () => void
-  onPaymentDetailsComplete?: (complete: boolean) => void
 }
 
-function cardBrandLabel(brand: string): string {
-  const brands: Record<string, string> = {
-    visa: "Visa",
-    mastercard: "Mastercard",
-    amex: "American Express",
-    discover: "Discover",
-    diners: "Diners Club",
-    jcb: "JCB",
-    unionpay: "UnionPay",
-  }
-  return brands[brand] || brand.charAt(0).toUpperCase() + brand.slice(1)
-}
+type CardBrick = { unmount?: () => void }
 
-const useInitiateCompanyPaymentSession = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      provider_id,
-      payment_method_id,
-    }: {
-      provider_id: string
-      payment_method_id: string
-    }) => {
-      assertPaymentProcessingEnabled()
-
-      const cartId = getStoredCart()
-      if (!cartId) throw new Error("No cart found")
-
-      const response = await sdk.client.fetch<{ payment_session: unknown }>(
-        "/store/company/initiate-checkout-session",
-        {
-          method: "POST",
-          body: {
-            cart_id: cartId,
-            provider_id,
-            payment_method_id,
-          },
-        }
-      )
-      return response.payment_session
-    },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({ predicate: queryKeys.cart.predicate })
-    },
-  })
-}
-
-const PaymentStep = ({
-  cart,
-  onNext,
-  onBack,
-  onPaymentDetailsComplete,
-}: PaymentStepProps) => {
-  const { employee } = useAuth()
-  const { data: availablePaymentMethods = [] } = useCartPaymentMethods({
-    region_id: cart.region?.id,
-  })
-  const initiatePaymentSessionMutation = useInitiateCartPaymentSession()
-  const initiateCompanySessionMutation = useInitiateCompanyPaymentSession()
-
-  const { data: savedPaymentMethods = [] } = useQuery({
-    queryKey: ["company-checkout-payment-methods"],
-    queryFn: async () => {
-      const response = await sdk.client.fetch<{ payment_methods: SavedPaymentMethod[] }>(
-        "/store/company/checkout-payment-methods",
-        { method: "GET" }
-      )
-      return response.payment_methods
-    },
-    enabled: paymentAvailability.processingEnabled && !!employee,
-  })
-
-  const hasSavedMethods = savedPaymentMethods.length > 0
-  const activeSession = getActivePaymentSession(cart)
-
+export default function CheckoutPaymentStep({ cart, prepared, selection, onSelectionChange, onNext, onBack }: PaymentStepProps) {
   const [error, setError] = useState<string | null>(null)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? ""
-  )
-  const [selectedSavedMethodId, setSelectedSavedMethodId] = useState<string | null>(null)
-  const [isPaymentDetailsComplete, setIsPaymentDetailsComplete] =
-    useState(false)
+  const brickRef = useRef<CardBrick | null>(null)
+  const brickMountQueueRef = useRef<Promise<void>>(Promise.resolve())
 
-  const isStripe = isStripeFunc(selectedPaymentMethod)
-  const paidByGiftcard = isPaidWithGiftCard(cart)
+  useEffect(() => {
+    let disposed = false
+    if (selection?.method !== "card" || !isMercadoPagoFrontendConfigured) return
 
-  const isInitiating =
-    initiatePaymentSessionMutation.isPending || initiateCompanySessionMutation.isPending
-
-  const initiatePaymentSession = useCallback(
-    async (method: string) => {
-      initiatePaymentSessionMutation.mutateAsync(
-        { provider_id: method },
-        {
-          onError: (error) => {
-            setError(
-              error instanceof Error ? error.message : "An error occurred"
-            )
+    const mount = async () => {
+      // React development effects may mount, clean up, and mount again before
+      // the SDK resolves. Serialize creation so two Bricks never target one node.
+      await brickMountQueueRef.current
+      if (disposed) return
+      try {
+        const brick = await mountMercadoPagoCardBrick({
+          publicKey: mercadoPagoPublicKey,
+          containerId: "mercado-pago-secure-card-mount",
+          amount: prepared.total,
+          payerEmail: prepared.email,
+          onSubmit: async (formData) => {
+            if (disposed) return
+            const token = typeof formData.token === "string" ? formData.token : ""
+            const paymentMethodId = typeof formData.payment_method_id === "string" ? formData.payment_method_id : undefined
+            const installments = typeof formData.installments === "number" ? Math.min(10, Math.max(1, formData.installments)) : 1
+            if (!token) {
+              setError("Nao foi possivel tokenizar o cartao com seguranca.")
+              return
+            }
+            onSelectionChange({ method: "card", card: { secureMountId: "mercado-pago-secure-card-mount", token, paymentMethodId, installments } })
           },
-        }
-      )
-    },
-    [initiatePaymentSessionMutation]
-  )
-
-  const initiateCompanySession = useCallback(
-    async (providerId: string, paymentMethodId: string) => {
-      initiateCompanySessionMutation.mutateAsync(
-        { provider_id: providerId, payment_method_id: paymentMethodId },
-        {
-          onError: (error) => {
-            setError(
-              error instanceof Error ? error.message : "An error occurred"
-            )
+          onError: (sdkError) => {
+            if (disposed) return
+            const code: MercadoPagoBrickErrorCode = typeof sdkError === "object" && sdkError !== null && "code" in sdkError &&
+              (["SDK_CONSTRUCTOR_ERROR", "SDK_BRICKS_UNAVAILABLE", "BRICK_CREATE_REJECTED", "SDK_CALLBACK_ERROR"] as string[]).includes(String((sdkError as { code?: unknown }).code))
+              ? String((sdkError as { code?: unknown }).code) as MercadoPagoBrickErrorCode
+              : "BRICK_CREATE_REJECTED"
+            setError(`Nao foi possivel carregar o formulario seguro do Mercado Pago. (${code})`)
           },
+        })
+        if (disposed) brick.unmount?.()
+        else brickRef.current = brick
+      } catch (sdkError) {
+        if (!disposed) {
+          const code = sdkError instanceof Error && (["SDK_CONSTRUCTOR_ERROR", "SDK_BRICKS_UNAVAILABLE", "BRICK_CREATE_REJECTED"] as string[]).includes(sdkError.message)
+            ? sdkError.message
+            : "BRICK_CREATE_REJECTED"
+          setError(`Nao foi possivel carregar o formulario seguro do Mercado Pago. (${code})`)
         }
-      )
-    },
-    [initiateCompanySessionMutation]
-  )
-
-  const handlePaymentMethodChange = useCallback(
-    async (method: string) => {
-      setError(null)
-      setSelectedPaymentMethod(method)
-      setSelectedSavedMethodId(null)
-      setIsPaymentDetailsComplete(false)
-      initiatePaymentSession(method)
-    },
-    [initiatePaymentSession]
-  )
-
-  const handleSavedMethodSelect = useCallback(
-    async (savedMethod: SavedPaymentMethod) => {
-      setError(null)
-      const stripeProviderId = availablePaymentMethods.find((m) =>
-        isStripeFunc(m.id)
-      )?.id
-      if (!stripeProviderId) return
-
-      setSelectedPaymentMethod(stripeProviderId)
-      setSelectedSavedMethodId(savedMethod.data.id)
-      setIsPaymentDetailsComplete(true)
-      onPaymentDetailsComplete?.(true)
-      initiateCompanySession(stripeProviderId, savedMethod.data.id)
-    },
-    [availablePaymentMethods, initiateCompanySession, onPaymentDetailsComplete]
-  )
-
-  const hasNonPendingSession =
-    cart?.payment_collection?.payment_sessions?.some(
-      (s) => s.status !== "pending" && isStripeFunc(s.provider_id)
-    ) && !activeSession
-
-  // Auto-select first saved method for company employees
-  useEffect(() => {
-    if (hasSavedMethods && !selectedSavedMethodId && !selectedPaymentMethod) {
-      handleSavedMethodSelect(savedPaymentMethods[0])
-    }
-  }, [hasSavedMethods, savedPaymentMethods, selectedSavedMethodId, selectedPaymentMethod, handleSavedMethodSelect])
-
-  // Fallback: auto-select first payment method if no saved methods
-  useEffect(() => {
-    if (!hasSavedMethods && !selectedPaymentMethod && availablePaymentMethods?.length > 0) {
-      const firstMethod = availablePaymentMethods[0]
-      if (firstMethod) {
-        setSelectedPaymentMethod(firstMethod.id)
-        handlePaymentMethodChange(firstMethod.id)
       }
     }
-  }, [
-    hasSavedMethods,
-    availablePaymentMethods,
-    selectedPaymentMethod,
-    handlePaymentMethodChange,
-  ])
+    const queuedMount = mount()
+    brickMountQueueRef.current = queuedMount.catch(() => undefined)
 
-  useEffect(() => {
-    if (hasNonPendingSession && selectedPaymentMethod) {
-      if (selectedSavedMethodId) {
-        initiateCompanySession(selectedPaymentMethod, selectedSavedMethodId)
-      } else {
-        initiatePaymentSession(selectedPaymentMethod)
-      }
+    return () => {
+      disposed = true
+      brickRef.current?.unmount?.()
+      brickRef.current = null
     }
-  }, [hasNonPendingSession, selectedPaymentMethod, selectedSavedMethodId, initiatePaymentSession, initiateCompanySession])
+  }, [onSelectionChange, prepared.email, prepared.total, selection?.method])
 
-  const handlePaymentComplete = useCallback(
-    (complete: boolean) => {
-      setIsPaymentDetailsComplete(complete)
-      onPaymentDetailsComplete?.(complete)
-    },
-    [onPaymentDetailsComplete]
-  )
-
-  const handleSubmit = useCallback(async () => {
-    if (!selectedPaymentMethod) return
-
-    if (!activeSession) {
-      if (selectedSavedMethodId) {
-        await initiateCompanySession(selectedPaymentMethod, selectedSavedMethodId)
-      } else {
-        await initiatePaymentSession(selectedPaymentMethod)
-      }
-    }
-
-    onNext()
-  }, [selectedPaymentMethod, activeSession, onNext, initiatePaymentSession, initiateCompanySession, selectedSavedMethodId])
-
-  const canProceed = hasSavedMethods && selectedSavedMethodId
-    ? !!activeSession
-    : isStripe
-      ? isPaymentDetailsComplete && !!activeSession
-      : !!selectedPaymentMethod || paidByGiftcard
-
-  if (!paymentAvailability.processingEnabled) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div
-          className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900"
-          role="status"
-        >
-          <p className="font-semibold">Pagamento temporariamente indisponível</p>
-          <p className="mt-1 text-sm">{PAYMENT_UNAVAILABLE_MESSAGE}</p>
-        </div>
-        <div>
-          <Button variant="secondary" onClick={onBack}>
-            Voltar
-          </Button>
-        </div>
-      </div>
-    )
+  const choose = (method: PaymentMethodId) => {
+    setError(null)
+    onSelectionChange(method === "pix"
+      ? { method: "pix" }
+      : { method: "card", card: { secureMountId: "mercado-pago-secure-card-mount", installments: 1 } })
   }
+  const continueToReview = () => {
+    if (!selection) return setError("Escolha uma forma de pagamento.")
+    if (selection.method === "card" && !selection.card?.token) return setError("Conclua a tokenizacao no formulario seguro do Mercado Pago para continuar.")
+    if (selection.method === "card") onSelectionChange({ method: "card", card: { ...selection.card, secureMountId: "mercado-pago-secure-card-mount", installments: selection.card?.installments || 1 } })
+    onNext()
+  }
+  const methods: Array<{ id: PaymentMethodId; label: string; description: string }> = [
+    { id: "pix", label: "Pix", description: "O pedido sera confirmado apos o pagamento." },
+    { id: "card", label: "Cartao de credito", description: "Pagamento processado com seguranca pelo Mercado Pago." },
+  ]
 
-  return (
-    <div className="flex flex-col gap-8">
-      {!paidByGiftcard && hasSavedMethods && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-zinc-700">Selecione um método de pagamento da empresa</p>
-          {savedPaymentMethods.map((method) => {
-            const card = method.data?.card
-            const isSelected = selectedSavedMethodId === method.data.id
-            return (
-              <button
-                key={method.data.id ?? method.id}
-                type="button"
-                onClick={() => handleSavedMethodSelect(method)}
-                className={`w-full flex items-center gap-4 p-4 border rounded-lg transition-colors text-left ${
-                  isSelected
-                    ? "border-zinc-900 bg-zinc-50"
-                    : "border-zinc-200 hover:border-zinc-300"
-                }`}
-              >
-                <div className="w-10 h-7 bg-zinc-100 rounded flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-zinc-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-900">
-                    {card ? cardBrandLabel(card.brand) : "Cartão"} terminado em {card?.last4 || "****"}
-                  </p>
-                  {card && (
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      Expira em {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
-                    </p>
-                  )}
-                </div>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                  isSelected ? "border-zinc-900" : "border-zinc-300"
-                }`}>
-                  {isSelected && <div className="w-2 h-2 rounded-full bg-zinc-900" />}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {!paidByGiftcard && !hasSavedMethods && (availablePaymentMethods?.length ?? 0) > 0 && (
-        <>
-          {availablePaymentMethods.map((paymentMethod) => (
-            <div key={paymentMethod.id}>
-              <PaymentContainer
-                paymentProviderId={paymentMethod.id}
-                selectedPaymentOptionId={selectedPaymentMethod}
-                onClick={() => handlePaymentMethodChange(paymentMethod.id)}
-              >
-                {isStripeFunc(paymentMethod.id) &&
-                  selectedPaymentMethod === paymentMethod.id && (
-                    <StripeCardContainer
-                      cart={cart}
-                      onPaymentDetailsComplete={handlePaymentComplete}
-                    />
-                  )}
-              </PaymentContainer>
-            </div>
-          ))}
-        </>
-      )}
-
-      {paidByGiftcard && (
-        <div className="flex flex-col w-1/3">
-          <p className="text-base font-semibold text-zinc-900 mb-1">
-            Método de pagamento
-          </p>
-          <p
-            className="text-base font-semibold text-zinc-600"
-            data-testid="payment-method-summary"
-          >
-            Cartão presente
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <div
-          className="text-rose-900 text-sm p-3 bg-red-50 border border-red-200 rounded-md"
-          data-testid="payment-method-error-message"
-          aria-live="assertive"
-        >
-          {error}
-        </div>
-      )}
-
-      <div className="flex items-center gap-4">
-        <Button
-          variant="secondary"
-          onClick={onBack}
-          disabled={isInitiating}
-          className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-        >
-          Voltar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={!canProceed || isInitiating}
-          data-testid="submit-payment-button"
-          className="motion-interactive focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-        >
-          Próximo
-        </Button>
-      </div>
+  return <div className="space-y-6">
+    <section className="rounded-xl border border-[var(--color-border)] bg-sky-50 p-4" aria-labelledby="payment-total-title">
+      <h3 id="payment-total-title" className="font-semibold text-[var(--color-navy)]">Total confirmado pelo servidor</h3>
+      <p className="mt-2 text-2xl font-bold text-[var(--color-navy)]"><Price price={prepared.total} currencyCode={cart.currency_code || "brl"} /></p>
+    </section>
+    <p className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950" role="status">A tentativa so sera criada apos a confirmacao explicita na revisao.</p>
+    <div className="grid gap-3" role="radiogroup" aria-label="Forma de pagamento">
+      {methods.map((method) => {
+        const selected = selection?.method === method.id
+        return <button key={method.id} type="button" role="radio" aria-checked={selected} onClick={() => choose(method.id)} className={`min-h-24 rounded-xl border p-4 text-left transition-colors ${selected ? "border-[var(--color-primary)] bg-sky-50" : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary)]"}`}>
+          <span className="font-semibold text-[var(--color-navy)]">{method.label}</span><span className="mt-1 block text-sm text-[var(--color-text-muted)]">{method.description}</span>
+        </button>
+      })}
     </div>
-  )
+    {selection?.method === "card" && <section className="rounded-xl border border-[var(--color-border)] p-4" aria-labelledby="secure-card-title">
+      <h3 id="secure-card-title" className="font-semibold text-[var(--color-navy)]">Cartao de credito</h3>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">A FriggaFrio nao armazena dados do cartao.</p>
+      <div id="mercado-pago-secure-card-mount" className="mt-4 min-h-56 rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">Carregando formulario seguro do Mercado Pago...</div>
+      <p className="mt-3 text-sm text-[var(--color-text-muted)]">O Mercado Pago informa parcelas elegiveis, limitadas a 10x sem juros.</p>
+    </section>}
+    {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert">{error}</p>}
+    <div className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row"><Button type="button" variant="secondary" onClick={onBack}>Voltar</Button><Button type="button" data-testid="checkout-payment-next" onClick={continueToReview} disabled={!selection || (selection.method === "card" && !selection.card?.token)}>Continuar para revisao</Button></div>
+  </div>
 }
-
-export default PaymentStep

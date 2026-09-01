@@ -36,9 +36,24 @@ test("account shell has explicit desktop sidebar and compact mobile navigation s
   assert.match(source, /aria-current=\{active \? "page" : undefined\}/)
 })
 
+test("customer logout replaces history with the validated public home", () => {
+  assert.match(source, /window\.location\.replace\(defaultAuthenticatedPath\(countryCode\)\)/)
+  // The shell owns the unauthenticated redirect; logout must still only
+  // replace history with the validated public home.
+  assert.match(source, /to: "\/\$countryCode\/account\/login"/)
+})
+
 test("account overview and orders preserve their existing pages inside the shell", () => {
   assert.match(accountRouteSource, /<AccountShell>\s*<SettingsPage \/>\s*<\/AccountShell>/)
   assert.match(ordersRouteSource, /<AccountShell>\s*<OrdersPage \/>\s*<\/AccountShell>/)
-  assert.match(accountRouteSource, /normalizeReturnTo/)
-  assert.match(ordersRouteSource, /normalizeReturnTo/)
+  assert.match(source, /normalizeReturnTo\(currentPath, countryCode\)/)
+  assert.match(accountRouteSource, /beforeLoad: async \(\) => undefined/)
+  assert.match(ordersRouteSource, /beforeLoad: async \(\) => undefined/)
+})
+
+test("account loading reserves route-sized space before authentication resolves", () => {
+  assert.match(source, /routeMinHeight = location\.pathname\.endsWith\("\/account\/orders"\)/)
+  assert.match(source, /location\.pathname\.endsWith\("\/favorites"\)/)
+  assert.match(source, /style=\{\{ minHeight: routeMinHeight \}\}/)
+  assert.match(source, /data-account-shell[\s\S]*style=\{\{ minHeight: routeMinHeight \}\}/)
 })

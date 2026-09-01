@@ -92,6 +92,19 @@ test("blocks forbidden production admin origins and wildcard CORS", () => {
   assert.equal(findings.length, 2);
 });
 
+test("Medusa Admin never starts an alternate HMR listener", () => {
+  const config = readFileSync(join(root, "apps/backend/medusa-config.ts"), "utf8");
+  assert.doesNotMatch(config, /HMR_PORT/);
+  assert.doesNotMatch(config, /hmrServer/);
+});
+
+test("Storefront development server is fixed to the canonical IPv4 port", () => {
+  const config = readFileSync(join(root, "apps/storefront/vite.config.ts"), "utf8");
+  assert.match(config, /host: "127\.0\.0\.1"/);
+  assert.match(config, /port: 5173/);
+  assert.match(config, /strictPort: true/);
+});
+
 test("detects duplicate runtime ownership", () => {
   const listeners = parseSsListeners(
     'LISTEN 0 128 0.0.0.0:9000 0.0.0.0:* users:(("node",pid=222,fd=1))',

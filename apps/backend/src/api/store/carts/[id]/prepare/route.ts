@@ -36,6 +36,7 @@ import {
   assertCheckoutCartOwnership,
   authenticatedCheckoutCustomerId,
 } from "../../../../../utils/checkout-customer-authorization"
+import { validateCheckoutCustomerInput } from "../../../../../lib/validation/checkout-input"
 
 type CheckoutItem = CartInventoryLine & CommercialLine & {
   title?: string | null
@@ -78,10 +79,14 @@ type ShippingOption = {
   data?: Record<string, unknown> | null
 }
 
+const isPickupOption = (option?: ShippingOption): boolean =>
+  option?.data?.commercial_shipping_option === "FRIGGAFRIO_PICKUP_STORE_1"
+
 type PreparationBody = {
   shipping_option_id?: unknown
   shipping_amount?: unknown
   total?: unknown
+  customer?: { person_type?: unknown; document?: unknown; legal_name?: unknown }
 }
 
 const CART_FIELDS = [
@@ -185,11 +190,37 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   assertCheckoutCartOwnership(customerId, cart.customer_id)
   if (cart.completed_at) return blockedResponse(res, cartId, [safeError("CART_COMPLETED", "Completed carts cannot be prepared again.")])
 
+  const shippingMethod = cart.shipping_methods?.[0]
+  const body = (req.body && typeof req.body === "object" ? req.body : {}) as PreparationBody
+  let selectedShipping: ShippingOption | undefined
+  if (shippingMethod?.shipping_option_id) {
+    try {
+      const shippingResult = await listShippingOptionsForCartWithPricingWorkflow(req.scope).run({ input: { cart_id: cartId } })
+      selectedShipping = ((shippingResult.result as ShippingOption[]) ?? []).find((option) => option.id === shippingMethod.shipping_option_id)
+    } catch {
+      selectedShipping = undefined
+    }
+  }
+  if (shippingMethod?.shipping_option_id && selectedShipping && !selectedShipping.data) {
+    const optionResult = await query.graph({
+      entity: "shipping_option",
+      fields: ["id", "data"],
+      filters: { id: shippingMethod.shipping_option_id },
+    })
+    const optionData = optionResult.data[0] as { data?: Record<string, unknown> | null } | undefined
+    if (optionData?.data) selectedShipping = { ...selectedShipping, data: optionData.data }
+  }
+  const pickup = isPickupOption(selectedShipping) || shippingMethod?.shipping_option_id?.includes("PICKUP_STORE_1") === true
   const errors: CheckoutValidationError[] = [
-    ...validateCheckoutContact(cart),
+    ...validateCheckoutContact({ ...cart, allow_missing_shipping_address: pickup, allow_missing_billing_address: pickup }),
   ]
+  if (body.customer) {
+    errors.push(...validateCheckoutCustomerInput(body.customer))
+  }
   const addressResult = normalizeBrazilAddress(cart.shipping_address)
-  errors.push(...addressResult.errors)
+  const billingAddressResult = normalizeBrazilAddress(cart.billing_address, "billing_address")
+  if (!pickup) errors.push(...addressResult.errors)
+  if (!pickup) errors.push(...billingAddressResult.errors)
   if (cart.currency_code?.toLowerCase() !== "brl") {
     errors.push(safeError("INVALID_CURRENCY", "Checkout must use BRL currency.", "currency_code"))
   }
@@ -220,23 +251,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     }
   }
 
-  const shippingMethod = cart.shipping_methods?.[0]
-  const body = (req.body && typeof req.body === "object" ? req.body : {}) as PreparationBody
   if (!shippingMethod?.shipping_option_id) {
     errors.push(safeError("SHIPPING_METHOD_REQUIRED", "Select a valid shipping method before preparing checkout.", "shipping_methods"))
   }
 
-  let selectedShipping: ShippingOption | undefined
-  if (shippingMethod?.shipping_option_id && addressResult.address) {
+  if (shippingMethod?.shipping_option_id && selectedShipping) {
     try {
-      const shippingResult = await listShippingOptionsForCartWithPricingWorkflow(req.scope).run({
-        input: { cart_id: cartId },
-      })
-      const availableShipping = (shippingResult.result as ShippingOption[]) ?? []
-      selectedShipping = availableShipping.find((option) => option.id === shippingMethod.shipping_option_id)
-      if (!selectedShipping) {
-        errors.push(safeError("STALE_SHIPPING_OPTION", "The selected shipping option is no longer valid."))
-      } else {
+      {
         const expectedAmount = asFiniteNumber(selectedShipping.amount)
         const persistedAmount = asFiniteNumber(shippingMethod.amount)
         if (expectedAmount === null || expectedAmount < 0) {
@@ -258,6 +279,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     } catch {
       errors.push(safeError("SHIPPING_UNAVAILABLE", "Shipping options could not be revalidated."))
     }
+  } else if (shippingMethod?.shipping_option_id) {
+    errors.push(safeError("STALE_SHIPPING_OPTION", "The selected shipping option is no longer valid."))
   }
 
   const subtotal = items.reduce((sum, item) => sum + ((item.quantity ?? 0) * (item.unit_price ?? 0)), 0)
@@ -287,15 +310,19 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     errors.push(safeError("TOTAL_TAMPERED", "Submitted total is not authoritative."))
   }
 
-  if (errors.length || !addressResult.address || !selectedShipping || shipping === null || total === null) {
+  if (errors.length || (!pickup && !addressResult.address) || (!pickup && !billingAddressResult.address) || !selectedShipping || shipping === null || total === null) {
     return blockedResponse(res, cartId, errors.length ? errors : [safeError("CHECKOUT_NOT_READY", "Cart is not ready for payment.")])
   }
 
   const snapshot = checkoutSnapshotFromCart({
     ...cart,
+    shipping_address: pickup ? undefined : cart.shipping_address,
+    billing_address: cart.billing_address,
     shipping_methods: [{ shipping_option_id: selectedShipping.id, amount: shipping }],
     item_subtotal: subtotal,
     total,
+    allow_missing_shipping_address: pickup,
+    allow_missing_billing_address: pickup,
   })
   if (!snapshot) return blockedResponse(res, cartId, [safeError("CHECKOUT_NOT_READY", "Cart is not ready for payment.")])
   const snapshotHash = stableCheckoutHash(snapshot)
@@ -376,7 +403,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     cart_id: cartId,
     checkout_state: "READY_FOR_PAYMENT",
     customer: { customer_id: cart.customer_id ?? null, email: String(cart.email).trim().toLowerCase() },
-    address: toAddressSummary(addressResult.address),
+    address: toAddressSummary(pickup ? undefined : addressResult.address),
+    billing_address: toAddressSummary(billingAddressResult.address),
     selected_shipping: {
       id: selectedShipping.id,
       name: selectedShipping.name ?? shippingMethod?.name ?? "Shipping",

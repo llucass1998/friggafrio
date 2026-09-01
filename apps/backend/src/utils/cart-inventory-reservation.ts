@@ -9,10 +9,10 @@ type InventoryLevel = {
   location_id?: string | null
   stocked_quantity?: number | string | null
   reserved_quantity?: number | string | null
-  stock_locations?: {
+  stock_locations?: Array<{
     id?: string | null
     sales_channels?: Array<{ id?: string | null }> | null
-  } | null
+  }> | null
 }
 
 type VariantInventoryItem = {
@@ -65,8 +65,10 @@ const isAvailableInSalesChannel = (
 ): level is InventoryLevel & { location_id: string } => {
   if (!level.location_id) return false
   if (!salesChannelId) return true
-  return level.stock_locations?.sales_channels?.some(
-    (salesChannel) => salesChannel.id === salesChannelId,
+  return level.stock_locations?.some((location) =>
+    location.sales_channels?.some(
+      (salesChannel) => salesChannel.id === salesChannelId,
+    ) === true,
   ) === true
 }
 

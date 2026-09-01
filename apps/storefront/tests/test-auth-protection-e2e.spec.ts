@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+test('protected favorites route redirects once without recursive returnTo', async ({ page }) => {
+  await page.goto('http://localhost:5173/br/favorites');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page).toHaveURL(/\/br\/account\/login\?returnTo=%2Fbr%2Ffavorites$/);
+  expect(page.url().length).toBeLessThan(160);
+  await expect(page.getByRole('heading', { name: 'Bem-vindo(a) de volta' })).toBeVisible();
+});
+
 test('Should protect account route and preserve returnTo', async ({ page }) => {
   // 1. Visitante acessa página protegida
   await page.goto('http://localhost:5173/br/account');
@@ -13,18 +22,19 @@ test('Should protect account route and preserve returnTo', async ({ page }) => {
   const userPassword = 'Password123!';
 
   await page.goto('http://localhost:5173/br/account/register');
+  await page.waitForLoadState('networkidle');
   
   // Create user through UI
-  await page.getByLabel(/Nome/i).first().fill('E2EProtect');
-  await page.getByLabel(/Sobrenome/i).first().fill('User');
-  await page.getByRole('textbox', { name: /E-mail/i }).fill(userEmail);
-  await page.getByLabel(/Telefone/i).first().fill('11999999999');
-  await page.getByLabel(/Senha/i).first().fill(userPassword);
-  await page.getByLabel(/Confirmar senha/i).first().fill(userPassword);
-  await page.getByLabel(/Li e aceito os Termos/i).first().check();
+  await page.locator('#pf_firstName').fill('E2EProtect');
+  await page.locator('#pf_lastName').fill('User');
+  await page.locator('#pf_email').fill(userEmail);
+  await page.locator('#pf_phone').fill('11999999999');
+  await page.locator('#pf_password').fill(userPassword);
+  await page.locator('#pf_confirmPassword').fill(userPassword);
+  await page.locator('#pf_firstName').locator('xpath=ancestor::form').getByRole('checkbox').first().check();
   
   await Promise.all([
-    page.waitForURL('http://localhost:5173/br'),
+    page.waitForURL(/\/br\/?$/),
     page.getByRole('button', { name: 'Criar conta' }).click()
   ]);
 

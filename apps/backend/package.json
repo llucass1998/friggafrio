@@ -17,6 +17,7 @@
     "db:migrate:safe": "medusa db:migrate --all-or-nothing --execute-safe-links --concurrency 1",
     "preseed": "node ../../scripts/worktree-guard.mjs",
     "seed": "medusa exec ./src/scripts/seed.ts",
+    "seed:payments:sandbox": "medusa exec ./src/scripts/configure-mercado-pago-sandbox.ts",
     "seed:shipping:v1": "medusa exec ./src/scripts/seed-commercial-shipping-v1.ts",
     "smoke:shipping:v1": "medusa exec ./src/scripts/smoke-commercial-shipping-v1.ts",
     "inventory:omie:project": "medusa exec ./src/scripts/reconcile-omie-inventory.ts",
@@ -35,7 +36,7 @@
     "test:integration": "pnpm test:integration:http",
     "typecheck": "tsc --noEmit",
     "dev:tee": "medusa develop 2>&1 | tee -a ../backend.log",
-    "test:integration:http": "cross-env NODE_OPTIONS=--experimental-vm-modules NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 TEST_TYPE=integration:http jest --silent=false --runInBand",
+    "test:integration:http": "cross-env NODE_ENV=test STOREFRONT_URL=http://localhost:8000 STORE_CORS=http://localhost:8000 NODE_OPTIONS=--experimental-vm-modules NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 TEST_TYPE=integration:http jest --silent=false --runInBand",
     "test:integration:modules": "cross-env TEST_TYPE=integration:modules jest --silent --runInBand",
     "test:unit": "cross-env TEST_TYPE=unit jest --silent --runInBand",
     "email:dev": "email-preview --dir ./src/email-templates --port 9004 --hostname 0.0.0.0"
@@ -44,6 +45,7 @@
     "@hookform/resolvers": "^3.10.0",
     "@medusajs/admin-sdk": "2.18.0",
     "@medusajs/admin-shared": "2.18.0",
+    "@medusajs/auth-google": "2.18.0",
     "@medusajs/cli": "2.18.0",
     "@medusajs/dashboard": "2.18.0",
     "@medusajs/draft-order": "2.18.0",
@@ -87,7 +89,7 @@
     "react-dom": "19.1.1",
     "ts-node": "10.9.2",
     "typescript": "5.8.3",
-    "vite": "5.2.11",
+    "vite": "5.4.21",
     "yalc": "1.0.0-pre.53"
   },
   "engines": {

@@ -1,16 +1,18 @@
 import { Link, useLoaderData } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
+import { ChevronRight, FileText, PackageCheck, Share2 } from "lucide-react"
+import type { ReactNode } from "react"
 import { ImageGallery } from "@/components/ui/image-gallery"
-import { ChevronRight } from "@medusajs/icons"
 import ProductActions from "@/components/product-actions"
-import { useState } from "react"
+import ProductRating from "@/components/product-rating"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { getPublicProductDocuments, getPublicProductSpecs } from "@/lib/utils/public-product-specs"
-import { Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
+import ProductReviews from "@/components/product-reviews"
+import RelatedProducts from "@/components/related-products"
 
 interface ProductPageData {
   product: HttpTypes.StoreProduct
@@ -18,48 +20,47 @@ interface ProductPageData {
   countryCode: string
 }
 
+function DetailPanel({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-5 shadow-[0_8px_24px_rgba(8,59,102,0.06)] sm:p-7 ${className}`}>
+      <h2 className="text-xl font-bold text-[var(--color-navy)] sm:text-2xl">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  )
+}
+
 export function ProductPage() {
   const loaderData = useLoaderData({ strict: false }) as ProductPageData | undefined
   const { product, region, countryCode = "br" } = loaderData || {}
 
-  // Local state for tabs
-  const [activeTab, setActiveTab] = useState("description")
-
   if (!product) {
     return (
-      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
-        <div className="text-center bg-white p-8 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-sm max-w-md w-full">
-          <div className="w-16 h-16 bg-[var(--color-surface-soft)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/w3.org/2000/svg" className="w-8 h-8 text-[var(--color-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--color-navy)] mb-2">Produto não encontrado</h1>
-          <p className="text-[var(--color-text-muted)] mb-6 text-sm">O item que você tentou acessar não existe ou foi removido.</p>
-          <Link
-            to={"/$countryCode/store" as string} params={{ countryCode }}
-            className="inline-flex justify-center w-full px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-sm font-semibold rounded-[var(--radius-button)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
-          >
+      <main className="flex min-h-screen items-center justify-center bg-[var(--color-background)] p-4">
+        <div className="w-full max-w-md rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white p-8 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-[var(--color-navy)]">Produto não encontrado</h1>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">O item que você tentou acessar não existe ou foi removido.</p>
+          <Link to={"/$countryCode/store" as string} params={{ countryCode }} className="mt-6 inline-flex w-full justify-center rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
             Voltar ao Catálogo
           </Link>
         </div>
-      </div>
+      </main>
     )
   }
 
-  // Fallback to real or mock images
-  const productImages = product.images || []
+  const productImages = (product.images || []).filter((image) => typeof image.url === "string" && image.url.trim())
   const images = productImages.length > 0
-    ? productImages
+    ? productImages.filter((image, index, list) => list.findIndex((candidate) => candidate.url === image.url) === index)
     : product.thumbnail
       ? [{ id: "thumbnail", url: product.thumbnail, rank: 0 } as HttpTypes.StoreProductImage]
       : []
-
-  // Extract metadata
   const publicSpecs = getPublicProductSpecs(product)
+  const documents = getPublicProductDocuments(product)
   const brand = product.collection?.title || publicSpecs.find((spec) => spec.label === "Marca")?.value || "FriggaFrio"
   const productTitle = decodeProductText(product.title)
-  const sku = product.variants?.[0]?.sku || "N/A"
+  const sku = product.variants?.[0]?.sku || null
   const category = product.categories?.[0]?.name || product.type?.value || null
   const purchaseState = getProductPurchaseState(product)
+  const available = purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
   const availabilityLabel = purchaseState.status === "quote_only"
     ? "Somente sob cotação"
     : purchaseState.status === "price_pending"
@@ -69,194 +70,98 @@ export function ProductPage() {
         : purchaseState.status === "unavailable"
           ? "Indisponível"
           : "Em estoque"
-  const availabilityClass = purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
-    ? "bg-[#e6f4ea] text-[#137333] border-[#ceead6]"
-    : "bg-amber-50 text-amber-800 border-amber-200"
-
-  const specs = publicSpecs
-  const documents = getPublicProductDocuments(product)
-  const tabs = [
-    "description",
-    ...(specs.length > 0 ? ["specs"] : []),
-    ...(documents.length > 0 ? ["documents"] : []),
-  ]
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-[var(--color-border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-xs md:text-sm text-[var(--color-text-muted)] overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <Link to={"/$countryCode" as string} params={{ countryCode }} className="hover:text-[var(--color-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm">
-              Home
-            </Link>
-            <ChevronRight className="w-4 h-4 shrink-0" />
-            <Link to={"/$countryCode/store" as string} params={{ countryCode }} className="hover:text-[var(--color-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm">
-              Catálogo
-            </Link>
-            <ChevronRight className="w-4 h-4 shrink-0" />
-            <span className="text-[var(--color-navy)] font-medium truncate">{productTitle}</span>
-          </div>
+    <main className="min-h-screen bg-[var(--color-background)] pb-20 md:pb-10" data-testid="product-page">
+      <nav aria-label="Caminho de navegação" className="border-b border-[var(--color-border)] bg-white" data-testid="product-breadcrumbs">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-4 text-xs text-[var(--color-text-muted)] sm:px-6 md:text-sm lg:px-8">
+          <Link to={"/$countryCode" as string} params={{ countryCode }} className="shrink-0 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Home</Link>
+          <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <Link to={"/$countryCode/store" as string} params={{ countryCode }} className="shrink-0 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Catálogo</Link>
+          {category && <><ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="shrink-0">{category}</span></>}
+          <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="truncate font-medium text-[var(--color-navy)]" aria-current="page">{productTitle}</span>
         </div>
-      </div>
+      </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-12">
-
-          {/* Left: Image Gallery */}
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white shadow-sm">
-              {images.length > 0 ? (
-                <ImageGallery images={images} />
-              ) : (
-                <div className="flex aspect-[4/3] items-center justify-center bg-[var(--color-surface-soft)]">
-                  <div className="text-center text-[var(--color-text-muted)] flex flex-col items-center">
-                    <svg xmlns="http://www.w3.org/w3.org/2000/svg" className="w-16 h-16 mb-4 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                    <span className="text-sm font-medium">Imagem indisponível</span>
-                  </div>
-                </div>
+      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 md:py-10 lg:px-8" data-testid="product-top-layout">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-7 xl:gap-8">
+          <section className="lg:col-span-5" aria-label="Galeria do produto">
+            <div className="rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-3 shadow-[0_8px_24px_rgba(8,59,102,0.06)] sm:p-4">
+              {images.length > 0 ? <ImageGallery images={images} /> : (
+                <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-[var(--color-surface-soft)] text-sm font-medium text-[var(--color-text-muted)]">Imagem indisponível</div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Right: Product Info */}
-          <div className="flex flex-col lg:sticky lg:top-24">
-            <div className="mb-5">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="px-2 py-1 bg-[var(--color-surface-soft)] text-[var(--color-primary)] text-xs font-bold uppercase tracking-wider rounded">
-                    {brand}
-                  </span>
-                  <span className="px-2 py-1 bg-[var(--color-background)] border border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-mono rounded">
-                    Ref: {sku}
-                  </span>
-                </div>
-                <FavoriteButton productId={product.id} productTitle={productTitle} className="shrink-0" />
+          <section className="min-w-0 lg:col-span-4" aria-labelledby="product-title">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded bg-[var(--color-surface-soft)] px-2 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">{brand}</span>
+                {sku && <span className="rounded border border-[var(--color-border)] bg-white px-2 py-1 font-mono text-xs text-[var(--color-text-muted)]">Ref: {sku}</span>}
               </div>
-
-              <h1 className="mb-3 text-2xl font-bold leading-tight text-[var(--color-navy)] md:text-3xl lg:text-4xl">
-                {productTitle}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-full border ${availabilityClass}`}>
-                  <span className="w-2 h-2 rounded-full bg-current"></span>
-                  {availabilityLabel}
-                </span>
-                {category && (
-                  <span className="text-sm text-[var(--color-text-muted)]">
-                    Categoria: <strong className="text-[var(--color-text)] font-medium">{category}</strong>
-                  </span>
-                )}
-              </div>
+              <FavoriteButton productId={product.id} productTitle={productTitle} className="shrink-0" />
             </div>
+            <h1 id="product-title" className="mt-4 text-3xl font-bold leading-tight text-[var(--color-navy)] sm:text-4xl">{productTitle}</h1>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <ProductRating productId={product.id} />
+              <a href="#reviews-title" className="text-sm font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Ver avaliações</a>
+              {category && <span className="text-sm text-[var(--color-text-muted)]">Categoria: <strong className="font-medium text-[var(--color-text)]">{category}</strong></span>}
+            </div>
+            <div className={`mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${available ? "border-[#ceead6] bg-[#e6f4ea] text-[#137333]" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{availabilityLabel}
+            </div>
+            {product.options?.length ? (
+              <div className="mt-7 border-t border-[var(--color-border)] pt-5">
+                <h2 className="text-sm font-bold text-[var(--color-navy)]">Escolha as opções do produto</h2>
+                <p className="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">Preço e disponibilidade são atualizados conforme a variante selecionada.</p>
+              </div>
+            ) : null}
+          </section>
 
-            {/* Price & Actions Box */}
-            <div className="mb-6 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white p-5 shadow-sm md:p-6">
+          <aside className="min-w-0 lg:col-span-3 lg:sticky lg:top-24" aria-label="Compra do produto" data-testid="purchase-panel">
+            <div className="min-w-0 rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-5 shadow-[0_12px_30px_rgba(8,59,102,0.1)]">
               <ProductActions product={product} region={region!} />
               <ShippingEstimate />
-
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-4 border-t border-[var(--color-border)] pt-4 text-sm text-[var(--color-text-muted)]">
-                                   <button
-                    type="button"
-                    onClick={async () => {
-                      const shareData = { title: productTitle, url: window.location.href }
-                      if (navigator.share) {
-                        await navigator.share(shareData).catch(() => undefined)
-                        return
-                      }
-                      await navigator.clipboard?.writeText(window.location.href)
-                      toast.success("Link do produto copiado")
-                    }}
-                    className="flex items-center gap-1.5 rounded-sm transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                  >
-                    <Share2 className="h-4 w-4" aria-hidden="true" />
-                    Compartilhar
-                  </button>
+              <div className="mt-5 flex items-center justify-between border-t border-[var(--color-border)] pt-4 text-sm text-[var(--color-text-muted)]">
+                <span>Atendimento especializado</span>
+                <button type="button" onClick={async () => {
+                  const shareData = { title: productTitle, url: window.location.href }
+                  if (navigator.share) { await navigator.share(shareData).catch(() => undefined); return }
+                  await navigator.clipboard?.writeText(window.location.href)
+                  toast.success("Link do produto copiado")
+                }} className="inline-flex min-h-11 items-center gap-1.5 rounded px-2 font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
+                  <Share2 className="h-4 w-4" aria-hidden="true" />Compartilhar
+                </button>
               </div>
             </div>
+          </aside>
+        </div>
 
-            {/* Aviso Técnico Discreto se necessário */}
-            <div className="mb-6 rounded-r-md border-l-4 border-[var(--color-primary)] bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-navy)]">
-              A seleção, aplicação, armazenamento e manuseio de fluidos refrigerantes e equipamentos devem seguir as especificações do fabricante e as normas de segurança aplicáveis.
-            </div>
-
-            {/* Tabs Content */}
-            <div className="mt-auto">
-              <div className="flex gap-6 overflow-x-auto border-b border-[var(--color-border)]" role="tablist" aria-label="Informações do produto">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setActiveTab(tab)}
-                    role="tab"
-                    aria-selected={activeTab === tab}
-                    aria-controls={`product-tabpanel-${tab}`}
-                    id={`product-tab-${tab}`}
-                    className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
-                      activeTab === tab
-                        ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-                        : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-navy)]"
-                    }`}
-                  >
-                    {tab === "description" ? "Descrição" : tab === "specs" ? "Especificações" : "Documentos"}
-                  </button>
-                ))}
-              </div>
-
-              <div className="min-h-[120px] py-5">
-                {activeTab === "description" && (
-                  <div id="product-tabpanel-description" role="tabpanel" aria-labelledby="product-tab-description" className="prose prose-sm max-w-none text-[var(--color-text)]">
-                    {product.description ? (
-                      <p className="leading-relaxed whitespace-pre-line">{decodeProductText(product.description)}</p>
-                    ) : (
-                      <p className="text-[var(--color-text-muted)] italic">Nenhuma descrição detalhada disponível para este produto.</p>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "specs" && (
-                  <div id="product-tabpanel-specs" role="tabpanel" aria-labelledby="product-tab-specs" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {specs.length > 0 ? (
-                      specs.map(({ label, value }) => (
-                        <div key={label} className="bg-[var(--color-surface-soft)] p-3 rounded-md border border-[var(--color-border)]">
-                          <span className="block text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</span>
-                          <span className="block text-sm text-[var(--color-navy)]">{value}</span>
-                        </div>
-                      ))
-                    ) : (
-                       <p className="text-[var(--color-text-muted)] italic text-sm">Ficha técnica não disponível no momento.</p>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "documents" && documents.length > 0 && (
-                  <div id="product-tabpanel-documents" role="tabpanel" aria-labelledby="product-tab-documents" className="flex flex-col gap-3">
-                    <p className="text-sm text-[var(--color-text-muted)] mb-2">Manuais, FISPQ e documentações técnicas:</p>
-                    <div className="p-4 bg-white border border-[var(--color-border)] rounded-md flex items-center justify-between group hover:border-[var(--color-primary)] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-[#ffeceb] text-[#d93025] flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        </div>
-                        <div>
-                          <span className="block text-sm font-semibold text-[var(--color-navy)] group-hover:text-[var(--color-primary)] transition-colors">Manual do Fabricante</span>
-                          <span className="block text-xs text-[var(--color-text-muted)]">PDF • 2.4 MB</span>
-                        </div>
-                      </div>
-                      <a href={documents[0]?.url} target="_blank" rel="noopener noreferrer" aria-label="Abrir documento técnico" className="text-[var(--color-primary)] p-2 rounded-full hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-                        <svg xmlns="http://www.w3.org/w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
+        <div className="mt-8 grid gap-6" data-testid="product-detail-panels">
+          {publicSpecs.length > 0 && <DetailPanel title="Principais características">
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {publicSpecs.slice(0, 6).map(({ label, value }) => <li key={label} className="rounded-lg bg-[var(--color-surface-soft)] px-4 py-3"><span className="block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</span><span className="mt-1 block text-sm font-medium text-[var(--color-navy)]">{value}</span></li>)}
+            </ul>
+          </DetailPanel>}
+          <DetailPanel title="Descrição">
+            {product.description ? <p className="max-w-5xl whitespace-pre-line text-sm leading-7 text-[var(--color-text)] sm:text-base">{decodeProductText(product.description)}</p> : <p className="text-sm italic text-[var(--color-text-muted)]">Nenhuma descrição detalhada disponível para este produto.</p>}
+          </DetailPanel>
+          {publicSpecs.length > 0 && <DetailPanel title="Ficha técnica">
+            <div className="overflow-x-auto"><table className="w-full min-w-[360px] border-separate border-spacing-y-1 text-left text-sm"><tbody>{publicSpecs.map(({ label, value }) => <tr key={label}><th scope="row" className="w-1/3 rounded-l-md bg-[var(--color-surface-soft)] px-4 py-3 font-semibold text-[var(--color-navy)]">{label}</th><td className="rounded-r-md bg-[var(--color-background)] px-4 py-3 text-[var(--color-text)]">{value}</td></tr>)}</tbody></table></div>
+          </DetailPanel>}
+          {documents.length > 0 && <DetailPanel title="Documentos técnicos">
+            <ul className="grid gap-3 sm:grid-cols-2">{documents.map((document) => <li key={document.url}><a href={document.url} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-lg border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"><FileText className="h-5 w-5" aria-hidden="true" />{document.name}</a></li>)}</ul>
+          </DetailPanel>}
+          <aside className="flex items-start gap-3 rounded-[var(--radius-card)] border border-[var(--color-primary)]/15 bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-[var(--color-navy)]">
+            <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]" aria-hidden="true" />
+            A seleção, aplicação, armazenamento e manuseio de fluidos refrigerantes e equipamentos devem seguir as especificações do fabricante e as normas de segurança aplicáveis.
+          </aside>
         </div>
       </div>
-    </div>
+      {region && <RelatedProducts product={product} regionId={region.id} />}
+      <ProductReviews productId={product.id} productTitle={productTitle} />
+    </main>
   )
 }
 

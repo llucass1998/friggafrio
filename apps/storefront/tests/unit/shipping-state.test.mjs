@@ -74,7 +74,7 @@ test("delivery copy projects each official server field without inventing fallba
 
 test("official shipping boundaries keep destinations above 100km unavailable", () => {
   const source = readFileSync(new URL("../../../backend/src/utils/commercial-shipping-policy.ts", import.meta.url), "utf8")
-  assert.match(source, /distanceKm <= \(rate\.maxDistanceKm/)
+  assert.match(source, /distanceKm > 100/)
   assert.match(source, /maxDistanceKm: 100/)
 })
 
@@ -82,4 +82,21 @@ test("shipping selection is scoped to options returned for the cart", () => {
   assert.equal(hasShippingOption([flatOption], "ship_flat"), true)
   assert.equal(hasShippingOption([flatOption], "ship_other"), false)
   assert.equal(hasShippingOption(undefined, "ship_flat"), false)
+})
+
+test("checkout keeps the three delivery modalities visible in fixed order", () => {
+  const source = readFileSync(new URL("../../src/components/checkout-delivery-step.tsx", import.meta.url), "utf8")
+  assert.match(source, /pickup:\s*0/)
+  assert.match(source, /car:\s*1/)
+  assert.match(source, /motoboy:\s*2/)
+  assert.match(source, /disabled=\{!option\.available \|\| \(option\.modality !== "car" && !option\.shipping_option_id\)\}/)
+  assert.match(source, /visibleShippingPlaceholders/)
+  assert.doesNotMatch(source, /estimateShipping/)
+  assert.doesNotMatch(source, /setOptions\(\[\]\)/)
+})
+
+test("shipping cards render the backend reason instead of hiding unavailable modalities", () => {
+  const source = readFileSync(new URL("../../src/components/shipping-option-card.tsx", import.meta.url), "utf8")
+  assert.match(source, /!option\.available && option\.reason/)
+  assert.match(source, /Indisponível/)
 })

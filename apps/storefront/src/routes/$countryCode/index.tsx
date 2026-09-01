@@ -4,6 +4,7 @@ import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { storeConfig } from "@/config/store"
+import { absoluteSiteUrl, pageMeta } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/")({
   loader: async ({ params, context }) => {
@@ -39,45 +40,17 @@ export const Route = createFileRoute("/$countryCode/")({
       region,
     }
   },
-  head: () => {
+  head: ({ loaderData }) => {
+    const countryCode = loaderData?.countryCode || "br"
     const title = `${storeConfig.name} | Refrigeração e Climatização`
     const description = storeConfig.description
 
-    return {
-      meta: [
-        {
-          title,
-        },
-        {
-          name: "description",
-          content: description,
-        },
-        {
-          property: "og:title",
-          content: title,
-        },
-        {
-          property: "og:description",
-          content: description,
-        },
-        {
-          property: "og:type",
-          content: "website",
-        },
-        {
-          property: "twitter:card",
-          content: "summary_large_image",
-        },
-        {
-          property: "twitter:title",
-          content: title,
-        },
-        {
-          property: "twitter:description",
-          content: description,
-        },
-      ]
-    }
+    return pageMeta({
+      title,
+      description,
+      path: `/${countryCode || "br"}`,
+      image: absoluteSiteUrl("/images/brand/logo-friggafrio-optimized.webp"),
+    })
   },
   component: Home,
 })

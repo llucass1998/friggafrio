@@ -28,7 +28,9 @@ Para SSR, a autenticação ainda é delegada primeiramente pro cliente fazer fet
 - **CSRF**: As mutações no frontend são protegidas com checagens de `Origin` (`protectSessionMutation` e `requireTrustedAuthOrigin`).
 
 ## Google & SSO
-**BLOQUEADO**. No momento, a autenticação Google via SSR falhava ou introduzia complexidade desnecessária porque abria o backend com um endpoint solto para um ID token sem provider real do Medusa V2. Bloqueado até haver provider homologado.
+O Storefront usa Authorization Code + PKCE com `state` e `nonce` guardados em sessão HttpOnly. O backend troca o código, valida assinatura RS256 via JWKS, issuer, audience, expiração e e-mail verificado antes de vincular a identidade Google a uma identidade `emailpass` de cliente existente. O callback consome o estado antes da rede e valida `return_to` contra `STOREFRONT_URL`.
+
+O provider nativo `@medusajs/auth-google` é registrado somente quando `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `GOOGLE_OAUTH_REDIRECT_URI` estão presentes. Sem essas credenciais, os endpoints retornam `GOOGLE_OIDC_EXTERNAL_CONFIGURATION_REQUIRED` e nenhum login externo é simulado.
 
 ## Convites
 O aceite de convite foi refatorado para um Medusa Workflow atômico (`acceptEmployeeInviteWorkflow`), que destrói quaisquer criações parciais se houver erro ao registrar o AuthIdentity ou linkar o Company.

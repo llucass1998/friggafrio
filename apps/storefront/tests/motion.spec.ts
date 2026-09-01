@@ -11,7 +11,7 @@ test.describe("storefront motion interactions", () => {
 
     const drawer = page.getByTestId("mobile-navigation-drawer")
     await expect(drawer).toBeVisible()
-    await expect(drawer.getByRole("link", { name: "Produtos" })).toBeVisible()
+    await expect(drawer.getByRole("link", { name: "Produtos", exact: true })).toBeVisible()
     await expect(drawer.getByRole("link", { name: "Nossa Loja" })).toBeVisible()
 
     await page.getByTestId("mobile-navigation-overlay").click({ position: { x: 380, y: 420 } })
@@ -23,7 +23,8 @@ test.describe("storefront motion interactions", () => {
     await expect(drawer).toBeHidden()
   })
 
-  test("desktop Products dropdown uses click, route, and Escape close", async ({ page }) => {
+  test("desktop Products dropdown uses click, route, and Escape close", async ({ page, isMobile }) => {
+    test.skip(isMobile, "desktop navigation is covered by the Chromium project")
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto("/br")
     await page.waitForTimeout(750)
@@ -67,5 +68,19 @@ test.describe("storefront motion interactions", () => {
     )
 
     expect(transitionDuration).toBeLessThanOrEqual(0.01)
+  })
+
+  test("mobile accessibility panel returns focus to a visible trigger", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto("/br")
+    await page.waitForTimeout(750)
+
+    await page.getByTestId("mobile-navigation-trigger").click()
+    await page.getByTestId("mobile-navigation-drawer").getByRole("button", { name: "Acessibilidade", exact: true }).click()
+    await expect(page.getByRole("dialog", { name: "Recursos de Acessibilidade" })).toBeVisible()
+
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog", { name: "Recursos de Acessibilidade" })).toBeHidden()
+    await expect(page.getByTestId("mobile-navigation-trigger")).toBeFocused()
   })
 })

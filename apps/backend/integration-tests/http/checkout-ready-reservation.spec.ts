@@ -40,10 +40,14 @@ medusaIntegrationTestRunner({
         const container = getContainer()
         const cart = await (container.resolve(Modules.CART) as unknown as {
           createCarts: (input: Record<string, unknown>) => Promise<{ id: string }>
-        }).createCarts({ currency_code: "brl" })
+        }).createCarts({ currency_code: "brl", customer_id: "customer_legacy_boundary" })
         const res = responseCapture()
 
-        await checkoutReady({ params: { id: cart.id }, scope: container } as never, res as never)
+        await checkoutReady({
+          params: { id: cart.id },
+          auth_context: { actor_id: "customer_legacy_boundary" },
+          scope: container,
+        } as never, res as never)
 
         expect(res.statusCode).toBe(409)
         expect(res.body).toMatchObject({ checkout_ready: false, code: "checkout_preparation_required" })

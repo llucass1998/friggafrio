@@ -19,6 +19,10 @@ const makeCart = () => ({
     first_name: "Guest", last_name: "Buyer", address_1: "Rua A, 10",
     city: "Sao Paulo", postal_code: "01310-100", country_code: "br", province: "br-sp",
   },
+  billing_address: {
+    first_name: "Guest", last_name: "Buyer", address_1: "Rua A, 10",
+    city: "Sao Paulo", postal_code: "01310-100", country_code: "br", province: "br-sp",
+  },
   items: [{ id: "li_1", quantity: 1, unit_price: 100, variant: { id: "variant_1" } }],
   shipping_methods: [{ shipping_option_id: "so_1", amount: 0 }],
   item_subtotal: 100,

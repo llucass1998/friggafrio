@@ -9,6 +9,7 @@ export interface AccessibilityContextData {
   ) => void
   resetPreferences: () => void
   togglePanel: () => void
+  setPanelOpen: (open: boolean) => void
   speak: (text: string) => void
   pauseSpeech: () => void
   resumeSpeech: () => void

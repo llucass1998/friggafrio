@@ -56,13 +56,71 @@ describe("server shipping estimate route", () => {
     } as never, res as never)
 
     expect(res.statusCode).toBe(200)
-    expect(res.body).toMatchObject({ status: "ready", options: [{ id: "FRIGGAFRIO_EXPRESS_0_10", amount: 80 }] })
+    expect(res.body).toMatchObject({ status: "ready", options: [{ id: "FRIGGAFRIO_PICKUP_STORE_1", amount: 0 }, { id: "FRIGGAFRIO_CAR_CENTRAL", amount: 0 }, { id: "FRIGGAFRIO_EXPRESS_0_10", amount: 80 }] })
   })
 
-  it("fails closed when the destination cannot be resolved", async () => {
+  it("returns a persisted shipping option id for cart selection", async () => {
+    const cart = makeCart()
+    const query = {
+      graph: jest.fn().mockImplementation(async ({ entity }: { entity: string }) => {
+        if (entity === "cart") return { data: [cart] }
+        if (entity === "shipping_option") return { data: [
+          { id: "so_pickup", data: { commercial_shipping_option: "FRIGGAFRIO_PICKUP_STORE_1" } },
+          { id: "so_car", data: { commercial_shipping_option: "FRIGGAFRIO_CAR_CENTRAL" } },
+          { id: "so_express", data: { commercial_shipping_option: "FRIGGAFRIO_EXPRESS_0_10" } },
+        ] }
+        return { data: [] }
+      }),
+    }
+    const res = response()
+    await POST({
+      body: { cart_id: cart.id },
+      scope: { resolve: (key: unknown) => key === ContainerRegistrationKeys.QUERY ? query : undefined },
+    } as never, res as never)
+
+    expect(res.body).toMatchObject({
+      options: [
+        { id: "FRIGGAFRIO_PICKUP_STORE_1", shipping_option_id: "so_pickup" },
+        { id: "FRIGGAFRIO_CAR_CENTRAL", shipping_option_id: "so_car" },
+        { id: "FRIGGAFRIO_EXPRESS_0_10", shipping_option_id: "so_express" },
+      ],
+    })
+  })
+
+  it("keeps all three cards visible when the destination cannot be resolved", async () => {
     const res = response()
     await POST({ body: { postal_code: "01310-100" }, scope: { resolve: jest.fn() } } as never, res as never)
     expect(res.statusCode).toBe(422)
-    expect(res.body).toMatchObject({ status: "unavailable", reason: "ADDRESS_NOT_RESOLVABLE", options: [] })
+    expect(res.body).toMatchObject({
+      status: "unavailable",
+      reason: "ADDRESS_NOT_RESOLVABLE",
+      options: [
+        { modality: "pickup", available: true, amount: 0 },
+        { modality: "car", available: false },
+        { modality: "motoboy", available: false },
+      ],
+    })
+  })
+
+  it("blocks non-SP delivery before consulting the route provider", async () => {
+    const cart = makeCart()
+    cart.shipping_address.province = "RJ"
+    const query = { graph: jest.fn().mockResolvedValue({ data: [cart] }) }
+    const res = response()
+    await POST({
+      body: { cart_id: cart.id },
+      scope: { resolve: (key: unknown) => key === ContainerRegistrationKeys.QUERY ? query : undefined },
+    } as never, res as never)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toMatchObject({
+      region: "OUT_OF_COVERAGE",
+      options: [
+        { modality: "pickup", available: true, amount: 0 },
+        { modality: "car", available: false, amount: 0 },
+        { modality: "motoboy", available: false, amount: 0 },
+      ],
+    })
+    expect(global.fetch).not.toHaveBeenCalled()
   })
 })

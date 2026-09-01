@@ -9,11 +9,19 @@ RUN corepack enable
 
 WORKDIR /app
 
+# Build-time public origins keep config validation deterministic. Runtime
+# secrets and deployment-specific values are supplied by the environment.
+ARG STOREFRONT_URL=http://localhost:5173
+ARG STORE_CORS=http://localhost:5173
+ENV STOREFRONT_URL=$STOREFRONT_URL
+ENV STORE_CORS=$STORE_CORS
+
 # Stage 1: Dependências
 FROM base AS builder
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/backend/package.json ./apps/backend/
-RUN pnpm install --frozen-lockfile
+# Git hooks are development-only; omit lifecycle scripts in the image build.
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Build
 COPY . .
@@ -32,7 +40,7 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 COPY --from=builder /app/apps/backend/medusa-config.ts ./apps/backend/
 COPY --from=builder /app/apps/backend/.medusa ./apps/backend/.medusa/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 USER nodejs
 

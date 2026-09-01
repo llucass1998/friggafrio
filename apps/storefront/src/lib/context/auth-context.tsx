@@ -1,25 +1,18 @@
 import { useState, useEffect, useCallback, ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useLocation } from "@tanstack/react-router"
 import { sdk } from "@/lib/medusa"
 import { HttpTypes } from "@medusajs/types"
 import { getMe, Employee } from "@/lib/data/me"
 import { AuthContext } from "@/lib/context/auth-context-value"
 import { resetFavoritesForLogout } from "@/lib/hooks/use-favorites"
 import { clearGuestCep } from "@/lib/cep"
+import { clearCheckoutRuntimeState } from "@/lib/utils/checkout-runtime-state"
+import { getStoredCart } from "@/lib/utils/cart"
+import { transferGuestCartToCustomer } from "@/lib/auth/cart-session"
 
 // This is only a local hint. The backend remains the authority for the session.
 const AUTH_STATE_KEY = "auth_state"
-
-const readAuthHint = (): boolean => {
-  if (typeof window === "undefined") {
-    return false
-  }
-
-  return (
-    sessionStorage.getItem(AUTH_STATE_KEY) === "authenticated" ||
-    localStorage.getItem(AUTH_STATE_KEY) === "authenticated"
-  )
-}
 
 const writeAuthHint = (authenticated: boolean): void => {
   if (typeof window === "undefined") {
@@ -31,8 +24,19 @@ const writeAuthHint = (authenticated: boolean): void => {
   localStorage.setItem(AUTH_STATE_KEY, value)
 }
 
+/** A repeated logout may legitimately race with an already-cleared session. */
+export const isAlreadyLoggedOutError = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return false
+  }
+
+  const status = (error as { status?: unknown }).status
+  return status === 401 || status === 404
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
+  const location = useLocation()
   // SSR-safe state initialization without relying on window/sessionStorage during render
   // This ensures the server and initial client render always match
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -40,6 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [isAdminSession, setIsAdminSession] = useState(false)
+  const authState = isLoading
+    ? "loading"
+    : isAuthenticated
+      ? "authenticated"
+      : "guest"
 
   const fetchCustomer = useCallback(async (): Promise<boolean> => {
     try {
@@ -62,6 +71,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Not a B2B customer or error fetching employee data
       }
 
+      // OAuth callbacks establish the server session through a browser
+      // redirect, so there is no login() call to perform cart handoff. The
+      // same idempotent ownership check used by password login covers that
+      // path without trusting local storage as an authority.
+      try {
+        await transferGuestCartToCustomer(getStoredCart(), customer.id, {
+          retrieve: async (cartId) => {
+            const { cart } = await sdk.store.cart.retrieve(cartId, { fields: "id,customer_id" })
+            return { id: cart.id, customer_id: cart.customer_id ?? null }
+          },
+          transfer: async (cartId) => {
+            const { cart } = await sdk.store.cart.transferCart(cartId, { fields: "id,customer_id" })
+            return { id: cart.id, customer_id: cart.customer_id ?? null }
+          },
+        })
+      } catch {
+        // A cart owned by another account stays untouched and is revalidated
+        // by the server on the next checkout request.
+      }
+
       // Batch all state updates together so React renders once with
       // the complete picture (customer + employee + authenticated).
       setCustomer(customer)
@@ -74,8 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomer(null)
       setEmployee(null)
       return false
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
@@ -99,25 +126,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(false)
       writeAuthHint(false)
       return false
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    // Guest pages do not need an authenticated customer request. Only probe
-    // the protected endpoint when a prior successful login left a local hint.
-    if (!readAuthHint()) {
+  const probeSession = useCallback(async ({ includeAdmin = true }: { includeAdmin?: boolean } = {}): Promise<"customer" | "admin" | "guest"> => {
+    setIsLoading(true)
+    if (await fetchCustomer()) {
       setIsLoading(false)
+      return "customer"
+    }
+    if (includeAdmin && await fetchAdminSession()) {
+      setIsLoading(false)
+      return "admin"
+    }
+    setCustomer(null)
+    setEmployee(null)
+    setIsAdminSession(false)
+    setIsAuthenticated(false)
+    writeAuthHint(false)
+    setIsLoading(false)
+    return "guest"
+  }, [fetchAdminSession, fetchCustomer])
+
+  const requiresImmediateSession = /\/(?:checkout|account(?:\/|$)|employees(?:\/|$)|quotes(?:\/|$)|order(?:\/|$))/.test(location.pathname)
+
+  useEffect(() => {
+    if (requiresImmediateSession) {
+      void probeSession()
       return
     }
 
-    void (async () => {
-      if (!(await fetchCustomer())) {
-        await fetchAdminSession()
-      }
-    })()
-  }, [fetchAdminSession, fetchCustomer])
+    // Public pages can paint their catalog before their optional session probe.
+    // Checkout and account routes still verify the Medusa session immediately.
+    const deferProbe = () => void probeSession({ includeAdmin: false })
+    const idleCallback = window.requestIdleCallback?.(deferProbe, { timeout: 250 })
+    const timeout = idleCallback === undefined ? window.setTimeout(deferProbe, 100) : undefined
+
+    return () => {
+      if (idleCallback !== undefined) window.cancelIdleCallback?.(idleCallback)
+      if (timeout !== undefined) window.clearTimeout(timeout)
+    }
+  }, [probeSession, requiresImmediateSession])
 
   const login = async (email: string, password: string): Promise<"customer" | "admin"> => {
     await sdk.client.fetch("/auth/unified/emailpass", {
@@ -125,14 +174,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: { email, password },
     })
 
-    if (await fetchAdminSession()) {
-      return "admin"
+    const actor = await probeSession()
+    if (actor === "guest") throw new Error("Não foi possível validar a sessão de cliente.")
+    if (actor === "customer") {
+      const authenticatedCustomer = await sdk.store.customer.retrieve({ fields: "id" })
+      await transferGuestCartToCustomer(getStoredCart(), authenticatedCustomer.customer.id, {
+        retrieve: async (cartId) => {
+          const { cart } = await sdk.store.cart.retrieve(cartId, { fields: "id,customer_id" })
+          return { id: cart.id, customer_id: cart.customer_id ?? null }
+        },
+        transfer: async (cartId) => {
+          const { cart } = await sdk.store.cart.transferCart(cartId, { fields: "id,customer_id" })
+          return { id: cart.id, customer_id: cart.customer_id ?? null }
+        },
+      })
     }
-
-    if (!(await fetchCustomer())) {
-      throw new Error("Não foi possível validar a sessão de cliente.")
-    }
-    return "customer"
+    return actor
   }
 
   const logout = async () => {
@@ -141,11 +198,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("medusa_auth_token")
       }
       await sdk.auth.logout()
+    } catch (error) {
+      // Keep logout idempotent when the server has already invalidated the
+      // session, while still surfacing transport/server failures.
+      if (!isAlreadyLoggedOutError(error)) {
+        throw error
+      }
     } finally {
       resetFavoritesForLogout()
       clearGuestCep()
       // Private account responses must never be reused by the next session.
       queryClient.clear()
+      // Checkout preparation and method selections are identity-scoped and
+      // must not survive a logout or account switch.
+      clearCheckoutRuntimeState()
       // Update cached state so navigation doesn't show loading
       writeAuthHint(false)
       setCustomer(null)
@@ -167,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
+        authState,
         isAuthenticated,
         isLoading,
         customer,

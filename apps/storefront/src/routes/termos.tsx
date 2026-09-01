@@ -1,15 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
 import TermosPage from "@/pages/support/termos"
+import { pageMeta } from "@/lib/seo"
 
 export const Route = createFileRoute("/termos")({
   component: TermosPage,
-  head: () => ({
-    meta: [
-      { title: "Termos de Uso | FriggaFrio" },
-      {
-        name: "description",
-        content: "Termos de Uso FriggaFrio.",
-      },
-    ],
+  head: () => pageMeta({
+    title: "Termos de Uso | FriggaFrio",
+    description: "Termos de Uso FriggaFrio.",
+    path: "/termos",
   }),
 })

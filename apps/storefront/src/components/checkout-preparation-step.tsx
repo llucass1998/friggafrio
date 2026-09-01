@@ -1,24 +1,28 @@
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/ui/price"
 import { usePrepareCartForPayment } from "@/lib/hooks/use-checkout"
-import { CheckoutPrepareError, type CheckoutPreparedSummary } from "@/lib/data/checkout/prepare"
+import { CheckoutPrepareError, type CheckoutCustomerPayload, type CheckoutPreparedSummary } from "@/lib/data/checkout/prepare"
 import { HttpTypes } from "@medusajs/types"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 interface CheckoutPreparationStepProps {
   cart: HttpTypes.StoreCart
   onBack: () => void
+  onNext: () => void
   onPrepared: (summary: CheckoutPreparedSummary) => void
   onInvalidPreparation: () => void
   prepared: CheckoutPreparedSummary | null
+  customer?: CheckoutCustomerPayload
 }
 
 const CheckoutPreparationStep = ({
   cart,
   onBack,
+  onNext,
   onPrepared,
   onInvalidPreparation,
   prepared,
+  customer,
 }: CheckoutPreparationStepProps) => {
   const prepareMutation = usePrepareCartForPayment()
   const attemptedCartId = useRef<string | null>(null)
@@ -29,6 +33,7 @@ const CheckoutPreparationStep = ({
     try {
       const summary = await prepareMutation.mutateAsync({
         shippingOptionId: cart.shipping_methods?.[0]?.shipping_option_id || undefined,
+        customer,
       })
       onPrepared(summary)
     } catch (error) {
@@ -38,7 +43,7 @@ const CheckoutPreparationStep = ({
         onInvalidPreparation()
       }
     }
-  }, [cart.shipping_methods, onInvalidPreparation, onPrepared, prepareMutation])
+  }, [cart.shipping_methods, customer, onInvalidPreparation, onPrepared, prepareMutation])
 
   useEffect(() => {
     if (prepared?.cartId === cart.id || attemptedCartId.current === cart.id) return
@@ -122,8 +127,8 @@ const CheckoutPreparationStep = ({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Button type="button" variant="secondary" onClick={onBack}>Voltar</Button>
-        <Button type="button" disabled aria-disabled="true" title="Disponível na próxima etapa">
-          Continuar para pagamento (em breve)
+        <Button type="button" onClick={onNext}>
+          Continuar para pagamento
         </Button>
       </div>
     </div>

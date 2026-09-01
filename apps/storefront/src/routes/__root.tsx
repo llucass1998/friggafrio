@@ -12,6 +12,11 @@ import {
 import { lazy } from "react"
 import { Toaster } from "sonner"
 import appCss from "@/styles/app.css?url"
+import {
+  organizationStructuredData,
+  structuredDataScript,
+  websiteStructuredData,
+} from "@/lib/seo"
 
 const NotFound = lazy(() => import("@/components/not-found"))
 
@@ -47,8 +52,12 @@ export const Route = createRootRouteWithContext<{
         name: "viewport",
         content: "width=device-width, initial-scale=1.0",
       },
+      { property: "og:locale", content: "pt_BR" },
     ],
-    scripts: [],
+    scripts: [
+      structuredDataScript(organizationStructuredData()),
+      structuredDataScript(websiteStructuredData()),
+    ],
   }),
   notFoundComponent: NotFound,
   component: RootComponent,

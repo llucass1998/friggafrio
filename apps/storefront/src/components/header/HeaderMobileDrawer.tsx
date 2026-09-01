@@ -1,11 +1,12 @@
 import { createPortal } from "react-dom"
 import { Link, useParams } from "@tanstack/react-router"
-import { Menu, X } from "lucide-react"
+import { Accessibility, Menu, X } from "lucide-react"
 import { type TransitionEvent, useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
+import { useAccessibility } from "@/components/accessibility/accessibility-context"
 
 export function HeaderMobileDrawer() {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,6 +19,7 @@ export function HeaderMobileDrawer() {
   const drawerRef = useRef<HTMLDivElement>(null)
   const previousOverflowRef = useRef("")
   const categoryFrameRef = useRef<number | null>(null)
+  const { setPanelOpen } = useAccessibility()
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -155,7 +157,7 @@ export function HeaderMobileDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Menu principal"
-        className={`motion-mobile-drawer absolute inset-y-0 left-0 flex w-[min(85vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
+        className={`motion-mobile-drawer absolute inset-y-0 left-0 flex w-[min(90vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
         data-state={isOpen ? "open" : "closed"}
         data-testid="mobile-navigation-drawer"
         onTransitionEnd={handleDrawerTransitionEnd}
@@ -280,6 +282,19 @@ export function HeaderMobileDrawer() {
                     Central de Ajuda
                   </Link>
                 </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeDrawer()
+                      setPanelOpen(true)
+                    }}
+                    className="flex min-h-11 w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                  >
+                    <Accessibility className="h-5 w-5 text-[var(--color-primary)]" aria-hidden="true" />
+                    Acessibilidade
+                  </button>
+                </li>
               </ul>
             </div>
           </nav>
@@ -293,7 +308,7 @@ export function HeaderMobileDrawer() {
       <button
         ref={triggerRef}
         type="button"
-        className="-ml-2 flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
         onClick={openDrawer}
         aria-label="Abrir menu mobile"
         aria-expanded={isOpen}

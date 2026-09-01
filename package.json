@@ -11,8 +11,12 @@
     "backend:dev": "turbo dev --filter=backend",
     "storefront:dev": "turbo dev --filter=storefront",
     "security:secrets": "node scripts/security/check-secrets.mjs",
+    "security:bundle-scan": "node scripts/bundle-scan.mjs",
     "policy:check": "node scripts/project-policy-check.mjs",
     "source:sync:check": "node scripts/source-sync-policy-check.mjs",
+    "source:integrity:snapshot": "node scripts/source-integrity-guard.mjs snapshot",
+    "source:integrity:verify": "node scripts/source-integrity-guard.mjs verify",
+    "source:integrity:run": "node scripts/source-integrity-guard.mjs run",
     "runtime:check": "node scripts/runtime-policy-check.mjs",
     "release:check": "node scripts/release-policy-check.mjs",
     "deploy:preflight": "node scripts/deploy/require-wsl-host.mjs preflight",
@@ -44,8 +48,20 @@
   },
   "pnpm": {
     "overrides": {
+      "fast-xml-parser": "5.7.0",
+      "flatted": "3.4.4",
+      "h3": "2.0.1-rc.15",
+      "h3-v2": "npm:h3@2.0.1-rc.18",
+      "js-yaml": "3.15.1",
+      "lodash": "4.18.0",
+      "lodash-es": "4.18.0",
+      "minimatch": "9.0.7",
+      "next": "16.2.11",
+      "postcss": "8.5.23",
       "react": "19.1.1",
-      "react-dom": "19.1.1"
+      "react-dom": "19.1.1",
+      "sharp": "0.35.3",
+      "ws": "8.21.0"
     }
   },
   "dependencies": {

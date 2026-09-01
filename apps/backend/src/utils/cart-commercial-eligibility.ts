@@ -77,10 +77,14 @@ export function resolveCommercialState(line: CommercialLine): CommercialLineResu
     return { lineId: line.id, state: "QUOTE_ONLY", reason: "QUOTE_ONLY" }
   }
 
+  // Decimal columns can arrive from the Medusa graph as numeric strings.
+  // Normalize only for validation; persisted commercial values remain server-owned.
+  const numericUnitPrice = typeof line.unit_price === "number"
+    ? line.unit_price
+    : Number(line.unit_price)
   const pricePending = metadataValue(line, "price_pending") === true
-    || typeof line.unit_price !== "number"
-    || !Number.isFinite(line.unit_price)
-    || line.unit_price <= 0
+    || !Number.isFinite(numericUnitPrice)
+    || numericUnitPrice <= 0
   if (pricePending) {
     return { lineId: line.id, state: "PRICE_PENDING", reason: "PRICE_PENDING" }
   }

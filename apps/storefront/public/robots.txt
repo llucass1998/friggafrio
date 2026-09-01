@@ -5,6 +5,15 @@ Disallow: /*/checkout/
 Disallow: /*/cart
 Disallow: /*/order/
 Disallow: /*/quotes/
+Disallow: /*/favorites
+Disallow: /*/employees
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account/
+Disallow: /order/
+Disallow: /quotes/
+Disallow: /favorites
+Disallow: /employees
 
 # Specific rules for Googlebot
 User-agent: Googlebot
@@ -14,5 +23,14 @@ Disallow: /*/checkout/
 Disallow: /*/cart
 Disallow: /*/order/
 Disallow: /*/quotes/
+Disallow: /*/favorites
+Disallow: /*/employees
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account/
+Disallow: /order/
+Disallow: /quotes/
+Disallow: /favorites
+Disallow: /employees
 
 Sitemap: https://friggafrio.com.br/sitemap.xml

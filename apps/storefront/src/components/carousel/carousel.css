@@ -37,7 +37,9 @@
 }
 
 .ff-product-slide {
-  flex-basis: 100%;
+  /* Include the inter-slide gap in the mobile calculation so the second
+     card ends at the viewport edge instead of being visibly clipped. */
+  flex-basis: calc((100% - var(--ff-carousel-gap)) / 2);
 }
 
 .ff-team-slide {

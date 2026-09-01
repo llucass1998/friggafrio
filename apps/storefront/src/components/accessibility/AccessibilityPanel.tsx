@@ -8,9 +8,14 @@ import {
   Ear, AlignLeft, EyeOff
 } from "lucide-react"
 import { announceToScreenReader } from "@/components/accessibility/live-region-announcer"
+import type { AccessibilityPreferences } from "@/components/accessibility/accessibility.types"
+
+type BooleanPreferenceKey = {
+  [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never
+}[keyof AccessibilityPreferences]
 
 export function AccessibilityPanel() {
-  const { preferences, updatePreference, resetPreferences, togglePanel } = useAccessibility()
+  const { preferences, updatePreference, resetPreferences, setPanelOpen } = useAccessibility()
 
   const handleFontScale = (direction: "up" | "down" | "reset") => {
     const scales = [1, 1.125, 1.25, 1.375, 1.5]
@@ -28,20 +33,30 @@ export function AccessibilityPanel() {
     announceToScreenReader(`Contraste alterado para ${mode}`)
   }
 
-  const toggleBooleanPref = (key: keyof typeof preferences, label: string) => {
+  const toggleBooleanPref = (key: BooleanPreferenceKey, label: string) => {
     const val = !preferences[key]
-    updatePreference(key as any, val)
+    updatePreference(key, val)
     announceToScreenReader(`${label} ${val ? "ativado" : "desativado"}`)
   }
 
   return (
-    <Dialog.Root open={preferences.panelEnabled} onOpenChange={togglePanel}>
+    <Dialog.Root open={preferences.panelEnabled} onOpenChange={setPanelOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[9990]" />
         <Dialog.Content
           id="a11y-panel-drawer"
-          className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-white shadow-2xl z-[9999] flex flex-col border-l border-[var(--color-border)] overflow-hidden"
-          aria-describedby="a11y-panel-description"
+          className="fixed right-0 top-0 bottom-0 max-h-[100dvh] w-full bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl z-[9999] flex flex-col border-l border-[var(--color-border)] overflow-hidden sm:w-[400px]"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            const floatingButton = document.getElementById("a11y-floating-button")
+            const mobileTrigger = document.querySelector<HTMLElement>(
+              '[data-testid="mobile-navigation-trigger"]',
+            )
+            const focusTarget = floatingButton && floatingButton.getClientRects().length > 0
+              ? floatingButton
+              : mobileTrigger
+            focusTarget?.focus()
+          }}
         >
           <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)] bg-[var(--color-surface-soft)]">
             <div>
@@ -49,8 +64,8 @@ export function AccessibilityPanel() {
                 <Settings2 className="w-5 h-5 text-[var(--color-primary)]" />
                 Recursos de Acessibilidade
               </Dialog.Title>
-              <Dialog.Description id="a11y-panel-description" className="text-sm text-[var(--color-text-muted)] mt-1 mb-0">
-                Personalize a visualizacao conforme suas necessidades.
+              <Dialog.Description className="text-sm text-[var(--color-text-muted)] mt-1 mb-0">
+                Personalize a visualização conforme suas necessidades.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
@@ -96,7 +111,7 @@ export function AccessibilityPanel() {
                   onClick={() => handleContrast("default")}
                   className={`py-2.5 px-3 border rounded-md font-medium text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] ${preferences.contrast === "default" ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" : "border-[var(--color-border)] text-[var(--color-navy)]"}`}
                   aria-pressed={preferences.contrast === "default"}
-                >Padrao</button>
+                >Padrão</button>
                 <button
                   onClick={() => handleContrast("high")}
                   className={`py-2.5 px-3 border rounded-md font-medium text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] ${preferences.contrast === "high" ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" : "border-[var(--color-border)] text-[var(--color-navy)]"}`}
@@ -111,13 +126,13 @@ export function AccessibilityPanel() {
                   onClick={() => toggleBooleanPref("grayscale", "Escala de cinza")}
                   className={`py-2.5 px-3 border rounded-md font-medium text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] ${preferences.grayscale ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" : "border-[var(--color-border)] text-[var(--color-navy)]"}`}
                   aria-pressed={preferences.grayscale}
-                >Monocromatico</button>
+                >Monocromático</button>
               </div>
             </section>
 
             <section aria-labelledby="a11y-focus-title">
               <h3 id="a11y-focus-title" className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-                <EyeOff className="w-4 h-4" /> Navegacao e Leitura
+                <EyeOff className="w-4 h-4" /> Navegação e Leitura
               </h3>
               <div className="space-y-3">
                 <ToggleRow label="Destacar links" icon={<LinkIcon className="w-4 h-4" />} checked={preferences.underlineLinks} onChange={() => toggleBooleanPref("underlineLinks", "Destacar links")} />
@@ -129,10 +144,10 @@ export function AccessibilityPanel() {
 
             <section aria-labelledby="a11y-spacing-title">
               <h3 id="a11y-spacing-title" className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-                <AlignLeft className="w-4 h-4" /> Espacamento
+                <AlignLeft className="w-4 h-4" /> Espaçamento
               </h3>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[var(--color-navy)] mb-2">Espacamento de Linhas</label>
+                <label className="block text-sm font-medium text-[var(--color-navy)] mb-2">Espaçamento de Linhas</label>
                 <div className="flex gap-2">
                   {(["default", "comfortable", "wide"] as const).map(mode => (
                     <button key={`line-${mode}`} onClick={() => updatePreference("lineSpacing", mode)} className={`flex-1 py-1.5 px-2 border rounded font-medium text-xs ${preferences.lineSpacing === mode ? "bg-[var(--color-navy)] text-white border-[var(--color-navy)]" : "border-[var(--color-border)] text-[var(--color-navy)]"}`} aria-pressed={preferences.lineSpacing === mode}>
@@ -142,7 +157,7 @@ export function AccessibilityPanel() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-navy)] mb-2">Espacamento de Letras</label>
+                <label className="block text-sm font-medium text-[var(--color-navy)] mb-2">Espaçamento de Letras</label>
                 <div className="flex gap-2">
                   {(["default", "comfortable", "wide"] as const).map(mode => (
                     <button key={`letter-${mode}`} onClick={() => updatePreference("letterSpacing", mode)} className={`flex-1 py-1.5 px-2 border rounded font-medium text-xs ${preferences.letterSpacing === mode ? "bg-[var(--color-navy)] text-white border-[var(--color-navy)]" : "border-[var(--color-border)] text-[var(--color-navy)]"}`} aria-pressed={preferences.letterSpacing === mode}>
@@ -166,7 +181,7 @@ export function AccessibilityPanel() {
 
           <div className="p-5 border-t border-[var(--color-border)] bg-[var(--color-surface-soft)]">
             <button onClick={() => { resetPreferences(); announceToScreenReader("Restaurado") }} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-[var(--color-border)] rounded-md font-bold text-[var(--color-navy)] hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors">
-              <RotateCcw className="w-4 h-4" /> Restaurar Padroes
+              <RotateCcw className="w-4 h-4" /> Restaurar Padrões
             </button>
           </div>
 

@@ -9,6 +9,7 @@ import { z } from "zod"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
 import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 import { clampPage, normalizePage, offsetForPage, PRODUCTS_PER_PAGE } from "@/lib/utils/pagination"
+import { breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
 
 const storeSearchSchema = z.object({
   category: z.string().optional(),
@@ -109,48 +110,28 @@ export const Route = createFileRoute("/$countryCode/store")({
       optionValueIds,
       category,
       categoryId,
+      q,
     })
   },
   head: ({ loaderData }) => {
-    const { region, countryCode } = loaderData || {}
+    const { region, countryCode, q, category, optionValueIds, page } = loaderData || {}
     const regionName = region?.name || countryCode?.toUpperCase()
-    const title = `Shop All Products - ${regionName} | FriggaFrio`
-    const description = `Browse FriggaFrio's complete collection of industrial equipment and parts available in ${regionName}.`
+    const title = `Catálogo de produtos - ${regionName} | FriggaFrio`
+    const description = `Encontre equipamentos e peças de refrigeração da FriggaFrio disponíveis em ${regionName}.`
+    const filtered = Boolean(q || category || optionValueIds?.length || (page && page > 1))
+    const metadata = pageMeta({
+      title,
+      description,
+      path: `/${countryCode || "br"}/store`,
+      indexable: !filtered,
+    })
 
     return {
-      meta: [
-        {
-          title,
-        },
-        {
-          name: "description",
-          content: description,
-        },
-        {
-          property: "og:title",
-          content: title,
-        },
-        {
-          property: "og:description",
-          content: description,
-        },
-        {
-          property: "og:type",
-          content: "website",
-        },
-        {
-          property: "twitter:card",
-          content: "summary_large_image",
-        },
-        {
-          property: "twitter:title",
-          content: title,
-        },
-        {
-          property: "twitter:description",
-          content: description,
-        },
-      ]
+      ...metadata,
+      scripts: [structuredDataScript(breadcrumbStructuredData([
+        { name: "Home", path: `/${countryCode || "br"}` },
+        { name: "Catálogo", path: `/${countryCode || "br"}/store` },
+      ]))],
     }
   },
   component: Store,

@@ -14,6 +14,7 @@ import { PASSWORD_RESET_TOKEN_MODULE } from "../../../../modules/password-reset-
 import {
   createPasswordResetId,
   getPasswordResetExpiry,
+  getPasswordResetTokenTtlMs,
   hashPasswordResetToken,
 } from "../../../../lib/auth/password-reset-token"
 
@@ -88,7 +89,7 @@ export const POST = async (
         jti,
       },
       config.http.jwtSecret!,
-      { expiresIn: "15m" },
+      { expiresIn: Math.floor(getPasswordResetTokenTtlMs() / 1000) },
     )
 
     await resetTokenService.createPasswordResetTokens({

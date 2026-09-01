@@ -6,6 +6,7 @@ import {
   isCheckoutPreparationMarker,
   normalizeBrazilAddress,
   stableCheckoutHash,
+  checkoutSnapshotFromCart,
   validateCheckoutContact,
 } from "./checkout-preparation"
 
@@ -29,6 +30,20 @@ describe("checkout preparation contract", () => {
     expect(foreign.errors.map((error) => error.code)).toContain("INVALID_POSTAL_CODE")
   })
 
+  it("rejects unsafe names and malformed phone numbers server-side", () => {
+    const result = normalizeBrazilAddress({
+      first_name: "Ana 123",
+      last_name: "Silva",
+      address_1: "Rua A",
+      city: "Sao Paulo",
+      postal_code: "01310-100",
+      province: "SP",
+      country_code: "BR",
+      phone: "11111111111",
+    })
+    expect(result.errors.map((error) => error.code)).toEqual(expect.arrayContaining(["INVALID_NAME", "INVALID_PHONE"]))
+  })
+
   it("requires a server-side email but permits guest carts without customer_id", () => {
     expect(validateCheckoutContact({
       email: "guest@example.com",
@@ -46,6 +61,33 @@ describe("checkout preparation contract", () => {
     expect(first).toBe(second)
     expect(checkoutReadinessToken("cart_1", first)).toBe(checkoutReadinessToken("cart_1", second))
     expect(checkoutPreparationExpiresAt(Date.UTC(2026, 0, 1))).toBe("2026-01-01T00:15:00.000Z")
+  })
+
+  it("keeps pickup delivery-free but binds the customer billing address to the snapshot", () => {
+    const base = {
+      id: "cart_pickup",
+      email: "buyer@example.com",
+      currency_code: "brl",
+      billing_address: {
+        first_name: "Ana",
+        last_name: "Silva",
+        address_1: "Rua A, 1",
+        city: "São Paulo",
+        postal_code: "01310-100",
+        province: "SP",
+        country_code: "br",
+      },
+      shipping_methods: [{ shipping_option_id: "FRIGGAFRIO_PICKUP_STORE_1", amount: 0 }],
+      item_subtotal: 100,
+      tax_total: 0,
+      discount_total: 0,
+      total: 100,
+    }
+    const first = checkoutSnapshotFromCart({ ...base, shipping_address: undefined, allow_missing_shipping_address: true })
+    const changed = checkoutSnapshotFromCart({ ...base, shipping_address: undefined, allow_missing_shipping_address: true, billing_address: { ...base.billing_address, address_1: "Rua B, 2" } })
+    expect(first?.address).toBeNull()
+    expect(first?.billing_address).toMatchObject({ address_1: "Rua A, 1" })
+    expect(stableCheckoutHash(first)).not.toBe(stableCheckoutHash(changed))
   })
 
   it("recognizes only complete server-owned readiness markers", () => {

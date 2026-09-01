@@ -6,30 +6,50 @@ import "@/components/carousel/carousel.css"
 type EmblaPlugins = Parameters<typeof useEmblaCarousel>[1]
 const EMPTY_PLUGINS: EmblaPlugins = []
 
-export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS) {
+export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS, loop = true) {
   const [viewportRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
-    loop: true,
+    loop,
     skipSnaps: false,
   }, plugins)
   const [hasOverflow, setHasOverflow] = useState(false)
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
 
   const syncOverflow = useCallback(() => {
     if (!emblaApi) return
     const viewport = emblaApi.rootNode()
-    setHasOverflow(viewport.scrollWidth - viewport.clientWidth > 1 && emblaApi.scrollSnapList().length > 1)
-  }, [emblaApi])
+    // Embla's snap list is the authoritative source for overflow. Measuring
+    // scrollWidth after a trimmed end snap can transiently report no overflow
+    // and unmount the controls while the user is trying to go back.
+    const snapList = emblaApi.scrollSnapList()
+    const overflow = snapList.length > 1 && viewport.clientWidth > 0
+    const selectedSnap = emblaApi.selectedScrollSnap()
+    const lastSnap = Math.max(0, snapList.length - 1)
+
+    // canScrollPrev/Next can briefly return false while Embla is settling a
+    // trimmed snap. Derive the boundary from the selected snap instead so the
+    // previous control remains usable immediately after reaching the end.
+    const previous = loop ? overflow : overflow && selectedSnap > 0
+    const next = loop ? overflow : overflow && selectedSnap < lastSnap
+
+    setHasOverflow(overflow)
+    setCanScrollPrev(previous)
+    setCanScrollNext(next)
+  }, [emblaApi, loop])
 
   useEffect(() => {
     if (!emblaApi) return
     syncOverflow()
     emblaApi.on("reInit", syncOverflow)
     emblaApi.on("resize", syncOverflow)
+    emblaApi.on("select", syncOverflow)
     window.addEventListener("resize", syncOverflow)
     return () => {
       emblaApi.off("reInit", syncOverflow)
       emblaApi.off("resize", syncOverflow)
+      emblaApi.off("select", syncOverflow)
       window.removeEventListener("resize", syncOverflow)
     }
   }, [emblaApi, syncOverflow])
@@ -37,7 +57,7 @@ export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS) {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
 
-  return { viewportRef, emblaApi, hasOverflow, scrollPrev, scrollNext }
+  return { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext }
 }
 
 type CarouselSectionHeaderProps = {
@@ -45,6 +65,8 @@ type CarouselSectionHeaderProps = {
   description?: string
   action?: ReactNode
   hasOverflow: boolean
+  canScrollPrevious?: boolean
+  canScrollNext?: boolean
   onPrevious: () => void
   onNext: () => void
   previousLabel: string
@@ -56,6 +78,8 @@ export function CarouselSectionHeader({
   description,
   action,
   hasOverflow,
+  canScrollPrevious = hasOverflow,
+  canScrollNext = hasOverflow,
   onPrevious,
   onNext,
   previousLabel,
@@ -75,7 +99,8 @@ export function CarouselSectionHeader({
               type="button"
               aria-label={previousLabel}
               onClick={onPrevious}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+              disabled={!canScrollPrevious}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -83,7 +108,8 @@ export function CarouselSectionHeader({
               type="button"
               aria-label={nextLabel}
               onClick={onNext}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+              disabled={!canScrollNext}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-navy)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>

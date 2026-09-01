@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/react-router"
 import {
   Building2,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
+import { defaultAuthenticatedPath, normalizeReturnTo } from "@/lib/auth/return-to"
 
 type AccountTab = "profile" | "company"
 
@@ -122,7 +123,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const countryCode = routeCountryCode || DEFAULT_COUNTRY_CODE
   const location = useLocation()
   const navigate = useNavigate()
-  const { customer, employee, logout } = useAuth()
+  const { authState, customer, employee, logout } = useAuth()
+  const redirectingRef = useRef(false)
   const isAdmin = employee?.is_admin === true
 
   const navItems = [
@@ -135,19 +137,54 @@ export function AccountShell({ children }: { children: ReactNode }) {
     typeof location.search === "string"
       ? location.search
       : new URLSearchParams(location.search as Record<string, string>).toString()
+  const routeMinHeight = location.pathname.endsWith("/account/orders")
+    ? "35rem"
+    : location.pathname.endsWith("/favorites")
+      ? "60rem"
+      : "31rem"
+
+  useEffect(() => {
+    if (authState === "authenticated") {
+      redirectingRef.current = false
+      return
+    }
+    // The previous route can remain mounted briefly while the router commits
+    // the login navigation. Never redirect the login entrypoint back to itself.
+    if (/\/account\/login\/?$/.test(location.pathname)) return
+    if (authState !== "guest" || redirectingRef.current) return
+    redirectingRef.current = true
+    const currentPath = `${location.pathname}${locationSearch ? `?${locationSearch}` : ""}`
+    void navigate({
+      to: "/$countryCode/account/login",
+      params: { countryCode },
+      search: { returnTo: normalizeReturnTo(currentPath, countryCode) },
+      replace: true,
+    })
+  }, [authState, countryCode, location.pathname, locationSearch, navigate])
+
+  if (authState !== "authenticated") {
+    return (
+      <div
+        className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8"
+        style={{ minHeight: routeMinHeight }}
+        aria-busy="true"
+      >
+        <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
+        <div className="mt-6 h-40 animate-pulse rounded-2xl bg-slate-100" />
+      </div>
+    )
+  }
 
   const handleLogout = async () => {
     await logout()
-    await navigate({
-      to: "/$countryCode/account/login",
-      params: { countryCode },
-    })
+    window.location.replace(defaultAuthenticatedPath(countryCode))
   }
 
   return (
     <div
       data-account-shell
       className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+      style={{ minHeight: routeMinHeight }}
     >
       <aside
         aria-label="Account navigation"

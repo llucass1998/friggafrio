@@ -8,9 +8,13 @@ import {
   paymentAvailability,
 } from "@/lib/config/payment-availability"
 import { assertCheckoutReady } from "@/lib/data/checkout/checkout-ready"
+import { buildCheckoutAddressPayload } from "@/lib/utils/checkout-address-payload"
+import { clearCheckoutDraftStorage } from "@/lib/utils/checkout-draft"
+import { clearCheckoutRuntimeState } from "@/lib/utils/checkout-runtime-state"
 import {
   prepareCartForPayment,
   type CheckoutPreparedSummary,
+  type CheckoutCustomerPayload,
 } from "@/lib/data/checkout/prepare"
 
 const DEFAULT_CART_FIELDS = "+items.total, shipping_methods.name"
@@ -26,6 +30,7 @@ export const useSetCartAddresses = () => {
       if (!cartId) throw new Error("No cart found")
 
       const data = Object.fromEntries(formData.entries())
+      const pickupOnly = data.pickup_only === "true"
 
       const shippingAddress = {
         first_name: data["shipping_address.first_name"] as string,
@@ -54,12 +59,24 @@ export const useSetCartAddresses = () => {
       }
 
       const email = data.email as string
+      const hasShippingAddress = Boolean(
+        String(data["shipping_address.address_1"] || "").trim()
+        && String(data["shipping_address.city"] || "").trim()
+        && String(data["shipping_address.postal_code"] || "").trim(),
+      )
+      const hasBillingAddress = Boolean(
+        String(data["billing_address.address_1"] || "").trim()
+        && String(data["billing_address.city"] || "").trim()
+        && String(data["billing_address.postal_code"] || "").trim(),
+      )
 
-      const { cart } = await sdk.store.cart.update(cartId, {
-        shipping_address: shippingAddress,
-        billing_address: billingAddress,
+      const cartPayload = buildCheckoutAddressPayload({
         email,
-      }, { fields: DEFAULT_CART_FIELDS })
+        pickupOnly,
+        shippingAddress: hasShippingAddress ? shippingAddress : undefined,
+        billingAddress: hasBillingAddress ? billingAddress : undefined,
+      })
+      const { cart } = await sdk.store.cart.update(cartId, cartPayload as never, { fields: DEFAULT_CART_FIELDS })
 
       return cart
     },
@@ -118,8 +135,8 @@ export const useSetCartShippingMethod = () => {
 export const usePrepareCartForPayment = () => {
   const queryClient = useQueryClient()
 
-  return useMutation<CheckoutPreparedSummary, Error, { shippingOptionId?: string }>({
-    mutationFn: ({ shippingOptionId }) => prepareCartForPayment(shippingOptionId),
+  return useMutation<CheckoutPreparedSummary, Error, { shippingOptionId?: string; customer?: CheckoutCustomerPayload }>({
+    mutationFn: ({ shippingOptionId, customer }) => prepareCartForPayment(shippingOptionId, customer),
     onSuccess: async () => {
       await queryClient.refetchQueries({ predicate: queryKeys.cart.predicate })
     },
@@ -206,6 +223,8 @@ export const useCompleteCartOrder = () => {
       }
 
       removeStoredCart()
+      clearCheckoutDraftStorage()
+      clearCheckoutRuntimeState()
       return cartRes.order
     },
     onSuccess: async (order) => {

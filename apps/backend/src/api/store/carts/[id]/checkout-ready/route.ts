@@ -29,6 +29,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       "email",
       "currency_code",
       "shipping_address.*",
+      "billing_address.*",
       "item_subtotal",
       "tax_total",
       "discount_total",
@@ -56,7 +57,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     })
   }
   const marker = (cart.metadata as Record<string, unknown> | null | undefined)?.[CHECKOUT_PREPARATION_METADATA_KEY]
-  const snapshot = checkoutSnapshotFromCart(cart as never)
+  const pickup = (cart.metadata as Record<string, unknown> | null | undefined)?.frigga_fulfillment_mode === "pickup"
+  const snapshotCart = pickup
+    ? { ...cart, shipping_address: undefined, allow_missing_shipping_address: true, allow_missing_billing_address: true }
+    : cart
+  const snapshot = checkoutSnapshotFromCart(snapshotCart as never)
   if (!isAuthenticCheckoutPreparationMarker(req.params.id, marker) || !snapshot || stableCheckoutHash(snapshot) !== (marker as { snapshot_hash: string }).snapshot_hash) {
     return res.status(409).json({
       checkout_ready: false,

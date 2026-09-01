@@ -68,7 +68,9 @@ export function selectHomeProducts(
   selection: HomeProductSelection,
   options: { limit?: number; excludeIds?: ReadonlySet<string> } = {},
 ): HttpTypes.StoreProduct[] {
-  const limit = options.limit ?? (selection === "specialized" ? 4 : 10)
+  // Keep enough real products in the specialized shelf for navigation when
+  // the catalog has more than one viewport of cards.
+  const limit = options.limit ?? 10
   const excludedIds = options.excludeIds ?? new Set<string>()
   const eligibleProducts = products.filter((product) => !excludedIds.has(product.id))
 

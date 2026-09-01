@@ -73,6 +73,9 @@ const DrawerContent = React.forwardRef<
       data-motion-side={side}
       {...props}
     >
+      {!props["aria-describedby"] && <DialogPrimitive.Description className="sr-only">
+        Conteudo do painel.
+      </DialogPrimitive.Description>}
       {!hideClose && (
         <DialogPrimitive.Close className="absolute right-4 top-4 text-zinc-600 hover:text-zinc-500 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] motion-interactive disabled:pointer-events-none">
           <XMarkMini className="h-5 w-5" />

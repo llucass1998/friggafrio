@@ -15,6 +15,11 @@ type CreateCompanyAccountHolderInput = {
   provider_id: string
 }
 
+type RemoteLinkService = {
+  create(input: Record<string, Record<string, string>>): Promise<unknown>
+  dismiss(input: Record<string, Record<string, string>>): Promise<unknown>
+}
+
 const createAccountHolderStep = createStep(
   "create-account-holder",
   async (input: CreateCompanyAccountHolderInput, { container }) => {
@@ -51,11 +56,11 @@ const linkAccountHolderToCompanyStep = createStep(
     input: { company_id: string; account_holder_id: string },
     { container }
   ) => {
-    // @ts-expect-error
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as import("@medusajs/types").ILinkModule
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK
+    )
 
     await link.create({
-      // @ts-expect-error
       [COMPANY_MODULE]: { company_id: input.company_id },
       [Modules.PAYMENT]: { account_holder_id: input.account_holder_id },
     })
@@ -64,10 +69,10 @@ const linkAccountHolderToCompanyStep = createStep(
   },
   async (compensationData, { container }) => {
     if (!compensationData) return
-    // @ts-expect-error
-    const link = container.resolve(ContainerRegistrationKeys.LINK) as import("@medusajs/types").ILinkModule
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK
+    )
     await link.dismiss({
-      // @ts-expect-error
       [COMPANY_MODULE]: { company_id: compensationData.company_id },
       [Modules.PAYMENT]: {
         account_holder_id: compensationData.account_holder_id,

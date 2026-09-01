@@ -116,6 +116,60 @@ DB, Redis, uploads, `.env`, Caddy e DNS devem ser preservados salvo task explíc
 
 ## FRIGGAFRIO_CANONICAL_SYNC_AND_WSL_DEPLOY
 
+## FRIGGAFRIO_TWO_ENVIRONMENTS_ONLY
+
+## FRIGGAFRIO_SOURCE_INTEGRITY_GUARD
+
+## TESTS_AND_REGRESSION_MUST_NEVER_RESTORE_OR_MODIFY_SOURCE
+
+Tests and regression commands must be observational with respect to source.
+They may create only excluded generated artifacts and must never restore,
+overwrite, remove, stash, reset, revert, or copy source files. Snapshot source
+before a focused wave and verify it afterwards with the source-integrity guard.
+
+Before any focused test wave, create a source manifest with
+`pnpm source:integrity:snapshot`. After the wave, run
+`pnpm source:integrity:verify`. If source files under backend/storefront `src`,
+scripts, config, or package manifests differ, the guard fails with
+`SOURCE_MUTATION_DURING_TEST` and writes mutation evidence to the system
+temporary directory. The guard never restores, deletes, resets, or overwrites
+source. Run test/cleanup commands through `node scripts/source-integrity-guard.mjs run -- <command> <args>`; destructive Git commands and source-copy operations are rejected with
+`DESTRUCTIVE_COMMAND_BLOCKED`.
+
+Only two operational environments exist: Windows `Maestro` for development and
+validation, and WSL for Git-synchronized release/deployment. GitHub is transport
+only. Never develop in WSL or in `Maestro-deploy`.
+
+Shipping is backend-authoritative. `SHIPPING_POLICY_VERSION` and all commercial
+values live in `apps/backend/src/utils/commercial-shipping-policy.ts`; changing
+prices or coverage must change configuration and its tests, not frontend logic.
+Pickup is only `FriggaFrio Loja 1` and is always zero-priced.
+
+Known prevention guards:
+
+- `LOCAL_ADMIN_UPLOAD_PROVIDER_MISCONFIGURED`: startup asserts local file storage
+  and the upload URL is covered by provider tests.
+- `INVALID_PRODUCT_IMAGE_WITHOUT_URL`: gallery state accepts an image only after
+  a non-empty upload URL is validated.
+- `WORKFLOW_CONTAINER_RESOLVE_TYPE_LOSS`: workflow typecheck is a required gate.
+- `CHECKOUT_CEP_NOT_CONNECTED`: CEP lookup is exercised by Checkout and PDP tests.
+- `SHIPPING_STALE_SELECTION`: prepare revalidates the persisted shipping method,
+  amount, currency, and cart total server-side.
+- `FRIGGAFRIO_THREE_MODALITIES_HIDDEN_BY_ELIGIBILITY_FILTER`: checkout always
+  renders pickup, Carro FriggaFrio, and Motoboy in fixed order; unavailable
+  cards remain visible, disabled, and explain the server-derived reason.
+- `FRIGGAFRIO_SINGLE_STORE_PICKUP`: pickup is restricted to Loja 1, starts as
+  `awaiting_preparation`, and only an authenticated Admin operator can make the
+  advisory-lock-protected `ready_for_pickup` then `collected` transitions.
+- `MERCADO_PAGO_WEBHOOK_IDEMPOTENCY`: webhook event and operation tables use
+  unique idempotency keys and duplicate races return an accepted duplicate.
+- `MERCADO_PAGO_SECRET_BOUNDARIES`: Mercado Pago provider is opt-in only when
+  sandbox credentials and both payment flags are present; otherwise it fails closed.
+- `ACCESSIBILITY_SOURCE_OR_RUNTIME_REGRESSION`: the approved Local button and
+  panel are compared with the WSL release source by SHA-256. The regression
+  suite verifies focus-visible styling, semantic icon, mobile safe-area sizing,
+  Dialog description, focus return, and typed preference updates.
+
 This is a fail-closed rule for every human, script, and Codex task:
 
 ```text

@@ -43,6 +43,10 @@ export const normalizeReturnTo = (
       return fallback
     }
 
+    if (parsed.pathname === `${fallback}/account/login`) {
+      return fallback
+    }
+
     return `${parsed.pathname}${parsed.search}${parsed.hash}`
   } catch {
     return fallback

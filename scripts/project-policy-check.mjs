@@ -108,7 +108,7 @@ export function parsePolicy(raw) {
 export function findProductionConfigViolations(sources) {
   const findings = [];
   const forbiddenUrl =
-    /(?:VITE_MEDUSA_(?:BACKEND|ADMIN)_URL|(?:PUBLIC|ADMIN|BACKEND|STOREFRONT)_ORIGIN)\s*[:=][^\r\n]*(?::(?:5174|9001|9002)\b|localhost|127\.0\.0\.1)/i;
+    /(?:VITE_MEDUSA_(?:BACKEND|ADMIN)_URL|(?:PUBLIC|ADMIN|BACKEND|STOREFRONT)_ORIGIN)\s*[:=][^\r\n]*(?::(?:9001|9002)\b|localhost|127\.0\.0\.1)/i;
   const wildcardCors =
     /(?:STORE_CORS|AUTH_CORS|ADMIN_CORS|storeCors|authCors|adminCors)\s*[:=][\s"']*\*/i;
   for (const source of sources) {

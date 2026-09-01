@@ -12,7 +12,7 @@ channel, and enabled `manual_manual` provider idempotently.
 Express is calculated only server-side after a trustworthy route-distance
 provider resolves the persisted delivery address. The browser never supplies a
 distance, zone, or price. Unknown distance and every destination over 100 km
-receive no express option.
+receive a visible but disabled express option with a sanitized explanation.
 
 | Distance | Amount |
 | --- | ---: |

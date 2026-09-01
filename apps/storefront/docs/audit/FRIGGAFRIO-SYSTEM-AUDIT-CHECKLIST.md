@@ -6,7 +6,7 @@
 - [x] PostgreSQL ativo.
 - [x] Redis ativo.
 - [x] Backend responde em localhost:9000.
-- [x] Storefront responde em localhost:5174.
+- [x] Storefront responde em 127.0.0.1:5173.
 - [x] Frontend não utiliza domínio inexistente.
 - [x] CORS local configurado.
 - [x] Cookies locais configurados.

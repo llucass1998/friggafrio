@@ -13,6 +13,7 @@ export const PaymentAttempt = model
   .define("payment_attempt", {
     id: model.id().primaryKey(),
     cart_id: model.text().nullable(),
+    payment_session_id: model.text().nullable(),
     order_id: model.text().nullable(),
     customer_id: model.text().nullable(),
     provider: model.text(),

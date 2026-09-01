@@ -14,7 +14,7 @@ A variável de ambiente e o fallback local vazaram o link para o ambiente de pro
 8. O arquivo `.env.production` permanece sendo o único lugar para deploy com a URL `api.friggafrio.com.br`.
 
 ## 2. CORS do Backend
-A porta do frontend `5174` (diferente da padrão do vite) foi adicionada explicitamente em:
+A porta canônica do frontend `5173` foi configurada explicitamente em:
 `apps/backend/.env` sob `STORE_CORS` e `AUTH_CORS` para garantir que AuthContext funcione livre de bloqueios pré-flight no ambiente local.
 
 ## 3. Hydration Mismatch (`FeaturedProducts` e `FeaturedCategories`)

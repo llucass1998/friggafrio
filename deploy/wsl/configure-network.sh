@@ -21,10 +21,11 @@ backend_env="$project_root/apps/backend/.env"
 storefront_env="$project_root/apps/storefront/.env"
 
 replace_env "$storefront_env" "VITE_MEDUSA_BACKEND_URL" "$backend_origin"
+replace_env "$storefront_env" "VITE_MEDUSA_ADMIN_URL" "$backend_origin"
 replace_env "$backend_env" "STORE_CORS" "$storefront_origin"
 replace_env "$backend_env" "AUTH_CORS" "$storefront_origin"
 replace_env "$backend_env" "ADMIN_CORS" "$storefront_origin,$backend_origin"
 replace_env "$backend_env" "STOREFRONT_URL" "$storefront_origin"
-replace_env "$backend_env" "DISABLE_MEDUSA_ADMIN" "true"
+replace_env "$backend_env" "DISABLE_MEDUSA_ADMIN" "false"
 
 echo "Configured storefront and API origins without printing secret values."

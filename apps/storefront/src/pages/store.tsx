@@ -2,7 +2,8 @@ import { Link, useLoaderData, useNavigate, useRouterState, useSearch } from "@ta
 import { HttpTypes } from "@medusajs/types"
 import { PublicProductCard } from "@/components/public-product-card"
 import { OptionsPicker } from "@/components/options-picker"
-import { MagnifyingGlass, Funnel, XMark } from "@medusajs/icons"
+import { MagnifyingGlass, XMark } from "@medusajs/icons"
+import { Tags } from "lucide-react"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { OPTION_VALUE_QUERY_KEY } from "@/lib/utils/option-value-params"
@@ -41,7 +42,16 @@ export function StorePage({
   } = loaderData || {}
   const searchParams = useSearch({ strict: false }) as StoreSearch | undefined
   const navigate = useNavigate()
-  const isNavigating = useRouterState({ select: (state) => state.status === "pending" })
+  const routerIsNavigating = useRouterState({ select: (state) => state.status === "pending" })
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  // TanStack reports the SSR render as pending; defer this visual-only state
+  // until hydration so the server and first client tree stay identical.
+  useEffect(() => {
+    setHasHydrated(true)
+  }, [])
+
+  const isNavigating = hasHydrated && routerIsNavigating
 
   const optionValueIds = useMemo<string[]>(() => {
     const raw = searchParams?.[OPTION_VALUE_QUERY_KEY]
@@ -183,7 +193,7 @@ export function StorePage({
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
       {/* Breadcrumb e Header Simples da Página */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-3">
           <Link to={"/$countryCode" as string} params={{ countryCode }} className="hover:text-[var(--color-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm">
             Home
@@ -207,7 +217,7 @@ export function StorePage({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 flex flex-col lg:flex-row gap-8">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-4 pb-16 sm:px-6 lg:flex-row lg:px-8">
 
         {/* Filtros Mobile Overlay */}
         {mobileFiltersOpen && (
@@ -227,8 +237,8 @@ export function StorePage({
             {/* Cabecalho Filtros Mobile */}
             <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] lg:hidden bg-white">
               <h2 className="font-bold text-[var(--color-navy)] text-lg flex items-center gap-2">
-                <Funnel className="w-5 h-5" />
-                Filtros
+                <Tags className="w-5 h-5" aria-hidden="true" />
+                Categorias
               </h2>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
@@ -241,7 +251,7 @@ export function StorePage({
             <div className="flex-1 overflow-y-auto p-4 lg:p-0">
               <div className="bg-white lg:border border-[var(--color-border)] rounded-[var(--radius-card)] lg:p-5">
                 <h2 className="hidden lg:flex text-base font-bold text-[var(--color-navy)] mb-4 items-center gap-2">
-                  <Funnel className="w-4 h-4 text-[var(--color-primary)]" />
+                  <Tags className="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true" />
                   Filtrar resultados
                 </h2>
 
@@ -324,8 +334,8 @@ export function StorePage({
                 onClick={() => setMobileFiltersOpen(true)}
                 className="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-medium rounded-[var(--radius-button)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               >
-                <Funnel className="w-4 h-4" />
-                Filtros
+                <Tags className="w-4 h-4" aria-hidden="true" />
+                Categorias
               </button>
 
               <div className="flex-1 sm:flex-initial min-w-[160px]">
@@ -346,7 +356,7 @@ export function StorePage({
 
           {/* Product Grid */}
           {isNavigating ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border)] overflow-hidden animate-pulse">
                   <div className="aspect-[4/3] bg-[var(--color-background)]" />
@@ -360,12 +370,11 @@ export function StorePage({
             </div>
           ) : allProducts.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+              <div data-testid="store-product-grid" className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {allProducts.map((product) => (
                   <PublicProductCard
                     key={product.id}
                     product={product}
-                    isNew={false} // Depende da lógica de negócio
                   />
                 ))}
               </div>

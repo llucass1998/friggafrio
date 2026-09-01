@@ -13,6 +13,11 @@ type ViaCepResponse = {
   erro?: boolean
 }
 
+export type CepLookupOptions = {
+  signal?: AbortSignal
+  timeoutMs?: number
+}
+
 export const normalizeCep = (value: string): string => value.replace(/\D/g, "").slice(0, 8)
 
 export const formatCep = (value: string): string => {
@@ -41,20 +46,30 @@ export const subscribeGuestCep = (listener: () => void): (() => void) => {
   return () => guestCepListeners.delete(listener)
 }
 
-export async function lookupCep(value: string): Promise<CepAddress | null> {
+const CEP_CACHE_TTL_MS = 5 * 60 * 1000
+const cepCache = new Map<string, { expiresAt: number; value: CepAddress | null }>()
+
+export async function lookupCep(value: string, options: CepLookupOptions = {}): Promise<CepAddress | null> {
   const cep = normalizeCep(value)
   if (cep.length !== 8) return null
-
-  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+  const cached = cepCache.get(cep)
+  if (cached && cached.expiresAt > Date.now()) return cached.value
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 4000)
+  const signal = options.signal
+  const abort = () => controller.abort()
+  signal?.addEventListener("abort", abort, { once: true })
+  if (signal?.aborted) controller.abort()
+  let valueResult: CepAddress | null = null
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: controller.signal })
   if (!response.ok) throw new Error("N\u00e3o foi poss\u00edvel consultar o CEP.")
-
-  const data = await response.json() as ViaCepResponse
-  if (data.erro) return null
-
-  return {
-    street: data.logradouro?.trim() ?? "",
-    neighborhood: data.bairro?.trim() ?? "",
-    city: data.localidade?.trim() ?? "",
-    state: data.uf?.trim() ?? "",
+    const data = await response.json() as ViaCepResponse
+    if (!data.erro) valueResult = { street: data.logradouro?.trim() ?? "", neighborhood: data.bairro?.trim() ?? "", city: data.localidade?.trim() ?? "", state: data.uf?.trim() ?? "" }
+    cepCache.set(cep, { expiresAt: Date.now() + CEP_CACHE_TTL_MS, value: valueResult })
+    return valueResult
+  } finally {
+    clearTimeout(timeout)
+    signal?.removeEventListener("abort", abort)
   }
 }

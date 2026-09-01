@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
-import { listCategories } from "@/lib/data/categories"
+import { useCategories } from "@/lib/hooks/use-categories"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
 
@@ -45,11 +44,9 @@ export function FeaturedCategories() {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
   const hydrated = useHydrated()
-  const categoriesQuery = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => listCategories(),
+  const categoriesQuery = useCategories({
+    queryParams: { limit: 100, offset: 0, include_ancestors_tree: false },
     enabled: hydrated,
-    retry: 1,
   })
   const isLoading = !hydrated || categoriesQuery.isPending
   const categories = categoriesQuery.data || []

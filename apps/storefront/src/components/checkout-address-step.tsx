@@ -7,6 +7,13 @@ import { useAuth } from "@/lib/hooks/use-auth"
 import { sdk } from "@/lib/medusa"
 import { AddressFormData } from "@/lib/types/global"
 import { HttpTypes } from "@medusajs/types"
+import type { CheckoutCustomerInfo } from "@/lib/payments/contracts"
+import {
+  isValidCnpj,
+  isValidCpf,
+  isValidEmail,
+} from "@/lib/validation/checkout"
+import { formatCNPJ, formatCPF } from "@/lib/utils/formatters"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { MapPin } from "@medusajs/icons"
@@ -32,6 +39,8 @@ interface CompanyAddressData {
 interface AddressStepProps {
   cart: HttpTypes.StoreCart;
   onNext: () => void;
+  customerInfo?: CheckoutCustomerInfo
+  onCustomerInfoChange?: (info: CheckoutCustomerInfo) => void
 }
 
 const CHECKOUT_COUNTRY_CODE = "br"
@@ -52,13 +61,16 @@ function applyCompanyAddress(
     province: CHECKOUT_PROVINCE,
     country_code: CHECKOUT_COUNTRY_CODE,
     phone: addr.phone || "",
+    number: "",
+    neighborhood: "",
   })
 }
 
-const AddressStep = ({ cart, onNext }: AddressStepProps) => {
+const AddressStep = ({ cart, onNext, customerInfo = { personType: "individual", document: "", legalName: "", tradeName: "", firstName: "", lastName: "", email: "", phone: "" }, onCustomerInfoChange }: AddressStepProps) => {
   const setAddressesMutation = useSetCartAddresses()
   const { employee } = useAuth()
-  const [sameAsBilling, setSameAsBilling] = useState(true)
+  const [sameAsBilling, setSameAsBilling] = useState(Boolean(cart.shipping_address))
+  const [pickupOnly, setPickupOnly] = useState(cart.metadata?.frigga_fulfillment_mode === "pickup")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isShippingAddressValid, setIsShippingAddressValid] = useState(false)
   const [isBillingAddressValid, setIsBillingAddressValid] = useState(false)
@@ -100,6 +112,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     province: CHECKOUT_PROVINCE,
     country_code: CHECKOUT_COUNTRY_CODE,
     phone: cart.shipping_address?.phone || "",
+    number: "",
+    neighborhood: "",
   })
   const [billingAddress, setBillingAddress] = useState<AddressFormData>({
     first_name: cart.billing_address?.first_name || "",
@@ -112,6 +126,8 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     province: CHECKOUT_PROVINCE,
     country_code: CHECKOUT_COUNTRY_CODE,
     phone: cart.billing_address?.phone || "",
+    number: "",
+    neighborhood: "",
   })
 
   useEffect(() => {
@@ -140,6 +156,10 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
     shippingAddresses,
   ])
 
+  useEffect(() => {
+    if (pickupOnly && sameAsBilling) setSameAsBilling(false)
+  }, [pickupOnly, sameAsBilling])
+
   const handleSelectShippingAddress = (addr: CompanyAddressData) => {
     setSelectedShippingAddressId(addr.id)
     applyCompanyAddress(addr, setShippingAddress)
@@ -166,13 +186,24 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
       const submitData = new FormData()
 
       submitData.append("email", email)
+      submitData.append("pickup_only", String(pickupOnly))
 
-      Object.entries(shippingAddress).forEach(([key, value]) => {
+      const hasShippingAddress = !pickupOnly && Boolean(
+        shippingAddress.address_1.trim() && shippingAddress.city.trim() && shippingAddress.postal_code.trim(),
+      )
+      const shippingData = {
+        ...shippingAddress,
+        address_2: [shippingAddress.number ? `Nº ${shippingAddress.number}` : "", shippingAddress.neighborhood, shippingAddress.address_2].filter(Boolean).join(", "),
+      }
+      if (hasShippingAddress) Object.entries(shippingData).filter(([key]) => !["number", "neighborhood"].includes(key)).forEach(([key, value]) => {
         submitData.append(`shipping_address.${key}`, value)
       })
 
-      const billingData = sameAsBilling ? shippingAddress : billingAddress
-      Object.entries(billingData).forEach(([key, value]) => {
+      const billingData = sameAsBilling && hasShippingAddress ? shippingData : {
+        ...billingAddress,
+        address_2: [billingAddress.number ? `Nº ${billingAddress.number}` : "", billingAddress.neighborhood, billingAddress.address_2].filter(Boolean).join(", "),
+      }
+      Object.entries(billingData).filter(([key]) => !["number", "neighborhood"].includes(key)).forEach(([key, value]) => {
         submitData.append(`billing_address.${key}`, value)
       })
 
@@ -187,18 +218,21 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
   }
 
   const isFormValid = () => {
-    const emailValid = email.trim() && email.includes("@")
+    const emailValid = isValidEmail(email)
+    const documentValid = customerInfo.personType === "individual"
+      ? isValidCpf(customerInfo.document)
+      : isValidCnpj(customerInfo.document) && customerInfo.legalName.trim().length >= 2
 
     if (hasCompanyAddresses) {
-      const shippingValid = !!selectedShippingAddressId
-      const billingValid = sameAsBilling || !!selectedBillingAddressId
-      return emailValid && shippingValid && billingValid
+      const billingValid = pickupOnly
+        ? !!selectedBillingAddressId
+        : sameAsBilling || !!selectedBillingAddressId
+      return emailValid && documentValid && billingValid
     }
 
     return (
-      emailValid &&
-      isShippingAddressValid &&
-      (isBillingAddressValid || sameAsBilling)
+      emailValid && documentValid &&
+      (pickupOnly ? isBillingAddressValid : isBillingAddressValid || (sameAsBilling && isShippingAddressValid))
     )
   }
 
@@ -209,12 +243,36 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
 
   return (
     <div className="flex flex-col gap-8">
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="checkout-customer-type-title">
+        <h3 id="checkout-customer-type-title" className="text-base font-semibold text-zinc-900">Dados do comprador</h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="text-sm font-medium text-zinc-900">Tipo de pessoa
+            <select value={customerInfo.personType} onChange={(event) => {
+              const personType = event.target.value as CheckoutCustomerInfo["personType"]
+              onCustomerInfoChange?.({ ...customerInfo, personType, document: "", legalName: personType === "business" ? customerInfo.legalName : "" })
+            }} className="mt-1 min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3">
+              <option value="individual">Pessoa física</option><option value="business">Pessoa jurídica</option>
+            </select>
+          </label>
+          <label className="text-sm font-medium text-zinc-900" htmlFor="checkout-document">{customerInfo.personType === "individual" ? "CPF" : "CNPJ"}
+            <Input id="checkout-document" type="text" value={customerInfo.document} onChange={(event) => onCustomerInfoChange?.({ ...customerInfo, document: customerInfo.personType === "individual" ? formatCPF(event.target.value) : formatCNPJ(event.target.value) })} className="mt-1" inputMode="numeric" autoComplete="off" aria-invalid={!((customerInfo.personType === "individual" ? isValidCpf : isValidCnpj)(customerInfo.document))} aria-describedby="checkout-document-help" />
+            <span id="checkout-document-help" className="mt-1 block text-xs font-normal text-zinc-600">{customerInfo.personType === "individual" ? "Informe um CPF válido." : "Informe um CNPJ válido."}</span>
+          </label>
+        </div>
+        {customerInfo.personType === "business" && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm font-medium text-zinc-900" htmlFor="checkout-legal-name">Razão social<Input id="checkout-legal-name" value={customerInfo.legalName} onChange={(event) => onCustomerInfoChange?.({ ...customerInfo, legalName: event.target.value })} className="mt-1" /></label><label className="text-sm font-medium text-zinc-900" htmlFor="checkout-trade-name">Nome fantasia<Input id="checkout-trade-name" value={customerInfo.tradeName} onChange={(event) => onCustomerInfoChange?.({ ...customerInfo, tradeName: event.target.value })} className="mt-1" /></label></div>}
+      </section>
       <div className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm leading-5 text-teal-950">
-        Informe um endereco para entrega em Sao Paulo. O frete sera calculado na proxima etapa.
+        Escolha retirada na loja ou informe um endereco em Sao Paulo. O frete sera calculado na proxima etapa.
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <label className="flex items-start gap-3 text-sm font-medium text-zinc-900" htmlFor="checkout-pickup-only">
+            <input id="checkout-pickup-only" type="checkbox" checked={pickupOnly} onChange={(event) => { const checked = event.target.checked; setPickupOnly(checked); setSameAsBilling(!checked) }} className="mt-1 h-4 w-4" />
+            <span><span className="block">Vou retirar na Loja 1</span><span className="mt-1 block text-xs font-normal text-zinc-600">Alameda Glete, 663 — Campos Elíseos, São Paulo/SP. O endereco de entrega nao sera exigido.</span></span>
+          </label>
+        </div>
         {/* Shipping Address */}
-        <div className="flex flex-col gap-2">
+        {!pickupOnly && <div className="flex flex-col gap-2">
           <h3 className="text-zinc-900 !text-base font-semibold">
             Endereço de Entrega
           </h3>
@@ -234,10 +292,10 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
               lockedProvince={CHECKOUT_PROVINCE}
             />
           )}
-        </div>
+        </div>}
 
-        {/* Billing Address Checkbox */}
-        <div className="flex items-start gap-x-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+        {/* Pickup has no delivery address to copy into billing. */}
+        {!pickupOnly && <div className="flex items-start gap-x-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
           <Checkbox
             id="same_as_billing"
             type="checkbox"
@@ -253,13 +311,13 @@ const AddressStep = ({ cart, onNext }: AddressStepProps) => {
           <label htmlFor="same_as_billing" className="text-sm leading-5">
             O endereço de cobrança é o mesmo da entrega
           </label>
-        </div>
+        </div>}
 
         {/* Billing Address (if different) */}
         {!sameAsBilling && (
           <div className="flex flex-col gap-2">
             <h3 className="text-zinc-900 !text-base font-semibold">
-              Endereço de Cobrança
+              {pickupOnly ? "Endereço de cobrança/fiscal" : "Endereço de Cobrança"}
             </h3>
             {hasCompanyBillingAddresses ? (
               <CompanyAddressSelector

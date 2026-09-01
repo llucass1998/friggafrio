@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerFooter,
@@ -376,7 +377,7 @@ export const CartSummary = ({ cart, context }: CartSummaryProps) => {
         {/* Shipping hint — only on the cart page */}
         {isPage && !hasSelectedShipping && (
           <p className="text-xs text-text-muted">
-            Opções e valores de entrega serão calculados no checkout.
+            Calculado na próxima etapa.
           </p>
         )}
 
@@ -480,7 +481,7 @@ export const CartPromo = ({ cart }: CartPromoProps) => {
           onClick={() => setShowInput(true)}
           className="text-sm text-accent hover:text-accent-hover font-medium transition-colors"
         >
-          + Adicionar cupom
+          Tenho um cupom
         </button>
       ) : (
         <div className="space-y-2">
@@ -589,11 +590,10 @@ export const CartDropdown = () => {
         data-testid="cart-drawer"
         className="z-[70] flex h-full min-w-0 max-w-[100vw] flex-col overflow-x-hidden border-l border-[#E5EDF4] sm:max-w-md"
         style={{ right: 0, left: "auto", bottom: 0 }}
-        aria-describedby="cart-drawer-description"
       >
         <DrawerHeader className="border-b border-[#E5EDF4]">
           <DrawerTitle className="text-xl font-bold text-[var(--color-navy)]">Seu Carrinho</DrawerTitle>
-          <div id="cart-drawer-description" className="sr-only">Lista de itens adicionados ao carrinho.</div>
+          <DrawerDescription className="sr-only">Lista de itens adicionados ao carrinho.</DrawerDescription>
         </DrawerHeader>
 
         {/* Empty Cart */}

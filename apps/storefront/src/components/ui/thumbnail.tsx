@@ -1,5 +1,6 @@
 import { clsx } from "clsx"
 import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
+import { resolveMediaUrl } from "@/lib/media-url"
 
 type ThumbnailProps = {
   thumbnail?: string | null;
@@ -8,11 +9,12 @@ type ThumbnailProps = {
 };
 
 export const Thumbnail = ({ thumbnail, alt, className }: ThumbnailProps) => {
+  const resolvedThumbnail = resolveMediaUrl(thumbnail)
   return (
     <>
-      {thumbnail ? (
+      {resolvedThumbnail ? (
         <img
-          src={thumbnail}
+          src={resolvedThumbnail}
           alt={alt}
           className={clsx("w-20 h-20 object-cover bg-zinc-50", className)}
         />

@@ -5,12 +5,18 @@
 {$FRIGGAFRIO_DOMAIN} {
 	encode zstd gzip
 
-	@backend path /store/* /auth/* /health /health/* /uploads/*
+	@admin_app path /app /app/*
+	handle @admin_app {
+		header Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src 'self'; frame-src 'none'"
+		reverse_proxy {$FRIGGAFRIO_BACKEND_UPSTREAM:http://172.25.20.159:9000}
+	}
+
+	@backend path /store/* /auth/* /admin /admin/* /health /health/* /uploads/*
 	handle @backend {
-		reverse_proxy http://172.25.20.159:9000
+		reverse_proxy {$FRIGGAFRIO_BACKEND_UPSTREAM:http://172.25.20.159:9000}
 	}
 
 	handle {
-		reverse_proxy http://172.25.20.159:5173
+		reverse_proxy {$FRIGGAFRIO_STOREFRONT_UPSTREAM:http://172.25.20.159:5173}
 	}
 }

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { useEffect } from "react"
 import type { HttpTypes } from "@medusajs/types"
 import { PublicProductCard } from "@/components/public-product-card"
 import { CarouselSectionHeader, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
@@ -38,15 +39,26 @@ export function HomeProductSection({
   sectionId,
   showAllProductsLink = false,
 }: HomeProductSectionProps) {
-  const { viewportRef, hasOverflow, scrollPrev, scrollNext } = useInfiniteCarousel()
+  const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext } = useInfiniteCarousel([], false)
+
+  // Product shelves mount after the query resolves; re-measure Embla when the
+  // real slides replace the skeletons so controls reflect the mounted track.
+  useEffect(() => {
+    if (!emblaApi || isLoading) return
+    const frame = window.requestAnimationFrame(() => emblaApi.reInit())
+    return () => window.cancelAnimationFrame(frame)
+  }, [emblaApi, isLoading, products.length])
 
   return (
-    <section data-testid={sectionId} className="relative w-full bg-white py-8 md:py-10">
+    <section data-testid={sectionId} className="relative w-full bg-[var(--color-background)] py-8 md:py-10">
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
+        <div className="rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-4 shadow-[0_10px_28px_rgba(8,59,102,0.07)] sm:p-6">
         <CarouselSectionHeader
           title={title}
           description={description}
           hasOverflow={hasOverflow}
+          canScrollPrevious={canScrollPrev}
+          canScrollNext={canScrollNext}
           onPrevious={scrollPrev}
           onNext={scrollNext}
           previousLabel={`Ver produtos anteriores em ${title}`}
@@ -75,7 +87,6 @@ export function HomeProductSection({
                 <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
                   <PublicProductCard
                     product={product}
-                    badgeText={sectionId === "home-best-sellers" ? "Mais vendido" : undefined}
                     compact
                   />
                 </div>
@@ -85,6 +96,7 @@ export function HomeProductSection({
         ) : (
           <p className="py-8 text-sm text-[var(--color-text-muted)]">{emptyMessage}</p>
         )}
+        </div>
       </div>
     </section>
   )

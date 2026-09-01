@@ -3,6 +3,7 @@ import type { HttpTypes } from "@medusajs/types"
 import type { Employee } from "@/lib/data/me"
 
 export interface AuthContextValue {
+  authState: "loading" | "authenticated" | "guest"
   isAuthenticated: boolean
   isLoading: boolean
   customer: HttpTypes.StoreCustomer | null

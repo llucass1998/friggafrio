@@ -3,6 +3,7 @@ import OrderConfirmationPage from "@/pages/order-confirmation"
 import { retrieveOrder } from "@/lib/data/order"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { sanitize } from "@/lib/utils/sanitize"
+import { pageMeta } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/order/$orderId/confirmed")({
   loader: async ({ params, context }) => {
@@ -26,5 +27,11 @@ export const Route = createFileRoute("/$countryCode/order/$orderId/confirmed")({
       order,
     })
   },
+  head: ({ params }) => pageMeta({
+    title: "Pedido confirmado | FriggaFrio",
+    description: "Detalhes privados do seu pedido FriggaFrio.",
+    path: `/${params.countryCode}/order/${params.orderId}/confirmed`,
+    indexable: false,
+  }),
   component: OrderConfirmationPage,
 })

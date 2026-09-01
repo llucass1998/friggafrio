@@ -4,6 +4,7 @@ import { COMPANY_INFORMATION } from "@/config/company"
 import { footerNavigation } from "@/config/footer-navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
+import { BadgeCheck, CreditCard, LockKeyhole } from "lucide-react"
 
 function Accordion({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -54,9 +55,9 @@ export function PublicFooter() {
       {/* 1. Área Superior de Benefícios e Atendimento */}
       <div className="border-b border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center lg:text-left">
-            <div className="flex flex-col lg:flex-row items-center gap-3">
-              <div className="bg-[var(--color-primary)]/20 p-3 rounded-full text-[var(--color-accent)]">
+          <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-2 lg:grid-cols-4 lg:text-left">
+            <div className="flex min-h-14 flex-col items-center gap-3 lg:flex-row lg:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-[var(--color-accent)]">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -67,40 +68,42 @@ export function PublicFooter() {
               </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-3">
-              <div className="bg-[#25D366]/20 p-3 rounded-full text-[#25D366]">
+            <div className="flex min-h-14 flex-col items-center gap-3 lg:flex-row lg:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366]">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
               <div>
-                <h4 className="font-bold text-white text-sm uppercase">Atendimento Rápido</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Atendimento Rápido</h4>
                 <a href={`https://wa.me/${storeConfig.whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[#25D366] hover:text-[#20bd5a] transition-colors">Via WhatsApp</a>
               </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-3">
-              <div className="bg-[var(--color-primary)]/20 p-3 rounded-full text-[var(--color-accent)]">
+            <div className="flex min-h-14 flex-col items-center gap-3 lg:flex-row lg:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-[var(--color-accent)]">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <div>
-                <h4 className="font-bold text-white text-sm uppercase">Nossa Loja Física</h4>
-                <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">Venha nos visitar</Link>
+                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja Física</h4>
+                <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                  {primaryLocation ? `${primaryLocation.addressLine}, ${primaryLocation.city} - ${primaryLocation.stateCode}` : "Venha nos visitar"}
+                </Link>
               </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-3">
-              <div className="bg-[var(--color-primary)]/20 p-3 rounded-full text-[var(--color-accent)]">
+            <div className="flex min-h-14 flex-col items-center gap-3 lg:flex-row lg:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-[var(--color-accent)]">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
               <div>
-                <h4 className="font-bold text-white text-sm uppercase">Compra 100% Segura</h4>
-                <span className="text-sm text-[var(--color-surface-soft)]">Ambiente blindado</span>
+                <h4 className="font-bold text-white text-sm uppercase">Compra segura</h4>
+                <span className="text-sm text-[var(--color-surface-soft)]">Informações e políticas claras</span>
               </div>
             </div>
           </div>
@@ -113,7 +116,7 @@ export function PublicFooter() {
           {/* Brand & Sobre */}
           <div className="lg:col-span-1 mb-6 md:mb-0">
             <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-4">
-              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-12 w-auto object-contain brightness-0 invert" />
+              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-20 w-auto object-contain brightness-0 invert sm:h-24" />
             </Link>
             <p className="text-sm text-[var(--color-surface-soft)] leading-relaxed mb-6">
               {storeConfig.description || "Especialistas em refrigeração, ar-condicionado e câmaras frias. Produtos e componentes de alta performance."}
@@ -199,31 +202,18 @@ export function PublicFooter() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4">
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Formas de Pagamento</span>
-              <div className="flex gap-2 flex-wrap justify-center">
-                <div className="bg-white px-2 py-1 rounded text-gray-800 text-xs font-bold w-12 h-8 flex items-center justify-center shadow-sm">VISA</div>
-                <div className="bg-white px-2 py-1 rounded text-gray-800 text-xs font-bold w-12 h-8 flex items-center justify-center shadow-sm">MC</div>
-                <div className="bg-white px-2 py-1 rounded text-gray-800 text-xs font-bold w-12 h-8 flex items-center justify-center shadow-sm">AMEX</div>
-                <div className="bg-white px-2 py-1 rounded text-[#00bdae] text-xs font-bold w-12 h-8 flex items-center justify-center shadow-sm">PIX</div>
-                <div className="bg-white px-2 py-1 rounded text-gray-800 text-xs font-bold w-12 h-8 flex items-center justify-center shadow-sm">BOLETO</div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Formas de pagamento</span>
+              <div className="flex max-w-sm items-center gap-3 rounded-xl border border-gray-700 bg-gray-950/60 px-4 py-3 text-gray-300">
+                <CreditCard className="h-6 w-6 shrink-0 text-sky-300" aria-hidden="true" />
+                <p className="text-xs leading-5">As formas disponíveis são apresentadas no checkout quando o pagamento estiver habilitado.</p>
               </div>
             </div>
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Segurança</span>
-              <div className="flex gap-4 justify-center">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <span className="text-xs">SSL<br/>Blindado</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-400">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span className="text-xs">Compra<br/>Segura</span>
-                </div>
+                <div className="flex justify-center gap-4">
+                 <div className="flex items-center gap-2 text-gray-300"><LockKeyhole className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Navegação<br/>protegida</span></div>
+                <div className="flex items-center gap-2 text-gray-300"><BadgeCheck className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Dados da empresa<br/>transparentes</span></div>
               </div>
             </div>
 

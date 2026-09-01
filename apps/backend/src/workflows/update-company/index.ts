@@ -13,7 +13,13 @@ import {
   SpendLimitResetFrequency,
 } from "../../modules/company/models"
 import type { IPaymentModuleService } from "@medusajs/framework/types"
+import type { RemoteQueryFunction } from "@medusajs/framework/types"
 import { isStripeConfigured } from "../../utils/is-stripe-configured"
+
+type RemoteLinkService = {
+  create(input: Record<string, Record<string, string>>): Promise<unknown>
+  dismiss(input: Record<string, Record<string, string>>): Promise<unknown>
+}
 
 export type UpdateCompanyInput = {
   id: string
@@ -39,7 +45,26 @@ type UpdateCompanyStepResult = {
   [key: string]: unknown
 }
 
-const updateCompanyStep = createStep(
+type CompanySnapshot = {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  country_code: string | null
+  logo_url: string | null
+  status: CompanyStatus
+  spend_limit_reset_frequency: SpendLimitResetFrequency
+}
+
+const updateCompanyStep = createStep<
+  UpdateCompanyInput,
+  UpdateCompanyStepResult,
+  CompanySnapshot
+>(
   "update-company",
   async (input: UpdateCompanyInput, { container }) => {
     const companyModuleService: CompanyModuleService =
@@ -59,17 +84,16 @@ const updateCompanyStep = createStep(
         ...(company as Record<string, unknown>),
         previous_status: previousCompany.status,
       } as UpdateCompanyStepResult,
-      previousCompany as unknown as Record<string, unknown> | undefined
+      previousCompany
     )
   },
-  async (previousCompany: Record<string, unknown> | undefined, { container }) => {
+  async (previousCompany: CompanySnapshot | undefined, { container }) => {
     if (!previousCompany) return
 
     const companyModuleService: CompanyModuleService =
       container.resolve(COMPANY_MODULE)
 
     await companyModuleService.updateCompanies({
-      // @ts-expect-error
       id: previousCompany.id,
       name: previousCompany.name,
       email: previousCompany.email,
@@ -99,7 +123,9 @@ const createAccountHolderStep = createStep(
 
     const paymentModuleService: IPaymentModuleService =
       container.resolve(Modules.PAYMENT)
-    const query = container.resolve(ContainerRegistrationKeys.QUERY)
+    const query = container.resolve<RemoteQueryFunction>(
+      ContainerRegistrationKeys.QUERY
+    )
 
     const { data: existingLinks } = await query.graph({
       entity: "company",
@@ -122,7 +148,9 @@ const createAccountHolderStep = createStep(
       },
     })
 
-    const link = container.resolve(ContainerRegistrationKeys.LINK)
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK
+    )
     await link.create({
       [COMPANY_MODULE]: { company_id: input.company_id },
       [Modules.PAYMENT]: { account_holder_id: accountHolder.id },
@@ -137,7 +165,9 @@ const createAccountHolderStep = createStep(
     if (!compensationData) return
     const paymentModuleService: IPaymentModuleService =
       container.resolve(Modules.PAYMENT)
-    const link = container.resolve(ContainerRegistrationKeys.LINK)
+    const link = container.resolve<RemoteLinkService>(
+      ContainerRegistrationKeys.LINK
+    )
 
     await link.dismiss({
       [COMPANY_MODULE]: { company_id: compensationData.company_id },

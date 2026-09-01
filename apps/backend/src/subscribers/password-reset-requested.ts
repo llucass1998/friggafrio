@@ -38,10 +38,9 @@ export default async function passwordResetRequestedHandler({
         "[Auth] Password reset email was not delivered: RESEND_API_KEY is not configured.",
       )
     }
-  } catch (error) {
-    logger.error(
-      `[Auth] Password reset email delivery failed: ${error instanceof Error ? error.message : "unknown error"}`,
-    )
+  } catch {
+    // Provider errors can contain recipient or request details; keep logs generic.
+    logger.error("[Auth] Password reset email delivery failed.")
   }
 }
 

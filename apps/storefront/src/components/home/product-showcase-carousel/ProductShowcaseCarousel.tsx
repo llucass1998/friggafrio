@@ -109,38 +109,40 @@ export function ProductShowcaseCarousel() {
       aria-roledescription="carousel"
       aria-label="Destaques de Equipamentos FriggaFrio"
     >
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
-          {showcaseSlides.map((slide, index) => (
-            <ProductShowcaseSlide
-              key={slide.id}
-              slide={slide}
-              isActive={index === selectedIndex}
-              direction={direction}
-            />
-          ))}
+      <div className="ff-hero-controls-stage relative">
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
+            {showcaseSlides.map((slide, index) => (
+              <ProductShowcaseSlide
+                key={slide.id}
+                slide={slide}
+                isActive={index === selectedIndex}
+                direction={direction}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <button
+        <button
         type="button"
         onClick={scrollPrev}
-        className="absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:h-11 sm:w-11 md:left-6"
+        className="ff-hero-control absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:h-11 sm:w-11 md:left-6"
         aria-label="Ver slide anterior"
       >
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-      </button>
+        </button>
 
-      <button
+        <button
         type="button"
         onClick={scrollNext}
-        className="absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:h-11 sm:w-11 md:right-6"
+        className="ff-hero-control absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:h-11 sm:w-11 md:right-6"
         aria-label="Ver próximo slide"
       >
         <ChevronRight className="h-5 w-5" aria-hidden="true" />
-      </button>
+        </button>
+      </div>
 
-      <div className="flex items-center justify-center bg-white py-3">
+      <div className="hidden items-center justify-center bg-white py-3 sm:flex">
         <div className="flex gap-2">
           {showcaseSlides.map((_, index) => {
             const active = index === selectedIndex

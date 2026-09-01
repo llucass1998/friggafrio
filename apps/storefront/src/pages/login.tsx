@@ -5,19 +5,30 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react"
 import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 import { normalizeReturnTo } from "@/lib/auth/return-to"
 import { configuredAdminOrigin } from "@/lib/auth/admin-origin"
+import { MEDUSA_BACKEND_URL } from "@/config/env"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false }) as { countryCode?: string }
   const countryCode = params.countryCode || DEFAULT_COUNTRY_CODE
-  const search = useSearch({ strict: false }) as { returnTo?: unknown }
+  const search = useSearch({ strict: false }) as { returnTo?: unknown; google_error?: unknown }
   const { login } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const googleErrorMessage =
+    search.google_error === "expired"
+      ? "A sessão do Google expirou. Inicie o login novamente."
+      : search.google_error === "invalid_request"
+        ? "Não foi possível validar a solicitação do Google. Inicie o login novamente."
+        : search.google_error === "authentication_failed"
+          ? "Não foi possível concluir o login com Google. Tente novamente."
+          : ""
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +38,11 @@ export default function LoginPage() {
     try {
       const actor = await login(email, password)
       if (actor === "admin") {
-        const adminOrigin = configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL)
+        // Local development shares the API origin; production keeps the Admin
+        // origin explicit so an API-only origin cannot become a bad redirect.
+        const adminOrigin =
+          configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL) ??
+          (import.meta.env.DEV ? configuredAdminOrigin(MEDUSA_BACKEND_URL) : null)
         if (!adminOrigin) {
           throw new Error("Admin origin is not configured")
         }
@@ -60,9 +75,9 @@ export default function LoginPage() {
           </div>
 
           {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
+          {(error || googleErrorMessage) && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert" aria-live="assertive">
+              <p className="text-sm text-red-600">{error || googleErrorMessage}</p>
             </div>
           )}
 
@@ -145,6 +160,22 @@ export default function LoginPage() {
           </div>
 
           {/* Create Account Link */}
+          <button
+            type="button"
+            disabled={isGoogleLoading}
+            aria-busy={isGoogleLoading}
+            onClick={() => {
+              setError("")
+              setIsGoogleLoading(true)
+              const returnPath = normalizeReturnTo(search.returnTo, countryCode)
+              const returnTo = `${window.location.origin}${returnPath}`
+              window.location.assign(`${MEDUSA_BACKEND_URL}/auth/customer/google/start?return_to=${encodeURIComponent(returnTo)}`)
+            }}
+            className="mb-5 w-full rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-3 font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-background)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGoogleLoading ? "Abrindo Google..." : "Continuar com Google"}
+          </button>
+
           <div className="text-center">
             <p className="text-[var(--color-text-muted)]">
               Ainda não tem uma conta?{" "}

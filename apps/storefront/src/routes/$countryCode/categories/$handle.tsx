@@ -8,6 +8,7 @@ import { sanitize } from "@/lib/utils/sanitize"
 import { z } from "zod"
 import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
 import { clampPage, normalizePage, offsetForPage, PRODUCTS_PER_PAGE } from "@/lib/utils/pagination"
+import { breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/categories/$handle")({
   validateSearch: z.object({
@@ -94,42 +95,22 @@ export const Route = createFileRoute("/$countryCode/categories/$handle")({
     const regionName = region?.name || countryCode?.toUpperCase()
     const categoryName = category?.name || "Category"
     const title = `${categoryName} - ${regionName} | FriggaFrio`
-    const description = `Shop FriggaFrio's ${categoryName.toLowerCase()} category available in ${regionName}.`
+    const description = `Encontre produtos de ${categoryName.toLowerCase()} da FriggaFrio disponíveis em ${regionName}.`
+    const categoryPath = `/${countryCode || "br"}/categories/${category?.handle || ""}`
+    const metadata = pageMeta({
+      title,
+      description,
+      path: categoryPath,
+      indexable: !(loaderData?.page && loaderData.page > 1),
+    })
 
     return {
-      meta: [
-        {
-          title,
-        },
-        {
-          name: "description",
-          content: description,
-        },
-        {
-          property: "og:title",
-          content: title,
-        },
-        {
-          property: "og:description",
-          content: description,
-        },
-        {
-          property: "og:type",
-          content: "website",
-        },
-        {
-          property: "twitter:card",
-          content: "summary_large_image",
-        },
-        {
-          property: "twitter:title",
-          content: title,
-        },
-        {
-          property: "twitter:description",
-          content: description,
-        },
-      ]
+      ...metadata,
+      scripts: category ? [structuredDataScript(breadcrumbStructuredData([
+        { name: "Home", path: `/${countryCode || "br"}` },
+        { name: "Categorias", path: `/${countryCode || "br"}/categories` },
+        { name: categoryName, path: categoryPath },
+      ]))] : [],
     }
   },
   component: Category,

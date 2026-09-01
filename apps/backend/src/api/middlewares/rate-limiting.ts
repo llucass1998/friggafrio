@@ -1,5 +1,6 @@
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { contentSecurityPolicyReportOnlyOptions } from "./content-security-policy";
 
 /**
  * Helmet adds secure HTTP headers.
@@ -7,7 +8,7 @@ import helmet from "helmet";
  */
 export const secureHeaders = helmet({
   crossOriginResourcePolicy: false,
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: contentSecurityPolicyReportOnlyOptions,
 });
 
 /**
@@ -35,6 +36,18 @@ export const registerRateLimit = rateLimit({
   message: {
     message: "Limite de criação de contas atingido. Tente novamente mais tarde.",
     type: "rate_limit_exceeded"
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/** Newsletter is public and intentionally limited more tightly than catalog reads. */
+export const newsletterRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    message: "Muitas tentativas de cadastro. Tente novamente mais tarde.",
+    type: "rate_limit_exceeded",
   },
   standardHeaders: true,
   legacyHeaders: false,

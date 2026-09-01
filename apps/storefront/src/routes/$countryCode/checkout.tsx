@@ -3,16 +3,13 @@ import Checkout from "@/pages/checkout"
 import { getRegion } from "@/lib/data/regions"
 import { CheckoutStepKey } from "@/lib/types/global"
 import { sanitize } from "@/lib/utils/sanitize"
+import { pageMeta } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/checkout")({
   validateSearch: (search): { step: CheckoutStepKey } => {
     let step = search.step
     if (!Object.values(CheckoutStepKey).includes(step as CheckoutStepKey)) {
       step = CheckoutStepKey.ADDRESSES
-    }
-    // Gate 7 has no payment step; old links land on the prepared summary.
-    if (step === CheckoutStepKey.PAYMENT) {
-      step = CheckoutStepKey.REVIEW
     }
     return {
       step: step as CheckoutStepKey,
@@ -43,5 +40,11 @@ export const Route = createFileRoute("/$countryCode/checkout")({
       step,
     })
   },
+  head: ({ params }) => pageMeta({
+    title: "Finalizar compra | FriggaFrio",
+    description: "Conclua sua compra com as opções de entrega e retirada da FriggaFrio.",
+    path: `/${params.countryCode}/checkout`,
+    indexable: false,
+  }),
   component: Checkout,
 })

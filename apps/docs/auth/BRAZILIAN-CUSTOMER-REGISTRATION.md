@@ -21,4 +21,4 @@ A prioridade crítica do projeto é proteger a manipulação e envio do document
 
 ## Próximos Passos (Backend Check)
 1. Certificar-se que a API da Medusa (`POST /auth/register` ou similar) está configurada no backend para aceitar campos no objeto `metadata`, ou mapear os dados corretamente.
-2. Certificar-se que a comunicação local aponta sempre para portas 9000 e 5174 com a varável `VITE_MEDUSA_BACKEND_URL` sem depender de fallbacks ocultos de prod.
+2. Certificar-se que a comunicação local aponta sempre para portas 9000 e 5173 com a variável `VITE_MEDUSA_BACKEND_URL` sem depender de fallbacks ocultos de prod.

@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "@tanstack/react-router"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { storeConfig } from "@/config/store"
 import { useCategories } from "@/lib/hooks/use-categories"
 
 export function ProductsMegaMenu() {
@@ -11,7 +10,7 @@ export function ProductsMegaMenu() {
   const menuId = `products-mega-menu-${useId().replace(/:/g, "")}`
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
-  const { data: categories = [], isLoading } = useCategories({ queryParams: { limit: 100, offset: 0 } })
+  const { data: categories = [], isLoading } = useCategories({ queryParams: { limit: 100, offset: 0, include_ancestors_tree: false } })
 
   const topLevel = useMemo(() => categories.filter((category) => !category.parent_category_id), [categories])
   const childrenByParent = useMemo(() => {
@@ -65,8 +64,6 @@ export function ProductsMegaMenu() {
     <div
       ref={menuRef}
       className="group relative z-50"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
     >
       <button
         type="button"
@@ -84,7 +81,7 @@ export function ProductsMegaMenu() {
         id={menuId}
         role="region"
         aria-label="Categorias de produtos"
-        className={`absolute left-0 top-full w-[min(92vw,900px)] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-white shadow-xl transition-[opacity,transform,visibility] duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)] ${isOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"}`}
+        className={`absolute left-0 top-full w-[min(92vw,900px)] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-white shadow-xl transition-[opacity,transform,visibility] duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)] ${isOpen ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none hidden -translate-y-1 opacity-0"}`}
       >
         <div className="max-h-[min(70vh,460px)] overflow-y-auto p-5 md:p-6">
           <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
@@ -100,18 +97,9 @@ export function ProductsMegaMenu() {
               onClick={closeMenu}
               className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
             >
-              Ver todos
+              Ver todos os produtos
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-            <a
-              href={`https://wa.me/${storeConfig.whatsappNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={closeMenu}
-              className="hidden items-center gap-1 text-xs font-semibold text-[#16803c] hover:underline sm:inline-flex"
-            >
-              Falar com especialista
-            </a>
           </div>
 
           {isLoading ? (

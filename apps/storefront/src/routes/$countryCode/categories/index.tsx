@@ -3,6 +3,7 @@ import { getRegion } from "@/lib/data/regions"
 import { listCategories } from "@/lib/data/categories"
 import CategoriesPage from "@/pages/categories"
 import { sanitize } from "@/lib/utils/sanitize"
+import { breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
 
 export const Route = createFileRoute("/$countryCode/categories/")({
   loader: async ({ params, context }) => {
@@ -20,6 +21,21 @@ export const Route = createFileRoute("/$countryCode/categories/")({
     })
 
     return sanitize({ countryCode, region, categories })
+  },
+  head: ({ loaderData }) => {
+    const countryCode = loaderData?.countryCode || "br"
+    const metadata = pageMeta({
+      title: "Categorias de produtos | FriggaFrio",
+      description: "Explore as categorias de produtos e peças para refrigeração da FriggaFrio.",
+      path: `/${countryCode}/categories`,
+    })
+    return {
+      ...metadata,
+      scripts: [structuredDataScript(breadcrumbStructuredData([
+        { name: "Home", path: `/${countryCode}` },
+        { name: "Categorias", path: `/${countryCode}/categories` },
+      ]))],
+    }
   },
   component: CategoriesPage,
 })

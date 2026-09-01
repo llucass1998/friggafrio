@@ -17,6 +17,10 @@ type PasswordResetConfirmation = {
   password: string
 }
 
+type SessionWithDestroy = {
+  destroy?: (callback: (error?: Error | null) => void) => void
+}
+
 type ResetTokenClaims = {
   entity_id?: string
   provider?: string
@@ -88,13 +92,6 @@ export const POST = async (
       return
     }
 
-    // Mark the token consumed while holding the database-backed lock before
-    // mutating credentials, so concurrent confirmations cannot both succeed.
-    await resetTokenService.updatePasswordResetTokens({
-      id: storedToken.id,
-      consumed_at: new Date(),
-    })
-
     const { success } = await authModule.updateProvider("emailpass", {
       entity_id: claims.entity_id,
       password,
@@ -107,6 +104,15 @@ export const POST = async (
       })
       return
     }
+
+    // Keep the token available when the provider rejects the update. The
+    // database-backed lock still serializes concurrent confirmations, and the
+    // successful credential update is followed immediately by single-use
+    // consumption before the lock is released.
+    await resetTokenService.updatePasswordResetTokens({
+      id: storedToken.id,
+      consumed_at: new Date(),
+    })
   } catch {
     res.status(400).json({
       code: "INVALID_PASSWORD_RESET_TOKEN",
@@ -115,6 +121,13 @@ export const POST = async (
     return
   } finally {
     await locking.release(lockKey, { ownerId: lockOwner }).catch(() => undefined)
+  }
+
+  // A reset must not leave the browser session that initiated the flow alive.
+  // Existing sessions are independently bounded by the server-side TTL.
+  const session = req.session as unknown as SessionWithDestroy | undefined
+  if (session && typeof session.destroy === "function") {
+    await new Promise<void>((resolve) => session.destroy?.(() => resolve()))
   }
 
   res.status(200).json({ success: true })

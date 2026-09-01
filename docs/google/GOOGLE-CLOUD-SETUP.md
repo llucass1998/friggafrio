@@ -24,8 +24,8 @@ Acesse **APIs e Serviços > Biblioteca** e ative APENAS as seguintes APIs:
 5. Selecione o tipo de aplicativo **Aplicativo da Web**.
 6. Insira o nome: `FriggaFrio Storefront`.
 7. **Origens JavaScript autorizadas:**
-   - `http://localhost:5174`
-   - `http://127.0.0.1:5174`
+   - `http://localhost:5173`
+   - `http://127.0.0.1:5173`
    - Futuramente adicionar: `https://friggafrio.com.br` e `https://www.friggafrio.com.br`
 8. **URIs de redirecionamento autorizados:**
    - Não usaremos Redirect URI estrita no modo popup, mas configure caso haja fallback: `http://localhost:9000/auth/customer/google/callback` e as URLs equivalentes de produção da API do Medusa.
@@ -37,7 +37,7 @@ Acesse **APIs e Serviços > Biblioteca** e ative APENAS as seguintes APIs:
 1. Em **Credenciais > Criar Credenciais > Chave de API**.
 2. Edite a chave e renomeie para `Frontend Maps Embed Key`.
 3. **Restrições do aplicativo:** Selecione "Referenciadores HTTP (sites)".
-   - Adicione as URLs: `http://localhost:5174/*`, `http://127.0.0.1:5174/*`. 
+   - Adicione as URLs: `http://localhost:5173/*`, `http://127.0.0.1:5173/*`.
    - Na produção adicione `https://friggafrio.com.br/*` e `https://www.friggafrio.com.br/*`.
 4. **Restrições de API:** Restrinja o uso APENAS para **Maps Embed API**.
 

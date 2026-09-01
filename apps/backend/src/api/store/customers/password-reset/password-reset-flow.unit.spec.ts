@@ -1,4 +1,5 @@
 import { Modules } from "@medusajs/framework/utils"
+import { sign } from "jsonwebtoken"
 import { PASSWORD_RESET_TOKEN_MODULE } from "../../../../modules/password-reset-token"
 import { POST as requestPasswordReset } from "./route"
 import { POST as confirmPasswordReset } from "./confirm/route"
@@ -131,5 +132,57 @@ describe("persistent password reset flow", () => {
     ])
     expect(auth.updateProvider).toHaveBeenCalledTimes(1)
     expect(records[0].consumed_at).toBeInstanceOf(Date)
+  })
+
+  it("does not consume a valid token when the provider rejects the password", async () => {
+    const records = [{
+      id: "reset_failure",
+      token_hash: "hash",
+      customer_email: "customer@example.com",
+      expires_at: new Date(Date.now() + 60_000),
+      consumed_at: null,
+    }]
+    const auth = {
+      updateProvider: jest.fn().mockResolvedValue({ success: false }),
+    }
+    const resetTokens = {
+      listPasswordResetTokens: jest.fn().mockResolvedValue(records),
+      updatePasswordResetTokens: jest.fn(),
+    }
+    const locking = {
+      acquire: jest.fn().mockResolvedValue(undefined),
+      release: jest.fn().mockResolvedValue(true),
+    }
+    const scope = {
+      resolve(key: string) {
+        if (key === Modules.AUTH) return auth
+        if (key === Modules.LOCKING) return locking
+        if (key === PASSWORD_RESET_TOKEN_MODULE) return resetTokens
+        if (key === "configModule") {
+          return { projectConfig: { http: { jwtSecret: "test-secret" } } }
+        }
+        throw new Error(`Unexpected dependency: ${key}`)
+      },
+    }
+    const response = createResponse()
+    const token = sign(
+      {
+        entity_id: "customer@example.com",
+        actor_type: "customer",
+        provider: "emailpass",
+        purpose: "reset",
+        jti: "reset_failure",
+      },
+      "test-secret",
+      { expiresIn: 300 },
+    )
+
+    await confirmPasswordReset(
+      { validatedBody: { token, password: "new-password-123" }, scope } as never,
+      response as never,
+    )
+
+    expect(response.statusCode).toBe(400)
+    expect(resetTokens.updatePasswordResetTokens).not.toHaveBeenCalled()
   })
 })

@@ -48,4 +48,6 @@ export type AddressFormData = {
   province: string
   country_code: string
   phone: string
+  number?: string
+  neighborhood?: string
 }

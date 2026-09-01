@@ -1,9 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 import OrdersPage from "@/pages/orders"
 import AccountShell from "@/components/account-shell"
-import { sdk } from "@/lib/medusa"
-import { normalizeReturnTo } from "@/lib/auth/return-to"
+import { pageMeta } from "@/lib/seo"
 
 const ordersSearchSchema = z.object({
   orderId: z.string().optional(),
@@ -19,38 +18,13 @@ function AccountOrdersRoute() {
 }
 
 export const Route = createFileRoute("/$countryCode/account/orders")({
-  beforeLoad: async ({ params, search }) => {
-    try {
-      await sdk.store.customer.retrieve()
-    } catch {
-      const countryCode = params.countryCode || "br"
-      const orderId = typeof search.orderId === "string"
-        ? `?orderId=${encodeURIComponent(search.orderId)}`
-        : ""
-      const filter = typeof search.filter === "string"
-        ? `${orderId ? "&" : "?"}filter=${encodeURIComponent(search.filter)}`
-        : ""
-      const returnTo = normalizeReturnTo(`/${countryCode}/account/orders${orderId}${filter}`, countryCode)
-      throw redirect({
-        to: "/$countryCode/account/login",
-        params: { countryCode },
-        search: { returnTo },
-      })
-    }
-  },
+  beforeLoad: async () => undefined,
   component: AccountOrdersRoute,
   validateSearch: ordersSearchSchema,
-  head: () => {
-    return {
-      meta: [
-        {
-          title: "Meus pedidos | FriggaFrio",
-        },
-        {
-          name: "description",
-          content: "Consulte e acompanhe seu histórico de pedidos.",
-        },
-      ],
-    }
-  },
+  head: ({ params }) => pageMeta({
+    title: "Meus pedidos | FriggaFrio",
+    description: "Consulte e acompanhe seu histórico de pedidos.",
+    path: `/${params.countryCode}/account/orders`,
+    indexable: false,
+  }),
 })

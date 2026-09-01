@@ -19,7 +19,7 @@ test.describe("Hero promocional", () => {
 
       const hero = page.getByTestId("home-hero-carousel")
       const measurement = await hero.evaluate((element) => {
-        const stage = element.querySelector<HTMLElement>(".ff-hero-slide-stage")
+        const stage = element.querySelector<HTMLElement>(".ff-hero-controls-stage")
         const images = [...element.querySelectorAll<HTMLImageElement>(".carousel-slide-img")]
         const slideControls = [...element.querySelectorAll<HTMLButtonElement>('button[aria-label*="slide"]')]
         const previous = slideControls[0]?.getBoundingClientRect()
@@ -78,9 +78,14 @@ test.describe("Hero promocional", () => {
     await expect(slides).toHaveCount(3)
     await expect(dots).toHaveCount(3)
 
+    // Autoplay may advance while other parallel pages finish loading; controls must
+    // still move relative to the currently selected slide rather than assuming zero.
+    const initialIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
+      [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
+    )
     const next = page.locator('button[aria-label*="slide"]').last()
     await next.click()
-    await expect(slides.nth(1)).toHaveAttribute("data-active", "true")
+    await expect(slides.nth((initialIndex + 1) % 3)).toHaveAttribute("data-active", "true")
 
     await dots.nth(2).click()
     await expect(slides.nth(2)).toHaveAttribute("data-active", "true")

@@ -1,0 +1,27 @@
+# Never send credentials or repository metadata to a Docker build context.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+**/.git
+**/.git/**
+**/node_modules
+**/dist
+**/dist-ssr
+**/build
+**/.medusa/server
+**/.turbo
+**/.vite
+**/coverage
+**/playwright-report
+**/test-results
+**/runtime-logs
+**/screenshots
+**/uploads
+**/.local-uploads
+**/*.log
+**/*.dump
+**/*.backup
+**/*.tmp
+**/NUL
+.tmp-products.json

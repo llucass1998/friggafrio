@@ -37,12 +37,12 @@ export function HeaderLogo({ compact = false }: HeaderLogoProps) {
           <img
             src="/favicon.png"
             alt="FriggaFrio Símbolo"
-            className="h-10 w-auto md:h-12"
-            width={48}
-            height={48}
+            className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10"
+            width={40}
+            height={40}
             loading="eager"
           />
-          <span className="font-heading font-black text-2xl tracking-tighter text-[var(--color-navy)] uppercase hidden sm:block">
+          <span className="font-heading text-base font-black tracking-tight text-[var(--color-navy)] sm:text-xl">
             FriggaFrio
           </span>
         </div>
@@ -50,7 +50,7 @@ export function HeaderLogo({ compact = false }: HeaderLogoProps) {
         <img
           src="/images/brand/logo-friggafrio-optimized.webp"
           alt="FriggaFrio — Refrigeração e Ar Condicionado"
-          className="h-[70px] sm:h-[80px] md:h-[90px] w-auto object-contain"
+          className="h-[52px] max-w-[44vw] w-auto object-contain px-[5px] sm:h-[60px] sm:max-w-none"
           loading="eager"
         />
       )}

@@ -16,6 +16,7 @@ import { memo, useEffect, useMemo, useState } from "react"
 import { Loader2, ShoppingCart, Check, MessageCircle, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { getInterestFreeInstallment } from "@/lib/utils/installments"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -28,12 +29,34 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
   const [quantity, setQuantity] = useState(1)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isBuyingNow, setIsBuyingNow] = useState(false)
+  const [isFooterVisible, setIsFooterVisible] = useState(false)
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const countryCode = getCountryCodeFromPath(location.pathname) || "br"
   const queryClient = useQueryClient()
   const { openCart } = useCartDrawer()
   const addToCartMutation = useAddToCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
+
+  useEffect(() => {
+    const footer = document.querySelector("footer")
+    if (!footer || typeof IntersectionObserver === "undefined") return
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsFooterVisible(Boolean(entry?.isIntersecting))
+    }, { threshold: 0.01 })
+    observer.observe(footer)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const updateOverlayState = () => {
+      setIsOverlayOpen(Boolean(document.querySelector('[role="dialog"][aria-modal="true"]')))
+    }
+    updateOverlayState()
+    const observer = new MutationObserver(updateOverlayState)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-modal", "data-state"] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     setSelectedOptions({})
@@ -70,13 +93,15 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
   const formattedPrice = typeof displayPrice === "number" && displayPrice > 0
     ? formatCurrencyAmount({ amount: displayPrice, currencyCode })
     : undefined
+  const installment = getInterestFreeInstallment(displayPrice)
   const reference = product.variants?.[0]?.sku || undefined
   const whatsappUrl = createProductWhatsAppUrl({
     title: productTitle,
     reference,
     quantity,
     price: formattedPrice,
-    url: typeof window !== "undefined" ? window.location.href : undefined,
+    // Keep the WhatsApp message identical during SSR and hydration.
+    url: location.pathname,
   })
   const isBusy = addToCartMutation.isPending || isBuyingNow
 
@@ -124,7 +149,8 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
           : null
 
   return (
-    <div className="flex flex-col gap-5" aria-live="polite">
+    <>
+    <div className="flex min-w-0 flex-col gap-5 pb-2 md:pb-0" aria-live="polite">
       <div>
         {quoteState ? (
           <>
@@ -134,7 +160,10 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
             <p className="mt-2 text-lg font-medium text-[var(--color-text-muted)]">{statusCopy}</p>
           </>
         ) : formattedPrice ? (
-          <p className="text-3xl font-bold tracking-tight text-[var(--color-navy)] md:text-4xl">{formattedPrice}</p>
+          <>
+            <p className="text-3xl font-bold tracking-tight text-[var(--color-navy)] md:text-4xl">{formattedPrice}</p>
+            {installment && <p className="mt-1 text-sm font-medium text-[var(--color-text-muted)]">{installment.label}</p>}
+          </>
         ) : statusCopy ? (
           <p className="text-lg font-medium text-[var(--color-text-muted)]">{statusCopy}</p>
         ) : null}
@@ -157,10 +186,10 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
       )}
 
       {canBuySelected && (
-        <div className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4">
+        <div className="flex flex-col items-start gap-2 border-t border-[var(--color-border)] pt-4 xl:flex-row xl:items-center xl:justify-between">
           <label htmlFor="product-quantity" className="text-sm font-semibold text-[var(--color-navy)]">Quantidade</label>
           <div className="flex items-center rounded-[var(--radius-button-sm)] border border-[var(--color-border)] bg-white">
-            <button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={isBusy || quantity <= 1} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">−</button>
+            <button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={isBusy || quantity <= 1} className="h-11 w-11 shrink-0 text-lg text-[var(--color-navy)] disabled:opacity-40">−</button>
             <input
               id="product-quantity"
               type="number"
@@ -183,14 +212,14 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
       )}
 
       {canBuySelected && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => void handleCartAction(true)} disabled={isBusy} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-wait disabled:opacity-60">
-            {isBuyingNow ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-            Comprar agora
-          </button>
-          <button type="button" onClick={() => void handleCartAction(false)} disabled={isBusy || isSuccess} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] border px-5 py-3 text-sm font-bold transition ${isSuccess ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-[var(--color-primary)] bg-white text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)]"} disabled:cursor-wait disabled:opacity-60`}>
+        <div className="grid min-w-0 gap-3">
+          <button type="button" onClick={() => void handleCartAction(false)} disabled={isBusy || isSuccess} className={`inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-button)] border px-5 py-3 text-sm font-bold transition ${isSuccess ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-[var(--color-primary)] bg-white text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)]"} disabled:cursor-wait disabled:opacity-60`}>
             {isSuccess ? <Check className="h-4 w-4" aria-hidden="true" /> : <ShoppingCart className="h-4 w-4" aria-hidden="true" />}
             {isSuccess ? "Adicionado" : "Adicionar ao carrinho"}
+          </button>
+          <button type="button" onClick={() => void handleCartAction(true)} disabled={isBusy} className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-button)] border border-[var(--color-primary)] bg-white px-5 py-3 text-sm font-bold text-[var(--color-primary)] transition hover:bg-[var(--color-surface-soft)] disabled:cursor-wait disabled:opacity-60">
+            {isBuyingNow ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            Comprar agora
           </button>
         </div>
       )}
@@ -199,14 +228,14 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
       {purchaseState.status === "out_of_stock" && <p className="text-sm font-medium text-rose-700">Sem estoque para compra imediata.</p>}
 
       {quoteState && whatsappUrl && (
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)]">
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-button)] bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)]">
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
           Solicitar orçamento
         </a>
       )}
 
       {whatsappUrl && (
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-primary)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-surface-soft)]">
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-button)] border border-[var(--color-primary)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-surface-soft)]">
           <MessageCircle className="h-4 w-4 text-[#25D366]" aria-hidden="true" />
           {quoteState ? "Falar com um especialista" : "Comprar via WhatsApp"}
         </a>
@@ -217,6 +246,26 @@ const ProductActions = memo(function ProductActions({ product, region, disabled 
         <span className="inline-flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[var(--color-primary)]" aria-hidden="true" /> Atendimento especializado</span>
       </div>
     </div>
+    {canBuySelected && formattedPrice && !isFooterVisible && !isOverlayOpen && (
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(8,59,102,0.12)] backdrop-blur md:hidden" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+        <div className="mx-auto flex max-w-xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-bold text-[var(--color-navy)]">{formattedPrice}</p>
+            {installment && <p className="truncate text-[11px] font-medium text-[var(--color-text-muted)]">{installment.label}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleCartAction(false)}
+            disabled={isBusy || isSuccess}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-wait disabled:opacity-60"
+            aria-label={isSuccess ? "Produto adicionado ao carrinho" : "Adicionar produto ao carrinho"}
+          >
+            {isSuccess ? "Adicionado" : "Adicionar ao carrinho"}
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   )
 })
 

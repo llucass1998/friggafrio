@@ -3,7 +3,7 @@ import { useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
-import { PUBLIC_PRODUCT_CARD_FIELDS } from "@/lib/data/product-fields"
+import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { selectHomeProducts } from "@/lib/data/home-products"
@@ -29,7 +29,7 @@ export function HomeProductSections() {
         limit: 500,
         offset: 0,
         order: "-created_at",
-        fields: PUBLIC_PRODUCT_CARD_FIELDS,
+        fields: PUBLIC_HOME_PRODUCT_FIELDS,
       },
       regionId: regionQuery.data!.id,
     }),

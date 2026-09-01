@@ -17,7 +17,7 @@ const CheckoutProgress = ({
 }: CheckoutProgressProps) => {
   return (
     <nav aria-label="Etapas do checkout" className={clsx("rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm", className)}>
-      <ol className="grid grid-cols-3 gap-1">
+      <ol className="grid grid-cols-2 gap-1 sm:grid-cols-4">
       {steps.map((step, index) => (
         <li key={step.key} className="min-w-0">
           <Button

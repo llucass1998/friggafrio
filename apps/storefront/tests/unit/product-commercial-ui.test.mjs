@@ -5,17 +5,18 @@ import { readFileSync } from "node:fs"
 const card = readFileSync(new URL("../../src/components/public-product-card.tsx", import.meta.url), "utf8")
 const detail = readFileSync(new URL("../../src/components/product-actions.tsx", import.meta.url), "utf8")
 
-test("Product Card renders quote-only and pending states as non-purchasable", () => {
+test("Product Card renders quote-only and pending states as factual PDP links", () => {
   assert.match(card, /purchaseState\.status === "quote_only"/)
   assert.match(card, /Sob cota/)
   assert.match(card, /purchaseState\.status === "price_pending"/)
   assert.match(card, /Valor em configura/)
   assert.match(card, /Consulte o valor/)
-  assert.match(card, /disabled=/)
+  assert.doesNotMatch(card, /Adicionar ao carrinho/)
+  assert.doesNotMatch(card, /useAddToCart/)
 })
 
 test("Product Card does not render a pending calculated price", () => {
-  const pendingBranch = card.match(/purchaseState\.status === "price_pending" \? \([\s\S]*?\) : displayPrice/)
+  const pendingBranch = card.match(/purchaseState\.status === "price_pending" \? \([\s\S]*?\) : purchaseState\.status === "out_of_stock"/)
   assert.ok(pendingBranch, "expected an explicit price_pending presentation branch")
   assert.doesNotMatch(pendingBranch[0], /formatCurrencyAmount/)
 })
@@ -34,4 +35,12 @@ test("Product Detail does not format a calculated price for pending states", () 
   assert.match(detail, /purchaseState\.status === "purchasable" \? purchaseState\.price : undefined/)
   assert.match(detail, /quoteState \? \(/)
   assert.match(detail, /formattedPrice = typeof displayPrice === "number" && displayPrice > 0/)
+})
+
+test("home product shelves request only fields used by compact public cards", () => {
+  const fields = readFileSync(new URL("../../src/lib/data/product-fields.ts", import.meta.url), "utf8")
+  const homeFields = fields.match(/PUBLIC_HOME_PRODUCT_FIELDS[\s\S]*?\n\n/)?.[0] ?? ""
+  assert.match(homeFields, /id,title,handle,thumbnail/)
+  assert.doesNotMatch(homeFields, /description/)
+  assert.doesNotMatch(homeFields, /variants\.options/)
 })

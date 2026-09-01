@@ -62,6 +62,7 @@ export const requireCheckoutPreparation = async (
       "email",
       "currency_code",
       "shipping_address.*",
+      "billing_address.*",
       "items.id",
       "items.quantity",
       "items.unit_price",
@@ -98,7 +99,12 @@ export const requireCheckoutPreparation = async (
   }
   assertCheckoutCartOwnership(customerId, cart?.customer_id)
   const marker = cart?.metadata?.[CHECKOUT_PREPARATION_METADATA_KEY]
-  const snapshot = cart ? checkoutSnapshotFromCart(cart as never) : null
+  const pickup = cart?.metadata?.frigga_fulfillment_mode === "pickup"
+  const snapshot = cart
+    ? checkoutSnapshotFromCart((pickup
+      ? { ...cart, shipping_address: undefined, allow_missing_shipping_address: true, allow_missing_billing_address: true }
+      : cart) as never)
+    : null
   if (
     !cart
     || cart.completed_at
