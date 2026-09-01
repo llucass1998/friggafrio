@@ -21,7 +21,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       return
     }
 
-    const uploadDir = process.env.FILE_LOCAL_UPLOAD_DIR
+    const uploadDir = process.env.FILE_LOCAL_UPLOAD_DIR?.trim() || process.env.LOCAL_FILE_UPLOAD_DIR?.trim()
     if (!uploadDir) {
       res.status(404).json({ type: "not_found", message: "Upload storage is not configured" })
       return
