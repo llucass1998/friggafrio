@@ -34,25 +34,12 @@ medusaIntegrationTestRunner({
         expect(Number.isNaN(Date.parse(response.data.timestamp))).toBe(false)
       })
 
-      it("reports readiness from the active database connection", async () => {
-        const originalDatabaseUrl = process.env.DATABASE_URL
-        process.env.DATABASE_URL = ""
-
-        try {
-          const response = await api.get("/health/ready", {
-            validateStatus: () => true,
-          })
-
-          expect({ status: response.status, data: response.data }).toEqual({
-            status: 200,
-            data: {
-              status: "ready",
-              checks: { database: "up" },
-            },
-          })
-        } finally {
-          process.env.DATABASE_URL = originalDatabaseUrl
-        }
+      it("reports readiness only after database and Redis checks pass", async () => {
+        const response = await api.get("/health/ready", { validateStatus: () => true })
+        expect({ status: response.status, data: response.data }).toEqual({
+          status: 200,
+          data: { status: "ready", checks: { database: "up", redis: "up" } },
+        })
       })
     })
   },

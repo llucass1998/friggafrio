@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { sdk } from "@/lib/medusa"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { companySetupQueryKey, isCompanySetupEligible, shouldRetryCompanySetup } from "@/lib/hooks/company-setup-policy"
 
 export interface CompanySetupStep {
   key: string
@@ -20,18 +21,23 @@ export interface CompanySetupStatus {
 }
 
 export function useCompanySetupStatus() {
-  const { isAuthenticated } = useAuth()
+  const { authState, customer, employee } = useAuth()
+  // This endpoint is meaningful only for a verified B2B employee session.
+  // Keeping B2C and transient auth states out prevents expected 401/404 retries.
+  const customerId = customer?.id
+  const companyId = employee?.company_id
 
   return useQuery({
-    queryKey: ["company-setup-status"],
+    queryKey: companySetupQueryKey(customerId),
     queryFn: async () => {
       const response = await sdk.client.fetch<{
         setup_status: CompanySetupStatus
       }>("/store/company/setup-status", { method: "GET" })
       return response.setup_status
     },
-    enabled: isAuthenticated,
+    enabled: isCompanySetupEligible({ authState, customerId, companyId }),
     staleTime: 30_000,
+    retry: shouldRetryCompanySetup,
   })
 }
 

@@ -1,5 +1,6 @@
 import { GET as startGoogle } from "./start/route"
 import { GET as callbackGoogle } from "./callback/route"
+import { GET as googleStatus } from "./status/route"
 import {
   exchangeGoogleCode,
   verifyGoogleIdToken,
@@ -68,6 +69,19 @@ describe("Google OIDC routes", () => {
     await startGoogle({ query: {}, session: {} } as never, res as never)
     expect(res.statusCode).toBe(503)
     expect(res.payload).toMatchObject({ code: "GOOGLE_OIDC_EXTERNAL_CONFIGURATION_REQUIRED" })
+  })
+
+  it("reports availability through the auth namespace without requiring a store key", () => {
+    process.env.GOOGLE_CLIENT_ID = "client-id"
+    process.env.GOOGLE_CLIENT_SECRET = "server-secret"
+    process.env.GOOGLE_OAUTH_REDIRECT_URI = "https://api.example/auth/customer/google/callback"
+    process.env.STOREFRONT_URL = "https://shop.example"
+
+    const res = response()
+    googleStatus({} as never, res as never)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.payload).toEqual({ available: true })
   })
 
   it("consumes a mismatched callback state without exchanging a code", async () => {

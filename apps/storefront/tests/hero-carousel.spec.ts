@@ -12,6 +12,17 @@ const viewports = [
 ]
 
 test.describe("Hero promocional", () => {
+  test.beforeEach(async ({ request }) => {
+    // Fail closed before navigation when the local API is unavailable; a blank
+    // storefront must not be reported as a visual regression.
+    try {
+      const health = await request.get("http://127.0.0.1:9000/health", { timeout: 5_000 })
+      test.skip(!health.ok(), "Local backend health check unavailable")
+    } catch {
+      test.skip(true, "Local backend health check unavailable")
+    }
+  })
+
   for (const viewport of viewports) {
     test(`preserva a arte e usa altura controlada em ${viewport.width}px`, async ({ page }) => {
       await page.setViewportSize(viewport)

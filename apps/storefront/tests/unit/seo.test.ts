@@ -7,6 +7,7 @@ import {
   organizationStructuredData,
   websiteStructuredData,
 } from "../../src/lib/seo"
+import { isLoopbackMediaUrl } from "../../src/lib/media-url"
 
 test("SEO URLs stay absolute and canonical to the public origin", () => {
   assert.equal(absoluteSiteUrl("/br/store"), "https://friggafrio.com.br/br/store")
@@ -44,4 +45,9 @@ test("organization, website and breadcrumb JSON-LD contain only factual URLs", (
   assert.equal(website["@type"], "WebSite")
   assert.equal(website.inLanguage, "pt-BR")
   assert.equal(breadcrumb.itemListElement[1].item, "https://friggafrio.com.br/br/store")
+})
+
+test("public product metadata never emits loopback image URLs", () => {
+  assert.equal(isLoopbackMediaUrl("http://localhost:9000/static/missing.jpg"), true)
+  assert.equal(isLoopbackMediaUrl("https://cdn.example.com/product.jpg"), false)
 })

@@ -74,7 +74,7 @@ export default function CheckoutCustomerStep({ cart, value, onChange, onNext }: 
     )
   }
 
-  const isAuthenticatedSession = authState === "authenticated"
+  const isAuthenticatedSession = authState === "authenticated" && customer !== null
   return (
     <form className="space-y-6" onSubmit={(event) => {
       event.preventDefault()
@@ -82,7 +82,7 @@ export default function CheckoutCustomerStep({ cart, value, onChange, onNext }: 
     }} noValidate>
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         {isAuthenticatedSession ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Compra vinculada à conta de {customer?.first_name || "sua conta"}.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">Compra vinculada à sua conta.</p>
         ) : (
           <>
             <p className="text-sm text-[var(--color-text-muted)]">Compra como convidado. Uma conta não é necessária para concluir.</p>

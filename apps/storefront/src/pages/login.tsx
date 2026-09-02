@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useParams, useSearch, Link } from "@tanstack/react-router"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { Eye, EyeOff, LockKeyhole } from "lucide-react"
@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null)
 
   const googleErrorMessage =
     search.google_error === "expired"
@@ -29,6 +30,23 @@ export default function LoginPage() {
         : search.google_error === "authentication_failed"
           ? "Não foi possível concluir o login com Google. Tente novamente."
           : ""
+
+  useEffect(() => {
+    const controller = new AbortController()
+    // Authentication routes do not require a publishable API key. Keeping this
+    // availability check beside the redirect flow prevents an anonymous 400
+    // from being mistaken for an unavailable OIDC provider.
+    void fetch(`${MEDUSA_BACKEND_URL}/auth/customer/google/status`, {
+      credentials: "include",
+      signal: controller.signal,
+    })
+      .then(async (response) => response.ok ? response.json() as Promise<{ available?: unknown }> : { available: false })
+      .then((payload) => setGoogleAvailable(payload.available === true))
+      .catch(() => {
+        if (!controller.signal.aborted) setGoogleAvailable(false)
+      })
+    return () => controller.abort()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -162,7 +180,7 @@ export default function LoginPage() {
           {/* Create Account Link */}
           <button
             type="button"
-            disabled={isGoogleLoading}
+            disabled={isGoogleLoading || googleAvailable !== true}
             aria-busy={isGoogleLoading}
             onClick={() => {
               setError("")
@@ -175,6 +193,11 @@ export default function LoginPage() {
           >
             {isGoogleLoading ? "Abrindo Google..." : "Continuar com Google"}
           </button>
+          {googleAvailable === false && (
+            <p className="-mt-3 mb-5 text-sm text-[var(--color-text-muted)]" role="status">
+              O login com Google esta temporariamente indisponivel. Use e-mail e senha.
+            </p>
+          )}
 
           <div className="text-center">
             <p className="text-[var(--color-text-muted)]">

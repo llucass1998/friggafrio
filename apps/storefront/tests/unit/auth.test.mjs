@@ -47,7 +47,8 @@ test("Google login preserves the validated returnTo and prevents duplicate navig
   const source = fs.readFileSync(new URL("../../src/pages/login.tsx", import.meta.url), "utf8");
   assert.match(source, /normalizeReturnTo\(search\.returnTo, countryCode\)/);
   assert.match(source, /setIsGoogleLoading\(true\)/);
-  assert.match(source, /disabled=\{isGoogleLoading\}/);
+  assert.match(source, /disabled=\{isGoogleLoading \|\| googleAvailable !== true\}/);
+  assert.match(source, /\/auth\/customer\/google\/status/);
   assert.match(source, /google_error === "authentication_failed"/);
   assert.match(source, /role="alert"/);
 });
@@ -110,6 +111,8 @@ test("checkout renders a session skeleton and never shows guest controls to an a
   assert.match(source, /isAuthenticatedSession/);
   assert.match(source, /customer\.first_name \|\| value\.firstName/);
   assert.match(source, /customer\.email \|\| value\.email/);
-  assert.match(source, /Compra vinculada à conta de/);
+  assert.match(source, /authState === "authenticated" && customer !== null/);
+  assert.match(source, /Compra vinculada à sua conta\./);
+  assert.doesNotMatch(source, /Compra vinculada à conta de/);
   assert.match(source, /Compra como convidado/);
 });

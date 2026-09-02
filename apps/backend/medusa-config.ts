@@ -20,6 +20,13 @@ const nodeEnv = process.env.NODE_ENV || "development";
 const isSecureSessionEnvironment = ["production", "staging"].includes(nodeEnv);
 const sessionTtlMs = Number(process.env.SESSION_TTL_MS || 10 * 60 * 60 * 1000);
 const storefrontOrigin = getConfiguredStorefrontOrigin();
+const redisOptions = {
+  connectTimeout: 1_000,
+  maxRetriesPerRequest: 1,
+  enableOfflineQueue: false,
+  // Allow bounded recovery attempts without queueing requests indefinitely.
+  retryStrategy: (attempt: number) => attempt > 10 ? null : Math.min(Math.max(attempt, 1) * 100, 1_000),
+};
 const googleAuthConfigured =
   !!process.env.GOOGLE_CLIENT_ID &&
   !!process.env.GOOGLE_CLIENT_SECRET &&
@@ -88,6 +95,7 @@ module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
+    redisOptions,
     sessionOptions: {
       name: getSessionCookieName(),
       resave: false,

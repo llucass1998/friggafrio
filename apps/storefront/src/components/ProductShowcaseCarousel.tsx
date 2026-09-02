@@ -59,7 +59,9 @@ export function ProductShowcaseCarousel() {
               key={index} 
               className="w-full flex-shrink-0 relative h-full"
               aria-roledescription="slide"
-              aria-hidden={!isActive}
+              // Inactive slides are removed from the tab sequence without
+              // applying aria-hidden to a subtree that may still contain focus.
+              inert={!isActive ? true : undefined}
             >
               <img 
                 src={slide.image}

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useCallback, memo, useEffect, useRef, type TouchEvent } from "react"
+import { createPortal } from "react-dom"
 import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 import { resolveMediaUrl } from "@/lib/media-url"
 
@@ -29,6 +30,8 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
     triggerRef.current = document.activeElement as HTMLElement | null
     setLightboxOpen(true)
   }, [])
+
+  const closeLightbox = useCallback(() => setLightboxOpen(false), [])
 
   const handleTouchStart = useCallback((event: TouchEvent) => {
     touchStartX.current = event.touches[0]?.clientX ?? null
@@ -183,24 +186,26 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
         </div>
       )}
 
-      {lightboxOpen && !!resolveMediaUrl(galleryImages[currentIndex]?.url) && !failedImages.has(galleryImages[currentIndex].id) && (
+      {lightboxOpen && !!resolveMediaUrl(galleryImages[currentIndex]?.url) && !failedImages.has(galleryImages[currentIndex].id) && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 p-3 sm:p-6"
+          className="fixed inset-0 z-[10000] flex h-[100dvh] w-screen items-center justify-center bg-slate-950/90 p-3 sm:p-6"
           role="presentation"
-          onMouseDown={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false) }}
-          onClick={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false) }}
+          onMouseDown={(event) => { if (event.target === event.currentTarget) closeLightbox() }}
+          onClick={(event) => { if (event.target === event.currentTarget) closeLightbox() }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div role="dialog" aria-modal="true" aria-label="Imagem ampliada do produto" className="relative flex h-[min(90vh,900px)] w-[min(94vw,1200px)] items-center justify-center overflow-hidden rounded-xl bg-black/20 p-10 sm:p-14">
+          <div role="dialog" aria-modal="true" aria-labelledby="product-lightbox-title" className="relative flex h-[min(92dvh,900px)] w-[min(94vw,1200px)] items-center justify-center overflow-hidden rounded-xl bg-black/20 p-10 sm:p-14">
+            <h2 id="product-lightbox-title" className="sr-only">Imagem ampliada do produto</h2>
             <img src={resolveMediaUrl(galleryImages[currentIndex].url)} alt={`Imagem ampliada do produto ${currentIndex + 1}`} className="max-h-full max-w-full object-contain" />
-            <button ref={closeButtonRef} type="button" onClick={() => setLightboxOpen(false)} aria-label="Fechar imagem ampliada" className="absolute right-3 top-3 z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-slate-900 shadow-lg focus-visible:outline-2 focus-visible:outline-white">×</button>
+            <button ref={closeButtonRef} type="button" onClick={closeLightbox} aria-label="Fechar imagem ampliada" className="absolute right-3 top-3 z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-slate-900 shadow-lg focus-visible:outline-2 focus-visible:outline-white">×</button>
             {galleryImages.length > 1 && <>
               <button type="button" onClick={goToPrevious} aria-label="Imagem anterior" className="absolute left-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
               <button type="button" onClick={goToNext} aria-label="Próxima imagem" className="absolute right-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
             </>}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

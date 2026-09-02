@@ -37,7 +37,7 @@ wait_for_backend_readiness() {
       [[ "$pid_changes" -lt 2 ]] || { readiness_diagnostics; deploy_fail "VERIFY_BACKEND_RESTART_LOOP"; }
     fi
     [[ "$pid" == "0" ]] || previous_pid="$pid"
-    status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 5 http://127.0.0.1:9000/health || true)"
+    status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 5 http://127.0.0.1:9000/health/ready || true)"
     attempts=$((attempts + 1))
     if [[ "$status_code" == "200" ]]; then
       consecutive=$((consecutive + 1))

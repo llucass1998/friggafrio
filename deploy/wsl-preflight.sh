@@ -39,7 +39,7 @@ fi
 require_no_recent_wsl_poweroff
 systemctl is-active --quiet friggafrio-backend.service || deploy_fail "DEPLOY_BLOCKED_BACKEND_UNHEALTHY"
 systemctl is-active --quiet friggafrio-storefront.service || deploy_fail "DEPLOY_BLOCKED_STOREFRONT_UNHEALTHY"
-curl --fail --silent --show-error --max-time 20 http://127.0.0.1:9000/health >/dev/null || deploy_fail "DEPLOY_BLOCKED_BACKEND_HEALTHCHECK"
+curl --fail --silent --show-error --max-time 20 http://127.0.0.1:9000/health/ready >/dev/null || deploy_fail "DEPLOY_BLOCKED_BACKEND_READINESS_CHECK"
 curl --fail --silent --show-error --max-time 20 http://127.0.0.1:5173/br >/dev/null || deploy_fail "DEPLOY_BLOCKED_STOREFRONT_HEALTHCHECK"
 verify_public_admin_ingress
 [[ -w "$FRIGGAFRIO_BACKUP_ROOT" || -w "$(dirname "$FRIGGAFRIO_BACKUP_ROOT")" ]] || deploy_fail "DEPLOY_BLOCKED_BACKUP_UNAVAILABLE"

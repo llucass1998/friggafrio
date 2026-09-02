@@ -413,7 +413,8 @@ const Checkout = () => {
                       prepared={effectivePrepared}
                       selection={effectiveSelection}
                       customer={customerInfo}
-                      authenticated={authState === "authenticated"}
+                      authenticated={authState === "authenticated" && customer !== null}
+                      customerId={customer?.id}
                       onEditCustomer={() => goToStep(CheckoutStepKey.ADDRESSES)}
                       onEditDelivery={() => goToStep(CheckoutStepKey.DELIVERY)}
                       onBack={handleBack}

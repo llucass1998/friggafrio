@@ -13,6 +13,7 @@ import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
 import ProductReviews from "@/components/product-reviews"
 import RelatedProducts from "@/components/related-products"
+import { resolveMediaUrl } from "@/lib/media-url"
 
 interface ProductPageData {
   product: HttpTypes.StoreProduct
@@ -47,10 +48,12 @@ export function ProductPage() {
     )
   }
 
-  const productImages = (product.images || []).filter((image) => typeof image.url === "string" && image.url.trim())
+  const productImages = (product.images || []).filter((image) =>
+    typeof image.url === "string" && Boolean(resolveMediaUrl(image.url)),
+  )
   const images = productImages.length > 0
     ? productImages.filter((image, index, list) => list.findIndex((candidate) => candidate.url === image.url) === index)
-    : product.thumbnail
+    : resolveMediaUrl(product.thumbnail)
       ? [{ id: "thumbnail", url: product.thumbnail, rank: 0 } as HttpTypes.StoreProductImage]
       : []
   const publicSpecs = getPublicProductSpecs(product)

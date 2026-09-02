@@ -12,6 +12,12 @@ import { PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
 import { getProductReviews, type ProductReviewSummary } from "@/lib/data/product-reviews"
 import { getRelatedProducts } from "@/lib/data/related-products"
 import { absoluteSiteUrl, breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
+import { isLoopbackMediaUrl } from "@/lib/media-url"
+
+const publicMediaUrl = (value: string | null | undefined): string | undefined => {
+  if (!value?.trim()) return undefined
+  return isLoopbackMediaUrl(value) ? undefined : value
+}
 
 export const Route = createFileRoute("/$countryCode/products/$handle")({
   loader: async ({ params, context }) => {
@@ -109,9 +115,9 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
       name: productName,
       description: productDescription,
       ...(product.images?.length
-        ? { image: product.images.map((image: { url?: string }) => image.url).filter(Boolean) }
-        : product.thumbnail
-          ? { image: [product.thumbnail] }
+        ? { image: product.images.map((image: { url?: string }) => publicMediaUrl(image.url)).filter(Boolean) }
+        : publicMediaUrl(product.thumbnail)
+          ? { image: [publicMediaUrl(product.thumbnail)] }
           : {}),
       ...(product.variants?.[0]?.sku ? { sku: product.variants[0].sku } : {}),
       url: absoluteSiteUrl(`/${countryCode}/products/${product.handle}`),
@@ -143,7 +149,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     }
 
     // Get first product image for preloading (critical for LCP)
-    const firstImageUrl = (product.images as any)?.[0]?.url || product.thumbnail
+    const firstImageUrl = (product.images as any[])?.map((image) => publicMediaUrl(image?.url)).find(Boolean) || publicMediaUrl(product.thumbnail)
 
     const metadata = pageMeta({
       title: `${productName} | FriggaFrio`,

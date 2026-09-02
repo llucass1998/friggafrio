@@ -13,6 +13,7 @@ type ReviewStepProps = {
   selection: CheckoutPaymentSelection
   customer: CheckoutCustomerInfo
   authenticated: boolean
+  customerId?: string | null
   onEditCustomer: () => void
   onEditDelivery: () => void
   onBack: () => void
@@ -38,6 +39,7 @@ export default function CheckoutReviewStep({
   selection,
   customer,
   authenticated,
+  customerId,
   onEditCustomer,
   onEditDelivery,
   onBack,
@@ -82,7 +84,7 @@ export default function CheckoutReviewStep({
             <p className="mt-1 text-sm text-zinc-700">{customer.email}</p>
             <p className="mt-1 text-sm text-zinc-700">{customer.phone}</p>
             {customer.document && <p className="mt-1 text-sm text-zinc-700">CPF/CNPJ: {maskDocument(customer.document)}</p>}
-            {authenticated && <p className="mt-2 text-sm text-[var(--color-text-muted)]">Compra vinculada a sua conta.</p>}
+            {authenticated && Boolean(customerId) && <p className="mt-2 text-sm text-[var(--color-text-muted)]">Compra vinculada à sua conta.</p>}
           </div>
           <Button type="button" variant="outline" size="sm" onClick={onEditCustomer}>Alterar</Button>
         </div>
