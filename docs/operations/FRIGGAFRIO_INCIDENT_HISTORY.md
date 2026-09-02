@@ -1,5 +1,16 @@
 # FriggaFrio Incident History
 
+## FF-20260902-IMMUTABLE-ROLLBACK-INTERACTIVE-SUDO
+
+- Date and SHA: 2026-09-02; affected deployment tooling through `ddbf22d`.
+- Failed stage: automatic immutable-release rollback after a failed candidate validation.
+- Proven cause: rollback paths invoked `sudo install` and `sudo systemctl daemon-reload` directly. On the restricted `srv` runtime this could wait for an interactive password prompt after services had been stopped.
+- Definitive correction: preserve the real unit file (not `systemctl cat` output), skip restoration when it is unchanged, and use `sudo -n` for a genuinely changed unit so the deployment fails closed rather than hanging.
+- Regression coverage: `scripts/deploy/immutable-release-replacement.test.mjs` requires the noninteractive helper and rejects direct interactive sudo invocations.
+- Rollback: restore the preserved release directory, run the guarded unit restore helper, then restart only the two FriggaFrio services.
+- Resume gate: use a candidate containing the guard; no global Medusa migration is part of this recovery.
+- Status: `LEARNED_AND_PREVENTED` in source; runtime promotion pending standard immutable gates.
+
 ## FF-20260824-PUBLIC-ADMIN-404
 
 - Date and SHA: 2026-08-24; candidate `26c019e0a812f8c2c07eef493799c5464079246f`.
