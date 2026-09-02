@@ -11,6 +11,11 @@ require_expected_paths
 
 template="$SCRIPT_DIR/systemd/friggafrio-backend.service"
 [[ -f "$template" ]] || deploy_fail "BACKEND_SERVICE_TEMPLATE_MISSING"
-sudo install -o root -g root -m 0644 "$template" /etc/systemd/system/friggafrio-backend.service
-sudo systemctl daemon-reload
-echo "BACKEND_SERVICE_TEMPLATE=INSTALLED"
+target="/etc/systemd/system/friggafrio-backend.service"
+if cmp -s "$template" "$target"; then
+  echo "BACKEND_SERVICE_TEMPLATE=UNCHANGED"
+else
+  sudo -n install -o root -g root -m 0644 "$template" "$target"
+  sudo -n systemctl daemon-reload
+  echo "BACKEND_SERVICE_TEMPLATE=INSTALLED"
+fi
