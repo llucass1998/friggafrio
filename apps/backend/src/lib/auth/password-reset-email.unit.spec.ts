@@ -115,6 +115,23 @@ describe("password reset email", () => {
     })).resolves.toBe(false)
   })
 
+  it("rejects a provider success response that has no message identifier", async () => {
+    process.env.RESEND_API_KEY = "re_test_only"
+    process.env.EMAIL_FROM = "FriggaFrio <nao-responda@friggafrio.istigestao.com.br>"
+    process.env.STOREFRONT_URL = "https://loja.example.com"
+    const originalFetch = global.fetch
+    global.fetch = jest.fn().mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }))
+
+    try {
+      await expect(sendPasswordResetEmail({
+        to: "customer@example.com",
+        token: "signed-token",
+      })).rejects.toThrow("provider rejected")
+    } finally {
+      global.fetch = originalFetch
+    }
+  })
+
   it("requires an explicitly configured sender", () => {
     process.env.STOREFRONT_URL = "https://loja.example.com"
     delete process.env.EMAIL_FROM

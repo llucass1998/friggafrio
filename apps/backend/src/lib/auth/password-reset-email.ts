@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 import { getPasswordResetTokenTtlMs } from "./password-reset-token"
-import { resendRequest } from "../email/resend"
+import { getResendConfigStatus, resendRequest } from "../email/resend"
 
 const DEFAULT_RESET_PATH = "/br/account/reset-password"
 
@@ -132,22 +132,19 @@ export const buildPasswordResetEmail = ({
 export const sendPasswordResetEmail = async (
   input: PasswordResetEmail,
 ): Promise<boolean> => {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
-  if (!apiKey) {
+  const config = getResendConfigStatus()
+  if (config.missing.length > 0) {
     return false
   }
 
   const templateId = process.env.RESEND_PASSWORD_RESET_TEMPLATE_ID?.trim()
   const idempotencyKey = `password-reset-${createHash("sha256").update(`${input.to}:${input.token}`, "utf8").digest("hex")}`
   if (templateId) {
-    const storefrontUrl = process.env.STOREFRONT_URL?.trim()
-    const emailFrom = process.env.EMAIL_FROM?.trim()
-    if (!storefrontUrl || !emailFrom) return false
-    const resetUrl = buildPasswordResetUrl(storefrontUrl, input.token, input.redirectPath)
+    const resetUrl = buildPasswordResetUrl(config.storefrontUrl, input.token, input.redirectPath)
     const result = await resendRequest(
       "/emails",
       {
-        from: emailFrom,
+        from: config.from,
         to: [input.to],
         subject: "Redefinição de senha — FriggaFrio",
         template: {
@@ -160,7 +157,7 @@ export const sendPasswordResetEmail = async (
       },
       idempotencyKey,
     )
-    if (!result.ok) throw new Error(result.error || "Password reset email provider rejected the request")
+    if (!result.ok || !result.id) throw new Error(result.error || "Password reset email provider rejected the request")
     return true
   }
 
@@ -169,6 +166,6 @@ export const sendPasswordResetEmail = async (
     buildPasswordResetEmail(input),
     idempotencyKey,
   )
-  if (!result.ok) throw new Error(result.error || "Password reset email provider rejected the request")
+  if (!result.ok || !result.id) throw new Error(result.error || "Password reset email provider rejected the request")
   return true
 }

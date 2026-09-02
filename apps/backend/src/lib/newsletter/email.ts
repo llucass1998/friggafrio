@@ -70,8 +70,10 @@ export const sendNewsletterConfirmationEmail = async ({
     },
     `newsletter-confirmation-${createStableDeliveryKey(to, confirmationToken)}`,
   )
-  if (!result.ok) throw new Error(result.error || "Newsletter email provider rejected the request")
-  return { delivered: true, emailId: result.id || null }
+  if (!result.ok || !result.id) {
+    throw new Error(result.error || "Newsletter email provider did not create a message")
+  }
+  return { delivered: true, emailId: result.id }
 }
 
 const createStableDeliveryKey = (email: string, token: string): string =>
