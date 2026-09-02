@@ -26,7 +26,7 @@ test("requires an explicit immutable mode and a clean official candidate", () =>
 test("requires backup, legacy manifest, runtime contract, and reversible rename", () => {
   assert.match(deploy, /write_legacy_manifest/);
   assert.match(deploy, /pg_restore --list/);
-  assert.match(deploy, /systemctl cat friggafrio-backend\.service/);
+  assert.match(deploy, /cp \/etc\/systemd\/system\/friggafrio-backend\.service/);
   assert.match(deploy, /mv "\$FRIGGAFRIO_DEPLOY_DIR" "\$legacy_dir"/);
   assert.match(deploy, /IMMUTABLE_RELEASE_VERIFY_FAILED_ROLLED_BACK/);
   assert.match(deploy, /bash "\$SCRIPT_DIR\/wsl-preflight\.sh"/);
@@ -36,6 +36,15 @@ test("requires backup, legacy manifest, runtime contract, and reversible rename"
   assert.match(deploy, /sub\(\/\\r\$\//);
   assert.match(preflight, /LEGACY_MANIFEST_MISSING/);
   assert.match(preflight, /OLD_UNIT_BACKUP_MISSING/);
+});
+
+test("rollback restores the service unit without interactive sudo", () => {
+  assert.match(deploy, /restore_backend_service_unit\(\)/);
+  assert.match(deploy, /BACKEND_SERVICE_ROLLBACK_UNIT=UNCHANGED/);
+  assert.match(deploy, /sudo -n install/);
+  assert.match(deploy, /sudo -n systemctl daemon-reload/);
+  assert.doesNotMatch(deploy, /sudo install/);
+  assert.doesNotMatch(deploy, /sudo systemctl/);
 });
 
 test("rejects missing Admin or unmaterialized runtime through the existing contract", () => {

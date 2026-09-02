@@ -31,6 +31,23 @@ if [[ "$apply" != "YES" ]]; then
   exit 0
 fi
 
+# A rollback must never wait for an interactive sudo prompt. The deployment user can
+# restore an unchanged unit without privilege; a changed unit fails closed via sudo -n.
+restore_backend_service_unit() {
+  local backup_path="$1"
+  local unit_path="/etc/systemd/system/friggafrio-backend.service"
+
+  [[ -f "$backup_path" ]] || deploy_fail "BACKEND_SERVICE_ROLLBACK_BACKUP_MISSING"
+  if cmp -s "$backup_path" "$unit_path"; then
+    echo "BACKEND_SERVICE_ROLLBACK_UNIT=UNCHANGED"
+    return 0
+  fi
+
+  sudo -n install -o root -g root -m 0644 "$backup_path" "$unit_path"
+  sudo -n systemctl daemon-reload
+  echo "BACKEND_SERVICE_ROLLBACK_UNIT=RESTORED"
+}
+
 if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   require_command pg_dump
   require_command pg_restore
@@ -72,7 +89,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   legacy_manifest="$backup_dir/legacy-manifest.txt"
   old_unit_backup="$backup_dir/friggafrio-backend.service.before"
   write_legacy_manifest "$FRIGGAFRIO_DEPLOY_DIR" "$legacy_manifest"
-  systemctl cat friggafrio-backend.service > "$old_unit_backup"
+  cp /etc/systemd/system/friggafrio-backend.service "$old_unit_backup"
   old_unit_checksum="$(sha256sum "$old_unit_backup" | awk '{print $1}')"
   database_url="$(awk -F= '/^DATABASE_URL=/{sub(/^DATABASE_URL=/, ""); sub(/\r$/, ""); print; exit}' "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.env")"
   [[ -n "$database_url" ]] || deploy_fail "DATABASE_BACKUP_URL_MISSING"
@@ -83,7 +100,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   FRIGGAFRIO_IMMUTABLE_CANDIDATE="$candidate_dir" FRIGGAFRIO_LEGACY_MANIFEST="$legacy_manifest" FRIGGAFRIO_OLD_UNIT_BACKUP="$old_unit_backup" FRIGGAFRIO_APPROVED_SHA="$SOURCE_SHA" FRIGGAFRIO_DEPLOY_MODE="IMMUTABLE_RELEASE_REPLACEMENT" FRIGGAFRIO_DEPLOY_LOCK_HELD=YES bash "$SCRIPT_DIR/wsl-preflight.sh"
   old_backend_pid="$(systemctl show --property=MainPID --value friggafrio-backend.service)"
   bash "$SCRIPT_DIR/wsl-install-backend-service.sh" --apply
-  [[ "$(systemctl show --property=MainPID --value friggafrio-backend.service)" == "$old_backend_pid" ]] || { cp "$old_unit_backup" /tmp/friggafrio-backend.service.rollback; sudo install -o root -g root -m 0644 /tmp/friggafrio-backend.service.rollback /etc/systemd/system/friggafrio-backend.service; sudo systemctl daemon-reload; deploy_fail "IMMUTABLE_UNEXPECTED_SERVICE_RESTART"; }
+  [[ "$(systemctl show --property=MainPID --value friggafrio-backend.service)" == "$old_backend_pid" ]] || { restore_backend_service_unit "$old_unit_backup"; deploy_fail "IMMUTABLE_UNEXPECTED_SERVICE_RESTART"; }
   legacy_dir="/home/srv/friggafrio/Maestro-deploy-legacy-preserved-$timestamp"
   [[ ! -e "$legacy_dir" ]] || deploy_fail "LEGACY_PRESERVATION_PATH_EXISTS"
   systemctl stop friggafrio-storefront.service
@@ -91,8 +108,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
   mv "$FRIGGAFRIO_DEPLOY_DIR" "$legacy_dir"
   if ! mv "$candidate_dir" "$FRIGGAFRIO_DEPLOY_DIR"; then
     mv "$legacy_dir" "$FRIGGAFRIO_DEPLOY_DIR"
-    sudo install -o root -g root -m 0644 "$old_unit_backup" /etc/systemd/system/friggafrio-backend.service
-    sudo systemctl daemon-reload
+    restore_backend_service_unit "$old_unit_backup"
     systemctl start friggafrio-backend.service
     systemctl start friggafrio-storefront.service
     deploy_fail "IMMUTABLE_RELEASE_SWAP_FAILED_ROLLED_BACK"
@@ -106,8 +122,7 @@ if [[ "$FRIGGAFRIO_DEPLOY_MODE" == "IMMUTABLE_RELEASE_REPLACEMENT" ]]; then
     failed_dir="/home/srv/friggafrio/Maestro-deploy-failed-$timestamp"
     mv "$FRIGGAFRIO_DEPLOY_DIR" "$failed_dir"
     mv "$legacy_dir" "$FRIGGAFRIO_DEPLOY_DIR"
-    sudo install -o root -g root -m 0644 "$old_unit_backup" /etc/systemd/system/friggafrio-backend.service
-    sudo systemctl daemon-reload
+    restore_backend_service_unit "$old_unit_backup"
     systemctl start friggafrio-backend.service
     systemctl start friggafrio-storefront.service
     deploy_fail "IMMUTABLE_RELEASE_VERIFY_FAILED_ROLLED_BACK"
