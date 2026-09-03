@@ -19,6 +19,7 @@ export function HeaderMobileDrawer() {
   const previousOverflowRef = useRef("")
   const previousHtmlOverflowRef = useRef("")
   const previousScrollYRef = useRef(0)
+  const scrollLockActiveRef = useRef(false)
   const categoryFrameRef = useRef<number | null>(null)
   const { setPanelOpen } = useAccessibility()
   const location = useLocation()
@@ -30,7 +31,19 @@ export function HeaderMobileDrawer() {
   }, [])
 
   useEffect(() => {
+    const releaseScrollLock = () => {
+      if (!scrollLockActiveRef.current) {
+        return
+      }
+
+      document.body.style.overflow = previousOverflowRef.current
+      document.documentElement.style.overflow = previousHtmlOverflowRef.current
+      window.scrollTo(0, previousScrollYRef.current)
+      scrollLockActiveRef.current = false
+    }
+
     if (!isMobileMenuOpen) {
+      releaseScrollLock()
       return
     }
 
@@ -39,6 +52,7 @@ export function HeaderMobileDrawer() {
     previousScrollYRef.current = window.scrollY
     document.body.style.overflow = "hidden"
     document.documentElement.style.overflow = "hidden"
+    scrollLockActiveRef.current = true
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -75,9 +89,7 @@ export function HeaderMobileDrawer() {
     return () => {
       window.cancelAnimationFrame(focusFrame)
       document.removeEventListener("keydown", handleKeyDown)
-      document.body.style.overflow = previousOverflowRef.current
-      document.documentElement.style.overflow = previousHtmlOverflowRef.current
-      window.scrollTo(0, previousScrollYRef.current)
+      releaseScrollLock()
       trigger?.focus()
     }
   }, [isMobileMenuOpen])

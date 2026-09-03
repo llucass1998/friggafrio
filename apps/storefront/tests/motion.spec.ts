@@ -30,6 +30,21 @@ test.describe("storefront motion interactions", () => {
     expect(Number.parseFloat(transition)).toBeCloseTo(0.15, 2)
     const finalTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
     expect(finalTransform).toMatch(/matrix\(1, 0, 0, 1, 0, 0\)/)
+
+    await page.getByTestId("mobile-navigation-close").click()
+    await page.waitForTimeout(100)
+    const closeDelayedTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
+    expect(closeDelayedTransform).toMatch(/matrix\(1, 0, 0, 1, 0, 0\)/)
+    await page.waitForTimeout(120)
+    const closeIntermediateTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
+    expect(closeIntermediateTransform).toMatch(/matrix\(1, 0, 0, 1, -/)
+    await page.waitForTimeout(120)
+    const closeFinal = await drawer.evaluate((element) => ({
+      transform: getComputedStyle(element).transform,
+      visibility: getComputedStyle(element).visibility,
+    }))
+    expect(closeFinal.transform).toMatch(/matrix\(1, 0, 0, 1, -/)
+    expect(closeFinal.visibility).toBe("hidden")
   })
 
   test("mobile drawer opens, closes, and navigates without blocking the page", async ({ page }) => {
