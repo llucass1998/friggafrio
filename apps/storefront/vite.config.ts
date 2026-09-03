@@ -7,6 +7,7 @@ import type { Plugin } from "vite";
 import Terminal from "vite-plugin-terminal";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 import { storefrontContentSecurityPolicyReportOnly } from "./src/lib/security/content-security-policy";
+import { adminProxyMiddleware } from "./src/lib/server/admin-proxy";
 
 const contentSecurityPolicyReportOnlyPlugin = (isDevelopment: boolean): Plugin => {
   const value = storefrontContentSecurityPolicyReportOnly(isDevelopment);
@@ -25,6 +26,16 @@ const contentSecurityPolicyReportOnlyPlugin = (isDevelopment: boolean): Plugin =
       server.middlewares.use(applyHeader);
     },
   };
+};
+
+const adminProxyPlugin: Plugin = {
+  name: "frigga-admin-proxy",
+  configureServer(server) {
+    server.middlewares.use(adminProxyMiddleware);
+  },
+  configurePreviewServer(server) {
+    server.middlewares.use(adminProxyMiddleware);
+  },
 };
 
 export default defineConfig(({ mode }) => {
@@ -65,6 +76,7 @@ export default defineConfig(({ mode }) => {
 
       tanstackStart(),
       viteReact(),
+      adminProxyPlugin,
       contentSecurityPolicyReportOnlyPlugin(isDev),
     ],
 
