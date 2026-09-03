@@ -7,7 +7,7 @@ import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 
 export function FullStoreHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-background)] lg:relative">
+    <header className="mobile-site-header w-full border-b border-[var(--color-border)] bg-[var(--color-background)]">
       {/* O Top bar com telefone e infos extras foi migrado para o AccessibilityTopBar para unificar a acessibilidade e layout
           conforme as instruções da Fase 2 */}
 
@@ -27,7 +27,9 @@ export function FullStoreHeader() {
             <HeaderSearch />
           </div>
 
-          <HeaderPostalCode />
+          <div className="hidden lg:block">
+            <HeaderPostalCode />
+          </div>
 
           {/* Actions */}
           <div className="flex shrink-0 items-center gap-1">
@@ -35,10 +37,6 @@ export function FullStoreHeader() {
           </div>
         </div>
 
-        {/* Keep mobile search on its own row so narrow headers retain usable touch targets. */}
-        <div className="border-t border-[var(--color-border)] py-3 lg:hidden">
-          <HeaderSearch compact />
-        </div>
       </div>
 
       {/* Bottom Navigation (Desktop) */}

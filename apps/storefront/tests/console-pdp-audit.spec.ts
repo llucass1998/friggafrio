@@ -57,6 +57,7 @@ test("critical routes keep browser console and page errors clean", async ({ page
 
   await page.goto("/br", { waitUntil: "networkidle" })
   await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByTestId("mobile-navigation-drawer")).toHaveAttribute("data-state", "closed")
   await page.getByTestId("mobile-navigation-trigger").click()
   await expect(page.getByTestId("mobile-navigation-drawer")).toHaveAttribute("data-state", "open")
   await page.getByTestId("mobile-navigation-drawer").getByRole("button", { name: "Acessibilidade", exact: true }).click()

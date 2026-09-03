@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom"
-import { Link, useParams } from "@tanstack/react-router"
+import { Link, useLocation, useParams } from "@tanstack/react-router"
 import { Accessibility, Menu, X } from "lucide-react"
-import { type TransitionEvent, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
@@ -9,8 +9,7 @@ import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 import { useAccessibility } from "@/components/accessibility/accessibility-context"
 
 export function HeaderMobileDrawer() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [mountedCategory, setMountedCategory] = useState<string | null>(null)
@@ -18,8 +17,11 @@ export function HeaderMobileDrawer() {
   const closeRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const previousOverflowRef = useRef("")
+  const previousHtmlOverflowRef = useRef("")
+  const previousScrollYRef = useRef(0)
   const categoryFrameRef = useRef<number | null>(null)
   const { setPanelOpen } = useAccessibility()
+  const location = useLocation()
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
 
@@ -28,16 +30,19 @@ export function HeaderMobileDrawer() {
   }, [])
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isMobileMenuOpen) {
       return
     }
 
     previousOverflowRef.current = document.body.style.overflow
+    previousHtmlOverflowRef.current = document.documentElement.style.overflow
+    previousScrollYRef.current = window.scrollY
     document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false)
+        setIsMobileMenuOpen(false)
         return
       }
 
@@ -71,15 +76,22 @@ export function HeaderMobileDrawer() {
       window.cancelAnimationFrame(focusFrame)
       document.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = previousOverflowRef.current
+      document.documentElement.style.overflow = previousHtmlOverflowRef.current
+      window.scrollTo(0, previousScrollYRef.current)
       trigger?.focus()
     }
-  }, [isOpen])
+  }, [isMobileMenuOpen])
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+    setExpandedCategory(null)
+  }, [location.pathname])
 
   useEffect(() => {
     const desktopMediaQuery = window.matchMedia("(min-width: 1024px)")
     const closeOnDesktop = () => {
       if (desktopMediaQuery.matches) {
-        setIsOpen(false)
+        setIsMobileMenuOpen(false)
         setExpandedCategory(null)
       }
     }
@@ -93,28 +105,12 @@ export function HeaderMobileDrawer() {
     }
   }, [])
 
-  const closeDrawer = () => {
-    if (!isOpen) {
-      setIsMounted(false)
-    }
-    setIsOpen(false)
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
     setExpandedCategory(null)
   }
 
-  const openDrawer = () => {
-    setIsMounted(true)
-    setIsOpen(true)
-  }
-
-  const handleDrawerTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
-    if (
-      !isOpen &&
-      event.target === event.currentTarget &&
-      (event.propertyName === "transform" || event.propertyName === "opacity")
-    ) {
-      setIsMounted(false)
-    }
-  }
+  const openMobileMenu = () => setIsMobileMenuOpen(true)
 
   const toggleCategory = (id: string) => {
     if (expandedCategory === id) {
@@ -136,18 +132,19 @@ export function HeaderMobileDrawer() {
   const toCountryPath = (href: string) =>
     href.replace(/^\/br(?=\/|$)/, `/${countryCode}`)
 
-  const drawer = isMounted ? (
+  const drawer = (
     <div
-      className={`fixed inset-0 z-[80] lg:hidden ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
-      data-state={isOpen ? "open" : "closed"}
+      className={`fixed inset-0 z-[80] lg:hidden ${isMobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+      data-state={isMobileMenuOpen ? "open" : "closed"}
       data-testid="mobile-navigation-layer"
     >
       <button
         type="button"
-        className={`absolute inset-0 bg-black/50 transition-opacity data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-medium)] data-[state=closed]:duration-[var(--motion-duration-small)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "opacity-100" : "opacity-0"}`}
-        onClick={closeDrawer}
+        className="mobile-drawer-overlay"
+        onClick={closeMobileMenu}
         aria-label="Fechar menu mobile"
-        data-state={isOpen ? "open" : "closed"}
+        tabIndex={isMobileMenuOpen ? 0 : -1}
+        data-state={isMobileMenuOpen ? "open" : "closed"}
         data-testid="mobile-navigation-overlay"
       />
 
@@ -155,22 +152,22 @@ export function HeaderMobileDrawer() {
         ref={drawerRef}
         id="mobile-navigation-drawer"
         role="dialog"
-        aria-modal="true"
+        aria-modal={isMobileMenuOpen ? "true" : undefined}
         aria-label="Menu principal"
-        className={`motion-mobile-drawer absolute inset-y-0 left-0 flex w-[min(90vw,24rem)] min-w-0 flex-col overflow-hidden bg-white shadow-2xl transition-[transform,opacity] data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:duration-[var(--motion-duration-menu-open)] data-[state=closed]:duration-[var(--motion-duration-menu-close)] data-[state=open]:ease-[var(--motion-ease-enter)] data-[state=closed]:ease-[var(--motion-ease-exit)] ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
-        data-state={isOpen ? "open" : "closed"}
+        aria-hidden={!isMobileMenuOpen}
+        className="mobile-drawer-panel"
+        data-state={isMobileMenuOpen ? "open" : "closed"}
         data-testid="mobile-navigation-drawer"
-        onTransitionEnd={handleDrawerTransitionEnd}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-white p-4">
-          <div onClick={closeDrawer}>
+          <div onClick={closeMobileMenu}>
             <HeaderLogo compact />
           </div>
           <button
             ref={closeRef}
             type="button"
-            onClick={closeDrawer}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+            onClick={closeMobileMenu}
+            className="mobile-drawer-close flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
             aria-label="Fechar menu"
             data-testid="mobile-navigation-close"
           >
@@ -191,7 +188,7 @@ export function HeaderMobileDrawer() {
               <Link
                 to={"/$countryCode/store" as string}
                 params={{ countryCode }}
-                onClick={closeDrawer}
+                onClick={closeMobileMenu}
                 className="block rounded-md px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               >
                 Produtos
@@ -221,7 +218,7 @@ export function HeaderMobileDrawer() {
                       ) : (
                         <Link
                           to={toCountryPath(category.href) as string}
-                          onClick={closeDrawer}
+                          onClick={closeMobileMenu}
                           className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                         >
                           {category.label}
@@ -243,7 +240,7 @@ export function HeaderMobileDrawer() {
                             <li key={child.id}>
                               <Link
                                 to={toCountryPath(child.href) as string}
-                                onClick={closeDrawer}
+                                onClick={closeMobileMenu}
                                 tabIndex={isExpanded ? 0 : -1}
                                 className="block min-h-11 px-8 py-3 text-sm text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                               >
@@ -267,7 +264,7 @@ export function HeaderMobileDrawer() {
                 <li>
                   <Link
                     to="/nossa-loja"
-                    onClick={closeDrawer}
+                    onClick={closeMobileMenu}
                     className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                   >
                     Nossa Loja
@@ -276,7 +273,7 @@ export function HeaderMobileDrawer() {
                 <li>
                   <Link
                     to="/ajuda"
-                    onClick={closeDrawer}
+                    onClick={closeMobileMenu}
                     className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                   >
                     Central de Ajuda
@@ -286,7 +283,7 @@ export function HeaderMobileDrawer() {
                   <button
                     type="button"
                     onClick={() => {
-                      closeDrawer()
+                      closeMobileMenu()
                       setPanelOpen(true)
                     }}
                     className="flex min-h-11 w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
@@ -301,7 +298,7 @@ export function HeaderMobileDrawer() {
         </div>
       </div>
     </div>
-  ) : null
+  )
 
   return (
     <>
@@ -309,9 +306,9 @@ export function HeaderMobileDrawer() {
         ref={triggerRef}
         type="button"
         className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] lg:hidden"
-        onClick={openDrawer}
-        aria-label="Abrir menu mobile"
-        aria-expanded={isOpen}
+        onClick={isMobileMenuOpen ? closeMobileMenu : openMobileMenu}
+        aria-label={isMobileMenuOpen ? "Fechar menu mobile" : "Abrir menu mobile"}
+        aria-expanded={isMobileMenuOpen}
         aria-controls="mobile-navigation-drawer"
         data-testid="mobile-navigation-trigger"
         data-hydrated={isHydrated ? "true" : "false"}
@@ -319,7 +316,7 @@ export function HeaderMobileDrawer() {
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
 
-      {typeof document !== "undefined" && drawer ? createPortal(drawer, document.body) : null}
+      {isHydrated && typeof document !== "undefined" ? createPortal(drawer, document.body) : null}
     </>
   )
 }

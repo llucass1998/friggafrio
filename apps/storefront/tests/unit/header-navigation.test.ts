@@ -64,7 +64,7 @@ const fullHeaderSource = readFileSync(
 )
 
 test("mobile navigation exposes an accessible open/close flow", () => {
-  assert.match(mobileDrawerSource, /aria-expanded=\{isOpen\}/)
+  assert.match(mobileDrawerSource, /aria-expanded=\{isMobileMenuOpen\}/)
   assert.match(mobileDrawerSource, /aria-controls="mobile-navigation-drawer"/)
   assert.match(mobileDrawerSource, /role="dialog"/)
   assert.match(mobileDrawerSource, /event\.key === "Escape"/)
@@ -73,12 +73,12 @@ test("mobile navigation exposes an accessible open/close flow", () => {
   assert.match(mobileDrawerSource, /document\.body\.style\.overflow = "hidden"/)
   assert.match(mobileDrawerSource, /document\.body\.style\.overflow = previousOverflowRef\.current/)
   assert.match(mobileDrawerSource, /createPortal\(drawer, document\.body\)/)
-  assert.match(mobileDrawerSource, /const \[isMounted, setIsMounted\]/)
-  assert.match(mobileDrawerSource, /onTransitionEnd=\{handleDrawerTransitionEnd\}/)
-  assert.match(mobileDrawerSource, /motion-duration-menu-open/)
-  assert.match(mobileDrawerSource, /motion-duration-menu-close/)
-  assert.match(mobileDrawerSource, /const openDrawer = \(\) => \{\s*setIsMounted\(true\)\s*setIsOpen\(true\)/)
-  assert.doesNotMatch(mobileDrawerSource, /openFrameRef/)
+  assert.match(mobileDrawerSource, /aria-hidden=\{!isMobileMenuOpen\}/)
+  assert.match(mobileDrawerSource, /mobile-drawer-panel/)
+  assert.match(mobileDrawerSource, /const openMobileMenu = \(\) => setIsMobileMenuOpen\(true\)/)
+  assert.match(mobileDrawerSource, /const closeMobileMenu = \(\) => \{[\s\S]*setIsMobileMenuOpen\(false\)/)
+  assert.doesNotMatch(mobileDrawerSource, /setTimeout\(/)
+  assert.doesNotMatch(mobileDrawerSource, /openTimerRef/)
   assert.match(mobileDrawerSource, /data-hydrated=\{isHydrated \? "true" : "false"\}/)
 })
 
@@ -166,8 +166,8 @@ test("listing product cards navigate to the PDP without a cart CTA", () => {
   assert.doesNotMatch(productCardSource, /Mais vendido/)
 })
 
-test("mobile header remains sticky without restoring the accessibility top bar", () => {
-  assert.match(fullHeaderSource, /sticky top-0/)
-  assert.match(fullHeaderSource, /lg:relative/)
+test("mobile header remains fixed without restoring the accessibility top bar", () => {
+  assert.match(fullHeaderSource, /mobile-site-header/)
+  assert.match(publicLayoutSource, /mobile-header-spacer/)
   assert.doesNotMatch(fullHeaderSource, /<AccessibilityTopBar/)
 })

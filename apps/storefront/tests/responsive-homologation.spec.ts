@@ -29,6 +29,15 @@ async function waitForHydration(page: Page) {
   await page.waitForTimeout(750)
 }
 
+async function openMobileDrawer(page: Page) {
+  const trigger = page.getByTestId("mobile-navigation-trigger")
+  await expect(trigger).toHaveAttribute("data-hydrated", "true", { timeout: 15000 })
+  await trigger.click()
+  const drawer = page.getByTestId("mobile-navigation-drawer")
+  await expect(drawer).toHaveAttribute("data-state", "open")
+  return drawer
+}
+
 test.describe("final responsive storefront homologation", () => {
   for (const viewport of viewports) {
     test(`home layout and header at ${viewport.width}px`, async ({ page }) => {
@@ -47,7 +56,7 @@ test.describe("final responsive storefront homologation", () => {
       if (mobileViewports.has(viewport.width)) {
         await expect(trigger).toBeVisible()
         await expect(page.locator("header").getByText("FriggaFrio", { exact: true })).toBeVisible()
-        await expect(page.locator("header input[placeholder*='Busque por produto']:visible")).toHaveCount(1)
+        await expect(page.locator("header input[placeholder*='Busque por produto']:visible")).toHaveCount(0)
         await expect(page.locator('a[aria-label="Minha conta"]:visible, a[aria-label="Entrar na conta"]:visible')).toHaveCount(1)
         await expect(page.locator('button[aria-label^="Abrir carrinho com"]:visible')).toHaveCount(1)
         if (viewport.width < 768) {
@@ -79,8 +88,7 @@ test.describe("final responsive storefront homologation", () => {
       const trigger = page.getByTestId("mobile-navigation-trigger")
       const drawer = page.getByTestId("mobile-navigation-drawer")
       await expect(trigger).toHaveAttribute("data-hydrated", "true")
-      await trigger.click()
-      await expect(drawer).toHaveAttribute("data-state", "open")
+      await openMobileDrawer(page)
       await expect(drawer.getByRole("link", { name: "Produtos", exact: true })).toBeVisible()
       await expect(drawer.getByRole("link", { name: "Nossa Loja", exact: true })).toBeVisible()
       await expect(drawer.getByRole("button", { name: "Acessibilidade", exact: true })).toBeVisible()
@@ -88,17 +96,17 @@ test.describe("final responsive storefront homologation", () => {
       await expect(page.getByTestId("mobile-navigation-layer")).toHaveCount(1)
 
       await page.getByTestId("mobile-navigation-close").click()
-      await expect(drawer).toHaveCount(0)
-      await trigger.click()
+      await expect(drawer).toHaveAttribute("data-state", "closed")
+      await openMobileDrawer(page)
       await page.getByTestId("mobile-navigation-overlay").click({ position: { x: width - 2, y: 420 } })
       await expect(drawer).toHaveAttribute("data-state", "closed")
-      await expect(drawer).toHaveCount(0, { timeout: 2000 })
+      await expect(drawer).toHaveAttribute("data-state", "closed")
 
-      await trigger.click()
+      await openMobileDrawer(page)
       await expect(drawer).toHaveAttribute("data-state", "open")
       await page.getByTestId("mobile-navigation-close").click()
-      await expect(drawer).toHaveCount(0)
-      await trigger.click()
+      await expect(drawer).toHaveAttribute("data-state", "closed")
+      await openMobileDrawer(page)
       await page.getByTestId("mobile-navigation-close").click()
 
       await page.getByRole("button", { name: /Abrir carrinho com/ }).click()
@@ -131,7 +139,8 @@ test.describe("final responsive storefront homologation", () => {
     await page.goto("/br", { waitUntil: "domcontentloaded" })
     await waitForHydration(page)
 
-    const search = page.locator("header input[placeholder*='Busque por produto']:visible")
+    const drawer = await openMobileDrawer(page)
+    const search = drawer.locator("input[placeholder*='Busque por produto']:visible")
     await search.fill("compressor")
     await expect(page.getByRole("option", { name: "Compressor de teste", exact: true })).toBeVisible()
     await expect(search).toHaveAttribute("aria-expanded", "true")
@@ -145,8 +154,8 @@ test.describe("final responsive storefront homologation", () => {
     await page.goto("/br", { waitUntil: "domcontentloaded" })
     await waitForHydration(page)
 
-    await page.getByTestId("mobile-navigation-trigger").click()
-    await page.getByTestId("mobile-navigation-drawer").getByRole("link", { name: "Nossa Loja", exact: true }).click()
+    const drawer = await openMobileDrawer(page)
+    await drawer.getByRole("link", { name: "Nossa Loja", exact: true }).click()
     await expect(page).toHaveURL(/\/nossa-loja$/)
     await expect(page.getByTestId("store-location-card")).toHaveCount(1)
     await expect(page.getByText(/Loja 2/)).toHaveCount(0)
@@ -168,7 +177,7 @@ test.describe("final responsive storefront homologation", () => {
         await waitForHydration(page)
 
         if (width < 1024) {
-          await page.getByTestId("mobile-navigation-trigger").click()
+          await openMobileDrawer(page)
           const duration = await page.getByTestId("mobile-navigation-drawer").evaluate(
             (element) => Number.parseFloat(getComputedStyle(element).transitionDuration)
           )

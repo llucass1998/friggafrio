@@ -29,6 +29,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <LiveRegion />
 
         <PublicHeader />
+        <div className="mobile-header-spacer" aria-hidden="true" />
 
         {/* Ajuste de espaçamento pro header: h-16 (mobile) + top bar h-8 (desktop) + header md h-20 */}
         <main

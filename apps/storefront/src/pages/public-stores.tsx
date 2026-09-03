@@ -3,7 +3,7 @@ import { storeConfig } from "@/config/store"
 import { COMPANY_INFORMATION } from "@/config/company"
 import { StoreLocationCard } from "@/components/store-locations/StoreLocationCard"
 import { Link } from "@tanstack/react-router"
-import { Image as ImageIcon, Info, MapPin, PhoneCall } from "lucide-react"
+import { Image as ImageIcon, Info, MapPin, MessageCircle } from "lucide-react"
 
 export function PublicStoresPage() {
   const activeLocations = storeLocations.filter((location) => location.active)
@@ -123,7 +123,7 @@ export function PublicStoresPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-8 py-4 font-bold text-white shadow-sm transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
-              <PhoneCall className="h-5 w-5" aria-hidden="true" />
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
               Confirmar pelo WhatsApp
             </a>
           </div>

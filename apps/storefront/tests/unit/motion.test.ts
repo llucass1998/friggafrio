@@ -21,6 +21,7 @@ test("motion tokens use the canonical FriggaFrio timings and curves", () => {
   assert.match(themeSource, /--motion-duration-medium:\s*220ms/)
   assert.match(themeSource, /--motion-duration-large:\s*260ms/)
   assert.match(themeSource, /--motion-duration-page:\s*280ms/)
+  assert.match(themeSource, /--motion-duration-menu-open:\s*150ms/)
   assert.match(themeSource, /--motion-ease-enter:\s*cubic-bezier\(0, 0, 0\.4, 1\)/)
   assert.match(themeSource, /--motion-ease-exit:\s*cubic-bezier\(0\.5, 0, 1, 1\)/)
   assert.match(themeSource, /--motion-ease-move:\s*cubic-bezier\(0\.45, 0, 0\.4, 1\)/)
@@ -37,8 +38,11 @@ test("page, menu, cart, and modal transitions use explicit motion primitives", (
   assert.match(publicLayoutSource, /key=\{pageKey\}/)
   assert.match(publicLayoutSource, /motion-page-enter/)
   assert.match(mobileDrawerSource, /requestAnimationFrame/)
-  assert.match(mobileDrawerSource, /motion-duration-menu-open/)
-  assert.match(mobileDrawerSource, /motion-duration-menu-close/)
+  assert.match(mobileDrawerSource, /const \[isMobileMenuOpen, setIsMobileMenuOpen\] = useState\(false\)/)
+  assert.match(appStylesSource, /\.mobile-drawer-panel[\s\S]*transform: translateX\(-100%\)/)
+  assert.match(appStylesSource, /transition: transform 150ms ease-in-out 150ms/)
+  assert.doesNotMatch(mobileDrawerSource, /setTimeout\(/)
+  assert.doesNotMatch(mobileDrawerSource, /openTimerRef/)
   assert.match(productsMenuSource, /transition-\[opacity,transform,visibility\]/)
   assert.match(productsMenuSource, /motion-duration-dropdown-open/)
   assert.match(cartSource, /motion-cart-item-removing/)
@@ -49,8 +53,9 @@ test("page, menu, cart, and modal transitions use explicit motion primitives", (
 })
 
 test("critical motion surfaces do not introduce transition-all", () => {
-  for (const source of [mobileDrawerSource, productsMenuSource, cartSource, drawerSource, dialogSource]) {
+  for (const source of [productsMenuSource, cartSource, drawerSource, dialogSource]) {
     assert.doesNotMatch(source, /transition-all/)
     assert.doesNotMatch(source, /setTimeout\(/)
   }
+  assert.doesNotMatch(mobileDrawerSource, /transition-all/)
 })
