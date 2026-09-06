@@ -6,32 +6,32 @@ export const showcaseSlides: ShowcaseSlide[] = [
     title: "Promoção FriggaFrio - Gás Refrigerante EOS R22",
     description: "",
     ctaText: "",
-    ctaLink: "/br/categories", // Safe fallback
+    ctaLink: "/br/categories",
     imageFilename: "eos-r22.png",
     isPromotionalImage: true,
     hideOverlayContent: true,
-    imageFit: "contain"
+    imageFit: "contain",
   },
   {
     id: "promo-bomba-dreno",
     title: "Promoção FriggaFrio - Bombas de Dreno Friven",
     description: "",
     ctaText: "",
-    ctaLink: "/br/categories", // Safe fallback
+    ctaLink: "/br/categories",
     imageFilename: "bomba-dreno.png",
     isPromotionalImage: true,
     hideOverlayContent: true,
-    imageFit: "contain"
+    imageFit: "contain",
   },
   {
     id: "promo-forc-teto",
     title: "Promoção FriggaFrio - Forçador de Teto Elgin",
     description: "",
     ctaText: "",
-    ctaLink: "/br/categories", // Safe fallback
+    ctaLink: "/br/categories",
     imageFilename: "forc-teto.png",
     isPromotionalImage: true,
     hideOverlayContent: true,
-    imageFit: "contain"
-  }
+    imageFit: "contain",
+  },
 ]

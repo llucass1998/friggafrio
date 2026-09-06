@@ -28,8 +28,8 @@ if (!storefrontUrl) {
   process.exit(0)
 }
 
-const loginUrl = `${storefrontUrl.replace(/\/$/, "")}/br/account/login`
-const replacement = `fetch("/admin/auth/logout",{method:"DELETE",credentials:"include"}).then(function(response){if(!response.ok&&response.status!==401&&response.status!==403){throw new Error("Admin logout failed")}window.location.assign(${JSON.stringify(loginUrl)})})`
+const homeUrl = `${storefrontUrl.replace(/\/$/, "")}/br`
+const replacement = `fetch("/admin/auth/logout",{method:"DELETE",credentials:"include"}).then(function(response){if(!response.ok&&response.status!==401&&response.status!==403){throw new Error("Admin logout failed")}window.location.assign(${JSON.stringify(homeUrl)})})`
 const files = []
 
 if (existsSync(adminBuild)) {

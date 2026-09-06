@@ -1,6 +1,6 @@
 import useEmblaCarousel from "embla-carousel-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type KeyboardEvent, type ReactNode } from "react"
 import "@/components/carousel/carousel.css"
 
 type EmblaPlugins = Parameters<typeof useEmblaCarousel>[1]
@@ -12,6 +12,7 @@ export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS, loop 
     containScroll: "trimSnaps",
     loop,
     skipSnaps: false,
+    duration: 20,
   }, plugins)
   const [hasOverflow, setHasOverflow] = useState(false)
   const [canScrollPrev, setCanScrollPrev] = useState(false)
@@ -56,8 +57,18 @@ export function useInfiniteCarousel(plugins: EmblaPlugins = EMPTY_PLUGINS, loop 
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
+  const scrollToStart = useCallback(() => emblaApi?.scrollTo(0), [emblaApi])
+  const scrollToEnd = useCallback(() => {
+    if (!emblaApi) return
+    const lastSnap = Math.max(0, emblaApi.scrollSnapList().length - 1)
+    emblaApi.scrollTo(lastSnap)
+  }, [emblaApi])
+  const onKeyDown = useCallback((event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "ArrowLeft") { event.preventDefault(); emblaApi?.scrollPrev() }
+    if (event.key === "ArrowRight") { event.preventDefault(); emblaApi?.scrollNext() }
+  }, [emblaApi])
 
-  return { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext }
+  return { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext, scrollToStart, scrollToEnd, onKeyDown }
 }
 
 type CarouselSectionHeaderProps = {
@@ -71,6 +82,7 @@ type CarouselSectionHeaderProps = {
   onNext: () => void
   previousLabel: string
   nextLabel: string
+  showControlsInHeader?: boolean
 }
 
 export function CarouselSectionHeader({
@@ -84,6 +96,7 @@ export function CarouselSectionHeader({
   onNext,
   previousLabel,
   nextLabel,
+  showControlsInHeader = true,
 }: CarouselSectionHeaderProps) {
   return (
     <header className="ff-carousel-section-header mb-6">
@@ -93,7 +106,7 @@ export function CarouselSectionHeader({
       </div>
         <div className="ff-carousel-section-header__actions">
         {action}
-        {hasOverflow && (
+        {showControlsInHeader && hasOverflow && (
           <div className="flex items-center gap-2" data-carousel-controls="section-header">
             <button
               type="button"
@@ -118,4 +131,12 @@ export function CarouselSectionHeader({
       </div>
     </header>
   )
+}
+
+export function CarouselSideControls({ side, hasOverflow, canScrollPrevious, canScrollNext, onPrevious, onNext, previousLabel, nextLabel }: Omit<CarouselSectionHeaderProps, "title" | "description" | "action" | "showControlsInHeader"> & { side: "previous" | "next" }) {
+  if (!hasOverflow) return null
+  const buttonClass = "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-white text-[var(--color-navy)] shadow-[0_4px_12px_rgba(15,45,75,0.12)] transition-[background-color,color,border-color,box-shadow] duration-[var(--motion-duration-interaction)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+  return side === "previous"
+    ? <button type="button" aria-label={previousLabel} onClick={onPrevious} disabled={!canScrollPrevious} className={buttonClass}><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
+    : <button type="button" aria-label={nextLabel} onClick={onNext} disabled={!canScrollNext} className={buttonClass}><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
 }

@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query"
 import { useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { getRegion } from "@/lib/data/regions"
-import { listProducts } from "@/lib/data/products"
+import { getHomeProductSelection, listProducts } from "@/lib/data/products"
 import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { selectHomeProducts } from "@/lib/data/home-products"
+import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { HomeProductSection } from "@/components/home/HomeProductSection"
+import { HomeWhatsAppQuoteBanner } from "@/components/home/HomeWhatsAppQuoteBanner"
 
 export function HomeProductSections() {
   const params = useParams({ strict: false }) as Record<string, string>
@@ -21,16 +23,9 @@ export function HomeProductSections() {
   })
 
   const productsQuery = useQuery({
-    queryKey: queryKeys.products.latest(100, regionQuery.data?.id || ""),
+    queryKey: queryKeys.products.latest(500, regionQuery.data?.id || ""),
     queryFn: () => listProducts({
-      queryParams: {
-        // Fetch the full seeded catalog window so the curated 5+5 shelf does
-        // not depend on the API's newest-100 slice hiding a category.
-        limit: 500,
-        offset: 0,
-        order: "-created_at",
-        fields: PUBLIC_HOME_PRODUCT_FIELDS,
-      },
+      queryParams: { limit: 500, offset: 0, order: "-created_at", fields: PUBLIC_HOME_PRODUCT_FIELDS },
       regionId: regionQuery.data!.id,
     }),
     enabled: hydrated && Boolean(regionQuery.data?.id),
@@ -38,25 +33,35 @@ export function HomeProductSections() {
 
   const allProducts = (productsQuery.data?.response?.products || []) as HttpTypes.StoreProduct[]
   const specializedProducts = selectHomeProducts(allProducts, "specialized")
-  const bestSellerProducts = selectHomeProducts(allProducts, "best_sellers", {
-    limit: 10,
-    excludeIds: new Set(specializedProducts.map((product) => product.id)),
-  })
+  const specializedIds = new Set(specializedProducts.map((product) => product.id))
   const maintenanceProducts = selectHomeProducts(allProducts, "maintenance", {
     limit: 10,
-    excludeIds: new Set([
-      ...specializedProducts.map((product) => product.id),
-      ...bestSellerProducts.map((product) => product.id),
-    ]),
+    excludeIds: specializedIds,
   })
-  const isLoading = !hydrated || regionQuery.isPending || productsQuery.isPending
+  const originalSectionIds = new Set([
+    ...specializedProducts.map((product) => product.id),
+    ...maintenanceProducts.map((product) => product.id),
+  ])
+  const homeSelectionQuery = useQuery({
+    queryKey: [...queryKeys.products.homeSelection(regionQuery.data?.id), Array.from(originalSectionIds).sort()],
+    queryFn: () => getHomeProductSelection(regionQuery.data!.id, { excludedProductIds: Array.from(originalSectionIds) }),
+    enabled: hydrated && Boolean(regionQuery.data?.id),
+  })
+  // The Backend owns this selection. Client checks below only defend card
+  // rendering against stale data between the selection and product hydration.
+  const selectedHomeProducts = (homeSelectionQuery.data?.products || [])
+    .filter((product) => !originalSectionIds.has(product.id))
+    .filter((product) => getProductPurchaseState(product).status === "purchasable")
+    .slice(0, 10)
+  const useRanking = homeSelectionQuery.data?.source === "sales-ranking-30d" && selectedHomeProducts.length > 0
+  const isLoading = !hydrated || regionQuery.isPending || productsQuery.isPending || homeSelectionQuery.isPending
 
   return (
     <>
       <HomeProductSection
         countryCode={countryCode}
-        title="Produtos Especializados FriggaFrio"
-        description="Soluções técnicas para o seu projeto de refrigeração"
+        title="Produtos Especializados"
+        description="Soluções técnicas para o seu projeto de refrigeração."
         products={specializedProducts}
         isLoading={isLoading}
         emptyMessage="Nenhum produto especializado encontrado no momento."
@@ -65,13 +70,15 @@ export function HomeProductSections() {
       />
       <HomeProductSection
         countryCode={countryCode}
-        title="Produtos mais vendidos"
-        description="Uma seleção estável de itens disponíveis para agilizar sua compra"
-        products={bestSellerProducts}
+        title={useRanking ? "Produtos mais vendidos" : "Produtos à pronta entrega"}
+        description={useRanking ? "Os produtos mais vendidos nos últimos 30 dias em nossas lojas." : "Itens disponíveis em estoque para agilizar sua compra."}
+        products={selectedHomeProducts}
         isLoading={isLoading}
-        emptyMessage="Nenhum produto disponível para esta seleção no momento."
+        emptyMessage=""
         sectionId="home-best-sellers"
+        hideWhenEmpty
       />
+      <HomeWhatsAppQuoteBanner />
       <HomeProductSection
         countryCode={countryCode}
         title="Produtos para manutenção"

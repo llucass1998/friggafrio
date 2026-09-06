@@ -3,7 +3,7 @@ import { storeConfig } from "@/config/store"
 import { COMPANY_INFORMATION } from "@/config/company"
 import { StoreLocationCard } from "@/components/store-locations/StoreLocationCard"
 import { Link } from "@tanstack/react-router"
-import { Image as ImageIcon, Info, MapPin, MessageCircle } from "lucide-react"
+import { Image as ImageIcon, Info, MapPin, MessageCircle, PackageCheck, ShieldCheck } from "lucide-react"
 
 export function PublicStoresPage() {
   const activeLocations = storeLocations.filter((location) => location.active)
@@ -126,6 +126,42 @@ export function PublicStoresPage() {
               <MessageCircle className="h-5 w-5" aria-hidden="true" />
               Confirmar pelo WhatsApp
             </a>
+          </div>
+
+          <div className="mt-16 border-t border-[#E5EDF4] pt-12">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-[var(--radius-card)] bg-[#F5F8FA] p-6 md:p-8">
+                <div className="mb-4 flex items-center gap-3">
+                  <PackageCheck className="h-6 w-6 text-[var(--color-primary)]" aria-hidden="true" />
+                  <h2 className="text-xl font-bold text-[var(--color-navy)]">Retirada gratuita na Loja 1</h2>
+                </div>
+                <p className="leading-relaxed text-[var(--color-text-muted)]">
+                  Escolha a retirada na Loja 1 no checkout e aguarde a confirmação de que o pedido está pronto antes de vir à unidade.
+                </p>
+              </div>
+              <div className="rounded-[var(--radius-card)] bg-[#F5F8FA] p-6 md:p-8">
+                <div className="mb-4 flex items-center gap-3">
+                  <ShieldCheck className="h-6 w-6 text-[var(--color-primary)]" aria-hidden="true" />
+                  <h2 className="text-xl font-bold text-[var(--color-navy)]">Atendimento especializado</h2>
+                </div>
+                <p className="leading-relaxed text-[var(--color-text-muted)]">
+                  Encontre gases refrigerantes, compressores, componentes, ferramentas e soluções para refrigeração e climatização, conforme a disponibilidade do catálogo.
+                </p>
+              </div>
+            </div>
+            <div className="mt-8 rounded-[var(--radius-card)] border border-[#E5EDF4] bg-white p-6 md:p-8">
+              <h2 className="text-xl font-bold text-[var(--color-navy)]">Dúvidas frequentes</h2>
+              <dl className="mt-5 space-y-5 text-[var(--color-text-muted)]">
+                <div>
+                  <dt className="font-semibold text-[var(--color-text)]">Como confirmo a disponibilidade?</dt>
+                  <dd className="mt-1 leading-relaxed">Consulte o estoque no produto ou fale com nossa equipe pelo WhatsApp antes de se deslocar.</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-[var(--color-text)]">A FriggaFrio realiza instalação?</dt>
+                  <dd className="mt-1 leading-relaxed">A loja comercializa produtos e componentes; a instalação deve ser realizada por profissional habilitado.</dd>
+                </div>
+              </dl>
+            </div>
           </div>
         </div>
       </div>

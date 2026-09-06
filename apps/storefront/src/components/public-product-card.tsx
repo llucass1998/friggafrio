@@ -8,16 +8,19 @@ import { decodeProductText } from "@/lib/utils/product-text"
 import { getInterestFreeInstallment } from "@/lib/utils/installments"
 import ProductRating from "@/components/product-rating"
 import { resolveMediaUrl } from "@/lib/media-url"
+import { useState } from "react"
 
 interface PublicProductCardProps {
   product: HttpTypes.StoreProduct
   compact?: boolean
+  promotionLabel?: string
 }
 
-export function PublicProductCard({ product, compact = false }: PublicProductCardProps) {
+export function PublicProductCard({ product, compact = false, promotionLabel }: PublicProductCardProps) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
   const thumbnail = resolveMediaUrl(product.thumbnail || product.images?.[0]?.url)
+  const [imageFailed, setImageFailed] = useState(false)
   const productTitle = decodeProductText(product.title)
   const sku = product.variants?.[0]?.sku?.trim() || null
   const brand = product.collection?.title || "FriggaFrio"
@@ -32,19 +35,23 @@ export function PublicProductCard({ product, compact = false }: PublicProductCar
   const formattedDisplayPrice = displayPrice > 0
     ? formatCurrencyAmount({ amount: displayPrice, currencyCode: displayCurrency })
     : null
+  const originalDisplayPrice = firstCalculatedPrice?.original_amount
+  const formattedOriginalPrice = typeof originalDisplayPrice === "number" && originalDisplayPrice > displayPrice
+    ? formatCurrencyAmount({ amount: originalDisplayPrice, currencyCode: displayCurrency })
+    : null
   const installment = purchaseState.status === "purchasable"
     ? getInterestFreeInstallment(displayPrice)
     : null
   const imageClassName = compact
-    ? "aspect-[16/10] bg-[var(--color-surface-soft)] p-2 sm:p-3"
-    : "aspect-[4/3] bg-[var(--color-surface-soft)] p-3 sm:p-4"
+    ? "aspect-square bg-white p-3 sm:p-4"
+    : "aspect-square bg-white p-3 sm:p-5"
   const contentClassName = compact ? "p-3" : "p-4"
   const titleClassName = compact
     ? "line-clamp-3 min-h-[3rem] text-[0.9rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors group-hover:text-[var(--color-primary)] sm:text-[0.95rem]"
     : "line-clamp-3 min-h-[3.75rem] text-[0.95rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors group-hover:text-[var(--color-primary)] sm:text-base"
 
   return (
-    <article data-testid="public-product-card" data-product-card-version="2" className="group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white transition-[box-shadow,border-color] duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] hover:border-[var(--color-primary)] hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
+    <article data-testid="public-product-card" data-product-card-version="2" className="ff-product-card group relative box-border flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[12px] border border-[#D9E2EA] bg-white shadow-[0_4px_14px_rgba(15,45,75,0.10)]">
       <FavoriteButton
         productId={product.id}
         productTitle={productTitle}
@@ -63,14 +70,15 @@ export function PublicProductCard({ product, compact = false }: PublicProductCar
               Imagem em breve
             </span>
           )}
-          {thumbnail ? (
+          {thumbnail && !imageFailed ? (
             <img
               src={thumbnail}
               alt={productTitle}
               loading="lazy"
               width="300"
               height="300"
-              className="h-full w-full object-contain mix-blend-multiply transition-transform duration-[var(--motion-duration-card)] ease-[var(--motion-ease-standard)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none"
+              className="h-full w-full object-contain mix-blend-multiply"
+              onError={() => setImageFailed(true)}
             />
           ) : (
             <ProductImagePlaceholder productName={productTitle} compact />
@@ -78,16 +86,16 @@ export function PublicProductCard({ product, compact = false }: PublicProductCar
         </div>
 
         <div className={`flex flex-1 flex-col ${contentClassName}`}>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+          <p className="ff-product-card__brand mb-1 min-h-[1rem] text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
             {brand}
           </p>
           <h3 className={titleClassName}>{productTitle}</h3>
           <div className="mt-2 min-h-4"><ProductRating productId={product.id} /></div>
-          {sku && (
-            <p className={`${compact ? "mb-2" : "mb-3"} mt-1.5 w-fit rounded bg-[var(--color-background)] px-2 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)] sm:text-xs`}>
-              Ref: {sku}
-            </p>
-          )}
+          <div className={`${compact ? "mb-2" : "mb-3"} mt-1.5 min-h-[1.25rem]`}>
+            {sku && (
+              <p className="w-fit rounded bg-[var(--color-background)] px-2 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)] sm:text-xs">Ref: {sku}</p>
+            )}
+          </div>
 
           <div className={`mt-auto border-t border-[var(--color-border)] ${compact ? "pt-2" : "pt-3"}`}>
             <div className={`${compact ? "min-h-[46px]" : "min-h-[52px]"} flex flex-col justify-end gap-1`}>
@@ -108,6 +116,8 @@ export function PublicProductCard({ product, compact = false }: PublicProductCar
                 </>
               ) : formattedDisplayPrice ? (
                 <>
+                  {promotionLabel && <span className="w-fit rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">{promotionLabel}</span>}
+                  {formattedOriginalPrice && <span className="text-xs text-[var(--color-text-muted)] line-through">{formattedOriginalPrice}</span>}
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-success)]"><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />Em estoque</span>
                   <span className="text-xl font-bold tracking-tight text-[var(--color-navy)]">{formattedDisplayPrice}</span>
                   {installment && <span className="text-xs font-medium text-[var(--color-text-muted)]">{installment.label}</span>}

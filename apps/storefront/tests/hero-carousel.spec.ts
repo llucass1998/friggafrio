@@ -91,12 +91,10 @@ test.describe("Hero promocional", () => {
 
     // Autoplay may advance while other parallel pages finish loading; controls must
     // still move relative to the currently selected slide rather than assuming zero.
-    const initialIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
-      [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
-    )
+    await dots.nth(0).click()
     const next = page.locator('button[aria-label*="slide"]').last()
     await next.click()
-    await expect(slides.nth((initialIndex + 1) % 3)).toHaveAttribute("data-active", "true")
+    await expect(slides.nth(1)).toHaveAttribute("data-active", "true")
 
     await dots.nth(2).click()
     await expect(slides.nth(2)).toHaveAttribute("data-active", "true")
@@ -119,16 +117,14 @@ test.describe("Hero promocional", () => {
     await expect(controls.first()).toHaveAttribute("type", "button")
     await expect(controls.last()).toHaveAttribute("type", "button")
 
-    const initialIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
-      [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
-    )
+    await page.locator(".carousel-indicator-bar").nth(0).click()
     await controls.last().click()
     await page.waitForTimeout(700)
 
     const nextIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) =>
       [...document.querySelectorAll(".carousel-slide")].indexOf(slide),
     )
-    expect(nextIndex).not.toBe(initialIndex)
+    expect(nextIndex).toBe(1)
 
     const transition = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => ({
       slideTransition: getComputedStyle(slide).transitionDuration,
@@ -138,20 +134,22 @@ test.describe("Hero promocional", () => {
     expect(transition.progressAnimation).not.toBe("none")
   })
 
-  test("autoplay percorre o loop sem slide vazio", async ({ page }) => {
+  test("autoplay para no ultimo slide sem loop", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto("/br", { waitUntil: "networkidle" })
 
-    const activeIndexes: number[] = []
-    for (let index = 0; index < 7; index += 1) {
-      activeIndexes.push(await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
-        const slides = [...document.querySelectorAll(".carousel-slide")]
-        return slides.indexOf(slide)
-      }))
-      await page.waitForTimeout(5000)
-    }
-
-    expect(activeIndexes).toEqual(expect.arrayContaining([0, 1, 2]))
+    await page.waitForTimeout(16000)
+    const activeIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
+      const slides = [...document.querySelectorAll(".carousel-slide")]
+      return slides.indexOf(slide)
+    })
+    expect(activeIndex).toBe(2)
+    await page.waitForTimeout(5500)
+    const finalIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
+      const slides = [...document.querySelectorAll(".carousel-slide")]
+      return slides.indexOf(slide)
+    })
+    expect(finalIndex).toBe(2)
     const activeImageWidth = await page
       .locator('.carousel-slide[data-active="true"] .carousel-slide-img')
       .evaluate((image: HTMLImageElement) => image.naturalWidth)

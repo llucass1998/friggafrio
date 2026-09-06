@@ -22,7 +22,7 @@ const rawRows = <T>(result: unknown): T[] => {
 }
 
 /** Atomically claims a pending confirmation lease before provider I/O. */
-const claimConfirmation = async (req: MedusaRequest, token: string): Promise<NewsletterRecord | "processing" | null> => {
+const claimConfirmation = async (req: MedusaRequest, token: string): Promise<NewsletterRecord | "processing" | "already_confirmed" | null> => {
   const database = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Partial<RawConnection>
   const tokenHash = hashNewsletterToken(token)
 
@@ -56,15 +56,26 @@ const claimConfirmation = async (req: MedusaRequest, token: string): Promise<New
     if (existing && existing.last_email_status === "confirmation_processing" && !processingLeaseExpired(existing as NewsletterRecord)) {
       return "processing"
     }
+    const confirmed = await database.raw(
+      `select "id" from "newsletter_subscription"
+        where "confirmation_token_hash" = ? and "status" = 'active'
+        limit 1`,
+      [tokenHash],
+    )
+    if (rawRows(confirmed).length > 0) return "already_confirmed"
     return null
   }
 
-  const legacyClaim = async (): Promise<NewsletterRecord | "processing" | null> => {
+  const legacyClaim = async (): Promise<NewsletterRecord | "processing" | "already_confirmed" | null> => {
     const service = serviceFor(req)
     const matches = await service.listNewsletterSubscriptions({ confirmation_token_hash: tokenHash, status: NewsletterSubscriptionStatus.PENDING })
     const subscription = matches[0] as NewsletterRecord | undefined
+    if (!subscription) {
+      const confirmed = await service.listNewsletterSubscriptions({ confirmation_token_hash: tokenHash, status: NewsletterSubscriptionStatus.ACTIVE })
+      return confirmed[0] ? "already_confirmed" : null
+    }
     const expiresAt = subscription?.confirmation_expires_at ? new Date(subscription.confirmation_expires_at) : null
-    if (!subscription || !expiresAt || expiresAt.getTime() <= Date.now()) return null
+    if (!expiresAt || expiresAt.getTime() <= Date.now()) return null
     if (subscription.last_email_status === "confirmation_processing" && !processingLeaseExpired(subscription)) return "processing"
     await service.updateNewsletterSubscriptions({ id: subscription.id, last_email_status: "confirmation_processing" })
     return subscription
@@ -103,7 +114,7 @@ const completeConfirmation = async (req: MedusaRequest, res: MedusaResponse, sub
   if (typeof database.raw === "function") {
     const result = await database.raw(
       `update "newsletter_subscription"
-          set "status" = 'active', "confirmed_at" = now(), "confirmation_token_hash" = null,
+          set "status" = 'active', "confirmed_at" = now(),
               "confirmation_expires_at" = null, "last_email_status" = 'confirmed', "updated_at" = now()
         where "id" = ? and "status" = 'pending' and "confirmation_token_hash" = ?
         returning "id"`,
@@ -113,7 +124,9 @@ const completeConfirmation = async (req: MedusaRequest, res: MedusaResponse, sub
   } else {
     const current = await service.listNewsletterSubscriptions({ confirmation_token_hash: hashNewsletterToken(token), status: NewsletterSubscriptionStatus.PENDING })
     if (current[0]) {
-      await service.updateNewsletterSubscriptions({ id: subscription.id, status: NewsletterSubscriptionStatus.ACTIVE, confirmed_at: new Date(), confirmation_token_hash: null, confirmation_expires_at: null, last_email_status: "confirmed" })
+      // Retain only the one-way hash to make repeated clicks an explicit,
+      // provider-free success path. The raw confirmation token is never stored.
+      await service.updateNewsletterSubscriptions({ id: subscription.id, status: NewsletterSubscriptionStatus.ACTIVE, confirmed_at: new Date(), confirmation_expires_at: null, last_email_status: "confirmed" })
       confirmed = true
     }
   }
@@ -127,5 +140,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const claimed = await claimConfirmation(req, token)
   if (!claimed) return res.status(400).json({ status: "invalid_or_expired" })
   if (claimed === "processing") return res.status(202).json({ status: "confirmation_pending" })
+  if (claimed === "already_confirmed") return res.status(200).json({ status: "already_confirmed" })
   return completeConfirmation(req, res, claimed, token)
 }

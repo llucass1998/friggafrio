@@ -11,8 +11,6 @@ const Root = ({ id, children }: StackedFocusModalProps) => {
 
   return (
     <FocusModal open={isOpen} onOpenChange={handleOpenChange}>
-      <FocusModal.Title></FocusModal.Title>
-      <FocusModal.Description></FocusModal.Description>
       {children}
     </FocusModal>
   );
@@ -29,7 +27,13 @@ const Content = ({
   children,
 }: PropsWithChildren<{ className?: string }>) => {
   return (
-    <FocusModal.Content className={clx(className)}>{children}</FocusModal.Content>
+    <FocusModal.Content className={clx(className)}>
+      <FocusModal.Title className="sr-only">Administração</FocusModal.Title>
+      <FocusModal.Description className="sr-only">
+        Formulário administrativo.
+      </FocusModal.Description>
+      {children}
+    </FocusModal.Content>
   );
 };
 

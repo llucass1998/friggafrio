@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react"
 import { Button } from "@/components/ui/button"
+import { reportClientError } from "@/lib/sentry"
 
 interface Props {
   children?: ReactNode;
@@ -21,7 +22,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo)
+    reportClientError(error)
+    void errorInfo
   }
 
   public render() {
@@ -37,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
           <h2 className="text-2xl font-bold mb-2">Ops! Algo deu errado.</h2>
           <p className="text-gray-600 mb-6 max-w-md">
-            Ocorreu um erro inesperado ao carregar esta parte da página. Nossa equipe já foi notificada.
+            Ocorreu um erro inesperado ao carregar esta parte da página. Tente novamente.
           </p>
           <div className="flex gap-4">
             <Button 

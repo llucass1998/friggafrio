@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { readFileSync, statSync } from "node:fs"
 import test from "node:test"
 import { storeLocations } from "../../src/config/store-locations"
 
@@ -8,6 +8,10 @@ test("Nossa Loja exposes exactly one approved active location", () => {
 
   assert.equal(activeLocations.length, 1)
   assert.equal(activeLocations[0]?.id, "loja-1")
+  assert.equal(activeLocations[0]?.name, "FriggaFrio")
+  assert.equal(activeLocations[0]?.ownImageSrc, "/images/store/loja-1-fachada.webp")
+  assert.equal(activeLocations[0]?.ownImageAlt, "Fachada da FriggaFrio")
+  assert.ok(statSync(new URL("../../public/images/store/loja-1-fachada.webp", import.meta.url)).size > 0)
   assert.equal(activeLocations.some((location) => location.id === "loja-2"), false)
 })
 

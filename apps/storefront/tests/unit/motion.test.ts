@@ -40,6 +40,8 @@ test("page, menu, cart, and modal transitions use explicit motion primitives", (
   assert.match(mobileDrawerSource, /requestAnimationFrame/)
   assert.match(mobileDrawerSource, /const \[isMobileMenuOpen, setIsMobileMenuOpen\] = useState\(false\)/)
   assert.match(appStylesSource, /\.mobile-drawer-panel[\s\S]*transform: translateX\(-100%\)/)
+  assert.match(appStylesSource, /\.mobile-drawer-panel[\s\S]*display: flex[\s\S]*flex-direction: column[\s\S]*overflow-y: hidden/)
+  assert.match(appStylesSource, /\.mobile-drawer-content[\s\S]*overflow-y: auto[\s\S]*touch-action: pan-y/)
   assert.match(appStylesSource, /transition: transform 150ms ease-in-out 150ms/)
   assert.doesNotMatch(mobileDrawerSource, /setTimeout\(/)
   assert.doesNotMatch(mobileDrawerSource, /openTimerRef/)

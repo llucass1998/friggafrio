@@ -3,8 +3,6 @@ import { getProductPurchaseState } from "@/lib/utils/product-state"
 
 export type HomeProductSelection = "specialized" | "best_sellers" | "maintenance"
 
-const BEST_SELLER_CATEGORY_HANDLES = ["gases-refrigerantes", "tubos-de-cobre"] as const
-
 const MAINTENANCE_CATEGORY_HANDLES = new Set([
   "bombas-de-vacuo",
   "componentes",
@@ -82,34 +80,30 @@ export function selectHomeProducts(
   }
 
   if (selection === "best_sellers") {
-    // No order-derived ranking is available yet. Keep this slot useful and
-    // repeatable with real catalog rows from the two priority departments,
-    // including out-of-stock rows so merchandising does not hide inventory
-    // truth. This is a deterministic merchandising fallback, not a claim of
-    // actual sales volume.
-    const selectedIds = new Set<string>()
-    const selected: HttpTypes.StoreProduct[] = []
-
-    for (const categoryHandle of BEST_SELLER_CATEGORY_HANDLES) {
-      const categoryProducts = sortDeterministically(
-        eligibleProducts.filter((product) => getCategoryHandles(product).includes(categoryHandle)),
-      )
-
-      for (const product of categoryProducts.slice(0, 5)) {
-        if (selectedIds.has(product.id)) continue
-        selectedIds.add(product.id)
-        selected.push(product)
-      }
-    }
-
-    return selected.slice(0, limit)
+    // Sales-ranked products come from the backend projection. Never substitute
+    // merchandising rows for a ranking that has no validated source data.
+    return []
   }
 
   const maintenanceProducts = eligibleProducts.filter((product) =>
-    getCategoryHandles(product).some((handle) => MAINTENANCE_CATEGORY_HANDLES.has(handle)),
+    getCategoryHandles(product).some((handle) => MAINTENANCE_CATEGORY_HANDLES.has(handle)) &&
+    getProductPurchaseState(product).status === "purchasable",
   )
 
-  // Maintenance is also catalog merchandising: show real rows even when an
-  // item is temporarily out of stock, so the card can communicate its state.
+  // Maintenance is a purchasable shelf; stock and price remain authoritative
+  // in the Store API projection consumed by getProductPurchaseState.
   return sortDeterministically(maintenanceProducts).slice(0, limit)
+}
+
+export function selectFeaturedInventoryProducts(
+  products: HttpTypes.StoreProduct[],
+  options: { limit?: number; excludeIds?: ReadonlySet<string> } = {},
+): HttpTypes.StoreProduct[] {
+  const limit = Math.max(0, Math.min(10, options.limit ?? 10))
+  const excludedIds = options.excludeIds ?? new Set<string>()
+  return sortDeterministically(products.filter((product) => {
+    if (excludedIds.has(product.id)) return false
+    const hasImage = Boolean(product.thumbnail || product.images?.some((image) => Boolean(image.url)))
+    return hasImage && getProductPurchaseState(product).status === "purchasable"
+  })).slice(0, limit)
 }

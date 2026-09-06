@@ -169,9 +169,15 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {footerNavigation.support.filter(item => item.active).map(item => (
                   <li key={item.id}>
-                    <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                      {item.label}
-                    </Link>
+                    {item.id === "privacy-preferences" ? (
+                      <button type="button" onClick={() => window.dispatchEvent(new Event("friggafrio:privacy-preferences"))} className="text-sm text-[var(--color-surface-soft)] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
                 {footerNavigation.support.filter(item => item.active).length === 0 && (

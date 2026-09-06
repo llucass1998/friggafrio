@@ -1,7 +1,7 @@
 import { sdk } from "@/lib/medusa"
 
 export type NewsletterSubscriptionStatus = "confirmation_pending"
-export type NewsletterActionStatus = "confirmed" | "unsubscribed" | "invalid" | "invalid_or_expired"
+export type NewsletterActionStatus = "confirmed" | "already_confirmed" | "unsubscribed" | "invalid" | "invalid_or_expired"
 
 export const subscribeToNewsletter = (input: {
   name: string

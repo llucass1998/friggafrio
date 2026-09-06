@@ -1,0 +1,613 @@
+diff --git a/dist/app.js b/dist/app.js
+index c954aa5b0d99edecab81c0da09c3dbc5ba2a652c..9df11052f8fa15462c3ed12259cd64c7d868730f 100644
+--- a/dist/app.js
++++ b/dist/app.js
+@@ -124054,7 +124054,11 @@ var init_route_focus_modal = __esm({
+         }
+         setOpen(open2);
+       };
+-      return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(import_ui57.FocusModal, { open, onOpenChange: handleOpenChange, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(RouteModalProvider, { prev: to, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(StackedModalProvider, { onOpenChange: onStackedModalOpen, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Content, { stackedModalOpen, children }) }) }) });
++      return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(import_ui57.FocusModal, { open, onOpenChange: handleOpenChange, children: [
++        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(import_ui57.FocusModal.Title, { className: "sr-only", children: "AdministraÃ§Ã£o" }),
++        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(import_ui57.FocusModal.Description, { className: "sr-only", children: "FormulÃ¡rio administrativo." }),
++        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(RouteModalProvider, { prev: to, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(StackedModalProvider, { onOpenChange: onStackedModalOpen, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Content, { stackedModalOpen, children }) }) })
++      ] });
+     };
+     Content = ({ stackedModalOpen, children }) => {
+       const { __internal } = useRouteModal();
+diff --git a/dist/chunk-MCLD4I4W.mjs b/dist/chunk-MCLD4I4W.mjs
+index 2f0a9e392627d0a4d3d52967cb8b5301bc99401b..cbfdb23242538edec1624a3c33de8dbc15b62e20 100644
+--- a/dist/chunk-MCLD4I4W.mjs
++++ b/dist/chunk-MCLD4I4W.mjs
+@@ -93,6 +93,14 @@ var RuleValueFormField = ({
+     queryKey: ["rule-value-options", ruleType, attribute?.id],
+     selectedValue
+   });
++  const {
++    options,
++    searchValue,
++    onSearchValueChange,
++    disabled: comboboxDisabled,
++    fetchNextPage,
++    isFetchingNextPage
++  } = comboboxData;
+   const watchOperator = useWatch({
+     control: form.control,
+     name: operator
+@@ -149,7 +157,12 @@ var RuleValueFormField = ({
+               Combobox,
+               {
+                 ...field,
+-                ...comboboxData,
++                options,
++                searchValue,
++                onSearchValueChange,
++                disabled: comboboxDisabled,
++                fetchNextPage,
++                isFetchingNextPage,
+                 ref,
+                 placeholder: watchOperator === "eq" ? t("labels.selectValue") : t("labels.selectValues"),
+                 disabled: !watchOperator,
+diff --git a/dist/chunk-Y4T75RAV.mjs b/dist/chunk-Y4T75RAV.mjs
+index 954c0f701b63fcce5791eb9707c14da5e4dd0436..d3c471c4792313653e40e84478045bf649473f4e 100644
+--- a/dist/chunk-Y4T75RAV.mjs
++++ b/dist/chunk-Y4T75RAV.mjs
+@@ -57,7 +57,7 @@ var SalesChannelHeader = () => {
+ // src/hooks/table/columns/use-product-table-columns.tsx
+ import { jsx as jsx2 } from "react/jsx-runtime";
+ var columnHelper = createColumnHelper();
+-var useProductTableColumns = () => {
++var useProductTableColumns = (privateCodes) => {
+   return useMemo(
+     () => [
+       columnHelper.display({
+@@ -65,6 +65,11 @@ var useProductTableColumns = () => {
+         header: () => /* @__PURE__ */ jsx2(ProductHeader, {}),
+         cell: ({ row }) => /* @__PURE__ */ jsx2(ProductCell, { product: row.original })
+       }),
++      columnHelper.display({
++        id: "frigga_omie_code",
++        header: () => "Código FriggaFrio / Omie",
++        cell: ({ row }) => row.original.__frigga_omie_code ?? "-"
++      }),
+       columnHelper.accessor("collection", {
+         header: () => /* @__PURE__ */ jsx2(CollectionHeader, {}),
+         cell: ({ row }) => /* @__PURE__ */ jsx2(CollectionCell, { collection: row.original.collection })
+@@ -82,7 +87,7 @@ var useProductTableColumns = () => {
+         cell: ({ row }) => /* @__PURE__ */ jsx2(ProductStatusCell, { status: row.original.status })
+       })
+     ],
+-    []
++    [privateCodes]
+   );
+ };
+
+diff --git a/dist/product-list-KFP2GKHN.mjs b/dist/product-list-KFP2GKHN.mjs
+index 28522b73fefac055a0ab3031851587f77e65e7d8..ed250cf579ee69e55f8c971e1825ee999f22420a 100644
+--- a/dist/product-list-KFP2GKHN.mjs
++++ b/dist/product-list-KFP2GKHN.mjs
+@@ -87,6 +87,7 @@ import {
+   useDeleteProduct,
+   useProducts
+ } from "./chunk-TPANFD43.mjs";
++import { useQuery } from "@tanstack/react-query";
+ import "./chunk-7AXHHXCX.mjs";
+ import {
+   ActionMenu
+@@ -216,6 +217,18 @@ var ProductListTable = () => {
+   const location = useLocation();
+   const initialData = useLoaderData();
+   const { searchParams, raw } = useProductTableQuery({ pageSize: PAGE_SIZE });
++  const codeSearch = typeof raw.q === "string" && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(raw.q.trim());
++  const privateLinksQuery = useQuery({
++    queryKey: ["frigga-omie-private-links", raw.q],
++    queryFn: () => sdk.client.fetch("/admin/omie/product-links", { query: { q: raw.q?.trim() } }),
++    enabled: codeSearch,
++    staleTime: 15e3
++  });
++  const linkedProductQuery = useQuery({
++    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids],
++    queryFn: () => sdk.admin.product.list({ id: privateLinksQuery.data?.product_ids, limit: PAGE_SIZE, offset: 0, is_giftcard: false, fields: "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail" }),
++    enabled: codeSearch && Boolean(privateLinksQuery.data?.product_ids?.length)
++  });
+   const { products, count, isLoading, isError, error } = useProducts(
+     {
+       ...searchParams,
+@@ -227,11 +240,14 @@ var ProductListTable = () => {
+     }
+   );
+   const filters = useProductTableFilters();
+-  const columns = useColumns();
++  const privateCodes = useMemo(() => Object.fromEntries((privateLinksQuery.data?.links ?? []).map((link) => [link.product_id, link.code_display])), [privateLinksQuery.data]);
++  const columns = useColumns(privateCodes);
++  const visibleProducts = (linkedProductQuery.data?.products?.length ? linkedProductQuery.data.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }));
++  const visibleCount = linkedProductQuery.data?.products?.length ? linkedProductQuery.data.count : count;
+   const { table } = useDataTable({
+-    data: products ?? [],
++    data: visibleProducts ?? [],
+     columns,
+-    count,
++    count: visibleCount,
+     enablePagination: true,
+     pageSize: PAGE_SIZE,
+     getRowId: (row) => row.id
+@@ -253,7 +269,7 @@ var ProductListTable = () => {
+       {
+         table,
+         columns,
+-        count,
++        count: visibleCount,
+         pageSize: PAGE_SIZE,
+         filters,
+         search: true,
+@@ -275,8 +291,8 @@ var ProductListTable = () => {
+   ] });
+ };
+ var columnHelper = createColumnHelper();
+-var useColumns = () => {
+-  const base = useProductTableColumns();
++var useColumns = (privateCodes) => {
++  const base = useProductTableColumns(privateCodes);
+   const columns = useMemo(
+     () => [
+       ...base,
+diff --git a/dist/promotion-create-ESZ56ZIT.mjs b/dist/promotion-create-ESZ56ZIT.mjs
+index 2b469f7f64967d1c6eedc54ac3e8133688ec0be3..31c6994d1da87985a0307f25ac1c4a0ba9c76bbd 100644
+--- a/dist/promotion-create-ESZ56ZIT.mjs
++++ b/dist/promotion-create-ESZ56ZIT.mjs
+@@ -114,7 +114,7 @@ var CreatePromotionSchema = z.object({
+   campaign_id: z.string().optional(),
+   campaign_choice: z.enum(["none", "existing", "new"]).optional(),
+   is_automatic: z.string().toLowerCase(),
+-  code: z.string().min(1),
++  code: z.string().trim(),
+   type: z.enum(["buyget", "standard"]),
+   status: z.enum(["draft", "active", "inactive"]),
+   rules: RuleSchema,
+@@ -132,6 +132,12 @@ var CreatePromotionSchema = z.object({
+   }),
+   campaign: CreateCampaignSchema.optional()
+ }).refine(
++  (data) => data.is_automatic === "true" || data.code.length > 0,
++  {
++    path: ["code"],
++    message: "Required field"
++  }
++).refine(
+   (data) => {
+     if (data.application_method.allocation === "across") {
+       return true;
+@@ -327,6 +333,8 @@ var CreatePromotionForm = () => {
+         rules,
+         ...promotionData
+       } = data;
++      const normalizedCode = promotionData.code.trim();
++      const { code: _code, ...promotionFields } = promotionData;
+       const {
+         target_rules: targetRulesData = [],
+         buy_rules: buyRulesData = [],
+@@ -354,7 +362,8 @@ var CreatePromotionForm = () => {
+       }
+       createPromotion(
+         {
+-          ...promotionData,
++          ...promotionFields,
++          ...(normalizedCode ? { code: normalizedCode } : {}),
+           rules: buildRulesData(rules),
+           application_method: {
+             ...applicationMethodData,
+@@ -448,9 +457,12 @@ var CreatePromotionForm = () => {
+     name: "template_id"
+   });
+   const currentTemplate = useMemo(() => {
+-    const currentTemplate2 = templates.find(
++    return templates.find(
+       (template) => template.id === watchTemplateId
+     );
++  }, [watchTemplateId]);
++  useEffect(() => {
++    const currentTemplate2 = currentTemplate;
+     if (!currentTemplate2) {
+       return;
+     }
+@@ -467,8 +479,7 @@ var CreatePromotionForm = () => {
+     if (currentTemplate2.defaults?.application_method?.allocation === "across") {
+       setValue("application_method.max_quantity", null);
+     }
+-    return currentTemplate2;
+-  }, [watchTemplateId, setValue, reset]);
++  }, [currentTemplate, reset, setValue, watchTemplateId]);
+   const watchValueType = useWatch({
+     control: form.control,
+     name: "application_method.type"
+@@ -525,14 +536,17 @@ var CreatePromotionForm = () => {
+   const watchCurrencyRule = watchRules.find(
+     (rule) => rule.attribute === "currency_code"
+   );
+-  if (watchCurrencyRule) {
++  useEffect(() => {
++    if (!watchCurrencyRule) {
++      return;
++    }
+     const formData = form.getValues();
+     const currencyCode = formData.application_method.currency_code;
+     const ruleValue = watchCurrencyRule.values;
+     if (!Array.isArray(ruleValue) && currencyCode !== ruleValue) {
+       form.setValue("application_method.currency_code", ruleValue);
+     }
+-  }
++  }, [form, watchCurrencyRule]);
+   return /* @__PURE__ */ jsx(RouteFocusModal.Form, { form, children: /* @__PURE__ */ jsxs(KeyboundForm, { className: "flex h-full flex-col", onSubmit: handleSubmit, children: [
+     /* @__PURE__ */ jsxs(
+       ProgressTabs,
+@@ -934,7 +948,10 @@ var CreatePromotionForm = () => {
+                                 ...field,
+                                 min: 0,
+                                 code: currencyCode || "USD",
+-                                onValueChange: (_value, _name, values) => onChange(values?.value),
++                                onValueChange: (rawValue, _name, values) => {
++                                  const nextValue = values?.value ?? rawValue;
++                                  onChange(nextValue === "" || nextValue == null ? null : nextValue);
++                                },
+                                 decimalScale: currencyInfo?.decimal_digits ?? 2,
+                                 decimalsLimit: currencyInfo?.decimal_digits ?? 2,
+                                 symbol: currencyCode ? getCurrencySymbol(currencyCode) : "$",
+diff --git a/dist/promotion-edit-details-YSF7TW3S.mjs b/dist/promotion-edit-details-YSF7TW3S.mjs
+index 40bba2b3f47198ca31de6723fe977311061db267..494f6daeb526714aead119d22ccdd77e4cb12ace 100644
+--- a/dist/promotion-edit-details-YSF7TW3S.mjs
++++ b/dist/promotion-edit-details-YSF7TW3S.mjs
+@@ -47,7 +47,7 @@ import * as zod from "zod";
+ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
+ var EditPromotionSchema = zod.object({
+   is_automatic: zod.string().toLowerCase(),
+-  code: zod.string().min(1),
++  code: zod.string().trim(),
+   is_tax_inclusive: zod.boolean().optional(),
+   status: zod.enum(["active", "inactive", "draft"]),
+   value_type: zod.enum(["fixed", "percentage"]),
+@@ -55,7 +55,10 @@ var EditPromotionSchema = zod.object({
+   allocation: zod.enum(["each", "across", "once"]),
+   target_type: zod.enum(["order", "shipping_methods", "items"]),
+   max_quantity: zod.number().min(1).optional().nullable()
+-});
++}).refine(
++  (data) => data.is_automatic === "true" || data.code.length > 0,
++  { path: ["code"], message: "Required field" }
++);
+ var EditPromotionDetailsForm = ({
+   promotion
+ }) => {
+@@ -95,7 +98,7 @@ var EditPromotionDetailsForm = ({
+     await mutateAsync(
+       {
+         is_automatic: data.is_automatic === "true",
+-        code: data.code,
++        ...(data.code.trim() ? { code: data.code.trim() } : {}),
+         status: data.status,
+         is_tax_inclusive: data.is_tax_inclusive,
+         application_method: {
+diff --git a/src/components/modals/route-focus-modal/route-focus-modal.tsx b/src/components/modals/route-focus-modal/route-focus-modal.tsx
+index ce80d332ddbe66aa725f97ae371a9e38bca9695e..2b0a7a79c322acb4b097f8821af24daffadfddef 100644
+--- a/src/components/modals/route-focus-modal/route-focus-modal.tsx
++++ b/src/components/modals/route-focus-modal/route-focus-modal.tsx
+@@ -47,6 +47,12 @@ const Root = ({ prev = "..", children }: RouteFocusModalProps) => {
+
+   return (
+     <FocusModal open={open} onOpenChange={handleOpenChange}>
++      <FocusModal.Title className="sr-only">
++        AdministraÃ§Ã£o
++      </FocusModal.Title>
++      <FocusModal.Description className="sr-only">
++        FormulÃ¡rio administrativo.
++      </FocusModal.Description>
+       <RouteModalProvider prev={to}>
+         <StackedModalProvider onOpenChange={onStackedModalOpen}>
+           <Content stackedModalOpen={stackedModalOpen}>{children}</Content>
+diff --git a/src/hooks/table/columns/use-product-table-columns.tsx b/src/hooks/table/columns/use-product-table-columns.tsx
+index 4fa85c428200af7d1cba440f70207d23efbc5a54..bc9d46ca1441551bdff19fdc43bf1a831f4fa16b 100644
+--- a/src/hooks/table/columns/use-product-table-columns.tsx
++++ b/src/hooks/table/columns/use-product-table-columns.tsx
+@@ -25,7 +25,7 @@ import { HttpTypes } from "@medusajs/types"
+
+ const columnHelper = createColumnHelper<HttpTypes.AdminProduct>()
+
+-export const useProductTableColumns = () => {
++export const useProductTableColumns = (privateCodes?: Record<string, string>) => {
+   return useMemo(
+     () => [
+       columnHelper.display({
+@@ -33,6 +33,11 @@ export const useProductTableColumns = () => {
+         header: () => <ProductHeader />,
+         cell: ({ row }) => <ProductCell product={row.original} />,
+       }),
++      columnHelper.display({
++        id: "frigga_omie_code",
++        header: () => "Código FriggaFrio / Omie",
++        cell: ({ row }) => (row.original as HttpTypes.AdminProduct & { __frigga_omie_code?: string }).__frigga_omie_code ?? "-",
++      }),
+       columnHelper.accessor("collection", {
+         header: () => <CollectionHeader />,
+         cell: ({ row }) => (
+@@ -54,6 +59,6 @@ export const useProductTableColumns = () => {
+         cell: ({ row }) => <ProductStatusCell status={row.original.status} />,
+       }),
+     ],
+-    []
++    [privateCodes]
+   )
+ }
+diff --git a/src/routes/products/product-list/components/product-list-table/product-list-table.tsx b/src/routes/products/product-list/components/product-list-table/product-list-table.tsx
+index 0d9c1b8b2602ef58fbfe66dc2a208f05622b092a..cdd373b9109c489a051cab4869b2d5466cc258ba 100644
+--- a/src/routes/products/product-list/components/product-list-table/product-list-table.tsx
++++ b/src/routes/products/product-list/components/product-list-table/product-list-table.tsx
+@@ -2,6 +2,7 @@ import { Button, Container, Heading } from "@medusajs/ui"
+ import { keepPreviousData } from "@tanstack/react-query"
+ import { createColumnHelper } from "@tanstack/react-table"
+ import { useMemo } from "react"
++import { useQuery } from "@tanstack/react-query"
+ import { useTranslation } from "react-i18next"
+ import { Link, Outlet, useLoaderData, useLocation } from "react-router-dom"
+
+@@ -14,6 +15,7 @@ import { useProductTableFilters } from "../../../../../hooks/table/filters/use-p
+ import { useProductTableQuery } from "../../../../../hooks/table/query/use-product-table-query"
+ import { useDataTable } from "../../../../../hooks/use-data-table"
+ import { productsLoader } from "../../loader"
++import { sdk } from "../../../../../lib/client"
+
+ const PAGE_SIZE = 20
+
+@@ -26,6 +28,27 @@ export const ProductListTable = () => {
+   >
+
+   const { searchParams, raw } = useProductTableQuery({ pageSize: PAGE_SIZE })
++  const codeSearch = typeof raw.q === "string" && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(raw.q.trim())
++  const privateLinksQuery = useQuery({
++    queryKey: ["frigga-omie-private-links", raw.q],
++    queryFn: () => sdk.client.fetch<{ links: Array<{ product_id: string; code_display: string }>; product_ids?: string[] }>(
++      "/admin/omie/product-links",
++      { query: { q: raw.q?.trim() } },
++    ),
++    enabled: codeSearch,
++    staleTime: 15_000,
++  })
++  const linkedProductQuery = useQuery({
++    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids],
++    queryFn: () => sdk.admin.product.list({
++      id: privateLinksQuery.data?.product_ids,
++      limit: PAGE_SIZE,
++      offset: 0,
++      is_giftcard: false,
++      fields: "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail",
++    }),
++    enabled: codeSearch && Boolean(privateLinksQuery.data?.product_ids?.length),
++  })
+   const { products, count, isLoading, isError, error } = useProducts(
+     {
+       ...searchParams,
+@@ -38,12 +61,15 @@ export const ProductListTable = () => {
+   )
+
+   const filters = useProductTableFilters()
+-  const columns = useColumns()
++  const privateCodes = useMemo(() => Object.fromEntries((privateLinksQuery.data?.links ?? []).map((link) => [link.product_id, link.code_display])), [privateLinksQuery.data])
++  const columns = useColumns(privateCodes)
++  const visibleProducts = (linkedProductQuery.data?.products?.length ? linkedProductQuery.data.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }))
++  const visibleCount = linkedProductQuery.data?.products?.length ? linkedProductQuery.data.count : count
+
+   const { table } = useDataTable({
+-    data: (products ?? []) as HttpTypes.AdminProduct[],
++    data: (visibleProducts ?? []) as HttpTypes.AdminProduct[],
+     columns,
+-    count,
++    count: visibleCount,
+     enablePagination: true,
+     pageSize: PAGE_SIZE,
+     getRowId: (row) => row.id,
+@@ -72,7 +98,7 @@ export const ProductListTable = () => {
+       <_DataTable
+         table={table}
+         columns={columns}
+-        count={count}
++        count={visibleCount}
+         pageSize={PAGE_SIZE}
+         filters={filters}
+         search
+@@ -96,8 +122,8 @@ export const ProductListTable = () => {
+
+ const columnHelper = createColumnHelper<HttpTypes.AdminProduct>()
+
+-const useColumns = () => {
+-  const base = useProductTableColumns()
++const useColumns = (privateCodes?: Record<string, string>) => {
++  const base = useProductTableColumns(privateCodes)
+
+   const columns = useMemo(
+     () => [
+diff --git a/src/routes/promotions/common/edit-rules/components/rule-value-form-field/rule-value-form-field.tsx b/src/routes/promotions/common/edit-rules/components/rule-value-form-field/rule-value-form-field.tsx
+index 630d186eb8e1caec48b66ab45b7447239e9d1715..6b7a27a4f875af9635ba41dfe8e4dcf1e8fb849b 100644
+--- a/src/routes/promotions/common/edit-rules/components/rule-value-form-field/rule-value-form-field.tsx
++++ b/src/routes/promotions/common/edit-rules/components/rule-value-form-field/rule-value-form-field.tsx
+@@ -86,6 +86,17 @@ export const RuleValueFormField = ({
+     queryKey: ["rule-value-options", ruleType, attribute?.id],
+     selectedValue,
+   })
++  // Keep React Query's control state inside the hook. Passing its full
++  // result to Combobox leaks internal flags (refetch, placeholder state,
++  // pagination errors) through to the native input as unknown DOM props.
++  const {
++    options,
++    searchValue,
++    onSearchValueChange,
++    disabled: comboboxDisabled,
++    fetchNextPage,
++    isFetchingNextPage,
++  } = comboboxData
+
+   const watchOperator = useWatch({
+     control: form.control,
+@@ -152,7 +163,12 @@ export const RuleValueFormField = ({
+               <Form.Control>
+                 <Combobox
+                   {...field}
+-                  {...comboboxData}
++                  options={options}
++                  searchValue={searchValue}
++                  onSearchValueChange={onSearchValueChange}
++                  disabled={comboboxDisabled}
++                  fetchNextPage={fetchNextPage}
++                  isFetchingNextPage={isFetchingNextPage}
+                   ref={ref}
+                   placeholder={
+                     watchOperator === "eq"
+diff --git a/src/routes/promotions/promotion-create/components/create-promotion-form/create-promotion-form.tsx b/src/routes/promotions/promotion-create/components/create-promotion-form/create-promotion-form.tsx
+index 22fcd468ac90f8d44479c72df29d50732840ea5a..330d0cf5e7d4d824aaba19119617710030ff7a06 100644
+--- a/src/routes/promotions/promotion-create/components/create-promotion-form/create-promotion-form.tsx
++++ b/src/routes/promotions/promotion-create/components/create-promotion-form/create-promotion-form.tsx
+@@ -101,6 +101,8 @@ export const CreatePromotionForm = () => {
+         rules,
+         ...promotionData
+       } = data
++      const normalizedCode = promotionData.code.trim()
++      const { code: _code, ...promotionFields } = promotionData
+       const {
+         target_rules: targetRulesData = [],
+         buy_rules: buyRulesData = [],
+@@ -148,7 +150,8 @@ export const CreatePromotionForm = () => {
+
+       createPromotion(
+         {
+-          ...promotionData,
++          ...promotionFields,
++          ...(normalizedCode ? { code: normalizedCode } : {}),
+           rules: buildRulesData(rules),
+           application_method: {
+             ...applicationMethodData,
+@@ -254,10 +257,12 @@ export const CreatePromotionForm = () => {
+   })
+
+   const currentTemplate = useMemo(() => {
+-    const currentTemplate = templates.find(
++    return templates.find(
+       (template) => template.id === watchTemplateId
+     )
++  }, [watchTemplateId])
+
++  useEffect(() => {
+     if (!currentTemplate) {
+       return
+     }
+@@ -280,8 +285,7 @@ export const CreatePromotionForm = () => {
+       setValue("application_method.max_quantity", null)
+     }
+
+-    return currentTemplate
+-  }, [watchTemplateId, setValue, reset])
++  }, [currentTemplate, reset, setValue, watchTemplateId])
+
+   const watchValueType = useWatch({
+     control: form.control,
+@@ -353,7 +357,11 @@ export const CreatePromotionForm = () => {
+     (rule) => rule.attribute === "currency_code"
+   )
+
+-  if (watchCurrencyRule) {
++  useEffect(() => {
++    if (!watchCurrencyRule) {
++      return
++    }
++
+     const formData = form.getValues()
+     const currencyCode = formData.application_method.currency_code
+     const ruleValue = watchCurrencyRule.values
+@@ -361,7 +369,7 @@ export const CreatePromotionForm = () => {
+     if (!Array.isArray(ruleValue) && currencyCode !== ruleValue) {
+       form.setValue("application_method.currency_code", ruleValue as string)
+     }
+-  }
++  }, [form, watchCurrencyRule])
+
+   return (
+     <RouteFocusModal.Form form={form}>
+@@ -593,6 +601,7 @@ export const CreatePromotionForm = () => {
+                                 components={[<br key="break" />]}
+                               />
+                             </Text>
++                            <Form.ErrorMessage />
+                           </Form.Item>
+                         )
+                       }}
+@@ -777,9 +786,13 @@ export const CreatePromotionForm = () => {
+                                     {...field}
+                                     min={0}
+                                     code={currencyCode || "USD"}
+-                                    onValueChange={(_value, _name, values) =>
+-                                      onChange(values?.value)
+-                                    }
++                                    onValueChange={(rawValue, _name, values) => {
++                                      // CurrencyInput may omit its metadata on blur; keep the
++                                      // primary value as the source of truth while preserving
++                                      // an empty field as null for schema validation.
++                                      const nextValue = values?.value ?? rawValue
++                                      onChange(nextValue === "" || nextValue == null ? null : nextValue)
++                                    }}
+                                     decimalScale={
+                                       currencyInfo?.decimal_digits ?? 2
+                                     }
+diff --git a/src/routes/promotions/promotion-create/components/create-promotion-form/form-schema.ts b/src/routes/promotions/promotion-create/components/create-promotion-form/form-schema.ts
+index 22363dbf7c0e19ab5934bf2b16f42b2d919385fa..ad11cea48f0e81f3937019b4d931334b943d2905 100644
+--- a/src/routes/promotions/promotion-create/components/create-promotion-form/form-schema.ts
++++ b/src/routes/promotions/promotion-create/components/create-promotion-form/form-schema.ts
+@@ -23,7 +23,7 @@ export const CreatePromotionSchema = z
+     campaign_id: z.string().optional(),
+     campaign_choice: z.enum(["none", "existing", "new"]).optional(),
+     is_automatic: z.string().toLowerCase(),
+-    code: z.string().min(1),
++    code: z.string().trim(),
+     type: z.enum(["buyget", "standard"]),
+     status: z.enum(["draft", "active", "inactive"]),
+     rules: RuleSchema,
+@@ -41,6 +41,10 @@ export const CreatePromotionSchema = z
+     }),
+     campaign: CreateCampaignSchema.optional(),
+   })
++  .refine((data) => data.is_automatic === "true" || data.code.length > 0, {
++    path: ["code"],
++    message: "Required field",
++  })
+   .refine(
+     (data) => {
+       if (data.application_method.allocation === "across") {
+diff --git a/src/routes/promotions/promotion-edit-details/components/edit-promotion-form/edit-promotion-details-form.tsx b/src/routes/promotions/promotion-edit-details/components/edit-promotion-form/edit-promotion-details-form.tsx
+index 945aadb0a2585a2ef6e3e3729e36a8f0599d8828..9b88268b29dc75637a804615168eecf668cf164b 100644
+--- a/src/routes/promotions/promotion-edit-details/components/edit-promotion-form/edit-promotion-details-form.tsx
++++ b/src/routes/promotions/promotion-edit-details/components/edit-promotion-form/edit-promotion-details-form.tsx
+@@ -24,7 +24,7 @@ type EditPromotionFormProps = {
+
+ const EditPromotionSchema = zod.object({
+   is_automatic: zod.string().toLowerCase(),
+-  code: zod.string().min(1),
++  code: zod.string().trim(),
+   is_tax_inclusive: zod.boolean().optional(),
+   status: zod.enum(["active", "inactive", "draft"]),
+   value_type: zod.enum(["fixed", "percentage"]),
+@@ -32,7 +32,10 @@ const EditPromotionSchema = zod.object({
+   allocation: zod.enum(["each", "across", "once"]),
+   target_type: zod.enum(["order", "shipping_methods", "items"]),
+   max_quantity: zod.number().min(1).optional().nullable(),
+-})
++}).refine(
++  (data) => data.is_automatic === "true" || data.code.length > 0,
++  { path: ["code"], message: "Required field" }
++)
+
+ export const EditPromotionDetailsForm = ({
+   promotion,
+@@ -81,7 +84,7 @@ export const EditPromotionDetailsForm = ({
+     await mutateAsync(
+       {
+         is_automatic: data.is_automatic === "true",
+-        code: data.code,
++        ...(data.code.trim() ? { code: data.code.trim() } : {}),
+         status: data.status,
+         is_tax_inclusive: data.is_tax_inclusive,
+         application_method: {

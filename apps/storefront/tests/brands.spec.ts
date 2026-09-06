@@ -23,7 +23,7 @@ test('Seção de Marcas é renderizada corretamente e contém marcas confirmadas
 test('Produtos Especializados tem nome e termina antes do footer', async ({ page }) => {
   await page.goto('/');
 
-  const produtosHeading = page.locator('h2', { hasText: 'Produtos Especializados FriggaFrio' });
+  const produtosHeading = page.locator('h2', { hasText: 'Produtos Especializados' });
   await expect(produtosHeading).toBeVisible();
 
   // Calculate coordinates to ensure no overlap

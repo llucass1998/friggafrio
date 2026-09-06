@@ -55,6 +55,33 @@ export interface OmieCatalogReaderOptions {
   maxPages?: number
 }
 
+export const normalizeOmieProductCode = (value: unknown): string | null => {
+  if (typeof value !== "string") return null
+  const normalized = value.trim()
+  return /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(normalized) ? normalized : null
+}
+
+const productCodeValues = (product: OmieProductRecord): string[] =>
+  ["cCodigo", "codigo", "codigo_produto", "cCodInt", "sku"]
+    .map((key) => product[key])
+    .filter((value): value is string | number =>
+      (typeof value === "string" && value.trim().length > 0) ||
+      (typeof value === "number" && Number.isFinite(value)),
+    )
+    .map(String)
+
+export const findOmieProductsByCode = (
+  products: readonly OmieProductRecord[],
+  code: string,
+): OmieProductRecord[] => {
+  const normalizedCode = normalizeOmieProductCode(code)
+  if (!normalizedCode) return []
+  const canonical = normalizedCode.toLocaleUpperCase("pt-BR")
+  return products.filter((product) =>
+    productCodeValues(product).some((value) => value.trim().toLocaleUpperCase("pt-BR") === canonical),
+  )
+}
+
 export class OmieCatalogReader {
   constructor(private readonly client: OmieClient) {}
 
@@ -101,5 +128,11 @@ export class OmieCatalogReader {
       operation: "ListarProdutos",
       retryable: false,
     })
+  }
+
+  async findByCode(code: string, options: OmieCatalogReaderOptions = {}): Promise<OmieProductRecord[]> {
+    const normalizedCode = normalizeOmieProductCode(code)
+    if (!normalizedCode) return []
+    return findOmieProductsByCode(await this.readAll(options), normalizedCode)
   }
 }

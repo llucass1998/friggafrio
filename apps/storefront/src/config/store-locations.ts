@@ -37,7 +37,7 @@ export type StoreLocation = {
 export const storeLocations: StoreLocation[] = [
   {
     id: "loja-1",
-    name: "FriggaFrio — Loja 1",
+    name: "FriggaFrio",
     shortName: "Loja 1",
     addressLine: "Alameda Glete, 663",
     district: "Campos Elíseos",
@@ -47,7 +47,7 @@ export const storeLocations: StoreLocation[] = [
     postalCode: "01215-001",
     countryCode: "BR",
     ownImageSrc: "/images/store/loja-1-fachada.webp",
-    ownImageAlt: "Fachada FriggaFrio Loja 1",
+    ownImageAlt: "Fachada da FriggaFrio",
     // Keep the address as the canonical Maps target until a verified Place ID
     // is available; stale IDs make directions/search links resolve nowhere.
     phone: "(11) 4580-1227",

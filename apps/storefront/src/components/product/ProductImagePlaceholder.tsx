@@ -14,7 +14,7 @@ export function ProductImagePlaceholder({
 }: ProductImagePlaceholderProps) {
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-center justify-center bg-[var(--color-surface-soft)] overflow-hidden ${className}`}
+      className={`relative w-full h-full flex flex-col items-center justify-center bg-white overflow-hidden ${className}`}
       role="img"
       aria-label={`Imagem ainda não disponível para o produto: ${productName}`}
     >

@@ -25,7 +25,7 @@ describe("newsletter confirmation", () => {
     ;(getNewsletterContactState as jest.Mock).mockResolvedValue({ status: "sent", contactState: "active" })
   })
 
-  it("activates a pending subscription exactly once and removes its confirmation hash", async () => {
+  it("activates a pending subscription exactly once and retains a hash for idempotent replay", async () => {
     const token = "a".repeat(32)
     const service = {
       listNewsletterSubscriptions: jest.fn().mockResolvedValue([{
@@ -46,7 +46,6 @@ describe("newsletter confirmation", () => {
     expect(service.updateNewsletterSubscriptions).toHaveBeenCalledWith(expect.objectContaining({
       id: "sub_1",
       status: NewsletterSubscriptionStatus.ACTIVE,
-      confirmation_token_hash: null,
       confirmation_expires_at: null,
     }))
   })
@@ -176,6 +175,21 @@ describe("newsletter confirmation", () => {
     await POST({ body: { token }, scope: { resolve: () => service } } as never, res as never)
     expect(res.statusCode).toBe(202)
     expect(res.payload).toEqual({ status: "confirmation_pending" })
+    expect(syncNewsletterContact).not.toHaveBeenCalled()
+  })
+
+  it("returns an idempotent success for a confirmation token already completed", async () => {
+    const token = "d".repeat(32)
+    const service = {
+      listNewsletterSubscriptions: jest.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: "sub_done", status: NewsletterSubscriptionStatus.ACTIVE }]),
+      updateNewsletterSubscriptions: jest.fn(),
+    }
+    const res = response()
+    await POST({ body: { token }, scope: { resolve: () => service } } as never, res as never)
+    expect(res.statusCode).toBe(200)
+    expect(res.payload).toEqual({ status: "already_confirmed" })
     expect(syncNewsletterContact).not.toHaveBeenCalled()
   })
 

@@ -49,6 +49,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@hookform/resolvers": "3.10.0",
       "fast-xml-parser": "5.7.0",
       "flatted": "3.4.4",
       "h3": "2.0.1-rc.15",
@@ -63,6 +64,10 @@
       "react-dom": "19.1.1",
       "sharp": "0.35.3",
       "ws": "8.21.0"
+    },
+    "patchedDependencies": {
+      "@medusajs/dashboard@2.18.0": "patches/@medusajs__dashboard@2.18.0.patch",
+      "@hookform/resolvers@3.10.0": "patches/@hookform__resolvers@3.10.0.patch"
     }
   },
   "dependencies": {

@@ -187,7 +187,7 @@ export function HeaderMobileDrawer() {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mobile-drawer-content">
           <div className="border-b border-[var(--color-border)] p-4">
             <HeaderSearch compact />
             <div className="mt-3">

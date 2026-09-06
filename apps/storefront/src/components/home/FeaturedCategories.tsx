@@ -58,16 +58,18 @@ export function FeaturedCategories() {
     .filter((category) => category.handle !== "outros" && category.name?.trim().toLowerCase() !== "outros")
     .slice(0, 12)
 
-  const { viewportRef, hasOverflow, scrollPrev, scrollNext } = useInfiniteCarousel()
+  const { viewportRef, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext, onKeyDown } = useInfiniteCarousel([], false)
   const showEmptyState = !isLoading && !categoriesQuery.isError && mainCategories.length === 0
 
   return (
-    <section className="bg-[var(--color-background)] py-10 md:py-12">
+    <section className="ff-featured-categories bg-[var(--color-background)] py-10 md:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <CarouselSectionHeader
           title="Categorias em Destaque"
           description="Navegue pelas principais linhas de produtos"
           hasOverflow={hasOverflow}
+          canScrollPrevious={canScrollPrev}
+          canScrollNext={canScrollNext}
           onPrevious={scrollPrev}
           onNext={scrollNext}
           previousLabel="Categoria anterior"
@@ -83,7 +85,7 @@ export function FeaturedCategories() {
           )}
         />
 
-        <div ref={viewportRef} className="ff-carousel-viewport" data-carousel-viewport="true" role="region" aria-label="Categorias em destaque">
+        <div ref={viewportRef} className="ff-carousel-viewport" data-carousel-viewport="true" role="region" tabIndex={0} aria-label="Categorias em destaque" onKeyDown={onKeyDown}>
           <div className="ff-carousel-track" data-carousel-track="true">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (

@@ -65,11 +65,13 @@ select {
   inset-block: 0;
   left: 0;
   z-index: 50;
+  display: flex;
+  flex-direction: column;
   width: min(90vw, 24rem);
   height: 100dvh;
   max-height: 100dvh;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   overscroll-behavior: contain;
   background: white;
   color: var(--color-navy);
@@ -78,6 +80,15 @@ select {
   pointer-events: none;
   transition: transform 150ms ease-in-out 150ms, visibility 0s linear 300ms;
   will-change: transform;
+}
+
+.mobile-drawer-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mobile-drawer-panel[data-state="open"] {

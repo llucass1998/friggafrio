@@ -1,5 +1,7 @@
 import { sdk } from "@/lib/medusa"
 import { cache } from "react"
+import type { HttpTypes } from "@medusajs/types"
+import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
 // import { getAuthHeaders } from "./cookies" // Unused and missing
 
 export const listProducts = cache(
@@ -89,3 +91,70 @@ export const getProductByHandle = cache(
     }).then(({ products }) => products[0])
   }
 )
+
+export type BestSellersResponse = {
+  available?: boolean
+  products?: Array<{ id?: string }>
+}
+
+export type HomeProductSelectionResponse = {
+  source: "sales-ranking-30d" | "featured-inventory-fallback"
+  generatedAt: string
+  products: Array<{ id?: string }>
+}
+
+export const getHomeProductSelection = cache(async (
+  regionId: string,
+  { excludedProductIds = [] }: { excludedProductIds?: readonly string[] } = {},
+): Promise<{
+  source: HomeProductSelectionResponse["source"]
+  products: HttpTypes.StoreProduct[]
+}> => {
+  try {
+    const selection = await sdk.client.fetch<HomeProductSelectionResponse>(
+      "/store/catalog/home-products",
+      {
+        method: "GET",
+        query: excludedProductIds.length > 0
+          ? { exclude_ids: excludedProductIds.join(",") }
+          : undefined,
+      },
+    )
+    const ids = selection.products.map((product) => product.id?.trim()).filter((id): id is string => Boolean(id))
+    if (ids.length === 0) return { source: selection.source, products: [] }
+    const { products } = await sdk.store.product.list({
+      id: ids,
+      region_id: regionId,
+      fields: PUBLIC_HOME_PRODUCT_FIELDS,
+    }, { next: { tags: ["products", "home-selection"] } })
+    const byId = new Map(products.map((product) => [product.id, product]))
+    return { source: selection.source, products: ids.map((id) => byId.get(id)).filter((product): product is (typeof products)[number] => Boolean(product)) }
+  } catch {
+    return { source: "featured-inventory-fallback", products: [] }
+  }
+})
+
+/** Loads only the backend's validated ranking; unavailable rankings stay empty. */
+export const listBestSellerProducts = cache(async (regionId: string) => {
+  try {
+    const ranking = await sdk.client.fetch<BestSellersResponse>(
+      "/store/catalog/best-sellers",
+      { method: "GET" },
+    )
+    if (!ranking.available || !Array.isArray(ranking.products)) return []
+
+    const ids = ranking.products
+      .map((product) => product.id?.trim())
+      .filter((id): id is string => Boolean(id))
+    if (ids.length === 0) return []
+
+    const { products } = await sdk.store.product.list({
+      id: ids,
+      region_id: regionId,
+    }, { next: { tags: ["products", "best-sellers"] } })
+    const byId = new Map(products.map((product) => [product.id, product]))
+    return ids.map((id) => byId.get(id)).filter((product): product is (typeof products)[number] => Boolean(product))
+  } catch {
+    return []
+  }
+})

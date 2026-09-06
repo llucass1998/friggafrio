@@ -15,7 +15,6 @@ export const newsletterEmailConfiguration = () => ({
   configured: Boolean(
     process.env.RESEND_API_KEY?.trim() &&
       process.env.EMAIL_FROM?.trim() &&
-      process.env.RESEND_NEWSLETTER_CONFIRMATION_TEMPLATE_ID?.trim() &&
       storefrontOrigin(),
   ),
   senderConfigured: Boolean(process.env.EMAIL_FROM?.trim()),
@@ -47,9 +46,13 @@ export const sendNewsletterConfirmationEmail = async ({
   const confirmationUrl = buildNewsletterUrl("/br/newsletter/confirm", confirmationToken)
   const unsubscribeUrl = buildNewsletterUrl("/br/newsletter/unsubscribe", unsubscribeToken)
 
-  if (!apiKey || !from || !templateId || !confirmationUrl || !unsubscribeUrl) {
+  if (!apiKey || !from || !confirmationUrl || !unsubscribeUrl) {
     return { delivered: false, reason: "not_configured" }
   }
+  const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f4f9fd;font-family:Arial,sans-serif;color:#102a43"><main style="max-width:560px;margin:32px auto;background:#fff;border:1px solid #d6e8f5;border-radius:16px;padding:32px"><h1 style="color:#0b4f8a">Confirme seu cadastro na Newsletter FriggaFrio</h1><p>Para concluir seu cadastro e receber novidades, ofertas e informações da FriggaFrio, confirme seu e-mail no botão abaixo.</p><p><a href="${confirmationUrl}" style="display:inline-block;background:#0b4f8a;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Confirmar cadastro</a></p><p style="font-size:12px;color:#526d82"><a href="${unsubscribeUrl}">Cancelar recebimento</a></p></main></body></html>`
+  const content = templateId
+    ? { template: { id: templateId, variables: { CONFIRMATION_URL: confirmationUrl } } }
+    : { html }
 
   const result = await resendRequest(
     "/emails",
@@ -61,12 +64,7 @@ export const sendNewsletterConfirmationEmail = async ({
         "List-Unsubscribe": `<${unsubscribeUrl}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
-      template: {
-        id: templateId,
-        // Resend resolves contact.first_name and RESEND_UNSUBSCRIBE_URL natively.
-        // The confirmation target is the only application-owned variable.
-        variables: { CONFIRMATION_URL: confirmationUrl },
-      },
+      ...content,
     },
     `newsletter-confirmation-${createStableDeliveryKey(to, confirmationToken)}`,
   )

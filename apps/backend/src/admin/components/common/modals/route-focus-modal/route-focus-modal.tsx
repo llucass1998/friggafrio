@@ -36,9 +36,6 @@ const Root = ({ prev = "..", children }: RouteFocusModalProps) => {
 
   return (
     <FocusModal open={open} onOpenChange={handleOpenChange}>
-      <FocusModal.Title></FocusModal.Title>
-      <FocusModal.Description></FocusModal.Description>
-
       <RouteModalProvider prev={prev}>
         <StackedModalProvider onOpenChange={onStackedModalOpen}>
           <Content stackedModalOpen={stackedModalOpen}>{children}</Content>
@@ -70,6 +67,10 @@ const Content = ({ stackedModalOpen, children }: ContentProps) => {
         "!bg-ui-bg-disabled !inset-x-5 !inset-y-3": stackedModalOpen,
       })}
     >
+      <FocusModal.Title className="sr-only">Administração</FocusModal.Title>
+      <FocusModal.Description className="sr-only">
+        Formulário administrativo.
+      </FocusModal.Description>
       {children}
     </FocusModal.Content>
   );

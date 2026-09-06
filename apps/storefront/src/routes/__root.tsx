@@ -1,3 +1,4 @@
+import { lazy, useEffect } from "react"
 import { ErrorBoundary } from "@/components/error-boundary"
 import Layout from "@/components/layout"
 import { listRegions } from "@/lib/data/regions"
@@ -9,8 +10,8 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
-import { lazy } from "react"
 import { Toaster } from "sonner"
+import { initSentry } from "@/lib/sentry"
 import appCss from "@/styles/app.css?url"
 import {
   organizationStructuredData,
@@ -65,6 +66,9 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext()
+  useEffect(() => {
+    initSentry()
+  }, [])
   return (
     <html lang="pt-BR">
       <head>

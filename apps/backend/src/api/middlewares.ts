@@ -88,12 +88,14 @@ export default defineMiddlewares({
       bodyParser: { preserveRawBody: true },
     },
     {
-      matcher: /^\/auth\/customer\/google(?:\/|$)/,
+      // Protect the state-changing Google start flow without throttling the
+      // anonymous readiness probe used by the login page.
+      matcher: /^\/auth\/customer\/google\/start(?:\/|$)/,
       method: "POST",
       middlewares: [requireTrustedAuthOrigin, authRateLimit],
     },
     {
-      matcher: /^\/auth\/customer\/google(?:\/|$)/,
+      matcher: /^\/auth\/customer\/google\/(?:start|callback)(?:\/|$)/,
       method: "GET",
       middlewares: [authRateLimit],
     },

@@ -6,6 +6,41 @@ const PRODUCT_ENTITY_REPLACEMENTS: Array<[RegExp, string]> = [
   [/&gt;/gi, ">"],
 ]
 
+const DISPLAY_TERMS: Record<string, string> = {
+  btus: "BTUs",
+  btu: "BTU",
+  cfm: "CFM",
+  hp: "HP",
+  led: "LED",
+  pvc: "PVC",
+  wifi: "Wi-Fi",
+  plus: "Plus",
+  vacuo: "vácuo",
+  valvula: "válvula",
+  estagio: "estágio",
+  liquido: "líquido",
+}
+
+const PROTECTED_TOKEN = /^(?=.*\d)[A-Z0-9./-]+$/i
+
+/** Presentation-only normalization for legacy all-caps catalog titles. */
+export function normalizeProductDisplayName(value: string): string {
+  const cleaned = value.trim().replace(/\s+/g, " ").replace(/\s+([,.;:!?])/g, "$1")
+  if (!cleaned || cleaned !== cleaned.toLocaleUpperCase("pt-BR")) return cleaned
+  let firstWord = true
+  return cleaned.replace(/[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9./-]*/g, (token) => {
+    if (PROTECTED_TOKEN.test(token)) {
+      firstWord = false
+      return token.toLocaleUpperCase("pt-BR")
+    }
+    const lower = token.toLocaleLowerCase("pt-BR")
+    const normalized = DISPLAY_TERMS[lower] ?? lower
+    if (!firstWord) return normalized
+    firstWord = false
+    return `${normalized.slice(0, 1).toLocaleUpperCase("pt-BR")}${normalized.slice(1)}`
+  })
+}
+
 export function decodeProductText(value: string): string {
   let decoded = value
   for (let pass = 0; pass < 3; pass += 1) {
@@ -24,5 +59,5 @@ export function decodeProductText(value: string): string {
   }
   decoded = decoded.replace(/&#(\d+);/g, (_, code: string) => decodeCodePoint(code, 10))
   decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, code: string) => decodeCodePoint(code, 16))
-  return decoded.replace(/<[^>]*>/g, "")
+  return normalizeProductDisplayName(decoded.replace(/<[^>]*>/g, ""))
 }

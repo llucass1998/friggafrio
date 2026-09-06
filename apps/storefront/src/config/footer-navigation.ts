@@ -62,6 +62,20 @@ export const footerNavigation = {
       requiresAuth: true,
       active: true,
       order: 4
+    },
+    {
+      id: "cookies",
+      label: "Política de Cookies",
+      href: "/politica-de-cookies",
+      active: true,
+      order: 5
+    },
+    {
+      id: "privacy-preferences",
+      label: "Preferências de privacidade",
+      href: "/privacidade#preferencias",
+      active: true,
+      order: 6
     }
   ],
   products: [

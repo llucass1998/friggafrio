@@ -26,7 +26,7 @@ export function RelatedProducts({ product, regionId }: RelatedProductsProps) {
 
   return (
     <section className="mx-auto mt-12 w-full max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-      <div className="rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-4 shadow-[0_10px_28px_rgba(8,59,102,0.07)] sm:p-6">
+      <div className="p-0 sm:p-0">
         <CarouselSectionHeader
           title="Produtos relacionados"
           description="Para completar sua compra"

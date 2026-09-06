@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@hookform/resolvers': 3.10.0
   fast-xml-parser: 5.7.0
   flatted: 3.4.4
   h3: 2.0.1-rc.15
@@ -19,6 +20,14 @@ overrides:
   react-dom: 19.1.1
   sharp: 0.35.3
   ws: 8.21.0
+
+patchedDependencies:
+  '@hookform/resolvers@3.10.0':
+    hash: f6dbi5km2ouki2yirnb3ghgk6e
+    path: patches/@hookform__resolvers@3.10.0.patch
+  '@medusajs/dashboard@2.18.0':
+    hash: mkzgxfbgdjkpjak4uecuvxqzn4
+    path: patches/@medusajs__dashboard@2.18.0.patch
 
 importers:
 
@@ -62,8 +71,8 @@ importers:
   apps/backend:
     dependencies:
       '@hookform/resolvers':
-        specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.71.1(react@19.1.1))
+        specifier: 3.10.0
+        version: 3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.71.1(react@19.1.1))
       '@medusajs/admin-sdk':
         specifier: 2.18.0
         version: 2.18.0
@@ -78,10 +87,10 @@ importers:
         version: 2.18.0(@types/node@20.0.0)
       '@medusajs/dashboard':
         specifier: 2.18.0
-        version: 2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
+        version: 2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
       '@medusajs/draft-order':
         specifier: 2.18.0
-        version: 2.18.0(ru7glilnqkbn56y7jgbvwb7k34)
+        version: 2.18.0(jiqj645vp2hun2hzx7x74trzlq)
       '@medusajs/email-preview-server':
         specifier: ^0.0.10
         version: 0.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.62.0)(@react-email/render@2.0.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
@@ -99,7 +108,7 @@ importers:
         version: 2.18.0
       '@medusajs/medusa':
         specifier: 2.18.0
-        version: 2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)
+        version: 2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)
       '@medusajs/types':
         specifier: 2.18.0
         version: 2.18.0(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))
@@ -216,8 +225,8 @@ importers:
   apps/storefront:
     dependencies:
       '@hookform/resolvers':
-        specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.71.1(react@19.1.1))
+        specifier: 3.10.0
+        version: 3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.71.1(react@19.1.1))
       '@medusajs/icons':
         specifier: 2.18.0
         version: 2.18.0(react@19.1.1)
@@ -239,6 +248,9 @@ importers:
       '@react-oauth/google':
         specifier: ^0.13.5
         version: 0.13.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@sentry/react':
+        specifier: ^10.22.0
+        version: 10.73.0(react@19.1.1)
       '@stripe/react-stripe-js':
         specifier: ^5.6.0
         version: 5.6.0(@stripe/stripe-js@8.8.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1492,11 +1504,6 @@ packages:
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
-    peerDependencies:
-      react-hook-form: ^7.0.0
-
-  '@hookform/resolvers@3.4.2':
-    resolution: {integrity: sha512-1m9uAVIO8wVf7VCDAGsuGA0t6Z3m6jVGAN50HkV9vYLl0yixKK/Z1lr01vaRvYCkIKGoy1noVRxMzQYb4y/j1Q==}
     peerDependencies:
       react-hook-form: ^7.0.0
 
@@ -4984,6 +4991,40 @@ packages:
   '@sendgrid/mail@8.1.6':
     resolution: {integrity: sha512-/ZqxUvKeEztU9drOoPC/8opEPOk+jLlB2q4+xpx6HVLq6aFu3pMpalkTpAQz8XfRfpLp8O25bh6pGPcHDCYpqg==}
     engines: {node: '>=12.*'}
+
+  '@sentry/browser-utils@10.73.0':
+    resolution: {integrity: sha512-qQygxJZ+RV779+iL1+lrJ4f4sZLgbgW0/JWPNp0YlcEAE62yCsdKbqoTEjB/EugdS4mSjBMX0chZC6rblu2Ycw==}
+    engines: {node: '>=18'}
+
+  '@sentry/browser@10.73.0':
+    resolution: {integrity: sha512-HqTe1S5RrWLufhX2LaFP3yNoMxfNDroh120bq1zdGHZfFDBMJQ0CDXxHO+L4UJfQ5dWdCCzWbXIAiZuWGa/DFQ==}
+    engines: {node: '>=18'}
+
+  '@sentry/conventions@0.16.0':
+    resolution: {integrity: sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==}
+    engines: {node: '>=14'}
+
+  '@sentry/core@10.73.0':
+    resolution: {integrity: sha512-FLO1UgH19RyasVpofu612WCOgb2nEH0dZy+R72d7p65XU9i0wxlMKm3+sgfwKmiSJp1Qhilaaxs4Jg6BbiM5HA==}
+    engines: {node: '>=18'}
+
+  '@sentry/feedback@10.73.0':
+    resolution: {integrity: sha512-D6nSngX+e46Mae2/oh2bxBvxNK1z2NERbuMAhB5sx9x4xMBWIyGnYYTECehvEqV9+AqGAgxxhOZoYIG3AmRwww==}
+    engines: {node: '>=18'}
+
+  '@sentry/react@10.73.0':
+    resolution: {integrity: sha512-wJrzS98ddPvhGS/MKNHZyE8X7ecd4KwKdz7fHino2qkqBBrF4cxWr+q/uLTIk5PYWMkeJ4oKMjHAjOqmzGR4tg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: 19.1.1
+
+  '@sentry/replay-canvas@10.73.0':
+    resolution: {integrity: sha512-sxa2lKkHPfF/j5xFpW7gocthWXRqyoHz8KCPy6yGc8plT477nl57iGSKhQDYsx1Ny10TLjs7YkIuPP1GY/Ax2Q==}
+    engines: {node: '>=18'}
+
+  '@sentry/replay@10.73.0':
+    resolution: {integrity: sha512-nN2wjN/Y0J5BOJV5hqRHUEBfxwUsipp1PKjcDHh6Fpxnrtfldu3Y99E8cQInseo5heFdzEvrOHBBrqWZXOHVKQ==}
+    engines: {node: '>=18'}
 
   '@sinclair/typebox@0.27.10':
     resolution: {integrity: sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==}
@@ -11563,13 +11604,13 @@ snapshots:
       react-dom: 19.1.1(react@19.1.1)
       react-hook-form: 7.49.1(react@19.1.1)
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.71.1(react@19.1.1))':
-    dependencies:
-      react-hook-form: 7.71.1(react@19.1.1)
-
-  '@hookform/resolvers@3.4.2(react-hook-form@7.49.1(react@19.1.1))':
+  '@hookform/resolvers@3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.49.1(react@19.1.1))':
     dependencies:
       react-hook-form: 7.49.1(react@19.1.1)
+
+  '@hookform/resolvers@3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.71.1(react@19.1.1))':
+    dependencies:
+      react-hook-form: 7.71.1(react@19.1.1)
 
   '@humanfs/core@0.19.1': {}
 
@@ -12022,7 +12063,7 @@ snapshots:
     dependencies:
       '@medusajs/admin-shared': 2.18.0
       '@medusajs/admin-vite-plugin': 2.18.0(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))
-      '@medusajs/dashboard': 2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
+      '@medusajs/dashboard': 2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
       '@vitejs/plugin-react': 4.7.0(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))
       autoprefixer: 10.4.24(postcss@8.5.23)
       compression: 1.8.1
@@ -12207,7 +12248,7 @@ snapshots:
     dependencies:
       '@medusajs/framework': 2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0)
 
-  '@medusajs/dashboard@2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)':
+  '@medusajs/dashboard@2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)':
     dependencies:
       '@ariakit/react': 0.4.21(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@babel/runtime': 7.28.6
@@ -12215,7 +12256,7 @@ snapshots:
       '@dnd-kit/sortable': 8.0.0(@dnd-kit/core@6.3.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
       '@dnd-kit/utilities': 3.2.2(react@19.1.1)
       '@hookform/error-message': 2.0.1(react-dom@19.1.1(react@19.1.1))(react-hook-form@7.49.1(react@19.1.1))(react@19.1.1)
-      '@hookform/resolvers': 3.4.2(react-hook-form@7.49.1(react@19.1.1))
+      '@hookform/resolvers': 3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.49.1(react@19.1.1))
       '@medusajs/admin-shared': 2.18.0
       '@medusajs/icons': 2.18.0(react@19.1.1)
       '@medusajs/js-sdk': 2.18.0
@@ -12283,11 +12324,11 @@ snapshots:
       - supports-color
       - tedious
 
-  '@medusajs/draft-order@2.18.0(ru7glilnqkbn56y7jgbvwb7k34)':
+  '@medusajs/draft-order@2.18.0(jiqj645vp2hun2hzx7x74trzlq)':
     dependencies:
       '@ariakit/react': 0.4.21(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@babel/runtime': 7.28.6
-      '@hookform/resolvers': 3.4.2(react-hook-form@7.49.1(react@19.1.1))
+      '@hookform/resolvers': 3.10.0(patch_hash=f6dbi5km2ouki2yirnb3ghgk6e)(react-hook-form@7.49.1(react@19.1.1))
       '@medusajs/framework': 2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0)
       '@medusajs/js-sdk': 2.18.0
       '@tanstack/react-query': 5.64.2(react@19.1.1)
@@ -12301,7 +12342,7 @@ snapshots:
     optionalDependencies:
       '@medusajs/admin-sdk': 2.18.0
       '@medusajs/cli': 2.18.0(@types/node@20.0.0)
-      '@medusajs/dashboard': 2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
+      '@medusajs/dashboard': 2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
       '@medusajs/icons': 2.18.0(react@19.1.1)
       '@medusajs/test-utils': 2.18.0(@medusajs/core-flows@2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0)))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/medusa@2.18.0)
       '@medusajs/ui': 4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3)
@@ -12521,7 +12562,7 @@ snapshots:
     dependencies:
       '@medusajs/framework': 2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0)
 
-  '@medusajs/medusa@2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)':
+  '@medusajs/medusa@2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)':
     dependencies:
       '@inquirer/checkbox': 2.5.0
       '@inquirer/confirm': 2.0.17
@@ -12543,7 +12584,7 @@ snapshots:
       '@medusajs/core-flows': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
       '@medusajs/currency': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
       '@medusajs/customer': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
-      '@medusajs/draft-order': 2.18.0(ru7glilnqkbn56y7jgbvwb7k34)
+      '@medusajs/draft-order': 2.18.0(jiqj645vp2hun2hzx7x74trzlq)
       '@medusajs/event-bus-local': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
       '@medusajs/event-bus-redis': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
       '@medusajs/file': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
@@ -12783,7 +12824,7 @@ snapshots:
       ulid: 2.4.0
     optionalDependencies:
       '@medusajs/core-flows': 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
-      '@medusajs/medusa': 2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)
+      '@medusajs/medusa': 2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(patch_hash=mkzgxfbgdjkpjak4uecuvxqzn4)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@swc/core@1.15.46(@swc/helpers@0.5.23))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(awilix@8.0.1)(lightningcss@1.33.0)(posthog-node@5.24.15)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(tsx@4.21.0)(typescript@5.8.3)(yalc@1.0.0-pre.53)(yaml@2.9.0)
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -16103,6 +16144,47 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - supports-color
+
+  '@sentry/browser-utils@10.73.0':
+    dependencies:
+      '@sentry/conventions': 0.16.0
+      '@sentry/core': 10.73.0
+
+  '@sentry/browser@10.73.0':
+    dependencies:
+      '@sentry/browser-utils': 10.73.0
+      '@sentry/conventions': 0.16.0
+      '@sentry/core': 10.73.0
+      '@sentry/feedback': 10.73.0
+      '@sentry/replay': 10.73.0
+      '@sentry/replay-canvas': 10.73.0
+
+  '@sentry/conventions@0.16.0': {}
+
+  '@sentry/core@10.73.0':
+    dependencies:
+      '@sentry/conventions': 0.16.0
+
+  '@sentry/feedback@10.73.0':
+    dependencies:
+      '@sentry/core': 10.73.0
+
+  '@sentry/react@10.73.0(react@19.1.1)':
+    dependencies:
+      '@sentry/browser': 10.73.0
+      '@sentry/conventions': 0.16.0
+      '@sentry/core': 10.73.0
+      react: 19.1.1
+
+  '@sentry/replay-canvas@10.73.0':
+    dependencies:
+      '@sentry/core': 10.73.0
+      '@sentry/replay': 10.73.0
+
+  '@sentry/replay@10.73.0':
+    dependencies:
+      '@sentry/browser-utils': 10.73.0
+      '@sentry/core': 10.73.0
 
   '@sinclair/typebox@0.27.10': {}
 

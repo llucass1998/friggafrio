@@ -176,6 +176,9 @@ module.exports = defineConfig({
       resolve: backendPath("src/modules/product-sales-policy"),
     },
     {
+      resolve: backendPath("src/modules/frigga-omie-product-link"),
+    },
+    {
       resolve: backendPath("src/modules/wishlist"),
     },
     {

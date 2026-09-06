@@ -4,6 +4,7 @@ import { FloatingActions } from "@/components/FloatingActions"
 import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button"
 import { CartDropdown } from "@/components/cart"
 import { useLocation } from "@tanstack/react-router"
+import { AnalyticsConsent } from "@/components/analytics-consent"
 import {
   AccessibilityProvider,
   AccessibilityPanel,
@@ -56,6 +57,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <AccessibilityPanel />
         <ReadingGuide />
         <VLibrasWidget />
+        <AnalyticsConsent />
       </div>
     </AccessibilityProvider>
   )

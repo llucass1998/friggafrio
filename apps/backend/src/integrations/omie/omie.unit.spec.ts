@@ -8,6 +8,8 @@ import {
   normalizeOmieStock,
   normalizeOmieProduct,
   planCatalogSync,
+  findOmieProductsByCode,
+  normalizeOmieProductCode,
 } from "./index.js"
 
 describe("Omie configuration", () => {
@@ -166,6 +168,20 @@ describe("OmieClient", () => {
 })
 
 describe("Omie discovery mapping", () => {
+  it("validates exact string codes without losing leading zeroes", () => {
+    expect(normalizeOmieProductCode("  000123  ")).toBe("000123")
+    expect(normalizeOmieProductCode("12 3")).toBeNull()
+    expect(normalizeOmieProductCode(123)).toBeNull()
+  })
+
+  it("matches codes case-insensitively without matching a partial value", () => {
+    const products = [
+      { cCodigo: "Ab-001", nCodProd: "omie-1" },
+      { cCodigo: "AB-001-extra", nCodProd: "omie-2" },
+    ]
+    expect(findOmieProductsByCode(products, " ab-001 ")).toEqual([products[0]])
+  })
+
   it("classifies stock source states without converting missing or negative values to zero", () => {
     expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: 0 }).state).toBe("REAL_ZERO")
     expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: -1 }).state).toBe("INVALID")

@@ -10,6 +10,11 @@ async function openMobileDrawer(page: import("@playwright/test").Page) {
   return drawer
 }
 
+function translateX(transform: string) {
+  const match = transform.match(/matrix\([^,]+,\s*[^,]+,\s*[^,]+,\s*[^,]+,\s*([^,]+)/)
+  return match ? Number.parseFloat(match[1]) : Number.NaN
+}
+
 test.describe("storefront motion interactions", () => {
   test("mobile drawer uses a 150ms delay and 150ms slide transition", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
@@ -29,21 +34,21 @@ test.describe("storefront motion interactions", () => {
     const transition = await drawer.evaluate((element) => getComputedStyle(element).transitionDuration)
     expect(Number.parseFloat(transition)).toBeCloseTo(0.15, 2)
     const finalTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
-    expect(finalTransform).toMatch(/matrix\(1, 0, 0, 1, 0, 0\)/)
+    expect(Math.abs(translateX(finalTransform))).toBeLessThan(0.5)
 
     await page.getByTestId("mobile-navigation-close").click()
     await page.waitForTimeout(100)
     const closeDelayedTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
-    expect(closeDelayedTransform).toMatch(/matrix\(1, 0, 0, 1, 0, 0\)/)
+    expect(Math.abs(translateX(closeDelayedTransform))).toBeLessThan(0.5)
     await page.waitForTimeout(120)
     const closeIntermediateTransform = await drawer.evaluate((element) => getComputedStyle(element).transform)
-    expect(closeIntermediateTransform).toMatch(/matrix\(1, 0, 0, 1, -/)
+    expect(translateX(closeIntermediateTransform)).toBeLessThan(-0.5)
     await page.waitForTimeout(120)
     const closeFinal = await drawer.evaluate((element) => ({
       transform: getComputedStyle(element).transform,
       visibility: getComputedStyle(element).visibility,
     }))
-    expect(closeFinal.transform).toMatch(/matrix\(1, 0, 0, 1, -/)
+    expect(translateX(closeFinal.transform)).toBeLessThan(-0.5)
     expect(closeFinal.visibility).toBe("hidden")
   })
 
@@ -91,16 +96,56 @@ test.describe("storefront motion interactions", () => {
     }))
     expect(lockedOverflow).toEqual({ body: "hidden", html: "hidden" })
 
-    const drawerContent = drawer.locator("div.min-h-0.flex-1")
+    const drawerContent = drawer.locator(".mobile-drawer-content")
     await expect(drawerContent).toBeVisible()
-    const internalScroll = await drawerContent.evaluate((element) => {
+    const internalScroll = await drawer.evaluate((panel) => {
+      const element = panel.querySelector<HTMLElement>(".mobile-drawer-content")
+      if (!element) throw new Error("drawer scroll container missing")
       element.scrollTop = 160
+      const panelStyle = getComputedStyle(panel)
       const style = getComputedStyle(element)
-      return { scrollTop: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight, overflowY: style.overflowY }
+      return {
+        scrollTop: element.scrollTop,
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+        overflowY: style.overflowY,
+        touchAction: style.touchAction,
+        panelOverflowY: panelStyle.overflowY,
+        scrollOwnerCount: [panel, element].filter((candidate) => {
+          const overflow = getComputedStyle(candidate).overflowY
+          return overflow === "auto" || overflow === "scroll"
+        }).length,
+      }
     })
     expect(internalScroll.overflowY).toBe("auto")
+    expect(internalScroll.touchAction).toBe("pan-y")
+    expect(internalScroll.panelOverflowY).toBe("hidden")
+    expect(internalScroll.scrollOwnerCount).toBe(1)
     if (internalScroll.scrollHeight > internalScroll.clientHeight) {
       expect(internalScroll.scrollTop).toBeGreaterThan(0)
+    }
+
+    if (internalScroll.scrollHeight > internalScroll.clientHeight) {
+      await drawerContent.evaluate((element) => { element.scrollTop = 0 })
+      // Wait for the CSS entrance transition so the scroll target is in the viewport.
+      await page.waitForTimeout(350)
+      const box = await drawerContent.boundingBox()
+      if (!box) throw new Error("drawer content bounds unavailable")
+      const client = await page.context().newCDPSession(page)
+      const x = box.x + box.width / 2
+      const startY = box.y + box.height - 80
+      await client.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x, y: startY, id: 1 }],
+      })
+      for (let index = 1; index <= 12; index += 1) {
+        await client.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [{ x, y: startY - index * 35, id: 1 }],
+        })
+      }
+      await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] })
+      await expect.poll(() => drawerContent.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
     }
 
     await page.getByTestId("mobile-navigation-close").click()
@@ -111,7 +156,7 @@ test.describe("storefront motion interactions", () => {
       scrollY: window.scrollY,
     }))).toEqual({ body: "", html: "", scrollY: 320 })
 
-    await page.mouse.wheel(0, 240)
+    await page.evaluate(() => window.scrollBy(0, 240))
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(320)
   })
 

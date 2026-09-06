@@ -33,6 +33,10 @@ export const queryKeys = {
 
   products: {
     ...createDomainKeys("products"),
+    bestSellers: (regionId?: string) =>
+      createDynamicKey("products", "best-sellers", regionId),
+    homeSelection: (regionId?: string) =>
+      createDynamicKey("products", "home-selection", regionId),
     related: (productId: string, regionId?: string) =>
       createDynamicKey("products", "related", productId, regionId),
     latest: (limit?: number, regionId?: string) =>

@@ -27,6 +27,7 @@ import { Route as CountryCodeIndexRouteImport } from './routes/$countryCode/inde
 import { Route as AdminSplatRouteImport } from './routes/admin/$'
 import { Route as CountryCodeStoreRouteImport } from './routes/$countryCode/store'
 import { Route as CountryCodeQuotesRouteImport } from './routes/$countryCode/quotes'
+import { Route as CountryCodePoliticaDeCookiesRouteImport } from './routes/$countryCode/politica-de-cookies'
 import { Route as CountryCodeFavoritesRouteImport } from './routes/$countryCode/favorites'
 import { Route as CountryCodeEmployeesRouteImport } from './routes/$countryCode/employees'
 import { Route as CountryCodeCheckoutRouteImport } from './routes/$countryCode/checkout'
@@ -138,6 +139,12 @@ const CountryCodeQuotesRoute = CountryCodeQuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => CountryCodeRoute,
 } as any)
+const CountryCodePoliticaDeCookiesRoute =
+  CountryCodePoliticaDeCookiesRouteImport.update({
+    id: '/politica-de-cookies',
+    path: '/politica-de-cookies',
+    getParentRoute: () => CountryCodeRoute,
+  } as any)
 const CountryCodeFavoritesRoute = CountryCodeFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
+  '/$countryCode/politica-de-cookies': typeof CountryCodePoliticaDeCookiesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/admin/$': typeof AdminSplatRoute
@@ -309,6 +317,7 @@ export interface FileRoutesByTo {
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
+  '/$countryCode/politica-de-cookies': typeof CountryCodePoliticaDeCookiesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/admin/$': typeof AdminSplatRoute
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/$countryCode/checkout': typeof CountryCodeCheckoutRoute
   '/$countryCode/employees': typeof CountryCodeEmployeesRoute
   '/$countryCode/favorites': typeof CountryCodeFavoritesRoute
+  '/$countryCode/politica-de-cookies': typeof CountryCodePoliticaDeCookiesRoute
   '/$countryCode/quotes': typeof CountryCodeQuotesRoute
   '/$countryCode/store': typeof CountryCodeStoreRoute
   '/admin/$': typeof AdminSplatRoute
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
     | '/$countryCode/favorites'
+    | '/$countryCode/politica-de-cookies'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/admin/$'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
     | '/$countryCode/favorites'
+    | '/$countryCode/politica-de-cookies'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/admin/$'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/$countryCode/checkout'
     | '/$countryCode/employees'
     | '/$countryCode/favorites'
+    | '/$countryCode/politica-de-cookies'
     | '/$countryCode/quotes'
     | '/$countryCode/store'
     | '/admin/$'
@@ -638,6 +651,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryCodeQuotesRouteImport
       parentRoute: typeof CountryCodeRoute
     }
+    '/$countryCode/politica-de-cookies': {
+      id: '/$countryCode/politica-de-cookies'
+      path: '/politica-de-cookies'
+      fullPath: '/$countryCode/politica-de-cookies'
+      preLoaderRoute: typeof CountryCodePoliticaDeCookiesRouteImport
+      parentRoute: typeof CountryCodeRoute
+    }
     '/$countryCode/favorites': {
       id: '/$countryCode/favorites'
       path: '/favorites'
@@ -802,6 +822,7 @@ interface CountryCodeRouteChildren {
   CountryCodeCheckoutRoute: typeof CountryCodeCheckoutRoute
   CountryCodeEmployeesRoute: typeof CountryCodeEmployeesRoute
   CountryCodeFavoritesRoute: typeof CountryCodeFavoritesRoute
+  CountryCodePoliticaDeCookiesRoute: typeof CountryCodePoliticaDeCookiesRoute
   CountryCodeQuotesRoute: typeof CountryCodeQuotesRoute
   CountryCodeStoreRoute: typeof CountryCodeStoreRoute
   CountryCodeIndexRoute: typeof CountryCodeIndexRoute
@@ -826,6 +847,7 @@ const CountryCodeRouteChildren: CountryCodeRouteChildren = {
   CountryCodeCheckoutRoute: CountryCodeCheckoutRoute,
   CountryCodeEmployeesRoute: CountryCodeEmployeesRoute,
   CountryCodeFavoritesRoute: CountryCodeFavoritesRoute,
+  CountryCodePoliticaDeCookiesRoute: CountryCodePoliticaDeCookiesRoute,
   CountryCodeQuotesRoute: CountryCodeQuotesRoute,
   CountryCodeStoreRoute: CountryCodeStoreRoute,
   CountryCodeIndexRoute: CountryCodeIndexRoute,

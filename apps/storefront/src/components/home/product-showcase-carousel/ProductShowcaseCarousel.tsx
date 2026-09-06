@@ -8,44 +8,47 @@ import "@/components/home/product-showcase-carousel/carousel.css"
 
 export function ProductShowcaseCarousel() {
   const autoplayRef = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true }),
+    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true, stopOnFocusIn: true, stopOnLastSnap: true }),
   )
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: "center", skipSnaps: false },
+    { loop: false, align: "center", skipSnaps: false },
     [autoplayRef.current],
   )
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [direction, setDirection] = useState<"next" | "prev">("next")
   const [isPlaying, setIsPlaying] = useState(true)
+  const lastIndex = showcaseSlides.length - 1
 
   const scrollPrev = useCallback(() => {
-    if (!emblaApi) return
+    if (!emblaApi || emblaApi.selectedScrollSnap() === 0) return
     setDirection("prev")
     emblaApi.scrollPrev()
-    emblaApi.plugins().autoplay?.reset()
+    emblaApi.plugins().autoplay?.stop()
   }, [emblaApi])
 
   const scrollNext = useCallback(() => {
-    if (!emblaApi) return
+    if (!emblaApi || emblaApi.selectedScrollSnap() >= lastIndex) return
     setDirection("next")
     emblaApi.scrollNext()
-    emblaApi.plugins().autoplay?.reset()
-  }, [emblaApi])
+    emblaApi.plugins().autoplay?.stop()
+  }, [emblaApi, lastIndex])
 
   const scrollTo = useCallback(
     (index: number) => {
       if (!emblaApi) return
       setDirection(index > selectedIndex ? "next" : "prev")
       emblaApi.scrollTo(index)
-      emblaApi.plugins().autoplay?.reset()
+      emblaApi.plugins().autoplay?.stop()
     },
     [emblaApi, selectedIndex],
   )
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-  }, [emblaApi])
+    const index = emblaApi.selectedScrollSnap()
+    setSelectedIndex(index)
+    if (index >= lastIndex) emblaApi.plugins().autoplay?.stop()
+  }, [emblaApi, lastIndex])
 
   useEffect(() => {
     if (!emblaApi) return
@@ -76,8 +79,6 @@ export function ProductShowcaseCarousel() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         autoplay?.stop()
-      } else if (isPlaying) {
-        autoplay?.play()
       }
     }
     document.addEventListener("visibilitychange", handleVisibilityChange)
@@ -93,7 +94,7 @@ export function ProductShowcaseCarousel() {
       window.removeEventListener("keydown", handleKeyDown)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
     }
-  }, [emblaApi, isPlaying, onSelect, scrollNext, scrollPrev])
+  }, [emblaApi, onSelect, scrollNext, scrollPrev])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -126,8 +127,10 @@ export function ProductShowcaseCarousel() {
         <button
         type="button"
         onClick={scrollPrev}
-        className="ff-hero-control absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:left-4 sm:h-11 sm:w-11 md:left-6"
+        disabled={selectedIndex === 0}
+        className="ff-hero-control absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:left-4 sm:h-11 sm:w-11 md:left-6"
         aria-label="Ver slide anterior"
+        aria-disabled={selectedIndex === 0}
       >
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
@@ -135,8 +138,10 @@ export function ProductShowcaseCarousel() {
         <button
         type="button"
         onClick={scrollNext}
-        className="ff-hero-control absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 sm:right-4 sm:h-11 sm:w-11 md:right-6"
+        disabled={selectedIndex >= lastIndex}
+        className="ff-hero-control absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:right-4 sm:h-11 sm:w-11 md:right-6"
         aria-label="Ver próximo slide"
+        aria-disabled={selectedIndex >= lastIndex}
       >
         <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
