@@ -4,6 +4,7 @@ import type { HttpTypes } from "@medusajs/types"
 import { getRegion } from "@/lib/data/regions"
 import { getPromotionCampaigns } from "@/lib/data/promotions"
 import { listProducts } from "@/lib/data/products"
+import { getProductReviewSummaries } from "@/lib/data/product-review-summaries"
 import { PublicProductCard } from "@/components/public-product-card"
 import { PromotionTimer } from "@/components/home/PromotionTimer"
 import { CarouselSectionHeader, CarouselSideControls, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
@@ -59,6 +60,12 @@ export function HomePromotionSection() {
         price.calculated_amount < price.original_amount &&
         Boolean(price.currency_code)
     }))
+  const reviewSummariesQuery = useQuery({
+    queryKey: ["product-review-summaries", products.map((product) => product.id).sort()],
+    queryFn: () => getProductReviewSummaries(products.map((product) => product.id)),
+    enabled: products.length > 0,
+    staleTime: 60_000,
+  })
   if (products.length === 0) return null
 
   const refreshCampaign = () => {
@@ -90,7 +97,7 @@ export function HomePromotionSection() {
               <div className="ff-carousel-track" data-carousel-track="true">
               {products.map((product) => (
                 <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
-                  <PublicProductCard product={product} compact promotionLabel={campaign.discountLabel ?? (() => {
+                  <PublicProductCard product={product} compact reviewSummary={reviewSummariesQuery.data?.[product.id]} promotionLabel={campaign.discountLabel ?? (() => {
                     const variant = product.variants?.find((item) => item.calculated_price?.calculated_amount != null && item.calculated_price?.original_amount != null)
                     const calculated = variant?.calculated_price?.calculated_amount
                     const original = variant?.calculated_price?.original_amount
