@@ -6,7 +6,7 @@ import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { getInterestFreeInstallment } from "@/lib/utils/installments"
-import ProductRating from "@/components/product-rating"
+import ProductRating, { type ProductRatingSummary } from "@/components/product-rating"
 import { resolveMediaUrl } from "@/lib/media-url"
 import { useState } from "react"
 
@@ -14,9 +14,10 @@ interface PublicProductCardProps {
   product: HttpTypes.StoreProduct
   compact?: boolean
   promotionLabel?: string
+  reviewSummary?: ProductRatingSummary
 }
 
-export function PublicProductCard({ product, compact = false, promotionLabel }: PublicProductCardProps) {
+export function PublicProductCard({ product, compact = false, promotionLabel, reviewSummary }: PublicProductCardProps) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
   const thumbnail = resolveMediaUrl(product.thumbnail || product.images?.[0]?.url)
@@ -90,7 +91,7 @@ export function PublicProductCard({ product, compact = false, promotionLabel }: 
             {brand}
           </p>
           <h3 className={titleClassName}>{productTitle}</h3>
-          <div className="mt-2 min-h-4"><ProductRating productId={product.id} /></div>
+          <div className="mt-2 min-h-4"><ProductRating productId={product.id} summary={reviewSummary} /></div>
           <div className={`${compact ? "mb-2" : "mb-3"} mt-1.5 min-h-[1.25rem]`}>
             {sku && (
               <p className="w-fit rounded bg-[var(--color-background)] px-2 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)] sm:text-xs">Ref: {sku}</p>

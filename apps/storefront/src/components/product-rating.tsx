@@ -5,15 +5,17 @@ type ReviewSummaryResponse = {
   summary: { average: number | null; total: number }
 }
 
-export function ProductRating({ productId }: { productId: string }) {
+export type ProductRatingSummary = { average: number | null; total: number }
+
+export function ProductRating({ productId, summary }: { productId: string; summary?: ProductRatingSummary }) {
   const { data } = useQuery({
     queryKey: ["product-rating", productId],
     queryFn: () => sdk.client.fetch<ReviewSummaryResponse>(`/store/products/${productId}/reviews?limit=1`),
-    enabled: Boolean(productId),
+    enabled: Boolean(productId) && !summary,
     staleTime: 60_000,
   })
-  const total = data?.summary.total ?? 0
-  const average = data?.summary.average
+  const total = summary?.total ?? data?.summary.total ?? 0
+  const average = summary?.average ?? data?.summary.average
 
   if (total === 0) return <span className="text-xs text-[var(--color-text-muted)]" aria-label="Este produto ainda não possui avaliações">Sem avaliações</span>
   const rounded = Math.max(0, Math.min(5, Math.round(average || 0)))

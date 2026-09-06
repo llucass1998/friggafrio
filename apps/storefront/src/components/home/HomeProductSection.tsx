@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router"
 import { useEffect } from "react"
 import type { HttpTypes } from "@medusajs/types"
 import { PublicProductCard } from "@/components/public-product-card"
+import type { ProductReviewSummary } from "@/lib/data/product-review-summaries"
 import { CarouselSectionHeader, CarouselSideControls, useInfiniteCarousel } from "@/components/carousel/InfiniteCarousel"
 
 interface HomeProductSectionProps {
@@ -14,6 +15,7 @@ interface HomeProductSectionProps {
   sectionId: string
   showAllProductsLink?: boolean
   hideWhenEmpty?: boolean
+  reviewSummaries?: Record<string, ProductReviewSummary>
 }
 
 function ProductSkeleton() {
@@ -40,6 +42,7 @@ export function HomeProductSection({
   sectionId,
   showAllProductsLink = false,
   hideWhenEmpty = false,
+  reviewSummaries,
 }: HomeProductSectionProps) {
   const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollToStart, scrollToEnd, onKeyDown } = useInfiniteCarousel([], false)
 
@@ -95,6 +98,7 @@ export function HomeProductSection({
                   <PublicProductCard
                     product={product}
                     compact
+                    reviewSummary={reviewSummaries?.[product.id]}
                   />
                 </div>
               ))}

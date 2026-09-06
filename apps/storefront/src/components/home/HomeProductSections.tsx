@@ -3,6 +3,8 @@ import { useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { getRegion } from "@/lib/data/regions"
 import { getHomeProductSelection, listProducts } from "@/lib/data/products"
+import { HOME_CATALOG_LIMIT } from "@/lib/data/home-catalog"
+import { getProductReviewSummaries } from "@/lib/data/product-review-summaries"
 import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
 import { queryKeys } from "@/lib/utils/query-keys"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
@@ -23,9 +25,9 @@ export function HomeProductSections() {
   })
 
   const productsQuery = useQuery({
-    queryKey: queryKeys.products.latest(500, regionQuery.data?.id || ""),
+    queryKey: queryKeys.products.latest(HOME_CATALOG_LIMIT, regionQuery.data?.id || ""),
     queryFn: () => listProducts({
-      queryParams: { limit: 500, offset: 0, order: "-created_at", fields: PUBLIC_HOME_PRODUCT_FIELDS },
+      queryParams: { limit: HOME_CATALOG_LIMIT, offset: 0, order: "-created_at", fields: PUBLIC_HOME_PRODUCT_FIELDS },
       regionId: regionQuery.data!.id,
     }),
     enabled: hydrated && Boolean(regionQuery.data?.id),
@@ -55,6 +57,17 @@ export function HomeProductSections() {
     .slice(0, 10)
   const useRanking = homeSelectionQuery.data?.source === "sales-ranking-30d" && selectedHomeProducts.length > 0
   const isLoading = !hydrated || regionQuery.isPending || productsQuery.isPending || homeSelectionQuery.isPending
+  const homeProductIds = Array.from(new Set([
+    ...specializedProducts.map((product) => product.id),
+    ...selectedHomeProducts.map((product) => product.id),
+    ...maintenanceProducts.map((product) => product.id),
+  ])).sort()
+  const reviewSummariesQuery = useQuery({
+    queryKey: ["product-review-summaries", homeProductIds],
+    queryFn: () => getProductReviewSummaries(homeProductIds),
+    enabled: homeProductIds.length > 0,
+    staleTime: 60_000,
+  })
 
   return (
     <>
@@ -67,6 +80,7 @@ export function HomeProductSections() {
         emptyMessage="Nenhum produto especializado encontrado no momento."
         sectionId="home-specialized-products"
         showAllProductsLink
+        reviewSummaries={reviewSummariesQuery.data}
       />
       <HomeProductSection
         countryCode={countryCode}
@@ -77,6 +91,7 @@ export function HomeProductSections() {
         emptyMessage=""
         sectionId="home-best-sellers"
         hideWhenEmpty
+        reviewSummaries={reviewSummariesQuery.data}
       />
       <HomeWhatsAppQuoteBanner />
       <HomeProductSection
@@ -87,6 +102,7 @@ export function HomeProductSections() {
         isLoading={isLoading}
         emptyMessage="Nenhum item de manutenção disponível no momento."
         sectionId="home-maintenance-products"
+        reviewSummaries={reviewSummariesQuery.data}
       />
     </>
   )
