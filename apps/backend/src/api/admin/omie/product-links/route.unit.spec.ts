@@ -1,7 +1,9 @@
 import { GET } from "./route"
 
 const response = () => {
-  const result: { statusCode?: number; body?: unknown; status: jest.Mock; json: jest.Mock } = {
+  const result: { statusCode?: number; body?: unknown; headers: Record<string, string>; setHeader: jest.Mock; status: jest.Mock; json: jest.Mock } = {
+    headers: {},
+    setHeader: jest.fn((name: string, value: string) => { result.headers[name] = value }),
     status: jest.fn((statusCode: number) => { result.statusCode = statusCode; return result }),
     json: jest.fn((body: unknown) => { result.body = body; return result }),
   }
@@ -24,6 +26,7 @@ describe("Admin private Omie product links", () => {
     await GET(request(links, {}) as never, res as never)
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.body).toMatchObject({ links })
+    expect(res.headers).toMatchObject({ "Cache-Control": "no-store", Pragma: "no-cache" })
   })
 
   it("filters exact and partial private codes without exposing unrelated links", async () => {

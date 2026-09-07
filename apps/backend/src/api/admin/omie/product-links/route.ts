@@ -38,6 +38,11 @@ const parseProductIds = (value: unknown): string[] => {
  * deliberately outside /store so the code cannot become a public product field.
  */
 export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void> => {
+  // Private codes change independently from product catalog caching. Never let
+  // an Admin table reuse a stale 304 response after a link is created or edited.
+  res.setHeader("Cache-Control", "no-store")
+  res.setHeader("Pragma", "no-cache")
+
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as QueryService
   const term = normalize(req.query?.q)
   const productIds = parseProductIds(req.query?.product_ids)
