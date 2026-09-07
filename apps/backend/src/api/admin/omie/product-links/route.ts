@@ -56,7 +56,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
 
   const matching = data.filter((link) => {
     if (term) return link.code_normalized.includes(term)
-    return productIds.includes(link.product_id)
+    if (productIds.length > 0) return productIds.includes(link.product_id)
+    return true
   }).slice(0, term ? MAX_SEARCH_RESULTS : 5_000)
 
   res.status(200).json({

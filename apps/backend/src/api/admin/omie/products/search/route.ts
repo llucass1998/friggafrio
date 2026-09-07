@@ -5,9 +5,7 @@ import {
   loadOmieConfig,
   OmieCatalogReader,
   OmieClient,
-  normalizeOmieProductCode,
 } from "../../../../../integrations/omie"
-import { ContainerRegistrationKeys as Keys } from "@medusajs/framework/utils"
 
 type Query = { graph: (input: { entity: string; fields: string[]; filters?: Record<string, unknown>; pagination?: { skip: number; take: number } }) => Promise<{ data: unknown[] }> }
 type Variant = { id?: string; title?: string | null; sku?: string | null; metadata?: Record<string, unknown> | null; inventory_quantity?: number | null }
@@ -46,7 +44,9 @@ const omieResult = (product: Record<string, unknown>) => ({
   medusa_product_id: null,
   medusa_variant_id: null,
   title: String(product.descricao ?? product.descricao_produto ?? product.nome ?? product.titulo ?? ""),
-  code: String(product.cCodigo ?? product.codigo ?? product.codigo_produto ?? product.cCodInt ?? ""),
+  // `codigo` is the FriggaFrio/Omie code returned by ListarProdutos. `cCodigo`
+  // is a legacy/alternate field and must not mask the canonical code.
+  code: String(product.codigo ?? product.cCodigo ?? product.codigo_produto ?? product.cCodInt ?? ""),
   sku: String(product.sku ?? product.cCodInt ?? product.cCodigo ?? "") || null,
   status: "Ainda não vinculado",
   inventory_quantity: null,
@@ -68,7 +68,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   let privateLinks: PrivateLink[] = []
   try {
-    const linkQuery = req.scope.resolve(Keys.QUERY) as Query
+    const linkQuery = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
     const result = await linkQuery.graph({ entity: "frigga_omie_product_link", fields: ["id", "code_display", "code_normalized", "product_id", "variant_id", "source"], filters: { deleted_at: null }, pagination: { skip: 0, take: 5_000 } })
     privateLinks = result.data as PrivateLink[]
   } catch {
@@ -88,8 +88,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
     return haystack.some((v) => v.includes(folded))
   })).slice(0, MAX_RESULTS)
   const localResults = localMatches.map((p) => localResult(p, term))
-  const privateExact = privateLinks.filter((link) => canonical(link.code_normalized) === folded)
-  const privateResults = privateExact.map((link) => {
+  const privateMatches = privateLinks.filter((link) => canonical(link.code_normalized).includes(folded))
+  const privateProductIds = new Set(privateMatches.map((link) => link.product_id))
+  const privateResults = privateMatches.map((link) => {
     const product = products.find((p) => p.id === link.product_id)
     return product ? { ...localResult(product, link.code_normalized), code: link.code_display, medusa_variant_id: link.variant_id ?? localResult(product, link.code_normalized).medusa_variant_id, source: "Medusa" as const } : null
   }).filter(Boolean)
@@ -111,7 +112,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
   const omieKeys = new Set(omieResults.map((r) => `${canonical(r.code)}|${canonical(r.title)}`))
   const merged = [
     ...privateResults,
-    ...localResults.map((r) => omieKeys.has(`${canonical(r.code)}|${canonical(r.title)}`) ? { ...r, source: "Medusa + Omie" as const } : r),
+    ...localResults
+      .filter((r) => !r.medusa_product_id || !privateProductIds.has(r.medusa_product_id))
+      .map((r) => omieKeys.has(`${canonical(r.code)}|${canonical(r.title)}`) ? { ...r, source: "Medusa + Omie" as const } : r),
     ...omieResults.filter((r) => !localResults.some((local) => `${canonical(local.code)}|${canonical(local.title)}` === `${canonical(r.code)}|${canonical(r.title)}`)),
   ].slice(0, MAX_RESULTS)
   res.status(200).json({ query: term, found: merged.length > 0, results: merged, product: merged[0] ?? null, local: { count: localResults.length }, omie: { status: omieStatus, count: omieResults.length, consulted: omieStatus !== "credentials_missing" } })

@@ -62,7 +62,7 @@ export const normalizeOmieProductCode = (value: unknown): string | null => {
 }
 
 const productCodeValues = (product: OmieProductRecord): string[] =>
-  ["cCodigo", "codigo", "codigo_produto", "cCodInt", "sku"]
+  ["codigo", "cCodigo", "codigo_produto", "cCodInt", "sku"]
     .map((key) => product[key])
     .filter((value): value is string | number =>
       (typeof value === "string" && value.trim().length > 0) ||
@@ -77,6 +77,10 @@ export const findOmieProductsByCode = (
   const normalizedCode = normalizeOmieProductCode(code)
   if (!normalizedCode) return []
   const canonical = normalizedCode.toLocaleUpperCase("pt-BR")
+  const canonicalMatches = products.filter((product) =>
+    typeof product.codigo === "string" && product.codigo.trim().toLocaleUpperCase("pt-BR") === canonical,
+  )
+  if (canonicalMatches.length > 0) return canonicalMatches
   return products.filter((product) =>
     productCodeValues(product).some((value) => value.trim().toLocaleUpperCase("pt-BR") === canonical),
   )

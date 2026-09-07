@@ -100,9 +100,9 @@ index 28522b73fefac055a0ab3031851587f77e65e7d8..ed250cf579ee69e55f8c971e1825ee99
    const { searchParams, raw } = useProductTableQuery({ pageSize: PAGE_SIZE });
 +  const codeSearch = typeof raw.q === "string" && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(raw.q.trim());
 +  const privateLinksQuery = useQuery({
-+    queryKey: ["frigga-omie-private-links", raw.q],
-+    queryFn: () => sdk.client.fetch("/admin/omie/product-links", { query: { q: raw.q?.trim() } }),
-+    enabled: codeSearch,
++    queryKey: ["frigga-omie-private-links", codeSearch ? raw.q?.trim() : "all"],
++    queryFn: () => sdk.client.fetch("/admin/omie/product-links", codeSearch ? { query: { q: raw.q?.trim() } } : { query: {} }),
++    enabled: true,
 +    staleTime: 15e3
 +  });
 +  const linkedProductQuery = useQuery({
@@ -362,12 +362,12 @@ index 0d9c1b8b2602ef58fbfe66dc2a208f05622b092a..cdd373b9109c489a051cab4869b2d546
    const { searchParams, raw } = useProductTableQuery({ pageSize: PAGE_SIZE })
 +  const codeSearch = typeof raw.q === "string" && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(raw.q.trim())
 +  const privateLinksQuery = useQuery({
-+    queryKey: ["frigga-omie-private-links", raw.q],
++    queryKey: ["frigga-omie-private-links", codeSearch ? raw.q?.trim() : "all"],
 +    queryFn: () => sdk.client.fetch<{ links: Array<{ product_id: string; code_display: string }>; product_ids?: string[] }>(
 +      "/admin/omie/product-links",
-+      { query: { q: raw.q?.trim() } },
++      codeSearch ? { query: { q: raw.q?.trim() } } : { query: {} },
 +    ),
-+    enabled: codeSearch,
++    enabled: true,
 +    staleTime: 15_000,
 +  })
 +  const linkedProductQuery = useQuery({

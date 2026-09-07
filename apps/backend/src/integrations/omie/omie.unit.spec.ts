@@ -182,6 +182,14 @@ describe("Omie discovery mapping", () => {
     expect(findOmieProductsByCode(products, " ab-001 ")).toEqual([products[0]])
   })
 
+  it("prioritizes the canonical codigo field over a legacy cCodigo match", () => {
+    const products = [
+      { codigo: "DPGS1347", cCodigo: "LEGACY-1", nCodProd: "omie-1" },
+      { codigo: "OTHER", cCodigo: "DPGS1347", nCodProd: "omie-2" },
+    ]
+    expect(findOmieProductsByCode(products, "DPGS1347")).toEqual([products[0]])
+  })
+
   it("classifies stock source states without converting missing or negative values to zero", () => {
     expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: 0 }).state).toBe("REAL_ZERO")
     expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1", fisico: -1 }).state).toBe("INVALID")
