@@ -3,7 +3,7 @@ import { getProductPurchaseState } from "@/lib/utils/product-state"
 
 export type HomeProductSelection = "specialized" | "best_sellers" | "maintenance"
 
-const MAINTENANCE_CATEGORY_HANDLES = new Set([
+export const HOME_MAINTENANCE_CATEGORY_HANDLES = new Set([
   "bombas-de-vacuo",
   "componentes",
   "conexoes",
@@ -75,7 +75,10 @@ export function selectHomeProducts(
   // The specialized shelf remains purchase-oriented and fail-closed.
   if (selection === "specialized") {
     return eligibleProducts
-      .filter((product) => getProductPurchaseState(product).status === "purchasable")
+      .filter((product) =>
+        getProductPurchaseState(product).status === "purchasable" &&
+        !getCategoryHandles(product).some((handle) => HOME_MAINTENANCE_CATEGORY_HANDLES.has(handle)),
+      )
       .slice(0, limit)
   }
 
@@ -86,7 +89,7 @@ export function selectHomeProducts(
   }
 
   const maintenanceProducts = eligibleProducts.filter((product) =>
-    getCategoryHandles(product).some((handle) => MAINTENANCE_CATEGORY_HANDLES.has(handle)) &&
+    getCategoryHandles(product).some((handle) => HOME_MAINTENANCE_CATEGORY_HANDLES.has(handle)) &&
     getProductPurchaseState(product).status === "purchasable",
   )
 
@@ -103,7 +106,8 @@ export function selectFeaturedInventoryProducts(
   const excludedIds = options.excludeIds ?? new Set<string>()
   return sortDeterministically(products.filter((product) => {
     if (excludedIds.has(product.id)) return false
-    const hasImage = Boolean(product.thumbnail || product.images?.some((image) => Boolean(image.url)))
-    return hasImage && getProductPurchaseState(product).status === "purchasable"
+    // A missing image is rendered by the card's accessible placeholder; it
+    // must not make an otherwise purchasable product disappear from a shelf.
+    return getProductPurchaseState(product).status === "purchasable"
   })).slice(0, limit)
 }

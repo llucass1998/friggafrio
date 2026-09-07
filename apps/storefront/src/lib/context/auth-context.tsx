@@ -14,6 +14,12 @@ import { transferGuestCartToCustomer } from "@/lib/auth/cart-session"
 // This remains only a UX hint; the server is always the session authority.
 const AUTH_STATE_KEY = "auth_state"
 
+type SessionStatus = {
+  authenticated?: boolean
+  actor?: "customer" | "user" | null
+  redirect_to?: string | null
+}
+
 const writeAuthHint = (authenticated: boolean): void => {
   if (typeof window === "undefined") return
   const value = authenticated ? "authenticated" : "unauthenticated"
@@ -95,38 +101,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const fetchAdminSession = useCallback(async (): Promise<boolean> => {
-    try {
-      const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
-        "/store/auth/session",
-        { method: "GET" },
-      )
-      if (session.redirect_to !== "/app") {
-        return false
-      }
-      setCustomer(null)
-      setEmployee(null)
-      setIsAdminSession(true)
-      setIsAuthenticated(true)
-      writeAuthHint(true)
-      return true
-    } catch {
-      setIsAdminSession(false)
-      setIsAuthenticated(false)
-      writeAuthHint(false)
-      return false
-    }
-  }, [])
-
   const probeSession = useCallback(async ({ includeAdmin = true }: { includeAdmin?: boolean } = {}): Promise<"customer" | "admin" | "guest"> => {
     setIsLoading(true)
-    if (await fetchCustomer()) {
-      setIsLoading(false)
-      return "customer"
-    }
-    if (includeAdmin && await fetchAdminSession()) {
-      setIsLoading(false)
-      return "admin"
+    // Probe the unauthenticated-safe status route first. Calling
+    // /store/customers/me for every public visitor produced a noisy 401 and
+    // added an avoidable request before the Home could settle.
+    try {
+      const status = await sdk.client.fetch<SessionStatus>(
+        "/store/auth/status",
+        { method: "GET" },
+      )
+      if (status.actor === "customer" && await fetchCustomer()) {
+        setIsLoading(false)
+        return "customer"
+      }
+      if (includeAdmin && status.actor === "user") {
+        setCustomer(null)
+        setEmployee(null)
+        setIsAdminSession(true)
+        setIsAuthenticated(true)
+        writeAuthHint(true)
+        setIsLoading(false)
+        return "admin"
+      }
+    } catch {
+      // A status transport failure is treated as a guest session; protected
+      // routes still enforce authentication at the backend boundary.
     }
     setCustomer(null)
     setEmployee(null)
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     writeAuthHint(false)
     setIsLoading(false)
     return "guest"
-  }, [fetchAdminSession, fetchCustomer])
+  }, [fetchCustomer])
 
   const requiresImmediateSession = /\/(?:checkout|account(?:\/|$)|employees(?:\/|$)|quotes(?:\/|$)|order(?:\/|$))/.test(location.pathname)
 

@@ -2,14 +2,13 @@ import { useQuery } from "@tanstack/react-query"
 import { useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { getRegion } from "@/lib/data/regions"
-import { getHomeProductSelection, listProducts } from "@/lib/data/products"
-import { HOME_CATALOG_LIMIT } from "@/lib/data/home-catalog"
+import { listProducts } from "@/lib/data/products"
+import { listCategories } from "@/lib/data/categories"
+import { HOME_CATALOG_LIMIT, HOME_MAINTENANCE_CANDIDATE_LIMIT } from "@/lib/data/home-catalog"
 import { getProductReviewSummaries } from "@/lib/data/product-review-summaries"
 import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
-import { queryKeys } from "@/lib/utils/query-keys"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
-import { selectHomeProducts } from "@/lib/data/home-products"
-import { getProductPurchaseState } from "@/lib/utils/product-state"
+import { HOME_MAINTENANCE_CATEGORY_HANDLES, selectFeaturedInventoryProducts, selectHomeProducts } from "@/lib/data/home-products"
 import { HomeProductSection } from "@/components/home/HomeProductSection"
 import { HomeWhatsAppQuoteBanner } from "@/components/home/HomeWhatsAppQuoteBanner"
 
@@ -25,7 +24,7 @@ export function HomeProductSections() {
   })
 
   const productsQuery = useQuery({
-    queryKey: queryKeys.products.latest(HOME_CATALOG_LIMIT, regionQuery.data?.id || ""),
+    queryKey: ["home-products", HOME_CATALOG_LIMIT, regionQuery.data?.id || ""],
     queryFn: () => listProducts({
       queryParams: { limit: HOME_CATALOG_LIMIT, offset: 0, order: "-created_at", fields: PUBLIC_HOME_PRODUCT_FIELDS },
       regionId: regionQuery.data!.id,
@@ -33,33 +32,58 @@ export function HomeProductSections() {
     enabled: hydrated && Boolean(regionQuery.data?.id),
   })
 
+  const maintenanceCategoriesQuery = useQuery({
+    queryKey: ["home-maintenance-categories"],
+    queryFn: () => listCategories({
+      fields: "id,handle",
+      queryParams: { limit: 100, offset: 0 },
+    }),
+    enabled: hydrated,
+    staleTime: 5 * 60_000,
+  })
+
+  const maintenanceCategoryIds = (maintenanceCategoriesQuery.data || [])
+    .filter((category) => category.id && category.handle && HOME_MAINTENANCE_CATEGORY_HANDLES.has(category.handle.trim().toLowerCase()))
+    .map((category) => category.id)
+
+  const maintenanceProductsQuery = useQuery({
+    queryKey: ["home-maintenance-products", regionQuery.data?.id || "", maintenanceCategoryIds],
+    queryFn: () => listProducts({
+      queryParams: {
+        category_id: maintenanceCategoryIds,
+        limit: HOME_MAINTENANCE_CANDIDATE_LIMIT,
+        offset: 0,
+        order: "-created_at",
+        fields: PUBLIC_HOME_PRODUCT_FIELDS,
+      },
+      regionId: regionQuery.data!.id,
+    }),
+    enabled: hydrated && Boolean(regionQuery.data?.id) && maintenanceCategoryIds.length > 0,
+  })
+
   const allProducts = (productsQuery.data?.response?.products || []) as HttpTypes.StoreProduct[]
   const specializedProducts = selectHomeProducts(allProducts, "specialized")
   const specializedIds = new Set(specializedProducts.map((product) => product.id))
-  const maintenanceProducts = selectHomeProducts(allProducts, "maintenance", {
+  const maintenanceCandidates = (maintenanceProductsQuery.data?.response?.products || []) as HttpTypes.StoreProduct[]
+  const maintenanceProducts = selectHomeProducts(maintenanceCandidates, "maintenance", {
     limit: 10,
     excludeIds: specializedIds,
   })
-  const originalSectionIds = new Set([
+  const reservedProductIds = new Set([
     ...specializedProducts.map((product) => product.id),
     ...maintenanceProducts.map((product) => product.id),
   ])
-  const homeSelectionQuery = useQuery({
-    queryKey: [...queryKeys.products.homeSelection(regionQuery.data?.id), Array.from(originalSectionIds).sort()],
-    queryFn: () => getHomeProductSelection(regionQuery.data!.id, { excludedProductIds: Array.from(originalSectionIds) }),
-    enabled: hydrated && Boolean(regionQuery.data?.id),
+  // Store API calculated prices and purchase state are authoritative. This
+  // bounded selection removes the legacy full catalog/inventory scan from the
+  // critical Home path after a refresh.
+  const readyProducts = selectFeaturedInventoryProducts(allProducts, {
+    excludeIds: reservedProductIds,
   })
-  // The Backend owns this selection. Client checks below only defend card
-  // rendering against stale data between the selection and product hydration.
-  const selectedHomeProducts = (homeSelectionQuery.data?.products || [])
-    .filter((product) => !originalSectionIds.has(product.id))
-    .filter((product) => getProductPurchaseState(product).status === "purchasable")
-    .slice(0, 10)
-  const useRanking = homeSelectionQuery.data?.source === "sales-ranking-30d" && selectedHomeProducts.length > 0
-  const isLoading = !hydrated || regionQuery.isPending || productsQuery.isPending || homeSelectionQuery.isPending
+  const generalSectionsLoading = !hydrated || regionQuery.isPending || productsQuery.isPending
+  const maintenanceSectionLoading = !hydrated || regionQuery.isPending || maintenanceCategoriesQuery.isPending || maintenanceProductsQuery.isPending
   const homeProductIds = Array.from(new Set([
     ...specializedProducts.map((product) => product.id),
-    ...selectedHomeProducts.map((product) => product.id),
+    ...readyProducts.map((product) => product.id),
     ...maintenanceProducts.map((product) => product.id),
   ])).sort()
   const reviewSummariesQuery = useQuery({
@@ -76,7 +100,7 @@ export function HomeProductSections() {
         title="Produtos Especializados"
         description="Soluções técnicas para o seu projeto de refrigeração."
         products={specializedProducts}
-        isLoading={isLoading}
+        isLoading={generalSectionsLoading}
         emptyMessage="Nenhum produto especializado encontrado no momento."
         sectionId="home-specialized-products"
         showAllProductsLink
@@ -84,13 +108,12 @@ export function HomeProductSections() {
       />
       <HomeProductSection
         countryCode={countryCode}
-        title={useRanking ? "Produtos mais vendidos" : "Produtos à pronta entrega"}
-        description={useRanking ? "Os produtos mais vendidos nos últimos 30 dias em nossas lojas." : "Itens disponíveis em estoque para agilizar sua compra."}
-        products={selectedHomeProducts}
-        isLoading={isLoading}
-        emptyMessage=""
+        title="Produtos à pronta entrega"
+        description="Itens disponíveis em estoque para agilizar sua compra."
+        products={readyProducts}
+        isLoading={generalSectionsLoading}
+        emptyMessage="Nenhum produto à pronta entrega encontrado no momento."
         sectionId="home-best-sellers"
-        hideWhenEmpty
         reviewSummaries={reviewSummariesQuery.data}
       />
       <HomeWhatsAppQuoteBanner />
@@ -99,7 +122,7 @@ export function HomeProductSections() {
         title="Produtos para manutenção"
         description="Componentes e insumos para manutenção de sistemas frigoríficos"
         products={maintenanceProducts}
-        isLoading={isLoading}
+        isLoading={maintenanceSectionLoading}
         emptyMessage="Nenhum item de manutenção disponível no momento."
         sectionId="home-maintenance-products"
         reviewSummaries={reviewSummariesQuery.data}

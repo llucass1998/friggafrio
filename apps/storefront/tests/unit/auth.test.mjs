@@ -101,6 +101,17 @@ test("public pages defer the optional session probe while checkout verifies it i
   assert.match(source, /if \(requiresImmediateSession\) \{\s*void probeSession\(\)/);
 });
 
+test("public session probing uses the unauthenticated-safe status endpoint", () => {
+  const source = fs.readFileSync(
+    new URL("../../src/lib/context/auth-context.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /\/store\/auth\/status/);
+  assert.match(source, /status\.actor === "customer"/);
+  assert.doesNotMatch(source, /fetchAdminSession\(/);
+});
+
 test("checkout renders a session skeleton and never shows guest controls to an authenticated customer", () => {
   const source = fs.readFileSync(
     new URL("../../src/components/checkout-customer-step.tsx", import.meta.url),

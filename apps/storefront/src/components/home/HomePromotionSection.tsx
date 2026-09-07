@@ -48,7 +48,6 @@ export function HomePromotionSection() {
     refetchInterval: 30_000,
   })
 
-  if (!campaign || productIds.length === 0) return null
   const products = ((productQuery.data?.response?.products || []) as HttpTypes.StoreProduct[])
     .filter((product) => getProductPurchaseState(product).status === "purchasable")
     // A rule alone is not commercial evidence. Render only when Medusa's
@@ -66,6 +65,7 @@ export function HomePromotionSection() {
     enabled: products.length > 0,
     staleTime: 60_000,
   })
+  if (!campaign || productIds.length === 0) return null
   if (products.length === 0) return null
 
   const refreshCampaign = () => {
