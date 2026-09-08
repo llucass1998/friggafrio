@@ -83,13 +83,28 @@ test("mobile navigation exposes an accessible open/close flow", () => {
 })
 
 test("mobile navigation has canonical links and no duplicate action group", () => {
-  assert.match(mobileDrawerSource, /Produtos/)
+  assert.match(mobileDrawerSource, /Categorias/)
+  assert.match(mobileDrawerSource, /Ver todos os produtos/)
   assert.match(mobileDrawerSource, /to=\{[^\n]*store/)
   assert.match(mobileDrawerSource, /to="\/nossa-loja"/)
   assert.match(mobileDrawerSource, /to="\/ajuda"/)
   assert.doesNotMatch(mobileDrawerSource, /HeaderActions/)
   assert.doesNotMatch(stickyHeaderSource, /HeaderMobileDrawer/)
   assert.match(stickyHeaderSource, /hidden .*lg:block/)
+})
+
+test("mobile categories are grouped, collapsible, and keep navigation accessible", () => {
+  assert.match(mobileDrawerSource, /productCategories\.map/)
+  assert.match(mobileDrawerSource, /aria-expanded=\{isExpanded\}/)
+  assert.match(mobileDrawerSource, /aria-controls=\{categoryPanelId\}/)
+  assert.match(mobileDrawerSource, /min-h-12 w-full/)
+  assert.match(mobileDrawerSource, /px-5 py-3/)
+  assert.match(mobileDrawerSource, /border-b border-\[var\(--color-border\)\]/)
+  assert.match(mobileDrawerSource, /Falar com especialista/)
+  assert.match(mobileDrawerSource, /storeConfig\.whatsappNumber/)
+  assert.match(mobileDrawerSource, /mobile-drawer-content/)
+  assert.match(mobileDrawerSource, /overflow-hidden transition-\[max-height,opacity\]/)
+  assert.match(mobileDrawerSource, /tabIndex=\{isExpanded \? 0 : -1\}/)
 })
 
 test("desktop products menu has a usable trigger and canonical store route", () => {

@@ -1,18 +1,18 @@
 import { createPortal } from "react-dom"
 import { Link, useLocation, useParams } from "@tanstack/react-router"
-import { Accessibility, Menu, X } from "lucide-react"
+import { Accessibility, ChevronRight, Menu, MessageCircle, Package, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 import { useAccessibility } from "@/components/accessibility/accessibility-context"
+import { storeConfig } from "@/config/store"
 
 export function HeaderMobileDrawer() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
-  const [mountedCategory, setMountedCategory] = useState<string | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
@@ -134,7 +134,6 @@ export function HeaderMobileDrawer() {
       window.cancelAnimationFrame(categoryFrameRef.current)
     }
 
-    setMountedCategory(id)
     categoryFrameRef.current = window.requestAnimationFrame(() => {
       setExpandedCategory(id)
       categoryFrameRef.current = null
@@ -187,85 +186,69 @@ export function HeaderMobileDrawer() {
           </button>
         </div>
 
-        <div className="mobile-drawer-content">
-          <div className="border-b border-[var(--color-border)] p-4">
-            <HeaderSearch compact />
-            <div className="mt-3">
-              <HeaderPostalCode mobile />
-            </div>
+        <div className="border-b border-[var(--color-border)] p-4">
+          <HeaderSearch compact />
+          <div className="mt-3">
+            <HeaderPostalCode mobile />
           </div>
+        </div>
 
+        <div className="mobile-drawer-content">
           <nav className="p-2" aria-label="Navegação mobile">
             <div className="mb-2">
               <Link
                 to={"/$countryCode/store" as string}
                 params={{ countryCode }}
                 onClick={closeMobileMenu}
-                className="block rounded-md px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                className="block min-h-12 rounded-md px-5 py-3 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               >
-                Produtos
+                Ver todos os produtos
               </Link>
 
-              <ul className="space-y-1">
+              <h2 className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Categorias</h2>
+              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
                 {productCategories.map((category) => {
                   const categoryPanelId = `mobile-category-${category.id}`
                   const isExpanded = expandedCategory === category.id
-                  const hasChildren = Boolean(category.children?.length)
+                  const children = category.children ?? []
 
                   return (
-                    <li key={category.id}>
-                      {hasChildren ? (
-                        <button
-                          type="button"
-                          onClick={() => toggleCategory(category.id)}
-                          aria-expanded={isExpanded}
-                          aria-controls={categoryPanelId}
-                          className="flex min-h-11 w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                        >
-                          {category.label}
-                          <span className="text-xl leading-none" aria-hidden="true">
-                            {isExpanded ? "-" : "+"}
-                          </span>
-                        </button>
-                      ) : (
-                        <Link
-                          to={toCountryPath(category.href) as string}
-                          onClick={closeMobileMenu}
-                          className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                        >
-                          {category.label}
-                        </Link>
-                      )}
-
-                      {hasChildren && mountedCategory === category.id && category.children && (
-                        <ul
-                          id={categoryPanelId}
-                          aria-hidden={!isExpanded}
-                          className={`motion-accordion-content mt-1 mb-2 overflow-hidden rounded-md bg-[var(--color-surface)] py-2 transition-[max-height,opacity,transform] duration-[var(--motion-duration-accordion)] ease-[var(--motion-ease-move)] ${isExpanded ? "max-h-[32rem] translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-1 opacity-0"}`}
-                          onTransitionEnd={(event) => {
-                            if (!isExpanded && event.propertyName === "max-height") {
-                              setMountedCategory(null)
-                            }
-                          }}
-                        >
-                          {category.children.map((child) => (
+                    <section key={category.id} className="border-b border-[var(--color-border)] last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(category.id)}
+                        aria-expanded={isExpanded}
+                        aria-controls={categoryPanelId}
+                        className={`flex min-h-12 w-full items-center gap-3 px-5 py-3 text-left text-sm font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${isExpanded ? "bg-[var(--color-surface-soft)]" : ""}`}
+                      >
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-[var(--color-primary)]" aria-hidden="true">
+                          <Package className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 flex-1">{category.label}</span>
+                        <span className="text-xs font-medium text-[var(--color-text-muted)]">{children.length}</span>
+                        <ChevronRight className={`h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform ${isExpanded ? "rotate-90" : ""}`} aria-hidden="true" />
+                      </button>
+                      <div id={categoryPanelId} aria-hidden={!isExpanded} className={`overflow-hidden transition-[max-height,opacity] duration-[var(--motion-duration-accordion)] ease-[var(--motion-ease-move)] ${isExpanded ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"}`}>
+                        <ul className="border-t border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1">
+                          {children.map((child) => (
                             <li key={child.id}>
                               <Link
                                 to={toCountryPath(child.href) as string}
                                 onClick={closeMobileMenu}
                                 tabIndex={isExpanded ? 0 : -1}
-                                className="block min-h-11 px-8 py-3 text-sm text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                                className="flex min-h-12 items-center gap-3 rounded-md border-b border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-navy)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                               >
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" aria-hidden="true" />
                                 {child.label}
                               </Link>
                             </li>
                           ))}
                         </ul>
-                      )}
-                    </li>
+                      </div>
+                    </section>
                   )
                 })}
-              </ul>
+              </div>
             </div>
 
             <div>
@@ -306,6 +289,16 @@ export function HeaderMobileDrawer() {
                 </li>
               </ul>
             </div>
+
+            <a
+              href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de falar com um especialista da FriggaFrio.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+              Falar com especialista
+            </a>
           </nav>
         </div>
       </div>

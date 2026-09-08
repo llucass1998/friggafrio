@@ -73,7 +73,7 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
           onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
-          placeholder="Busque por produto, gás, marca ou código"
+          placeholder={compact ? "Buscar produtos..." : "Busque por produto, gás, marca ou código"}
           className={`w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] pl-4 pr-20 text-sm transition-[background-color,border-color,box-shadow] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${compact ? "min-h-11 py-2" : "py-2.5"}`}
           aria-label="Busque por produto, gás, marca ou código"
           role="combobox"

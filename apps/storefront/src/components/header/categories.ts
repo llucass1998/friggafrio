@@ -28,10 +28,55 @@ const persistedCategories: Array<[string, string, string]> = [
   ["tubos-de-cobre", "Tubos de Cobre", "/br/categories/tubos-de-cobre"],
 ]
 
-export const productCategories: NavigationItem[] = persistedCategories.map(([id, label, href]) => ({
+const persistedProductCategories: NavigationItem[] = persistedCategories.map(([id, label, href]) => ({
   id,
   label,
   href,
+}))
+
+export type CategorySection = {
+  id: string
+  label: string
+  categoryIds: string[]
+}
+
+// Group the canonical categories so the mobile menu stays compact.
+export const productCategorySections: CategorySection[] = [
+  {
+    id: "refrigeracao",
+    label: "Refrigeração",
+    categoryIds: ["bombas-de-vacuo", "camara-fria", "compressores", "gases-refrigerantes", "cilindros-de-recolhimento", "recolhedoras"],
+  },
+  {
+    id: "componentes",
+    label: "Componentes",
+    categoryIds: ["componentes", "conexoes", "tubos-de-cobre", "isolamento-termico", "oleos"],
+  },
+  {
+    id: "ferramentas",
+    label: "Ferramentas e medição",
+    categoryIds: ["detectores-de-vazamento", "ferramentas-manuais", "manifolds-e-manometros"],
+  },
+  {
+    id: "outros",
+    label: "Outros",
+    categoryIds: ["outros", "produtos-quimicos"],
+  },
+]
+
+const categoriesById = new Map(persistedProductCategories.map((category) => [category.id, category]))
+
+export const getProductCategorySectionItems = (section: CategorySection): NavigationItem[] =>
+  section.categoryIds.flatMap((id) => {
+    const category = categoriesById.get(id)
+    return category ? [category] : []
+  })
+
+export const productCategories: NavigationItem[] = productCategorySections.map((section) => ({
+  id: section.id,
+  label: section.label,
+  href: "/br/store",
+  children: getProductCategorySectionItems(section),
 }))
 
 export const applicationCategories: NavigationItem[] = []
