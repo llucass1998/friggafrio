@@ -242,7 +242,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
     }
     await saveSession(authenticatedSession)
     res.redirect(302, returnTo)
-  } catch {
+  } catch (error) {
+    console.error("[Google Auth Callback Error]:", error)
     redirectWithError(res, config.storefrontOrigin, returnTo, "authentication_failed")
   }
 }

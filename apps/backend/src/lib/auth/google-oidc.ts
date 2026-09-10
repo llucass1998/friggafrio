@@ -64,7 +64,7 @@ export const getGoogleOidcConfig = (
     try {
       const hostname = new URL(effectiveHost.includes("://") ? effectiveHost : `http://${effectiveHost}`).hostname.replace(/^\[|\]$/g, "")
       if (LOCAL_HOSTS.has(hostname)) {
-        redirectUri = `http://${hostname}:9000/auth/customer/google/callback`
+        redirectUri = "http://localhost:9000/auth/customer/google/callback"
         storefrontOrigin = `http://${hostname}:5173`
       }
     } catch {

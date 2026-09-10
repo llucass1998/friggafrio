@@ -79,8 +79,13 @@ export default function LoginPage() {
       }
       const returnTo = normalizeReturnTo(search.returnTo, countryCode)
       navigate({ to: returnTo as string })
-    } catch {
-      setError("E-mail ou senha inválidos.")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : ""
+      if (message && !message.includes("fetch") && !message.includes("Failed") && message !== "Error") {
+        setError(message)
+      } else {
+        setError("E-mail ou senha inválidos.")
+      }
     } finally {
       setIsLoading(false)
     }
