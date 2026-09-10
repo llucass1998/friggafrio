@@ -4,11 +4,12 @@ import { test, expect } from "@playwright/test"
 test.setTimeout(60_000)
 
 const viewports = [
-  { width: 390, height: 844, minHeight: 240, maxHeight: 300 },
-  { width: 768, height: 1024, minHeight: 320, maxHeight: 380 },
-  { width: 1024, height: 900, minHeight: 340, maxHeight: 420 },
-  { width: 1440, height: 900, minHeight: 400, maxHeight: 460 },
-  { width: 1920, height: 1080, minHeight: 400, maxHeight: 460 },
+  { width: 390, height: 844, minHeight: 210, maxHeight: 260 },
+  { width: 768, height: 1024, minHeight: 180, maxHeight: 220 },
+  { width: 1024, height: 900, minHeight: 240, maxHeight: 280 },
+  { width: 1244, height: 900, minHeight: 290, maxHeight: 330 },
+  { width: 1440, height: 900, minHeight: 340, maxHeight: 380 },
+  { width: 1920, height: 1080, minHeight: 460, maxHeight: 500 },
 ]
 
 test.describe("Hero promocional", () => {
@@ -66,12 +67,14 @@ test.describe("Hero promocional", () => {
         }
       })
 
-      expect(measurement.heroWidth / viewport.width).toBeGreaterThanOrEqual(0.98)
+      expect(measurement.heroWidth).toBeGreaterThanOrEqual(viewport.width - 1)
       expect(measurement.heroHeight).toBeGreaterThanOrEqual(viewport.minHeight)
       expect(measurement.heroHeight).toBeLessThanOrEqual(viewport.maxHeight)
       expect(measurement.imageCount).toBe(3)
       expect(measurement.loadedImages).toBe(3)
-      expect(measurement.objectFit).toBe("contain")
+      if (viewport.width >= 640) {
+        expect(measurement.objectFit).toBe("cover")
+      }
       expect(measurement.overlayTitles).toBe(0)
       expect(measurement.dots).toBe(3)
       expect(measurement.arrowsInsideStage).toBe(true)
@@ -134,22 +137,26 @@ test.describe("Hero promocional", () => {
     expect(transition.progressAnimation).not.toBe("none")
   })
 
-  test("autoplay para no ultimo slide sem loop", async ({ page }) => {
+  test("loop infinito ao chegar no terceiro slide vai direto pro primeiro e navega continuamente", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto("/br", { waitUntil: "networkidle" })
 
-    await page.waitForTimeout(16000)
-    const activeIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
-      const slides = [...document.querySelectorAll(".carousel-slide")]
-      return slides.indexOf(slide)
-    })
-    expect(activeIndex).toBe(2)
-    await page.waitForTimeout(5500)
-    const finalIndex = await page.locator('.carousel-slide[data-active="true"]').evaluate((slide) => {
-      const slides = [...document.querySelectorAll(".carousel-slide")]
-      return slides.indexOf(slide)
-    })
-    expect(finalIndex).toBe(2)
+    const slides = page.locator(".carousel-slide")
+    const dots = page.locator(".carousel-indicator-bar")
+    const prevButton = page.locator('button[aria-label="Ver slide anterior"]')
+    const nextButton = page.locator('button[aria-label="Ver próximo slide"]')
+
+    // 1. Ir direto ao 3º slide (index 2) e avançar para o 1º (index 0)
+    await dots.nth(2).click()
+    await expect(slides.nth(2)).toHaveAttribute("data-active", "true")
+    await nextButton.click()
+    await expect(slides.nth(0)).toHaveAttribute("data-active", "true")
+
+    // 2. Do 1º slide (index 0), voltar para o 3º (index 2)
+    await prevButton.click()
+    await expect(slides.nth(2)).toHaveAttribute("data-active", "true")
+
+    // 3. Verificar que as imagens permanecem válidas e visíveis durante o loop
     const activeImageWidth = await page
       .locator('.carousel-slide[data-active="true"] .carousel-slide-img')
       .evaluate((image: HTMLImageElement) => image.naturalWidth)

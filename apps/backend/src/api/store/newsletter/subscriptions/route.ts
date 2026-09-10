@@ -99,7 +99,7 @@ const queueConfirmation = async ({
   email: string
   confirmationToken: string
   unsubscribeToken: string
-}): Promise<void> => {
+}): Promise<boolean> => {
   try {
     // Keep provider contact creation and marketing-topic opt-in behind the
     // double-opt-in confirmation endpoint; this call delivers only a token.
@@ -114,12 +114,14 @@ const queueConfirmation = async ({
       last_email_status: delivery.delivered ? "confirmation_sent" : "confirmation_not_configured",
       confirmation_sent_at: delivery.delivered ? new Date() : null,
     })
+    return delivery.delivered
   } catch {
     // Provider details never reach the public response or logs.
     await service.updateNewsletterSubscriptions({
       id: subscription.id,
       last_email_status: "confirmation_failed",
     })
+    return false
   }
 }
 
@@ -177,6 +179,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     ? await withPostgresAdvisoryLock((handler) => database.transaction!(handler), `newsletter-subscription:${email}`, claim)
     : await claim()
   if (!claimed) return accepted(res)
-  await queueConfirmation(claimed)
+  const confirmationQueued = await queueConfirmation(claimed)
+  if (!confirmationQueued) {
+    return res.status(503).json({ status: "confirmation_pending", message: "NÃ£o foi possÃ­vel enviar a confirmaÃ§Ã£o agora. Tente novamente." })
+  }
   return accepted(res)
 }

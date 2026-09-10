@@ -13,18 +13,22 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
   const galleryImages = images.filter((image, index, list) => Boolean(image.url?.trim()) && list.findIndex((candidate) => candidate.url === image.url) === index)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
+  const [fallbackImages, setFallbackImages] = useState<Set<string>>(new Set())
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
   const touchStartX = useRef<number | null>(null)
+  const thumbnailRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const imageKey = galleryImages.map((image) => image.id).join("|")
 
   const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % galleryImages.length)
+    setCurrentIndex((prev) => Math.min(prev + 1, galleryImages.length - 1))
   }, [galleryImages.length])
 
   const goToPrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)
-  }, [galleryImages.length])
+    setCurrentIndex((prev) => Math.max(prev - 1, 0))
+  }, [])
 
   const openLightbox = useCallback(() => {
     triggerRef.current = document.activeElement as HTMLElement | null
@@ -80,12 +84,34 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
     }
   }, [goToNext, goToPrevious, lightboxOpen])
 
+  useEffect(() => {
+    setCurrentIndex(0)
+    thumbnailRefs.current = []
+  }, [imageKey])
+
+  useEffect(() => {
+    thumbnailRefs.current[currentIndex]?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [currentIndex])
+
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    const frame = window.requestAnimationFrame(() => {
+      const readyIds = Array.from(document.querySelectorAll<HTMLImageElement>("img[data-gallery-image-id]"))
+        .filter((image) => image.complete && image.naturalWidth > 0)
+        .map((image) => image.dataset.galleryImageId)
+        .filter((id): id is string => Boolean(id))
+      if (readyIds.length === 0) return
+      setLoadedImages((current) => new Set(Array.from(current).concat(readyIds)))
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [galleryImages])
+
   if (galleryImages.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="product-gallery-root flex min-w-0 flex-col gap-3">
       {/* Main Image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-50" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div className="product-gallery-main relative order-1 aspect-square min-w-0 overflow-hidden rounded-lg bg-slate-50" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         <div 
           className="flex transition-transform duration-300 ease-in-out h-full"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -93,21 +119,31 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
           {galleryImages.map((image, index) => {
             const isFirstImage = index === 0
             const isCriticalImage = index === 0
+            const imageUrl = resolveMediaUrl(image.url)
+            const imageReady = loadedImages.has(image.id) && !failedImages.has(image.id)
             
             return (
               <div
                 key={image.id}
                 className="w-full h-full flex-shrink-0 relative"
               >
-                  {!!resolveMediaUrl(image.url) && !failedImages.has(image.id) ? (
+                  {!!imageUrl && !failedImages.has(image.id) ? (
                   <img
-                    src={resolveMediaUrl(image.url)}
-                    className="absolute inset-0 w-full h-full object-contain"
+                    src={fallbackImages.has(image.id) ? image.url : imageUrl}
+                    className={`absolute inset-0 h-full w-full object-contain transition-opacity ${imageReady ? "opacity-100" : "opacity-0"}`}
                     alt={isFirstImage ? "Imagem principal do produto" : `Imagem do produto ${index + 1}`}
                     loading={isCriticalImage ? "eager" : "lazy"}
                     fetchPriority={isFirstImage ? "high" : undefined}
                     decoding="async"
-                    onError={() => setFailedImages((current) => new Set(current).add(image.id))}
+                    aria-hidden={!imageReady}
+                    onLoad={() => setLoadedImages((current) => new Set(current).add(image.id))}
+                    onError={() => {
+                      if (image.url !== imageUrl && !fallbackImages.has(image.id)) {
+                        setFallbackImages((current) => new Set(current).add(image.id))
+                        return
+                      }
+                      setFailedImages((current) => new Set(current).add(image.id))
+                    }}
                     onClick={openLightbox}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -115,13 +151,15 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
                         openLightbox()
                       }
                     }}
-                    tabIndex={0}
+                    tabIndex={imageReady ? 0 : -1}
                     role="button"
                     aria-label="Ampliar imagem do produto"
+                    data-gallery-image-id={image.id}
                   />
                 ) : (
                   <ProductImagePlaceholder productName="este produto" />
                 )}
+                {!imageReady && !failedImages.has(image.id) && <ProductImagePlaceholder productName="este produto" />}
               </div>
             )
           })}
@@ -133,7 +171,8 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
             <button
               type="button"
               onClick={goToPrevious}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/90 hover:bg-white rounded-full shadow-md transition-colors cursor-pointer"
+              disabled={currentIndex === 0}
+              className="absolute left-3 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Imagem anterior"
             >
               <ChevronLeft className="w-5 h-5 text-slate-700" />
@@ -142,7 +181,8 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
             <button
               type="button"
               onClick={goToNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/90 hover:bg-white rounded-full shadow-md transition-colors cursor-pointer"
+              disabled={currentIndex === galleryImages.length - 1}
+              className="absolute right-3 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Próxima imagem"
             >
               <ChevronRight className="w-5 h-5 text-slate-700" />
@@ -160,27 +200,40 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
 
       {/* Thumbnail strip */}
       {galleryImages.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="order-2 flex min-w-0 gap-2 overflow-x-auto pb-1" aria-label="Miniaturas das imagens">
           {galleryImages.map((image, index) => (
             <button
               key={image.id}
+              ref={(node) => { thumbnailRefs.current[index] = node }}
               type="button"
               onClick={() => setCurrentIndex(index)}
               aria-label={`Selecionar imagem ${index + 1}`}
               aria-current={index === currentIndex ? "true" : undefined}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+              className={`flex h-[68px] w-[68px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-white transition-all cursor-pointer sm:h-[72px] sm:w-[72px] ${
                 index === currentIndex 
                   ? "border-accent ring-2 ring-accent/30" 
                   : "border-transparent hover:border-slate-300"
               }`}
             >
-              <img
-                src={resolveMediaUrl(image.url)}
-                alt={`Miniatura da imagem ${index + 1}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onError={() => setFailedImages((current) => new Set(current).add(image.id))}
-              />
+              <span className="relative flex h-full w-full items-center justify-center">
+                <img
+                  src={fallbackImages.has(image.id) ? image.url : resolveMediaUrl(image.url)}
+                  alt={`Miniatura da imagem ${index + 1}`}
+                  className={`h-full w-full object-contain transition-opacity ${loadedImages.has(image.id) && !failedImages.has(image.id) ? "opacity-100" : "opacity-0"}`}
+                  loading="lazy"
+                  aria-hidden={!loadedImages.has(image.id) || failedImages.has(image.id)}
+                  onLoad={() => setLoadedImages((current) => new Set(current).add(image.id))}
+                  onError={() => {
+                    const resolved = resolveMediaUrl(image.url)
+                    if (image.url !== resolved && !fallbackImages.has(image.id)) {
+                      setFallbackImages((current) => new Set(current).add(image.id))
+                      return
+                    }
+                    setFailedImages((current) => new Set(current).add(image.id))
+                  }}
+                />
+                {(!loadedImages.has(image.id) || failedImages.has(image.id)) && <ProductImagePlaceholder productName="este produto" compact className="absolute inset-0" />}
+              </span>
             </button>
           ))}
         </div>
@@ -200,8 +253,8 @@ const ImageGallery = memo(function ImageGallery({ images }: ImageGalleryProps) {
             <img src={resolveMediaUrl(galleryImages[currentIndex].url)} alt={`Imagem ampliada do produto ${currentIndex + 1}`} className="max-h-full max-w-full object-contain" />
             <button ref={closeButtonRef} type="button" onClick={closeLightbox} aria-label="Fechar imagem ampliada" className="absolute right-3 top-3 z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-slate-900 shadow-lg focus-visible:outline-2 focus-visible:outline-white">×</button>
             {galleryImages.length > 1 && <>
-              <button type="button" onClick={goToPrevious} aria-label="Imagem anterior" className="absolute left-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
-              <button type="button" onClick={goToNext} aria-label="Próxima imagem" className="absolute right-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={goToPrevious} disabled={currentIndex === 0} aria-label="Imagem anterior" className="absolute left-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={goToNext} disabled={currentIndex === galleryImages.length - 1} aria-label="Próxima imagem" className="absolute right-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
             </>}
           </div>
         </div>,

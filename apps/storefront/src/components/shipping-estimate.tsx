@@ -140,20 +140,20 @@ export function ShippingEstimate() {
   }
 
   return (
-    <section className="mt-5 border-t border-[var(--color-border)] pt-5" aria-labelledby="shipping-estimate-title">
+    <section className="mt-5 rounded-[10px] border border-[var(--color-border)] bg-[#f4f9fd] p-4" aria-labelledby="shipping-estimate-title">
       <div className="mb-3 flex items-start gap-3">
-        <div className="mt-0.5 rounded-md bg-[var(--color-surface-soft)] p-2 text-[var(--color-primary)]"><Truck className="h-4 w-4" aria-hidden="true" /></div>
+        <div className="mt-0.5 rounded-md bg-white p-2 text-[var(--color-primary)]"><Truck className="h-4 w-4" aria-hidden="true" /></div>
         <div>
-          <h2 id="shipping-estimate-title" className="text-sm font-semibold text-[var(--color-navy)]">Consulte o frete</h2>
-          <p className="mt-1 text-xs text-[var(--color-text-muted)]">Informe seu CEP para consultar as opcoes disponiveis.</p>
+          <h2 id="shipping-estimate-title" className="text-sm font-semibold text-[var(--color-navy)]">Calcule a entrega</h2>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">Informe seu CEP para verificar as opções disponíveis.</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-2">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <label htmlFor="shipping-estimate-postal-code" className="sr-only">CEP</label>
-          <input id="shipping-estimate-postal-code" value={postalCode} onChange={(event) => setPostalCode(formatPostalCode(event.target.value))} inputMode="numeric" autoComplete="postal-code" placeholder="CEP 00000-000" className="min-h-11 w-full rounded-md border border-[var(--color-border)] px-3 text-sm text-[var(--color-navy)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-          <button type="submit" disabled={isLoading || isCepLoading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--color-primary)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+          <input id="shipping-estimate-postal-code" value={postalCode} onChange={(event) => setPostalCode(formatPostalCode(event.target.value))} inputMode="numeric" autoComplete="postal-code" placeholder="Digite seu CEP" className="min-h-11 w-full rounded-[9px] border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-navy)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+          <button type="submit" disabled={isLoading || isCepLoading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px] bg-[var(--color-primary)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
             {isLoading || isCepLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <MapPin className="h-4 w-4" aria-hidden="true" />}
             Calcular
           </button>

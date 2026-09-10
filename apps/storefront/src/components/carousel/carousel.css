@@ -31,6 +31,7 @@
   overflow: hidden;
   padding-block: 8px 10px;
   touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: contain;
   cursor: grab;
 }
 
@@ -90,50 +91,38 @@
   margin-inline-end: var(--ff-carousel-gap);
 }
 
+.ff-product-slide:last-child {
+  margin-inline-end: 0;
+}
+
 .ff-home-banners-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  display: flex;
+}
+
+@media (min-width: 768px) {
+  .ff-home-banners-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
 }
 
 .ff-home-banner {
   display: block;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
-  scroll-snap-align: start;
 }
 
 .ff-home-banner img {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1935 / 813;
-  object-fit: contain;
-}
-
-@media (max-width: 1023px) {
-  .ff-home-banners-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 639px) {
-  .ff-home-banners-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    overflow: visible;
-  }
-
-  .ff-home-banner {
-    width: 100%;
-  }
+  aspect-ratio: 1200 / 504;
+  object-fit: cover;
 }
 
 .ff-product-slide {
-  /* Include the inter-slide gap in the mobile calculation so the second
-     card ends at the viewport edge instead of being visibly clipped. */
   flex-basis: calc(100% - 32px);
   margin-inline-end: var(--ff-carousel-gap);
 }
@@ -188,9 +177,31 @@
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --ff-carousel-gap: 16px;
+  }
+
+  .ff-product-slide,
+  .ff-related-products .ff-product-slide {
+    flex: 0 0 calc((100% - (var(--ff-carousel-gap) * 2)) / 3);
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 2)) / 3);
+    max-width: calc((100% - (var(--ff-carousel-gap) * 2)) / 3);
+    margin-inline-end: var(--ff-carousel-gap);
+  }
+}
+
 @media (min-width: 1024px) {
-  .ff-product-slide {
-    flex-basis: calc((100% - (var(--ff-carousel-gap) * 3)) / 3);
+  :root {
+    --ff-carousel-gap: 20px;
+  }
+
+  .ff-product-slide,
+  .ff-related-products .ff-product-slide {
+    flex: 0 0 calc((100% - (var(--ff-carousel-gap) * 3)) / 4);
+    flex-basis: calc((100% - (var(--ff-carousel-gap) * 3)) / 4);
+    max-width: calc((100% - (var(--ff-carousel-gap) * 3)) / 4);
+    margin-inline-end: var(--ff-carousel-gap);
   }
 
   .ff-team-slide {
@@ -199,10 +210,6 @@
 }
 
 @media (min-width: 1280px) {
-  .ff-product-slide {
-    flex-basis: calc((100% - (var(--ff-carousel-gap) * 5)) / 5);
-  }
-
   .ff-brand-slide {
     /* Add a subpixel-safe fraction so the next loop item cannot leak through
        the clipped viewport after fractional layout rounding. */
@@ -225,14 +232,92 @@
   .ff-promotion-timer__blocks { gap: 5px; }
   .ff-promotion-timer__block { min-width: 43px; padding-inline: 5px; }
   .ff-promotion-timer__block strong { font-size: 1.15rem; }
-  .ff-carousel-stage { display: block; }
-  .ff-carousel-stage:not(:has(> button)) > .ff-carousel-viewport { margin-inline: 0; }
-  .ff-carousel-stage > button { display: none; }
-  /* Category navigation stays available on desktop, while mobile uses the
-     native horizontal touch gesture without reserving arrow space. */
-  .ff-featured-categories .ff-carousel-section-header__actions [data-carousel-controls="section-header"] { display: none; }
-  .ff-product-slide {
+}
+
+/* Product shelves use a touch-first viewport below the desktop breakpoint.
+   Hide only the side arrows; focusable viewport arrows remain available to
+   keyboard users through the Embla key handler. */
+@media (max-width: 767px) {
+  .ff-carousel-stage {
+    display: block;
+    min-width: 0;
+  }
+
+  .ff-carousel-stage > button {
+    display: none !important;
+  }
+
+  .ff-carousel-stage > .ff-carousel-viewport,
+  .ff-carousel-stage:not(:has(> button)) > .ff-carousel-viewport {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .ff-carousel-track {
+    min-width: 0;
+  }
+
+  .ff-product-slide,
+  .ff-related-products .ff-product-slide {
+    flex: 0 0 calc((100% - 12px) / 2);
     flex-basis: calc((100% - 12px) / 2);
+    max-width: calc((100% - 12px) / 2);
+    min-width: 0;
     margin-inline-end: 12px;
+  }
+
+  .ff-carousel-track--short {
+    justify-content: center;
+  }
+
+  .ff-carousel-track--short > .ff-product-slide:last-child {
+    margin-inline-end: 0;
+  }
+
+  .ff-home-banners-grid {
+    scrollbar-width: none;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .ff-home-banners-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-home-banners-grid > * {
+    flex: 0 0 100%;
+  }
+
+  /* Category navigation stays available on desktop while mobile relies on
+     the native horizontal gesture and its indicators. */
+  .ff-featured-categories .ff-carousel-section-header__actions [data-carousel-controls="section-header"] {
+    display: none;
+  }
+
+}
+
+@keyframes ff-burst-rise {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 0), var(--ty, -30px)) scale(var(--scale, 1));
+  }
+}
+
+.ff-burst-heart {
+  animation-name: ff-burst-rise;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-burst-heart {
+    display: none !important;
+    animation: none !important;
   }
 }

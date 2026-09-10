@@ -133,11 +133,31 @@ export const useAddToCart = ({ fields }: { fields?: string } = {}) => {
         cartId = cart.id
       }
 
-      const response = await sdk.store.cart.createLineItem(
-        cartId,
-        { variant_id, quantity },
-        { fields: requestFields || fields || DEFAULT_CART_FIELDS }
-      )
+      let response: { cart: HttpTypes.StoreCart }
+      try {
+        response = await sdk.store.cart.createLineItem(
+          cartId,
+          { variant_id, quantity },
+          { fields: requestFields || fields || DEFAULT_CART_FIELDS }
+        )
+      } catch (error) {
+        if (isCartNotFoundError(error)) {
+          removeStoredCart()
+          const { regions } = await sdk.store.region.list({})
+          const region = resolveStoreRegion(regions, country_code)
+          const { cart: newCart } = await sdk.store.cart.create({ region_id: region.id }, {
+            fields: requestFields || fields || DEFAULT_CART_FIELDS,
+          })
+          setStoredCart(newCart.id)
+          response = await sdk.store.cart.createLineItem(
+            newCart.id,
+            { variant_id, quantity },
+            { fields: requestFields || fields || DEFAULT_CART_FIELDS }
+          )
+        } else {
+          throw error
+        }
+      }
       return response.cart
     },
     onMutate: async (variables) => {
@@ -225,7 +245,7 @@ export const useDeleteLineItem = ({ fields }: { fields?: string } = {}) => {
     onMutate: async (variables) => {
       beginCartMutation()
       await queryClient.cancelQueries({
-        predicate: (query) => queryKeys.cart.predicate(query, fields ? [fields] : undefined)
+        predicate: queryKeys.cart.predicate,
       })
       const previousCart = getCurrentCart(queryClient, fields)
       if (previousCart) {

@@ -36,8 +36,8 @@ export function HeaderMobileDrawer() {
         return
       }
 
-      document.body.style.overflow = previousOverflowRef.current
-      document.documentElement.style.overflow = previousHtmlOverflowRef.current
+      document.body.style.overflow = previousOverflowRef.current === "hidden" ? "" : previousOverflowRef.current
+      document.documentElement.style.overflow = previousHtmlOverflowRef.current === "hidden" ? "" : previousHtmlOverflowRef.current
       window.scrollTo(0, previousScrollYRef.current)
       scrollLockActiveRef.current = false
     }
@@ -47,8 +47,8 @@ export function HeaderMobileDrawer() {
       return
     }
 
-    previousOverflowRef.current = document.body.style.overflow
-    previousHtmlOverflowRef.current = document.documentElement.style.overflow
+    previousOverflowRef.current = document.body.style.overflow === "hidden" ? "" : document.body.style.overflow
+    previousHtmlOverflowRef.current = document.documentElement.style.overflow === "hidden" ? "" : document.documentElement.style.overflow
     previousScrollYRef.current = window.scrollY
     document.body.style.overflow = "hidden"
     document.documentElement.style.overflow = "hidden"
@@ -194,18 +194,18 @@ export function HeaderMobileDrawer() {
         </div>
 
         <div className="mobile-drawer-content">
-          <nav className="p-2" aria-label="Navegação mobile">
-            <div className="mb-2">
+          <nav className="px-2 py-1" aria-label="Navegação mobile">
+            <div className="mb-1">
               <Link
                 to={"/$countryCode/store" as string}
                 params={{ countryCode }}
                 onClick={closeMobileMenu}
-                className="block min-h-12 rounded-md px-5 py-3 text-sm font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                className="mb-1 block min-h-12 rounded-md border border-[var(--color-primary)]/20 bg-[var(--color-surface-soft)] px-5 py-3 text-sm font-bold text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               >
                 Ver todos os produtos
               </Link>
 
-              <h2 className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Categorias</h2>
+              <h2 className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Categorias</h2>
               <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
                 {productCategories.map((category) => {
                   const categoryPanelId = `mobile-category-${category.id}`
@@ -238,8 +238,11 @@ export function HeaderMobileDrawer() {
                                 tabIndex={isExpanded ? 0 : -1}
                                 className="flex min-h-12 items-center gap-3 rounded-md border-b border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-navy)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                               >
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" aria-hidden="true" />
-                                {child.label}
+                                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-primary)]" aria-hidden="true">
+                                  <Package className="h-3.5 w-3.5" />
+                                </span>
+                                <span className="min-w-0 flex-1">{child.label}</span>
+                                <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
                               </Link>
                             </li>
                           ))}
@@ -294,7 +297,7 @@ export function HeaderMobileDrawer() {
               href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de falar com um especialista da FriggaFrio.")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
+              className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
               <MessageCircle className="h-4 w-4" aria-hidden="true" />
               Falar com especialista

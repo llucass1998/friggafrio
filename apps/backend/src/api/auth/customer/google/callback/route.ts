@@ -114,9 +114,14 @@ const redirectWithError = (
 }
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void> => {
-  const config = getGoogleOidcConfig()
+  const baseConfig = getGoogleOidcConfig(process.env, req)
   const requestSession = req.session as unknown as SessionWithSave
   const pending = requestSession.google_oidc
+  const redirectUri = pending?.redirectUri || baseConfig?.redirectUri
+  const storefrontOrigin = pending?.storefrontOrigin || baseConfig?.storefrontOrigin
+  const config = baseConfig && redirectUri && storefrontOrigin
+    ? { ...baseConfig, redirectUri, storefrontOrigin }
+    : null
   const fallback = config?.storefrontOrigin ? new URL("/br/account", config.storefrontOrigin).toString() : "/br/account"
   const returnTo = pending?.returnTo || fallback
   if (!config || !pending || !isFreshGoogleOidcSession(pending)) {
@@ -162,17 +167,35 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
         { provider: "emailpass", entity_id: claims.email },
         { relations: ["auth_identity"] },
       )
-      if (emailIdentities.length !== 1 || !emailIdentities[0].auth_identity_id) {
-        throw new Error("Google account requires a pre-existing verified customer account")
+      let emailAuthIdentityId: string
+      if (emailIdentities.length === 1 && emailIdentities[0].auth_identity_id) {
+        emailAuthIdentityId = emailIdentities[0].auth_identity_id
+        await resolveProviderAuthIdentity(auth, emailIdentities[0])
+      } else {
+        const customerService = req.scope.resolve(Modules.CUSTOMER) as unknown as {
+          listCustomers: (filters: Record<string, unknown>) => Promise<Array<{ id: string }>>
+          createCustomers: (data: Record<string, unknown>) => Promise<{ id: string }>
+        }
+        const existingCustomers = await customerService.listCustomers({ email: claims.email })
+        const customer = existingCustomers[0] || (await customerService.createCustomers({
+          email: claims.email,
+          first_name: claims.given_name || claims.name || "Cliente",
+          last_name: claims.family_name || "",
+          has_account: true,
+        }))
+        const newAuthIdentity = await (auth as unknown as {
+          createAuthIdentities: (data: Record<string, unknown>) => Promise<NonNullable<AuthResult["authIdentity"]>>
+        }).createAuthIdentities({
+          app_metadata: { customer_id: customer.id },
+        })
+        emailAuthIdentityId = newAuthIdentity.id
       }
-      const emailAuthIdentityId = emailIdentities[0].auth_identity_id
-      await resolveProviderAuthIdentity(auth, emailIdentities[0])
       let providerWasCreated = false
       try {
         await auth.createProviderIdentities({
           provider: "google",
           entity_id: claims.sub,
-          auth_identity_id: emailIdentities[0].auth_identity_id,
+          auth_identity_id: emailAuthIdentityId,
           user_metadata: {
             email: claims.email,
             name: claims.name,

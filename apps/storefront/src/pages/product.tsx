@@ -1,14 +1,26 @@
 import { Link, useLoaderData } from "@tanstack/react-router"
 import { HttpTypes } from "@medusajs/types"
-import { ChevronRight, FileText, PackageCheck, Share2 } from "lucide-react"
-import type { ReactNode } from "react"
+import { ChevronRight } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ImageGallery } from "@/components/ui/image-gallery"
-import ProductActions from "@/components/product-actions"
+import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
+import ProductActions, { ProductTrustArguments } from "@/components/product-actions"
 import ProductRating from "@/components/product-rating"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
+import { isVariantInStock } from "@/lib/utils/product"
 import { decodeProductText } from "@/lib/utils/product-text"
-import { getPublicProductDocuments, getPublicProductSpecs } from "@/lib/utils/public-product-specs"
-import { toast } from "sonner"
+import {
+  getPublicProductDocuments,
+  getPublicProductSpecs,
+  getPublicProductApplication,
+  getPublicProductCompatibility,
+  getPublicProductPackageContents,
+} from "@/lib/utils/public-product-specs"
+import { ProductOverview } from "@/components/product/technical/ProductOverview"
+import { ProductSpecificationsTable } from "@/components/product/technical/ProductSpecificationsTable"
+import { ProductApplication } from "@/components/product/technical/ProductApplication"
+import { ProductPackageContents } from "@/components/product/technical/ProductPackageContents"
+import { ProductDocuments } from "@/components/product/technical/ProductDocuments"
 import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
 import ProductReviews from "@/components/product-reviews"
@@ -19,20 +31,24 @@ interface ProductPageData {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   countryCode: string
-}
-
-function DetailPanel({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-5 shadow-[0_8px_24px_rgba(8,59,102,0.06)] sm:p-7 ${className}`}>
-      <h2 className="text-xl font-bold text-[var(--color-navy)] sm:text-2xl">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  )
+  reviewSummary?: { average: number | null; total: number } | null
 }
 
 export function ProductPage() {
   const loaderData = useLoaderData({ strict: false }) as ProductPageData | undefined
-  const { product, region, countryCode = "br" } = loaderData || {}
+  const { product, region, countryCode = "br", reviewSummary } = loaderData || {}
+  const [activeDetail, setActiveDetail] = useState("overview")
+  const [selectedVariant, setSelectedVariant] = useState<HttpTypes.StoreProductVariant | undefined>(undefined)
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+
+  useEffect(() => {
+    setActiveDetail("overview")
+    setSelectedVariant(undefined)
+  }, [product?.id])
+
+  const handleVariantChange = useCallback((variant: HttpTypes.StoreProductVariant | undefined) => {
+    setSelectedVariant(variant)
+  }, [])
 
   if (!product) {
     return (
@@ -58,13 +74,81 @@ export function ProductPage() {
       : []
   const publicSpecs = getPublicProductSpecs(product)
   const documents = getPublicProductDocuments(product)
-  const brand = product.collection?.title || publicSpecs.find((spec) => spec.label === "Marca")?.value || "FriggaFrio"
+  const application = getPublicProductApplication(product)
+  const compatibility = getPublicProductCompatibility(product)
+  const packageContents = getPublicProductPackageContents(product)
+  const category = product.categories?.[0]?.name || null
   const productTitle = decodeProductText(product.title)
-  const sku = product.variants?.[0]?.sku || null
-  const category = product.categories?.[0]?.name || product.type?.value || null
+  const productDescription = decodeProductText(product.description || product.subtitle || "")
+  const sku = selectedVariant?.sku || product.variants?.[0]?.sku || null
   const purchaseState = getProductPurchaseState(product)
-  const available = purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
-  const availabilityLabel = purchaseState.status === "quote_only"
+  const hasSelectableVariants = (product.variants?.length ?? 0) > 1 && Boolean(product.options?.length)
+  const technicalSummary = publicSpecs.filter(({ label }) => label !== "Marca").slice(0, 3)
+  const hasDescription = Boolean(productDescription.trim())
+  const hasOverview = Boolean(hasDescription || publicSpecs.length > 0 || application || compatibility || packageContents || documents.length > 0)
+  const detailSections = [
+    hasOverview ? { id: "overview", label: "Visão geral" } : null,
+    publicSpecs.length > 0 ? { id: "specifications", label: "Especificação" } : null,
+    application || compatibility ? { id: "application-compatibility", label: "Aplicação e compatibilidade" } : null,
+    packageContents ? { id: "package", label: "O que acompanha" } : null,
+    { id: "documents", label: "Documentos" },
+  ].filter((section): section is { id: string; label: string } => Boolean(section))
+  const firstDetailId = detailSections[0]?.id
+  const selectedDetailId = detailSections.some((section) => section.id === activeDetail) ? activeDetail : firstDetailId
+
+  const detailContent = (id: string) => {
+    if (id === "overview") {
+      return (
+        <ProductOverview
+          // Sobre o produto e Especificações técnicas
+          description={productDescription}
+          specs={publicSpecs}
+          application={application}
+          packageContents={packageContents}
+          documents={documents}
+          onNavigateTab={(tabId) => setActiveDetail(tabId)}
+        />
+      )
+    }
+    if (id === "specifications" && publicSpecs.length > 0) {
+      return (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-[var(--color-navy)] sm:text-xl">Especificações técnicas</h2>
+          <ProductSpecificationsTable specs={publicSpecs} />
+        </div>
+      )
+    }
+    if (id === "application-compatibility" && (application || compatibility)) {
+      return (
+        <ProductApplication
+          application={application}
+          compatibility={compatibility}
+        />
+      )
+    }
+    if (id === "package" && packageContents) {
+      return (
+        <ProductPackageContents
+          contents={packageContents}
+        />
+      )
+    }
+    if (id === "documents") {
+      return (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-[var(--color-navy)] sm:text-xl">Documentos e Manuais</h2>
+          <ProductDocuments documents={documents} />
+        </div>
+      )
+    }
+    return null
+  }
+  const available = selectedVariant ? isVariantInStock(selectedVariant) : purchaseState.status === "purchasable" || purchaseState.status === "select_variant"
+  const outOfStock = selectedVariant ? !isVariantInStock(selectedVariant) : purchaseState.status === "out_of_stock"
+  const availabilityTone = available ? "positive" : outOfStock ? "negative" : "neutral"
+  const availabilityLabel = outOfStock
+    ? "Sem estoque"
+    : purchaseState.status === "quote_only"
     ? "Somente sob cotação"
     : purchaseState.status === "price_pending"
       ? "Preço em configuração"
@@ -75,9 +159,9 @@ export function ProductPage() {
           : "Em estoque"
 
   return (
-    <main className="min-h-screen bg-[var(--color-background)] pb-20 md:pb-10" data-testid="product-page">
-      <nav aria-label="Caminho de navegação" className="border-b border-[var(--color-border)] bg-white" data-testid="product-breadcrumbs">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-4 text-xs text-[var(--color-text-muted)] sm:px-6 md:text-sm lg:px-8">
+    <main className="ff-product-page min-h-screen bg-[var(--color-background)] pb-20 md:pb-10" data-testid="product-page">
+      <nav aria-label="Caminho de navegação" className="bg-transparent" data-testid="product-breadcrumbs">
+        <div className="mx-auto flex w-[calc(100%-32px)] max-w-[1520px] items-center gap-2 overflow-x-auto py-5 text-xs text-[var(--color-text-muted)] sm:w-[calc(100%-48px)] sm:text-sm lg:w-[calc(100%-64px)]">
           <Link to={"/$countryCode" as string} params={{ countryCode }} className="shrink-0 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Home</Link>
           <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
           <Link to={"/$countryCode/store" as string} params={{ countryCode }} className="shrink-0 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Catálogo</Link>
@@ -87,80 +171,83 @@ export function ProductPage() {
         </div>
       </nav>
 
-      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 md:py-10 lg:px-8" data-testid="product-top-layout">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-7 xl:gap-8">
-          <section className="lg:col-span-5" aria-label="Galeria do produto">
-            <div className="rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-3 shadow-[0_8px_24px_rgba(8,59,102,0.06)] sm:p-4">
+      <div className="mx-auto w-[calc(100%-32px)] max-w-[1520px] py-2 sm:w-[calc(100%-48px)] md:py-4 lg:w-[calc(100%-64px)]" data-testid="product-top-layout">
+        <div className="product-top-columns grid grid-cols-1 items-start gap-4" data-testid="product-columns">
+          <section aria-label="Galeria do produto">
+            <div className="product-gallery-card relative rounded-[14px] border border-[var(--color-border)] bg-white p-4 shadow-[0_6px_22px_rgba(13,67,105,0.07)] sm:p-5">
               {images.length > 0 ? <ImageGallery images={images} /> : (
-                <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-[var(--color-surface-soft)] text-sm font-medium text-[var(--color-text-muted)]">Imagem indisponível</div>
+                <div className="aspect-square overflow-hidden rounded-lg bg-[var(--color-surface-soft)]">
+                  <ProductImagePlaceholder productName={productTitle} />
+                </div>
               )}
             </div>
           </section>
 
-          <section className="min-w-0 lg:col-span-4" aria-labelledby="product-title">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded bg-[var(--color-surface-soft)] px-2 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">{brand}</span>
-                {sku && <span className="rounded border border-[var(--color-border)] bg-white px-2 py-1 font-mono text-xs text-[var(--color-text-muted)]">Ref: {sku}</span>}
+          <section className="product-info-column min-w-0" aria-labelledby="product-title">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 id="product-title" className="text-[1.75rem] font-bold leading-[1.2] text-[var(--color-navy)] sm:text-[2rem]">{productTitle}</h1>
+                <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${availabilityTone === "positive" ? "border-[#ceead6] bg-[#e6f4ea] text-[#137333]" : availabilityTone === "negative" ? "border-[#f3c7cd] bg-[#fff0f1] text-[#c93b45]" : "border-[#d7e2ea] bg-[#f4f8fb] text-[var(--color-text-muted)]"}`}>
+                  <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{availabilityLabel}
+                </div>
               </div>
-              <FavoriteButton productId={product.id} productTitle={productTitle} className="shrink-0" />
+              <div className="shrink-0 pt-1">
+                <FavoriteButton productId={product.id} productTitle={productTitle} />
+              </div>
             </div>
-            <h1 id="product-title" className="mt-4 text-3xl font-bold leading-tight text-[var(--color-navy)] sm:text-4xl">{productTitle}</h1>
+            {sku && <p className="mt-2 font-mono text-sm text-[var(--color-text-muted)]">Ref.: {sku}</p>}
+            {category && <p className="mt-3 text-sm text-[var(--color-text-muted)]">Categoria: <strong className="font-semibold text-[var(--color-navy)]">{category}</strong></p>}
+            {hasDescription && <div className="mt-4 max-w-prose">
+              <p className="line-clamp-3 text-sm leading-6 text-[var(--color-text)]">{productDescription}</p>
+              {productDescription.length > 180 && <button type="button" onClick={() => { setActiveDetail("overview"); window.requestAnimationFrame(() => document.getElementById("product-detail-panels")?.scrollIntoView({ behavior: "smooth", block: "start" })) }} className="mt-2 text-sm font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Ver descrição completa</button>}
+            </div>}
+            {technicalSummary.length > 0 && <div className="mt-5">
+              <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Resumo técnico</h2>
+              <div className="mt-2 flex flex-wrap gap-2">{technicalSummary.map(({ label, value }) => <span key={label} className="rounded-md border border-[#cde1f0] bg-[#eef7fd] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)]">{label}: {value}</span>)}</div>
+            </div>}
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <ProductRating productId={product.id} />
-              <a href="#reviews-title" className="text-sm font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">Ver avaliações</a>
-              {category && <span className="text-sm text-[var(--color-text-muted)]">Categoria: <strong className="font-medium text-[var(--color-text)]">{category}</strong></span>}
+              {reviewSummary?.total ? <ProductRating productId={product.id} summary={reviewSummary} /> : null}
             </div>
-            <div className={`mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${available ? "border-[#ceead6] bg-[#e6f4ea] text-[#137333]" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
-              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{availabilityLabel}
-            </div>
-            {product.options?.length ? (
-              <div className="mt-7 border-t border-[var(--color-border)] pt-5">
-                <h2 className="text-sm font-bold text-[var(--color-navy)]">Escolha as opções do produto</h2>
-                <p className="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">Preço e disponibilidade são atualizados conforme a variante selecionada.</p>
-              </div>
-            ) : null}
           </section>
 
-          <aside className="min-w-0 lg:col-span-3 lg:sticky lg:top-24" aria-label="Compra do produto" data-testid="purchase-panel">
-            <div className="min-w-0 rounded-[var(--radius-card-lg)] border border-[var(--color-border)] bg-white p-5 shadow-[0_12px_30px_rgba(8,59,102,0.1)]">
-              <ProductActions product={product} region={region!} />
-              <ShippingEstimate />
-              <div className="mt-5 flex items-center justify-between border-t border-[var(--color-border)] pt-4 text-sm text-[var(--color-text-muted)]">
-                <span>Atendimento especializado</span>
-                <button type="button" onClick={async () => {
-                  const shareData = { title: productTitle, url: window.location.href }
-                  if (navigator.share) { await navigator.share(shareData).catch(() => undefined); return }
-                  await navigator.clipboard?.writeText(window.location.href)
-                  toast.success("Link do produto copiado")
-                }} className="inline-flex min-h-11 items-center gap-1.5 rounded px-2 font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-                  <Share2 className="h-4 w-4" aria-hidden="true" />Compartilhar
-                </button>
-              </div>
-            </div>
+          <aside className="product-purchase-column min-w-0 rounded-[14px] border border-[var(--color-border)] bg-white p-5 shadow-[0_6px_22px_rgba(13,67,105,0.07)] sm:p-6" data-testid="purchase-panel" data-product-info-panel="true" data-has-selectable-variants={hasSelectableVariants} aria-label="Compra do produto" aria-labelledby="product-title">
+            <ProductActions
+              product={product}
+              region={region!}
+              onVariantChange={handleVariantChange}
+              afterActions={<>
+                <ShippingEstimate />
+                <ProductTrustArguments />
+              </>}
+            />
           </aside>
         </div>
 
-        <div className="mt-8 grid gap-6" data-testid="product-detail-panels">
-          {publicSpecs.length > 0 && <DetailPanel title="Principais características">
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {publicSpecs.slice(0, 6).map(({ label, value }) => <li key={label} className="rounded-lg bg-[var(--color-surface-soft)] px-4 py-3"><span className="block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</span><span className="mt-1 block text-sm font-medium text-[var(--color-navy)]">{value}</span></li>)}
-            </ul>
-          </DetailPanel>}
-          <DetailPanel title="Descrição">
-            {product.description ? <p className="max-w-5xl whitespace-pre-line text-sm leading-7 text-[var(--color-text)] sm:text-base">{decodeProductText(product.description)}</p> : <p className="text-sm italic text-[var(--color-text-muted)]">Nenhuma descrição detalhada disponível para este produto.</p>}
-          </DetailPanel>
-          {publicSpecs.length > 0 && <DetailPanel title="Ficha técnica">
-            <div className="overflow-x-auto"><table className="w-full min-w-[360px] border-separate border-spacing-y-1 text-left text-sm"><tbody>{publicSpecs.map(({ label, value }) => <tr key={label}><th scope="row" className="w-1/3 rounded-l-md bg-[var(--color-surface-soft)] px-4 py-3 font-semibold text-[var(--color-navy)]">{label}</th><td className="rounded-r-md bg-[var(--color-background)] px-4 py-3 text-[var(--color-text)]">{value}</td></tr>)}</tbody></table></div>
-          </DetailPanel>}
-          {documents.length > 0 && <DetailPanel title="Documentos técnicos">
-            <ul className="grid gap-3 sm:grid-cols-2">{documents.map((document) => <li key={document.url}><a href={document.url} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-lg border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"><FileText className="h-5 w-5" aria-hidden="true" />{document.name}</a></li>)}</ul>
-          </DetailPanel>}
-          <aside className="flex items-start gap-3 rounded-[var(--radius-card)] border border-[var(--color-primary)]/15 bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-[var(--color-navy)]">
-            <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]" aria-hidden="true" />
-            A seleção, aplicação, armazenamento e manuseio de fluidos refrigerantes e equipamentos devem seguir as especificações do fabricante e as normas de segurança aplicáveis.
-          </aside>
-        </div>
+        {detailSections.length > 0 && <div id="product-detail-panels" className="mt-8 rounded-[14px] border border-[var(--color-border)] bg-white p-4 shadow-[0_6px_22px_rgba(13,67,105,0.07)] sm:p-6" data-testid="product-detail-panels">
+          <nav aria-label="Informações do produto" role="tablist" className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[var(--color-border)] pb-2">
+            {detailSections.map((section) => <button
+              key={section.id}
+              ref={(node) => { tabRefs.current[section.id] = node }}
+              type="button"
+              role="tab"
+              id={`product-tab-${section.id}`}
+              aria-controls={`product-panel-${section.id}`}
+              aria-selected={selectedDetailId === section.id}
+              tabIndex={selectedDetailId === section.id ? 0 : -1}
+              onClick={() => setActiveDetail(section.id)}
+              onKeyDown={(event) => {
+                if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return
+                event.preventDefault()
+                const current = detailSections.findIndex((item) => item.id === section.id)
+                const next = event.key === "Home" ? 0 : event.key === "End" ? detailSections.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + detailSections.length) % detailSections.length
+                const nextId = detailSections[next]?.id
+                if (nextId) { setActiveDetail(nextId); tabRefs.current[nextId]?.focus() }
+              }}
+              className={`border-b-2 px-1 pb-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] ${selectedDetailId === section.id ? "border-[var(--color-primary)] text-[var(--color-primary)]" : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"}`}
+            >{section.label}</button>)}
+          </nav>
+          {selectedDetailId && <div id={`product-panel-${selectedDetailId}`} role="tabpanel" aria-labelledby={`product-tab-${selectedDetailId}`} tabIndex={0} className="motion-tab-content min-w-0">{detailContent(selectedDetailId)}</div>}
+        </div>}
       </div>
       {region && <RelatedProducts product={product} regionId={region.id} />}
       <ProductReviews productId={product.id} productTitle={productTitle} />

@@ -54,11 +54,26 @@ describe("newsletter subscriptions", () => {
     expect(sendNewsletterConfirmationEmail).toHaveBeenCalled()
   })
 
+  it("returns a retryable error instead of acknowledging an undelivered confirmation", async () => {
+    ;(sendNewsletterConfirmationEmail as jest.Mock).mockRejectedValueOnce(new Error("provider unavailable"))
+    const subscriptions = service()
+    const res = response()
+
+    await POST({ body: { name: "Ana", email: "ana@example.com", consent: true }, scope: { resolve: () => subscriptions } } as never, res as never)
+
+    expect(res.statusCode).toBe(503)
+    expect(res.payload).toEqual(expect.objectContaining({ status: "confirmation_pending" }))
+    expect(subscriptions.updateNewsletterSubscriptions).toHaveBeenCalledWith(expect.objectContaining({
+      id: "sub_1",
+      last_email_status: "confirmation_failed",
+    }))
+  })
+
   it("allows a deliberate retry after contact synchronization could not be configured", async () => {
     const subscriptions = service([{ id: "sub_1", status: NewsletterSubscriptionStatus.PENDING, last_email_status: "contact_sync_not_configured" }])
     const res = response()
     await POST({ body: { name: "Ana", email: "ana@example.com", consent: true }, scope: { resolve: () => subscriptions } } as never, res as never)
-    expect(res.statusCode).toBe(202)
+    expect(res.statusCode).toBe(503)
     expect(subscriptions.updateNewsletterSubscriptions).toHaveBeenCalledWith(expect.objectContaining({
       id: "sub_1",
       status: NewsletterSubscriptionStatus.PENDING,
@@ -76,7 +91,7 @@ describe("newsletter subscriptions", () => {
 
     await POST({ body: { name: "Ana", email: "ana@example.com", consent: true }, scope: { resolve: () => subscriptions } } as never, res as never)
 
-    expect(res.statusCode).toBe(202)
+    expect(res.statusCode).toBe(503)
     expect(subscriptions.updateNewsletterSubscriptions).toHaveBeenCalledWith(expect.objectContaining({
       id: "sub_1",
       status: NewsletterSubscriptionStatus.PENDING,
@@ -139,8 +154,9 @@ describe("newsletter subscriptions", () => {
       scope: { resolve: () => subscriptions },
     } as never, res as never)
 
-    expect(res.statusCode).toBe(202)
-    expect(res.payload).toEqual({ status: "confirmation_pending" })
+    expect(res.statusCode).toBe(503)
+    expect(res.payload).toEqual(expect.objectContaining({ status: "confirmation_pending" }))
+    expect((res.payload as { message?: unknown }).message).toEqual(expect.any(String))
     expect(subscriptions.createNewsletterSubscriptions).toHaveBeenCalledWith(expect.objectContaining({
       name: "Ana",
       email: "ana@example.com",

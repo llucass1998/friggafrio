@@ -12,6 +12,10 @@ test("local browser hosts preserve an explicitly configured local backend", () =
     resolveMedusaBackendUrl("http://127.0.0.1:19001", "127.0.0.1"),
     "http://127.0.0.1:19001",
   )
+  assert.equal(
+    resolveMedusaBackendUrl("http://localhost:9000", "127.0.0.1"),
+    "http://127.0.0.1:9000",
+  )
 })
 
 test("local browser hosts fall back to the canonical local backend for a non-local configured origin", () => {

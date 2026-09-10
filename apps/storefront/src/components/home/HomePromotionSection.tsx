@@ -36,7 +36,7 @@ export function HomePromotionSection() {
     productIds,
     endsAt: sharedEndsAt ?? activeCampaigns[0].endsAt,
   } : undefined
-  const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollToStart, scrollToEnd, onKeyDown } = useInfiniteCarousel([], false)
+  const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext, onKeyDown } = useInfiniteCarousel([], false)
   const productQuery = useQuery({
     queryKey: ["promotions", productIds, regionQuery.data?.id],
     queryFn: () => listProducts({ queryParams: { id: productIds, limit: productIds.length, fields: PUBLIC_PRODUCT_CARD_FIELDS }, regionId: regionQuery.data!.id }),
@@ -84,20 +84,20 @@ export function HomePromotionSection() {
             hasOverflow={hasOverflow}
             canScrollPrevious={canScrollPrev}
             canScrollNext={canScrollNext}
-            onPrevious={scrollToStart}
-            onNext={scrollToEnd}
+            onPrevious={scrollPrev}
+            onNext={scrollNext}
             showControlsInHeader={false}
             previousLabel="Ver produtos promocionais anteriores"
             nextLabel="Ver próximos produtos promocionais"
             action={sharedEndsAt ? <PromotionTimer campaign={campaign} serverNow={campaignQuery.data?.serverNow || new Date().toISOString()} onExpired={refreshCampaign} /> : undefined}
           />
-          <div className="ff-carousel-stage">
-            <CarouselSideControls side="previous" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollToStart} onNext={scrollToEnd} previousLabel="Produtos promocionais anteriores" nextLabel="Próximos produtos promocionais" />
+          <div className="ff-carousel-stage ff-product-carousel-stage">
+            <CarouselSideControls side="previous" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollPrev} onNext={scrollNext} previousLabel="Produtos promocionais anteriores" nextLabel="Próximos produtos promocionais" />
             <div ref={viewportRef} className="ff-carousel-viewport" data-carousel-viewport="true" role="region" tabIndex={0} aria-label={`${campaign.title}: produtos promocionais`} onKeyDown={onKeyDown}>
-              <div className="ff-carousel-track" data-carousel-track="true">
+              <div className={`ff-carousel-track${products.length <= 2 ? " ff-carousel-track--short" : ""}`} data-carousel-track="true">
               {products.map((product) => (
                 <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
-                  <PublicProductCard product={product} compact reviewSummary={reviewSummariesQuery.data?.[product.id]} promotionLabel={campaign.discountLabel ?? (() => {
+                  <PublicProductCard product={product} compact showInstallment={true} reviewSummary={reviewSummariesQuery.data?.[product.id]} promotionLabel={campaign.discountLabel ?? (() => {
                     const variant = product.variants?.find((item) => item.calculated_price?.calculated_amount != null && item.calculated_price?.original_amount != null)
                     const calculated = variant?.calculated_price?.calculated_amount
                     const original = variant?.calculated_price?.original_amount
@@ -108,7 +108,7 @@ export function HomePromotionSection() {
               ))}
               </div>
             </div>
-            <CarouselSideControls side="next" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollToStart} onNext={scrollToEnd} previousLabel="Produtos promocionais anteriores" nextLabel="Próximos produtos promocionais" />
+            <CarouselSideControls side="next" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollPrev} onNext={scrollNext} previousLabel="Produtos promocionais anteriores" nextLabel="Próximos produtos promocionais" />
           </div>
         </div>
       </div>

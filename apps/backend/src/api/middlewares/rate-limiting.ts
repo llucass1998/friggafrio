@@ -1,6 +1,7 @@
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { contentSecurityPolicyReportOnlyOptions } from "./content-security-policy";
+import { isLocalDevelopmentRequest } from "../../lib/auth/session-security";
 
 /**
  * Helmet adds secure HTTP headers.
@@ -18,6 +19,7 @@ export const secureHeaders = helmet({
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
+  skip: (req) => isLocalDevelopmentRequest(req as never),
   message: {
     message: "Muitas tentativas de login. Tente novamente após 15 minutos.",
     type: "rate_limit_exceeded"
@@ -33,6 +35,7 @@ export const authRateLimit = rateLimit({
 export const registerRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  skip: (req) => isLocalDevelopmentRequest(req as never),
   message: {
     message: "Limite de criação de contas atingido. Tente novamente mais tarde.",
     type: "rate_limit_exceeded"

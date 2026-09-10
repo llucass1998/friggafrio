@@ -1,6 +1,7 @@
 .carousel-slide-img {
-  transform: scale(1.025);
-  transition: transform 5000ms ease-out;
+  /* Keep the supplied 3:1 artwork pixel-aligned so no copy or product is cropped. */
+  transform: none;
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -19,7 +20,7 @@
 }
 
 .carousel-slide[data-active="true"] .carousel-slide-img {
-  transform: scale(1.075);
+  transform: none;
 }
 
 .carousel-slide[data-promotional="true"] .carousel-slide-img {
@@ -28,40 +29,30 @@
 }
 
 .ff-hero-slide-stage {
-  height: clamp(220px, 64vw, 270px);
-}
-
-.ff-hero-slide-stage .carousel-slide-img {
-  object-fit: contain;
-}
-
-.ff-hero-stage-backdrop {
-  position: absolute;
-  inset: -24px;
-  background-position: center;
-  background-size: cover;
-  filter: blur(22px);
-  opacity: 0.42;
-  transform: scale(1.06);
+  min-height: 220px;
+  height: clamp(210px, 58vw, 250px);
 }
 
 @media (min-width: 640px) {
-.ff-hero-slide-stage {
-    height: clamp(280px, 42vw, 330px);
+  .ff-hero-slide-stage {
+    min-height: 0;
+    aspect-ratio: 4027 / 1000;
+    max-height: 480px;
+    height: auto;
   }
 }
 
-@media (min-width: 1024px) {
-.ff-hero-slide-stage {
-    height: clamp(340px, 30vw, 400px);
+.ff-hero-slide-stage .carousel-slide-img {
+  object-fit: cover;
+  object-position: var(--slide-obj-pos-mobile, center);
+}
+
+@media (min-width: 768px) {
+  .ff-hero-slide-stage .carousel-slide-img {
+    object-position: var(--slide-obj-pos-desktop, center);
   }
 }
 
-@media (min-width: 1440px) {
-.ff-hero-slide-stage {
-    height: clamp(400px, 28vw, 440px);
-}
-}
 
 .carousel-category {
   opacity: 0;
@@ -136,23 +127,23 @@
 }
 
 .carousel-slide {
-  opacity: 0.88;
-  transform: translateX(-24px);
-  transition: opacity 420ms ease-in-out, transform 420ms ease-in-out;
+  opacity: 1;
+  transform: none;
+  transition: opacity 420ms ease-in-out;
 }
 
 .carousel-slide[data-direction="next"] {
-  transform: translateX(24px);
+  transform: none;
 }
 
 .carousel-slide[data-direction="prev"] {
-  transform: translateX(-24px);
+  transform: none;
 }
 
 .carousel-slide[data-active="true"] {
   opacity: 1;
-  transform: translateX(0);
-  transition: opacity 560ms ease-out, transform 560ms ease-out;
+  transform: none;
+  transition: opacity 560ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

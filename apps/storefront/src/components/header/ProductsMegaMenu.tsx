@@ -38,11 +38,16 @@ export function ProductsMegaMenu() {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIsOpen(false)
     }
+    const closeOnScroll = () => {
+      setIsOpen(false)
+    }
     document.addEventListener("mousedown", closeOnOutsideClick)
     document.addEventListener("keydown", closeOnEscape)
+    window.addEventListener("scroll", closeOnScroll, { passive: true })
     return () => {
       document.removeEventListener("mousedown", closeOnOutsideClick)
       document.removeEventListener("keydown", closeOnEscape)
+      window.removeEventListener("scroll", closeOnScroll)
     }
   }, [isOpen])
 
@@ -53,10 +58,9 @@ export function ProductsMegaMenu() {
       to="/$countryCode/categories/$handle"
       params={{ countryCode, handle: category.handle }}
       onClick={closeMenu}
-      className="flex min-h-10 items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+      className="flex min-h-9 items-center rounded-md px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
     >
-      <span className="line-clamp-2">{category.name}</span>
-      <ChevronRight className="ml-2 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+      <span className="truncate">{category.name}</span>
     </Link>
   )
 
@@ -81,9 +85,9 @@ export function ProductsMegaMenu() {
         id={menuId}
         role="region"
         aria-label="Categorias de produtos"
-        className={`absolute left-0 top-full w-[min(92vw,900px)] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-white shadow-xl transition-[opacity,transform,visibility] duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)] ${isOpen ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none hidden -translate-y-1 opacity-0"}`}
+        className={`absolute left-0 top-full w-[min(96vw,1000px)] origin-top overflow-hidden rounded-b-lg border border-[var(--color-border)] bg-white shadow-xl transition-[opacity,transform,visibility] duration-[var(--motion-duration-dropdown-open)] ease-[var(--motion-ease-enter)] ${isOpen ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none hidden -translate-y-1 opacity-0"}`}
       >
-        <div className="max-h-[min(70vh,460px)] overflow-y-auto p-5 md:p-6">
+        <div className="p-5 md:p-6">
           <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Catálogo</p>
@@ -109,7 +113,7 @@ export function ProductsMegaMenu() {
           ) : topLevel.length === 0 ? (
             <p className="py-6 text-sm text-[var(--color-text-muted)]">Nenhuma categoria disponível.</p>
           ) : parentCategories.length === 0 ? (
-            <nav aria-label="Categorias de produtos" className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
+            <nav aria-label="Categorias de produtos" className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
               {topLevel.map(renderCategoryLink)}
             </nav>
           ) : (

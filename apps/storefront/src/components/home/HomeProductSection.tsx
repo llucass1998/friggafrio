@@ -44,7 +44,7 @@ export function HomeProductSection({
   hideWhenEmpty = false,
   reviewSummaries,
 }: HomeProductSectionProps) {
-  const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollToStart, scrollToEnd, onKeyDown } = useInfiniteCarousel([], false)
+  const { viewportRef, emblaApi, hasOverflow, canScrollPrev, canScrollNext, scrollPrev, scrollNext, onKeyDown } = useInfiniteCarousel([], false)
 
   // Product shelves mount after the query resolves; re-measure Embla when the
   // real slides replace the skeletons so controls reflect the mounted track.
@@ -66,8 +66,8 @@ export function HomeProductSection({
           hasOverflow={hasOverflow}
           canScrollPrevious={canScrollPrev}
           canScrollNext={canScrollNext}
-          onPrevious={scrollToStart}
-          onNext={scrollToEnd}
+          onPrevious={scrollPrev}
+          onNext={scrollNext}
           showControlsInHeader={false}
           previousLabel={`Ver produtos anteriores em ${title}`}
           nextLabel={`Ver próximos produtos em ${title}`}
@@ -89,22 +89,41 @@ export function HomeProductSection({
             </div>
           </div>
         ) : products.length > 0 ? (
-          <div className="ff-carousel-stage">
-            <CarouselSideControls side="previous" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollToStart} onNext={scrollToEnd} previousLabel={`Ver produtos anteriores em ${title}`} nextLabel={`Ver próximos produtos em ${title}`} />
+          <div className="ff-carousel-stage ff-product-carousel-stage">
+            <CarouselSideControls
+              side="previous"
+              hasOverflow={hasOverflow}
+              canScrollPrevious={canScrollPrev}
+              canScrollNext={canScrollNext}
+              onPrevious={scrollPrev}
+              onNext={scrollNext}
+              previousLabel={`Ver produtos anteriores em ${title}`}
+              nextLabel={`Ver próximos produtos em ${title}`}
+            />
             <div ref={viewportRef} className="ff-carousel-viewport" data-carousel-viewport="true" role="region" tabIndex={0} aria-label={`${title}: produtos`} onKeyDown={onKeyDown}>
-            <div className="ff-carousel-track" data-carousel-track="true">
-              {products.map((product) => (
-                <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
-                  <PublicProductCard
-                    product={product}
-                    compact
-                    reviewSummary={reviewSummaries?.[product.id]}
-                  />
-                </div>
-              ))}
+              <div className={`ff-carousel-track${products.length <= 2 ? " ff-carousel-track--short" : ""}`} data-carousel-track="true">
+                {products.map((product) => (
+                  <div key={product.id} className="ff-carousel-slide ff-product-slide flex min-w-0" data-carousel-slide="true">
+                    <PublicProductCard
+                      product={product}
+                      compact
+                      showInstallment={true}
+                      reviewSummary={reviewSummaries?.[product.id]}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            </div>
-            <CarouselSideControls side="next" hasOverflow={hasOverflow} canScrollPrevious={canScrollPrev} canScrollNext={canScrollNext} onPrevious={scrollToStart} onNext={scrollToEnd} previousLabel={`Ver produtos anteriores em ${title}`} nextLabel={`Ver próximos produtos em ${title}`} />
+            <CarouselSideControls
+              side="next"
+              hasOverflow={hasOverflow}
+              canScrollPrevious={canScrollPrev}
+              canScrollNext={canScrollNext}
+              onPrevious={scrollPrev}
+              onNext={scrollNext}
+              previousLabel={`Ver produtos anteriores em ${title}`}
+              nextLabel={`Ver próximos produtos em ${title}`}
+            />
           </div>
         ) : (
           <p className="py-8 text-sm text-[var(--color-text-muted)]">{emptyMessage}</p>

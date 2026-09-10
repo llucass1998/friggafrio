@@ -34,12 +34,20 @@ describe("Resend server adapter", () => {
     delete process.env.RESEND_API_KEY
     delete process.env.RESEND_CONTACTS_API_KEY
     delete process.env.RESEND_NEWSLETTER_SEGMENT_ID
+    delete process.env.RESEND_SEGMENT_ID
     expect(getNewsletterContactsConfigStatus()).toEqual({
       missing: ["RESEND_CONTACTS_API_KEY_OR_RESEND_API_KEY", "RESEND_NEWSLETTER_SEGMENT_ID"],
       credentialVariable: null,
     })
     await expect(syncNewsletterContact({ email: "a@example.com", firstName: "Ana", idempotencyKey: "k" }))
       .resolves.toEqual(expect.objectContaining({ status: "not_configured" }))
+  })
+
+  it("accepts the legacy segment variable during the WSL configuration transition", () => {
+    process.env.RESEND_API_KEY = "re_test_only"
+    process.env.RESEND_SEGMENT_ID = "seg_legacy"
+    delete process.env.RESEND_NEWSLETTER_SEGMENT_ID
+    expect(getNewsletterContactsConfigStatus()).toEqual({ missing: [], credentialVariable: "RESEND_API_KEY" })
   })
 
   it("creates a global contact and adds it to the configured segment", async () => {

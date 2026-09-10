@@ -1,4 +1,4 @@
-const unitTests = ["<rootDir>/src/**/*.unit.spec.ts"];
+const unitTests = ["<rootDir>/src/**/*.unit.spec.[jt]s?(x)"];
 const httpIntegrationTests = [
   "<rootDir>/integration-tests/http/**/*.spec.ts",
 ];

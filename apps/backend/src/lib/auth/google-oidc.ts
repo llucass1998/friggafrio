@@ -25,6 +25,8 @@ export type GoogleOidcSession = {
   nonce: string
   codeVerifier: string
   returnTo: string
+  redirectUri?: string
+  storefrontOrigin?: string
   createdAt: number
 }
 
@@ -43,14 +45,32 @@ const base64Url = (value: Buffer): string => value.toString("base64url")
 const decodeJson = <T>(value: string): T =>
   JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
 export const getGoogleOidcConfig = (
   env: NodeJS.ProcessEnv = process.env,
+  req?: { headers?: Record<string, string | string[] | undefined> },
 ): GoogleOidcConfig | null => {
   const clientId = env.GOOGLE_CLIENT_ID?.trim()
   const clientSecret = env.GOOGLE_CLIENT_SECRET?.trim()
-  const redirectUri = env.GOOGLE_OAUTH_REDIRECT_URI?.trim()
-  const storefrontOrigin = env.STOREFRONT_URL?.trim()
+  let redirectUri = env.GOOGLE_OAUTH_REDIRECT_URI?.trim()
+  let storefrontOrigin = env.STOREFRONT_URL?.trim()
   if (!clientId || !clientSecret || !redirectUri || !storefrontOrigin) return null
+
+  const hostHeader = typeof req?.headers?.host === "string" ? req.headers.host : undefined
+  const forwardedHost = typeof req?.headers?.["x-forwarded-host"] === "string" ? req.headers["x-forwarded-host"] : undefined
+  const effectiveHost = forwardedHost || hostHeader
+  if (effectiveHost) {
+    try {
+      const hostname = new URL(effectiveHost.includes("://") ? effectiveHost : `http://${effectiveHost}`).hostname.replace(/^\[|\]$/g, "")
+      if (LOCAL_HOSTS.has(hostname)) {
+        redirectUri = `http://${hostname}:9000/auth/customer/google/callback`
+        storefrontOrigin = `http://${hostname}:5173`
+      }
+    } catch {
+      // Keep env defaults if host parsing fails
+    }
+  }
 
   try {
     const redirect = new URL(redirectUri)
@@ -78,8 +98,9 @@ export const normalizeGoogleReturnTo = (
   try {
     const candidate = new URL(value, storefrontOrigin)
     const origin = new URL(storefrontOrigin).origin
+    const isLocal = LOCAL_HOSTS.has(candidate.hostname.replace(/^\[|\]$/g, ""))
     if (
-      candidate.origin !== origin ||
+      (candidate.origin !== origin && !isLocal) ||
       candidate.username ||
       candidate.password ||
       candidate.pathname === "/br/account/login"
@@ -90,11 +111,17 @@ export const normalizeGoogleReturnTo = (
   }
 }
 
-export const createGoogleOidcSession = (returnTo: string): GoogleOidcSession => ({
+export const createGoogleOidcSession = (
+  returnTo: string,
+  redirectUri?: string,
+  storefrontOrigin?: string,
+): GoogleOidcSession => ({
   state: base64Url(randomBytes(32)),
   nonce: base64Url(randomBytes(32)),
   codeVerifier: base64Url(randomBytes(48)),
   returnTo,
+  redirectUri,
+  storefrontOrigin,
   createdAt: Date.now(),
 })
 

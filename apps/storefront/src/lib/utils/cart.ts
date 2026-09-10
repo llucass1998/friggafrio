@@ -388,26 +388,29 @@ export const removeLineItemOptimistically = (
   lineId: string,
   fields?: string
 ): HttpTypes.StoreCart | null => {
-  const currentCart = queryClient.getQueryData<HttpTypes.StoreCart | null>(
-    queryKeys.cart.current(fields)
+  queryClient.setQueriesData<HttpTypes.StoreCart | null>(
+    { predicate: queryKeys.cart.predicate },
+    (currentCart) => {
+      if (!currentCart || !currentCart.items) {
+        return currentCart
+      }
+
+      const updatedItems = currentCart.items.filter(item => item.id !== lineId)
+
+      const optimisticCart: OptimisticCart = {
+        ...currentCart,
+        items: updatedItems,
+        item_subtotal: updatedItems.reduce((sum, item) => sum + (item.total || 0), 0),
+        isOptimistic: true,
+      }
+
+      return optimisticCart
+    }
   )
 
-  if (!currentCart) {
-    return null
-  }
-
-  const updatedItems = (currentCart.items || []).filter(item => item.id !== lineId)
-
-  const optimisticCart: OptimisticCart = {
-    ...currentCart,
-    items: updatedItems,
-    item_subtotal: updatedItems.reduce((sum, item) => sum + (item.total || 0), 0),
-    isOptimistic: true,
-  }
-
-  queryClient.setQueryData(queryKeys.cart.current(fields), optimisticCart)
-
-  return optimisticCart
+  return queryClient.getQueryData<HttpTypes.StoreCart | null>(
+    queryKeys.cart.current(fields)
+  ) ?? null
 }
 
 export const rollbackOptimisticCart = (

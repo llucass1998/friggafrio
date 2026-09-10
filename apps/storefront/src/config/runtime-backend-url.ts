@@ -38,13 +38,15 @@ export function resolveMedusaBackendUrl(
 
   if (hostname && LOCALHOST_NAMES.has(hostname)) {
     if (normalizedUrl) {
-      const configuredHost = new URL(normalizedUrl).hostname.toLowerCase().replace(/^\[|\]$/g, "")
+      const parsed = new URL(normalizedUrl)
+      const configuredHost = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "")
       if (LOCALHOST_NAMES.has(configuredHost)) {
-        return normalizedUrl
+        const port = parsed.port ? `:${parsed.port}` : ""
+        return `${parsed.protocol}//${hostname}${port}`
       }
     }
 
-    return hostname === "127.0.0.1" ? "http://127.0.0.1:9000" : "http://localhost:9000"
+    return `http://${hostname}:9000`
   }
 
   if (!normalizedUrl) {

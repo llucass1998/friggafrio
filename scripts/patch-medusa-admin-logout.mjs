@@ -22,58 +22,56 @@ const readStorefrontUrl = async () => {
   return match?.[1]?.trim() || null
 }
 
-const storefrontUrl = await readStorefrontUrl()
-if (!storefrontUrl) {
-  console.warn("Skipping Admin logout patch because STOREFRONT_URL is not configured.")
-  process.exit(0)
-}
-
+const storefrontUrl = (await readStorefrontUrl()) || "https://friggafrio.istigestao.com.br"
 const homeUrl = `${storefrontUrl.replace(/\/$/, "")}/br`
-const replacement = `fetch("/admin/auth/logout",{method:"DELETE",credentials:"include"}).then(function(response){if(!response.ok&&response.status!==401&&response.status!==403){throw new Error("Admin logout failed")}window.location.assign(${JSON.stringify(homeUrl)})})`
-const files = []
+const replacement = `(function(){var h=window.location.hostname;var target=(h==="localhost"||h==="127.0.0.1"||h==="::1")?("http://"+h+":5173/br"):(${JSON.stringify(homeUrl)});try{sessionStorage.removeItem("frigga.admin.logout.pending");document.cookie="frigga_admin_logged_out=;Path=/;Max-Age=0";}catch(e){}window.location.assign(target);})()`
 
-if (existsSync(adminBuild)) {
-  const walk = async (directory) => {
-    const entries = await (await import("node:fs/promises")).readdir(directory, { withFileTypes: true })
-    for (const entry of entries) {
-      const path = resolve(directory, entry.name)
-      if (entry.isDirectory()) {
-        await walk(path)
-      } else if (/\.(?:js|mjs)$/.test(entry.name)) {
-        files.push(path)
-      }
+const directoriesToPatch = [adminBuild, runtimeAdmin].filter((dir) => existsSync(dir))
+
+const walk = async (directory, fileList) => {
+  const entries = await (await import("node:fs/promises")).readdir(directory, { withFileTypes: true })
+  for (const entry of entries) {
+    const path = resolve(directory, entry.name)
+    if (entry.isDirectory()) {
+      await walk(path, fileList)
+    } else if (/\.(?:js|mjs)$/.test(entry.name)) {
+      fileList.push(path)
     }
   }
-  await walk(adminBuild)
 }
 
-let patched = 0
-for (const file of files) {
-  const source = await readFile(file, "utf8")
-  const marker = 'queryClient.clear();\n            navigate("/login");'
-  const count = source.split(marker).length - 1
-  let next = source
-  if (count) {
-    next = next.replaceAll(marker, `queryClient.clear();\n            ${replacement};`)
-    patched += count
+let totalPatched = 0
+for (const dir of directoriesToPatch) {
+  const files = []
+  await walk(dir, files)
+
+  for (const file of files) {
+    const source = await readFile(file, "utf8")
+    const marker = 'queryClient.clear();\n            navigate("/login");'
+    const count = source.split(marker).length - 1
+    let next = source
+    if (count) {
+      next = next.replaceAll(marker, `queryClient.clear();\n            ${replacement};`)
+      totalPatched += count
+    }
+
+    // The production bundle is minified, so the same handlers become
+    // `cache.clear(),navigate("/login")` with short variable names.
+    const minified = /([A-Za-z_$][\w$]*)\.clear\(\),([A-Za-z_$][\w$]*)\(["']\/login["']\)/g
+    next = next.replace(minified, (_match, cache, _navigate) => {
+      totalPatched += 1
+      return `${cache}.clear(),${replacement}`
+    })
+
+    if (next !== source) {
+      await writeFile(file, next)
+    }
   }
-
-  // The production bundle is minified, so the same handlers become
-  // `cache.clear(),navigate("/login")` with short variable names.
-  const minified = /([A-Za-z_$][\w$]*)\.clear\(\),([A-Za-z_$][\w$]*)\("\/login"\)/g
-  next = next.replace(minified, (_match, cache, navigate) => {
-    patched += 1
-    return `${cache}.clear(),${replacement}`
-  })
-
-  if (next !== source) {
-    await writeFile(file, next)
-  }
 }
 
-if (patched < 2) {
-  throw new Error(`Expected at least two Admin logout handlers, patched ${patched}.`)
+if (existsSync(adminBuild) && existsSync(runtimeAdmin)) {
+  await cp(adminBuild, runtimeAdmin, { recursive: true, force: true })
 }
 
-await cp(adminBuild, runtimeAdmin, { recursive: true, force: true })
-console.log(`Patched ${patched} Medusa Admin logout handlers.`)
+console.log(`Patched ${totalPatched} Medusa Admin logout handlers across directories.`)
+

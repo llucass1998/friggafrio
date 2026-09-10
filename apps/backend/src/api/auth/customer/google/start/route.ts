@@ -13,7 +13,7 @@ type SessionWithSave = {
 }
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void> => {
-  const config = getGoogleOidcConfig()
+  const config = getGoogleOidcConfig(process.env, req)
   if (!config) {
     res.status(503).json({
       code: "GOOGLE_OIDC_EXTERNAL_CONFIGURATION_REQUIRED",
@@ -24,6 +24,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse): Promise<void
 
   const session = createGoogleOidcSession(
     normalizeGoogleReturnTo(req.query?.return_to, config.storefrontOrigin),
+    config.redirectUri,
+    config.storefrontOrigin,
   )
   const requestSession = req.session as unknown as SessionWithSave
   requestSession.google_oidc = session

@@ -39,7 +39,7 @@ export const getResendConfigStatus = (): ResendConfigStatus => {
 
 export const getNewsletterContactsConfigStatus = (): { missing: string[]; credentialVariable: string | null } => {
   const credential = newsletterContactsCredential()
-  const segmentId = required("RESEND_NEWSLETTER_SEGMENT_ID")
+  const segmentId = firstConfigured("RESEND_NEWSLETTER_SEGMENT_ID", "RESEND_SEGMENT_ID")
   return {
     missing: [
       ...(credential.value ? [] : ["RESEND_CONTACTS_API_KEY_OR_RESEND_API_KEY"]),
@@ -191,7 +191,7 @@ const hasConfiguredSegment = async (contactId: string, segmentId: string, idempo
 export const syncNewsletterContact = async (input: { email: string; firstName: string; idempotencyKey: string }): Promise<NewsletterProviderResult> => {
   const config = getNewsletterContactsConfigStatus()
   if (config.missing.length > 0) return { status: "not_configured", missing: config.missing }
-  const segmentId = required("RESEND_NEWSLETTER_SEGMENT_ID")
+  const segmentId = firstConfigured("RESEND_NEWSLETTER_SEGMENT_ID", "RESEND_SEGMENT_ID")
 
   let result = await newsletterContactsRequest(
     "/contacts",

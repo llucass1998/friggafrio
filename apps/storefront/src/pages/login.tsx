@@ -48,13 +48,23 @@ export default function LoginPage() {
     return () => controller.abort()
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
+    const form = e.currentTarget
+    const formEmail = (form.elements.namedItem("email") as HTMLInputElement)?.value?.trim() || email.trim()
+    const formPassword = (form.elements.namedItem("password") as HTMLInputElement)?.value || password
+
+    if (!formEmail || !formPassword) {
+      setError("Por favor, preencha o e-mail e a senha.")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const actor = await login(email, password)
+      const actor = await login(formEmail, formPassword)
       if (actor === "admin") {
         // Local development shares the API origin; production keeps the Admin
         // origin explicit so an API-only origin cannot become a bad redirect.
@@ -100,18 +110,22 @@ export default function LoginPage() {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate={false}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text)] mb-2">
                 E-mail
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 className="w-full px-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-input)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors text-[var(--color-text)]"
                 placeholder="você@empresa.com"
               />
@@ -123,16 +137,21 @@ export default function LoginPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 className="w-full px-4 py-3 pr-12 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-input)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors text-[var(--color-text)]"
                 placeholder="Digite sua senha"
               />
               <button
                 type="button"
+                tabIndex={-1}
                 onClick={() => setShowPassword((visible) => !visible)}
                 className="absolute bottom-3 right-3 rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
@@ -153,6 +172,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              id="login-submit-button"
               disabled={isLoading}
               className="w-full py-3 px-4 bg-[var(--color-primary)] text-white font-bold rounded-[var(--radius-button)] hover:bg-[var(--color-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
 import { FloatingActions } from "@/components/FloatingActions"
@@ -22,6 +23,13 @@ interface PublicLayoutProps {
 export function PublicLayout({ children }: PublicLayoutProps) {
   const location = useLocation()
   const pageKey = location.href
+
+  useEffect(() => {
+    // Ensure document.body scroll is never locked across route changes
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = ""
+    }
+  }, [location.pathname])
 
   return (
     <AccessibilityProvider>

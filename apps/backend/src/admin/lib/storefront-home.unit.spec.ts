@@ -7,6 +7,15 @@ describe("Admin Storefront home redirect", () => {
     );
   });
 
+  it("redirects to local port 5173 when on local development hostnames", () => {
+    expect(getStorefrontHomeUrl("https://store.example", "localhost")).toBe(
+      "http://localhost:5173/br",
+    );
+    expect(getStorefrontHomeUrl("https://store.example", "127.0.0.1")).toBe(
+      "http://127.0.0.1:5173/br",
+    );
+  });
+
   it.each([
     "javascript:alert(1)",
     "//store.example",

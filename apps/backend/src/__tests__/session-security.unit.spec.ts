@@ -121,4 +121,91 @@ describe("shared auth origin allowlist", () => {
       ),
     ).toEqual({ allowed: true });
   });
+
+  it("trusts local development origins only when the request targets a loopback host", () => {
+    process.env.STORE_CORS = "https://friggafrio.istigestao.com.br";
+    process.env.ADMIN_CORS = "https://friggafrio.istigestao.com.br";
+    process.env.AUTH_CORS = "https://friggafrio.istigestao.com.br";
+
+    const localReq = {
+      headers: { host: "localhost:9000" },
+    } as any;
+
+    const prodReq = {
+      headers: { host: "friggafrio.istigestao.com.br" },
+    } as any;
+
+    const spoofedReq = {
+      headers: {
+        host: "localhost:9000",
+        "x-forwarded-host": "friggafrio.istigestao.com.br",
+      },
+    } as any;
+
+    const localAuthOrigins = getTrustedAuthOrigins(localReq);
+    expect(localAuthOrigins.has("http://localhost:5173")).toBe(true);
+    expect(localAuthOrigins.has("http://127.0.0.1:5173")).toBe(true);
+    expect(localAuthOrigins.has("https://friggafrio.istigestao.com.br")).toBe(true);
+
+    const prodAuthOrigins = getTrustedAuthOrigins(prodReq);
+    expect(prodAuthOrigins.has("http://localhost:5173")).toBe(false);
+    expect(prodAuthOrigins.has("http://127.0.0.1:5173")).toBe(false);
+    expect(prodAuthOrigins.has("https://friggafrio.istigestao.com.br")).toBe(true);
+
+    const spoofedAuthOrigins = getTrustedAuthOrigins(spoofedReq);
+    expect(spoofedAuthOrigins.has("http://localhost:5173")).toBe(false);
+
+    // Validate request behavior
+    expect(
+      validateSessionRequestOrigin(
+        {
+          method: "POST",
+          originHeader: "http://localhost:5173",
+        },
+        localAuthOrigins,
+        "frigga.sid",
+        true,
+      ),
+    ).toEqual({ allowed: true });
+
+    expect(
+      validateSessionRequestOrigin(
+        {
+          method: "POST",
+          originHeader: "http://localhost:5173",
+          secFetchSiteHeader: "cross-site",
+        },
+        localAuthOrigins,
+        "frigga.sid",
+        true,
+        true, // isLocalDevelopment
+      ),
+    ).toEqual({ allowed: true });
+
+    expect(
+      validateSessionRequestOrigin(
+        {
+          method: "POST",
+          originHeader: "http://localhost:5173",
+          secFetchSiteHeader: "cross-site",
+        },
+        localAuthOrigins,
+        "frigga.sid",
+        true,
+        false, // production mode must reject cross-site
+      ),
+    ).toEqual({ allowed: false, reason: "cross-site" });
+
+    expect(
+      validateSessionRequestOrigin(
+        {
+          method: "POST",
+          originHeader: "http://localhost:5173",
+        },
+        prodAuthOrigins,
+        "frigga.sid",
+        true,
+      ),
+    ).toEqual({ allowed: false, reason: "untrusted-origin" });
+  });
 });

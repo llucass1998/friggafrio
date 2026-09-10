@@ -8,30 +8,29 @@ import "@/components/home/product-showcase-carousel/carousel.css"
 
 export function ProductShowcaseCarousel() {
   const autoplayRef = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true, stopOnFocusIn: true, stopOnLastSnap: true }),
+    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true, stopOnFocusIn: true, stopOnLastSnap: false }),
   )
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: false, align: "center", skipSnaps: false },
+    { loop: true, align: "start", skipSnaps: false },
     [autoplayRef.current],
   )
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [direction, setDirection] = useState<"next" | "prev">("next")
   const [isPlaying, setIsPlaying] = useState(true)
-  const lastIndex = showcaseSlides.length - 1
 
   const scrollPrev = useCallback(() => {
-    if (!emblaApi || emblaApi.selectedScrollSnap() === 0) return
+    if (!emblaApi) return
     setDirection("prev")
     emblaApi.scrollPrev()
     emblaApi.plugins().autoplay?.stop()
   }, [emblaApi])
 
   const scrollNext = useCallback(() => {
-    if (!emblaApi || emblaApi.selectedScrollSnap() >= lastIndex) return
+    if (!emblaApi) return
     setDirection("next")
     emblaApi.scrollNext()
     emblaApi.plugins().autoplay?.stop()
-  }, [emblaApi, lastIndex])
+  }, [emblaApi])
 
   const scrollTo = useCallback(
     (index: number) => {
@@ -45,10 +44,8 @@ export function ProductShowcaseCarousel() {
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
-    const index = emblaApi.selectedScrollSnap()
-    setSelectedIndex(index)
-    if (index >= lastIndex) emblaApi.plugins().autoplay?.stop()
-  }, [emblaApi, lastIndex])
+    setSelectedIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
 
   useEffect(() => {
     if (!emblaApi) return
@@ -111,7 +108,7 @@ export function ProductShowcaseCarousel() {
       aria-label="Destaques de Equipamentos FriggaFrio"
     >
       <div className="ff-hero-controls-stage relative">
-        <div className="overflow-hidden" ref={emblaRef}>
+        <div className="overflow-hidden w-full" ref={emblaRef}>
           <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
             {showcaseSlides.map((slide, index) => (
               <ProductShowcaseSlide
@@ -125,29 +122,25 @@ export function ProductShowcaseCarousel() {
         </div>
 
         <button
-        type="button"
-        onClick={scrollPrev}
-        disabled={selectedIndex === 0}
-        className="ff-hero-control absolute left-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:left-4 sm:h-11 sm:w-11 md:left-6"
-        aria-label="Ver slide anterior"
-        aria-disabled={selectedIndex === 0}
-      >
-        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          type="button"
+          onClick={scrollPrev}
+          className="ff-hero-control absolute left-1 sm:left-2 top-1/2 z-40 flex h-8 w-8 sm:h-9 sm:w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/85 text-[var(--color-navy)] shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95"
+          aria-label="Ver slide anterior"
+        >
+          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
         </button>
 
         <button
-        type="button"
-        onClick={scrollNext}
-        disabled={selectedIndex >= lastIndex}
-        className="ff-hero-control absolute right-2 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md border border-white/70 bg-white/75 text-[var(--color-navy)] shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:right-4 sm:h-11 sm:w-11 md:right-6"
-        aria-label="Ver próximo slide"
-        aria-disabled={selectedIndex >= lastIndex}
-      >
-        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          type="button"
+          onClick={scrollNext}
+          className="ff-hero-control absolute right-1 sm:right-2 top-1/2 z-40 flex h-8 w-8 sm:h-9 sm:w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/85 text-[var(--color-navy)] shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95"
+          aria-label="Ver próximo slide"
+        >
+          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
         </button>
       </div>
 
-      <div className="hidden items-center justify-center bg-white py-3 sm:flex">
+      <div className="flex items-center justify-center bg-transparent py-2.5 sm:py-3">
         <div className="flex gap-2">
           {showcaseSlides.map((_, index) => {
             const active = index === selectedIndex

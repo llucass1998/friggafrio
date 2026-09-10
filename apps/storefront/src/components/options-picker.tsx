@@ -20,6 +20,7 @@ type ProductOption = {
 type OptionsPickerProps = {
   selectedValueIds: string[]
   onChange: (next: string[]) => void
+  optionsOverride?: ProductOption[]
   className?: string
 }
 
@@ -40,12 +41,16 @@ const fetchGlobalOptions = async (): Promise<ProductOption[]> => {
 export function OptionsPicker({
   selectedValueIds,
   onChange,
+  optionsOverride,
   className,
 }: OptionsPickerProps) {
-  const { data: options = [], isLoading } = useQuery({
+  const { data: fetchedOptions = [], isLoading: optionsLoading } = useQuery({
     queryKey: ["global-product-options"],
     queryFn: fetchGlobalOptions,
+    enabled: !optionsOverride,
   })
+  const options = optionsOverride ?? fetchedOptions
+  const isLoading = !optionsOverride && optionsLoading
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 

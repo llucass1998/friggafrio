@@ -2,6 +2,8 @@ import { sdk } from "@/lib/medusa"
 import { cache } from "react"
 import type { HttpTypes } from "@medusajs/types"
 import { PUBLIC_HOME_PRODUCT_FIELDS } from "@/lib/data/product-fields"
+import type { CatalogFilters } from "@/lib/utils/catalog-filters"
+import { buildCatalogSearchQuery } from "@/lib/utils/catalog-query"
 // import { getAuthHeaders } from "./cookies" // Unused and missing
 
 export const listProducts = cache(
@@ -49,6 +51,79 @@ export const listProducts = cache(
       })
   }
 )
+
+/**
+ * Fetches catalog facets from the backend without downloading products. The
+ * endpoint intentionally returns only values that are present in the current
+ * region/catalog snapshot, so controls never advertise unsupported filters.
+ */
+export const getCatalogFacets = cache(async ({
+  regionId,
+  filters,
+}: {
+  regionId: string
+  filters?: Pick<CatalogFilters, "category" | "q" | "brand" | "availability" | "price_min" | "price_max" | "promotion" | "option_value_id">
+}) => {
+  const query: Record<string, string> = {}
+  const normalizedRegionId = regionId.trim()
+  if (normalizedRegionId) query.region_id = normalizedRegionId
+
+  if (filters) {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value === undefined || value === false || value === null) continue
+      if (Array.isArray(value)) {
+        const values = value.map((item) => String(item).trim()).filter(Boolean)
+        if (values.length > 0) query[key] = values.join(",")
+        continue
+      }
+      const normalized = String(value).trim()
+      if (normalized) query[key] = normalized
+    }
+  }
+
+  try {
+    return await sdk.client.fetch<{
+      brands: Array<{ id: string; name: string; count?: number }>
+      price: { min?: number; max?: number }
+      promotion_available?: boolean
+      options: Array<{ id: string; title: string; values: Array<{ id: string; value: string; count?: number }> }>
+    }>("/store/catalog/facets", { method: "GET", query })
+  } catch {
+    return {
+      brands: [] as Array<{ id: string; name: string; count?: number }>,
+      price: {} as { min?: number; max?: number },
+      promotion_available: false,
+      options: [] as Array<{ id: string; title: string; values: Array<{ id: string; value: string; count?: number }> }>,
+    }
+  }
+})
+
+export type CatalogSearchResponse = { product_ids: string[]; count: number; unavailable?: boolean; code?: string; limit?: number }
+
+/** Applies catalog-only filters before pagination in the backend adapter. */
+export const searchCatalog = cache(async ({
+  regionId,
+  filters,
+  limit = 24,
+  offset = 0,
+}: {
+  regionId: string
+  filters?: Record<string, unknown>
+  limit?: number
+  offset?: number
+}): Promise<CatalogSearchResponse> => {
+  const query = buildCatalogSearchQuery({ regionId, filters, limit, offset })
+  try {
+    return await sdk.client.fetch<CatalogSearchResponse>("/store/catalog/search", { method: "GET", query })
+  } catch (error) {
+    return {
+      product_ids: [],
+      count: 0,
+      unavailable: true,
+      code: error instanceof Error ? error.message : "CATALOG_QUERY_UNAVAILABLE",
+    }
+  }
+})
 
 export const retrieveProduct = cache(
   async (params: any, additionalArgs?: any) => {

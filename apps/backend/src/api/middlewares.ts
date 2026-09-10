@@ -35,12 +35,54 @@ import { adminQuotesMiddlewares } from "./admin/quotes/middlewares";
 import { productReviewAdminMiddlewares } from "./admin/product-reviews/middlewares";
 import { requireOwnedCheckoutCart } from "./middlewares/require-owned-checkout-cart";
 import { allowLocalDevelopmentCors } from "./middlewares/local-development-cors";
+import { getStorefrontHomeUrl } from "../admin/lib/storefront-home";
+import type { MedusaNextFunction, MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+const attachAdminLogoutCookie = (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction,
+): void => {
+  if (req.method === "DELETE") {
+    res.cookie("frigga_admin_logged_out", "1", {
+      path: "/",
+      maxAge: 30000,
+      httpOnly: false,
+      sameSite: "lax",
+    });
+  }
+  next();
+};
+
+const redirectLoggedOutAdmin = (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction,
+): void => {
+  const isLoginPath = req.path === "/app/login" || req.path === "/app/login/" || req.path === "/login";
+  const cookies = (req.headers as Record<string, string | undefined>)?.cookie || "";
+  const hasCookie = /frigga_admin_logged_out=1/.test(cookies);
+  if (isLoginPath && hasCookie) {
+    res.clearCookie("frigga_admin_logged_out", { path: "/" });
+    const host = typeof req.headers?.host === "string" ? req.headers.host.split(":")[0] : "localhost";
+    const homeUrl = getStorefrontHomeUrl(process.env.STOREFRONT_URL, host);
+    if (homeUrl) {
+      res.redirect(302, homeUrl);
+      return;
+    }
+  }
+  next();
+};
 
 export default defineMiddlewares({
   routes: [
     {
       matcher: /.*/,
       middlewares: [secureHeaders],
+    },
+    {
+      matcher: /.*/,
+      middlewares: [redirectLoggedOutAdmin],
     },
     {
       matcher: /.*/,
@@ -64,7 +106,7 @@ export default defineMiddlewares({
     {
       matcher: /^\/auth\/(?:session|token\/refresh)$/,
       methods: ["POST", "DELETE"],
-      middlewares: [requireTrustedAuthOrigin, authRateLimit],
+      middlewares: [requireTrustedAuthOrigin, authRateLimit, attachAdminLogoutCookie],
     },
     {
       matcher: "/auth/unified/emailpass",

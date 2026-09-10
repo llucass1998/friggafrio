@@ -46,16 +46,73 @@ const configuredOrigins = (
   return new Set(origins);
 };
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
+const LOCAL_STORE_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://[::1]:5173",
+];
+
+const LOCAL_AUTH_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://[::1]:5173",
+  "http://localhost:9000",
+  "http://127.0.0.1:9000",
+  "http://[::1]:9000",
+];
+
+const getHostname = (value: string | undefined): string | null => {
+  if (!value) return null;
+
+  try {
+    return new URL(value.includes("://") ? value : `http://${value}`).hostname.replace(/^\[|\]$/g, "");
+  } catch {
+    return null;
+  }
+};
+
+export const isLocalDevelopmentRequest = (req?: MedusaRequest): boolean => {
+  if (!req) return false;
+  const host = getHostname(
+    typeof req.headers?.host === "string" ? req.headers.host : undefined,
+  );
+  const forwardedHost = getHostname(
+    typeof req.headers?.["x-forwarded-host"] === "string"
+      ? req.headers["x-forwarded-host"]
+      : undefined,
+  );
+
+  if (!host || !LOCAL_HOSTS.has(host)) {
+    return false;
+  }
+
+  if (forwardedHost && !LOCAL_HOSTS.has(forwardedHost)) {
+    return false;
+  }
+
+  return true;
+};
+
 // Customer store mutations must never trust the Admin application origin.
-export const getTrustedStoreOrigins = (): ReadonlySet<string> =>
-  configuredOrigins([process.env.STORE_CORS]);
+export const getTrustedStoreOrigins = (
+  req?: MedusaRequest,
+): ReadonlySet<string> =>
+  configuredOrigins([
+    process.env.STORE_CORS,
+    ...(isLocalDevelopmentRequest(req) ? LOCAL_STORE_ORIGINS : []),
+  ]);
 
 // Medusa's generic /auth session endpoints are shared by customer and Admin.
-export const getTrustedAuthOrigins = (): ReadonlySet<string> =>
+export const getTrustedAuthOrigins = (
+  req?: MedusaRequest,
+): ReadonlySet<string> =>
   configuredOrigins([
     process.env.STORE_CORS,
     process.env.ADMIN_CORS,
     process.env.AUTH_CORS,
+    ...(isLocalDevelopmentRequest(req) ? LOCAL_AUTH_ORIGINS : []),
   ]);
 
 const hasSessionCookie = (
@@ -92,6 +149,7 @@ export const validateSessionRequestOrigin = (
   trustedOrigins: ReadonlySet<string>,
   sessionCookieName = DEFAULT_SESSION_COOKIE_NAME,
   requireOriginWithoutSession = false,
+  isLocalDevelopment = false,
 ): SessionOriginValidationResult => {
   if (SAFE_METHODS.has(input.method.toUpperCase())) {
     return { allowed: true };
@@ -104,7 +162,7 @@ export const validateSessionRequestOrigin = (
     return { allowed: true };
   }
 
-  if (input.secFetchSiteHeader?.toLowerCase() === "cross-site") {
+  if (!isLocalDevelopment && input.secFetchSiteHeader?.toLowerCase() === "cross-site") {
     return { allowed: false, reason: "cross-site" };
   }
 
@@ -143,6 +201,7 @@ const validateRequest = (
     trustedOrigins,
     getSessionCookieName(),
     requireOriginWithoutSession,
+    isLocalDevelopmentRequest(req),
   );
 
 const rejectUntrustedRequest = (
@@ -161,7 +220,7 @@ export const protectSessionMutation = (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ): void => {
-  const result = validateRequest(req, false, getTrustedStoreOrigins());
+  const result = validateRequest(req, false, getTrustedStoreOrigins(req));
   if (!result.allowed) {
     rejectUntrustedRequest(res, result);
     return;
@@ -175,7 +234,7 @@ export const requireTrustedAuthOrigin = (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ): void => {
-  const result = validateRequest(req, true, getTrustedAuthOrigins());
+  const result = validateRequest(req, true, getTrustedAuthOrigins(req));
   if (!result.allowed) {
     rejectUntrustedRequest(res, result);
     return;
@@ -189,7 +248,7 @@ export const requireTrustedCustomerOrigin = (
   res: MedusaResponse,
   next: MedusaNextFunction,
 ): void => {
-  const result = validateRequest(req, true, getTrustedStoreOrigins());
+  const result = validateRequest(req, true, getTrustedStoreOrigins(req));
   if (!result.allowed) {
     rejectUntrustedRequest(res, result);
     return;

@@ -41,9 +41,6 @@ export function NewsletterSignup() {
         locale: "pt-BR",
         website,
       })
-      setName("")
-      setEmail("")
-      setConsent(false)
       setState("confirmation_pending")
     } catch {
       setState("server_error")
@@ -77,7 +74,7 @@ export function NewsletterSignup() {
               <span>Quero receber por e-mail novidades, lançamentos e promoções da FriggaFrio. Posso cancelar a inscrição a qualquer momento. Consulte a <a href="/br/privacidade" className="font-semibold text-[var(--color-primary)] underline underline-offset-2">Política de Privacidade</a>.</span>
             </label>
             {message && <p id="newsletter-feedback" role={state === "server_error" || state === "validation_error" ? "alert" : "status"} aria-live="polite" className={`mt-5 flex items-center gap-2 rounded-xl px-3 py-3 text-sm ${state === "server_error" || state === "validation_error" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}><CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />{message}</p>}
-            <button type="submit" disabled={!consent || state === "loading"} aria-describedby={message ? "newsletter-feedback" : undefined} className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 font-bold text-white transition hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">{state === "loading" ? "Enviando..." : "Quero receber novidades"}<Send className="h-4 w-4" aria-hidden="true" /></button>
+            <button type="submit" disabled={!consent || state === "loading" || state === "confirmation_pending"} aria-describedby={message ? "newsletter-feedback" : undefined} className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 font-bold text-white transition hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">{state === "loading" ? "Enviando..." : state === "confirmation_pending" ? "Confirmação enviada" : "Quero receber novidades"}<Send className="h-4 w-4" aria-hidden="true" /></button>
           </form>
         </div>
       </div>

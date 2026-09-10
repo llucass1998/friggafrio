@@ -251,5 +251,6 @@ export function useFavorites() {
     favoriteCount: ids.length,
     isFavorite,
     toggleFavorite,
+    isAuthenticated: authenticated,
   }
 }

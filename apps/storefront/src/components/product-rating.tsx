@@ -17,7 +17,7 @@ export function ProductRating({ productId, summary }: { productId: string; summa
   const total = summary?.total ?? data?.summary.total ?? 0
   const average = summary?.average ?? data?.summary.average
 
-  if (total === 0) return <span className="text-xs text-[var(--color-text-muted)]" aria-label="Este produto ainda não possui avaliações">Sem avaliações</span>
+  if (total === 0) return null
   const rounded = Math.max(0, Math.min(5, Math.round(average || 0)))
   return (
     <span className="inline-flex items-center gap-1 text-xs" aria-label={`${average?.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} de 5 estrelas, ${total} avaliações`}>

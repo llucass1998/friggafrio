@@ -15,17 +15,22 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const normalizedValue = value.trim()
+  const [debouncedValue, setDebouncedValue] = useState("")
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(normalizedValue), 300)
+    return () => window.clearTimeout(timer)
+  }, [normalizedValue])
   const suggestionsQuery = useQuery({
-    queryKey: ["header-search-suggestions", normalizedValue],
+    queryKey: ["header-search-suggestions", debouncedValue],
     queryFn: async () => {
       const response = await sdk.store.product.list({
-        q: normalizedValue,
+        q: debouncedValue,
         limit: 6,
-        fields: "id,title,handle,thumbnail",
+        fields: "id,title,handle,thumbnail,variants.sku,*collection",
       })
       return response.products || []
     },
-    enabled: normalizedValue.length >= 2 && isFocused,
+    enabled: debouncedValue.length >= 2 && isFocused,
     staleTime: 30_000,
     gcTime: 5 * 60_000,
     retry: 1,
@@ -113,21 +118,26 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
         >
           {suggestionsQuery.isPending ? (
             <p className="px-4 py-3 text-sm text-[var(--color-text-muted)]" role="status">Buscando produtos...</p>
+          ) : suggestionsQuery.isError ? (
+            <p className="px-4 py-3 text-sm text-[var(--color-text-muted)]" role="status">Não foi possível carregar as sugestões. Tente buscar novamente.</p>
           ) : suggestions.length > 0 ? (
-            suggestions.map((product, index) => (
-              <button
-                key={product.id}
-                id={`${listboxId}-${index}`}
-                type="button"
-                role="option"
-                aria-selected={index === activeIndex}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => submitSuggestion(product.handle)}
-                className={`block w-full px-4 py-3 text-left text-sm text-[var(--color-navy)] ${index === activeIndex ? "bg-[var(--color-surface-soft)]" : "hover:bg-[var(--color-surface-soft)]"}`}
-              >
-                {product.title}
-              </button>
-            ))
+            <>
+              <p className="border-b border-[var(--color-border)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Produtos</p>
+              {suggestions.map((product, index) => (
+                <button
+                  key={product.id}
+                  id={`${listboxId}-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => submitSuggestion(product.handle)}
+                  className={`block w-full px-4 py-3 text-left text-sm text-[var(--color-navy)] ${index === activeIndex ? "bg-[var(--color-surface-soft)]" : "hover:bg-[var(--color-surface-soft)]"}`}
+                >
+                  {product.title}
+                </button>
+              ))}
+            </>
           ) : (
             <p className="px-4 py-3 text-sm text-[var(--color-text-muted)]">Nenhum produto encontrado.</p>
           )}

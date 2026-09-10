@@ -13,7 +13,7 @@
     "medusa"
   ],
   "scripts": {
-    "build": "medusa build",
+    "build": "medusa build && node ../../scripts/patch-medusa-admin-logout.mjs",
     "db:migrate:safe": "medusa db:migrate --all-or-nothing --execute-safe-links --concurrency 1",
     "preseed": "node ../../scripts/worktree-guard.mjs",
     "seed": "medusa exec ./src/scripts/seed.ts",

@@ -85,6 +85,7 @@ test("mobile navigation exposes an accessible open/close flow", () => {
 test("mobile navigation has canonical links and no duplicate action group", () => {
   assert.match(mobileDrawerSource, /Categorias/)
   assert.match(mobileDrawerSource, /Ver todos os produtos/)
+  assert.match(mobileDrawerSource, /border-\[var\(--color-primary\)\]\/20 bg-\[var\(--color-surface-soft\)\]/)
   assert.match(mobileDrawerSource, /to=\{[^\n]*store/)
   assert.match(mobileDrawerSource, /to="\/nossa-loja"/)
   assert.match(mobileDrawerSource, /to="\/ajuda"/)
@@ -105,6 +106,8 @@ test("mobile categories are grouped, collapsible, and keep navigation accessible
   assert.match(mobileDrawerSource, /mobile-drawer-content/)
   assert.match(mobileDrawerSource, /overflow-hidden transition-\[max-height,opacity\]/)
   assert.match(mobileDrawerSource, /tabIndex=\{isExpanded \? 0 : -1\}/)
+  assert.match(mobileDrawerSource, /<Package className="h-3\.5 w-3\.5"/)
+  assert.match(mobileDrawerSource, /<ChevronRight className="h-4 w-4 shrink-0 text-\[var\(--color-text-muted\)\]"/)
 })
 
 test("desktop products menu has a usable trigger and canonical store route", () => {
@@ -171,7 +174,7 @@ test("newsletter preserves the approved consent-first light-card design", () => 
   assert.match(publicHomeSource, /<NewsletterSignup \/>/)
 })
 
-test("listing product cards navigate to the PDP without a cart CTA", () => {
+test("listing product cards retain PDP navigation without a cart CTA", () => {
   assert.match(productCardSource, /data-testid="product-card-link"/)
   assert.match(productCardSource, /<FavoriteButton/)
   assert.match(productCardSource, /const sku = .*\|\| null/)

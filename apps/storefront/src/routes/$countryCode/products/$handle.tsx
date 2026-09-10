@@ -45,7 +45,6 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
           })
         } catch {
           throw notFound()
-          // Logging removido em produção throw notFound();
         }
       },
     })

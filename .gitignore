@@ -61,3 +61,18 @@ temp_*.html
 
 # Local Netlify folder
 .netlify/
+
+# Temporary test artifacts, screenshots, recordings, and scratch directories
+scratch/
+artifacts-*/
+*.png
+!apps/storefront/public/**/*.png
+/apps/backend/static/*.png
+create-local-promo.ts
+enrich-local-pdp.ts
+preview-product-name-normalization.ts
+probe-exec.ts
+*.webm
+.tmp-*.json
+*-manifest.json
+NUL

@@ -98,4 +98,20 @@ describe("Google OIDC safeguards", () => {
 
     await expect(verifyGoogleIdToken(token, config, "nonce-value", fetcher, now)).rejects.toThrow(/authorized-party/i)
   })
+
+  it("adapts redirectUri and storefrontOrigin for local development requests", () => {
+    const env = {
+      GOOGLE_CLIENT_ID: "client-id",
+      GOOGLE_CLIENT_SECRET: "server-secret",
+      GOOGLE_OAUTH_REDIRECT_URI: "https://friggafrio.istigestao.com.br/auth/customer/google/callback",
+      STOREFRONT_URL: "https://friggafrio.istigestao.com.br",
+    }
+    const localConfig = getGoogleOidcConfig(env, { headers: { host: "localhost:9000" } })!
+    expect(localConfig.redirectUri).toBe("http://localhost:9000/auth/customer/google/callback")
+    expect(localConfig.storefrontOrigin).toBe("http://localhost:5173")
+
+    expect(
+      normalizeGoogleReturnTo("http://localhost:5173/br/account", localConfig.storefrontOrigin),
+    ).toBe("http://localhost:5173/br/account")
+  })
 })
