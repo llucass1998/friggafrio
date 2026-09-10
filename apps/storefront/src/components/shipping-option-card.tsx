@@ -22,7 +22,7 @@ const presentationFor = (option: ShippingEstimateOptionView) => {
     title: pickup
       ? "Retirada na Loja 1"
       : express
-        ? "Motoboy — indisponível temporariamente"
+        ? (option.available ? "Entrega expressa — Motoboy" : "Motoboy — indisponível")
         : "Carro FriggaFrio",
     carrier: pickup ? "FriggaFrio Loja 1" : express ? "Motoboy" : "Entrega pela equipe FriggaFrio",
   }

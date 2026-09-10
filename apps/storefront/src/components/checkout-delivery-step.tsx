@@ -97,8 +97,8 @@ export default function DeliveryStep({ cart, onNext, onBack, resetSelectionToken
           ...option,
           available: false,
           reason: hasAddress
-            ? "Esta modalidade ainda não está disponível para este endereço."
-            : "Esta modalidade será liberada assim que o cálculo automático de rota estiver ativo (indisponível temporariamente). Informe o endereço de entrega para consultar.",
+            ? "Esta modalidade expressa não está disponível para este endereço (atendimento até 100 km da loja)."
+            : "Informe o endereço de entrega para consultar a disponibilidade e valor da entrega expressa.",
         }
       }
       return option
