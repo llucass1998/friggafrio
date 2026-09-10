@@ -14,6 +14,7 @@ git -C "$FRIGGAFRIO_DEPLOY_DIR" cat-file -e "${FRIGGAFRIO_ROLLBACK_SHA}^{commit}
 require_clean_git_dir "WSL_DEPLOY_CLONE" "$FRIGGAFRIO_DEPLOY_DIR"
 acquire_deploy_lock
 git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$FRIGGAFRIO_ROLLBACK_SHA"
+rm -rf -- "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.medusa/runtime-dependencies"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
 install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"

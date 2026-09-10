@@ -173,6 +173,7 @@ fi
 rollback() {
   echo "ROLLBACK_NEEDED=YES" >&2
   git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$OLD_DEPLOY_SHA"
+  rm -rf -- "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.medusa/runtime-dependencies"
   pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
   pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
   install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"
@@ -186,6 +187,7 @@ git -C "$FRIGGAFRIO_DEPLOY_DIR" fetch origin "$FRIGGAFRIO_BRANCH"
 git -C "$FRIGGAFRIO_DEPLOY_DIR" checkout --detach "$SOURCE_SHA"
 require_file_provider_env "$FRIGGAFRIO_DEPLOY_DIR"
 require_storefront_build_env "$FRIGGAFRIO_DEPLOY_DIR"
+rm -rf -- "$FRIGGAFRIO_DEPLOY_DIR/apps/backend/.medusa/runtime-dependencies"
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" install --frozen-lockfile
 pnpm --dir "$FRIGGAFRIO_DEPLOY_DIR" --filter backend build
 install_medusa_runtime_dependencies "$FRIGGAFRIO_DEPLOY_DIR"

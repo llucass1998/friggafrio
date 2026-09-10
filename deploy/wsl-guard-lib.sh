@@ -210,6 +210,7 @@ install_medusa_runtime_dependencies() {
   rm -f -- "$dependency_stage/node_modules/.pnpm/node_modules/backend"
   require_self_contained_node_modules "$dependency_stage/node_modules"
   mv "$dependency_stage/node_modules" "$runtime_dir/node_modules"
+  rm -rf -- "$dependency_stage"
   verify_medusa_runtime_contract "$release_dir" --require-runtime-dependencies
 }
 
