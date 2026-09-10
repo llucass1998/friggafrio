@@ -21,17 +21,26 @@ function forwardedHeaders(headers: Headers) {
   return result
 }
 
+export function isBackendApiPath(pathname: string): boolean {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return true
+  if (pathname.startsWith("/store/")) return true
+  if (pathname === "/auth" || pathname.startsWith("/auth/")) return true
+  if (pathname === "/uploads" || pathname.startsWith("/uploads/")) return true
+  if (pathname === "/health/ready") return true
+  return false
+}
+
 function upstreamUrl(request: Request) {
   const incoming = new URL(request.url)
-  if (incoming.pathname !== "/admin" && !incoming.pathname.startsWith("/admin/")) {
+  if (!isBackendApiPath(incoming.pathname)) {
     throw new Error("ADMIN_PROXY_PATH_DENIED")
   }
   return new URL(`${incoming.pathname}${incoming.search}`, ADMIN_PROXY_ORIGIN)
 }
 
 /**
- * Keeps the Admin API reachable when an external catch-all proxy forwards an
- * /admin request to the Storefront. Only the Admin namespace is forwarded.
+ * Keeps the backend API reachable when an external catch-all proxy forwards a
+ * request to the Storefront. Backend namespaces (admin, store, auth, uploads) are forwarded.
  */
 export async function proxyAdminRequest(request: Request) {
   const method = request.method.toUpperCase()
@@ -67,8 +76,9 @@ export const adminProxyHandlers = {
 
 /**
  * Vite preview serves the Storefront fallback before TanStack route handlers
- * for multi-segment paths. Intercept the whole Admin namespace at the server
- * boundary so `/admin/products/:id` keeps the same path and credentials.
+ * for multi-segment paths. Intercept backend namespaces at the server
+ * boundary so `/admin`, `/store/*`, `/auth/*`, and `/uploads/*` keep the same
+ * path and credentials instead of hitting the frontend SSR or 404 pages.
  */
 export const adminProxyMiddleware: Connect.NextHandleFunction = (
   request: IncomingMessage,
@@ -76,7 +86,7 @@ export const adminProxyMiddleware: Connect.NextHandleFunction = (
   next,
 ) => {
   const incoming = new URL(request.url ?? "/", "http://localhost")
-  if (incoming.pathname !== "/admin" && !incoming.pathname.startsWith("/admin/")) {
+  if (!isBackendApiPath(incoming.pathname)) {
     next()
     return
   }

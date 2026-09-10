@@ -51,4 +51,29 @@ test("preserves write methods and rejects paths outside the Admin namespace", as
     () => proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/br")),
     /ADMIN_PROXY_PATH_DENIED/,
   )
+  await assert.rejects(
+    () => proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/store")),
+    /ADMIN_PROXY_PATH_DENIED/,
+  )
 })
+
+test("proxies store, auth, uploads, and health/ready namespaces to the local backend", async () => {
+  const proxiedUrls: string[] = []
+  globalThis.fetch = async (input) => {
+    proxiedUrls.push(String(input))
+    return Response.json({ success: true }, { status: 200 })
+  }
+
+  await proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/store/regions"))
+  await proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/auth/customer/google/start"))
+  await proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/uploads/products/sensor.jpg"))
+  await proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/health/ready"))
+
+  assert.deepEqual(proxiedUrls, [
+    "http://127.0.0.1:9000/store/regions",
+    "http://127.0.0.1:9000/auth/customer/google/start",
+    "http://127.0.0.1:9000/uploads/products/sensor.jpg",
+    "http://127.0.0.1:9000/health/ready",
+  ])
+})
+
