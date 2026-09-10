@@ -61,8 +61,10 @@ const isIgnored = (repoRoot, file) => {
 }
 
 const readWorkspaceFile = (repoRoot, file) => {
+  const filePath = join(repoRoot, file)
+  if (!existsSync(filePath)) return ""
   try {
-    return readFileSync(join(repoRoot, file)).toString("utf8")
+    return readFileSync(filePath).toString("utf8")
   } catch {
     throw new ScanInfrastructureError("workspace-file")
   }

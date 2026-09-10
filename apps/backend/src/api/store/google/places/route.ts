@@ -6,7 +6,7 @@ export async function GET(
 ) {
   const { placeId } = req.query
 
-  if (!placeId || typeof placeId !== "string") {
+  if (!placeId || typeof placeId !== "string" || !/^[A-Za-z0-9._:-]{1,200}$/.test(placeId)) {
     return res.status(400).json({
       message: "placeId is required",
     })
@@ -19,6 +19,8 @@ export async function GET(
     })
   }
 
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5_000)
   try {
     // 1. Obter os metadados do lugar, pedindo APENAS as fotos (field mask `photos`)
     const detailsResponse = await fetch(
@@ -28,15 +30,14 @@ export async function GET(
           "X-Goog-Api-Key": apiKey,
           "X-Goog-FieldMask": "photos"
         },
+        signal: controller.signal,
       }
     )
 
     if (!detailsResponse.ok) {
-      const errorData = await detailsResponse.json()
-      console.error("Error fetching place details:", errorData)
+      console.warn("Google Places details request failed", { status: detailsResponse.status })
       return res.status(detailsResponse.status).json({
         message: "Failed to fetch place details",
-        error: errorData
       })
     }
 
@@ -64,9 +65,11 @@ export async function GET(
       photos: photoReferences
     })
   } catch (error) {
-    console.error("Google Places integration error:", error)
+    console.error("Google Places integration error")
     res.status(500).json({
       message: "Internal server error connecting to Google Places API",
     })
+  } finally {
+    clearTimeout(timeout)
   }
 }

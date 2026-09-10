@@ -77,6 +77,10 @@ export const mountMercadoPagoCardBrick = async ({ publicKey, containerId, amount
   try {
     return await bricks.create("cardPayment", containerId, {
     initialization: { amount, payer: { email: payerEmail } },
+    customization: {
+      visual: { style: { theme: "default" } },
+      paymentMethods: { creditCard: "all" },
+    },
     callbacks: {
       onReady: () => undefined,
       onSubmit,

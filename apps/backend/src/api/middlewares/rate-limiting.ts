@@ -56,6 +56,15 @@ export const newsletterRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
+/** External provider proxies are bounded separately from catalog traffic. */
+export const googleIntegrationRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  message: { message: "Limite de consultas externas excedido.", type: "rate_limit_exceeded" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * Rate limiter padrão para a API (evitar Data Scraping Massivo)
  * Máximo de 300 requisições a cada 5 minutos por IP.

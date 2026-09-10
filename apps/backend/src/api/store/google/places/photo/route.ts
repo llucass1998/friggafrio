@@ -6,7 +6,7 @@ export async function GET(
 ) {
   const { name, maxHeightPx = "500", maxWidthPx = "500" } = req.query
 
-  if (!name || typeof name !== "string") {
+  if (!name || typeof name !== "string" || !/^places\/[A-Za-z0-9._:-]{1,160}\/photos\/[A-Za-z0-9._:-]{1,160}$/.test(name)) {
     return res.status(400).json({
       message: "Photo name is required",
     })
@@ -19,23 +19,30 @@ export async function GET(
     })
   }
 
+  const height = Number(maxHeightPx)
+  const width = Number(maxWidthPx)
+  if (!Number.isInteger(height) || !Number.isInteger(width) || height < 64 || height > 1600 || width < 64 || width > 1600) {
+    return res.status(400).json({ message: "Photo dimensions are invalid" })
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5_000)
   try {
     // A API nova suporta skipHttpRedirect, vamos usar para obter a URL real
     const photoUrlResponse = await fetch(
-      `https://places.googleapis.com/v1/${name}/media?maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}&skipHttpRedirect=true`,
+      `https://places.googleapis.com/v1/${name}/media?maxHeightPx=${height}&maxWidthPx=${width}&skipHttpRedirect=true`,
       {
         headers: {
           "X-Goog-Api-Key": apiKey,
         },
+        signal: controller.signal,
       }
     )
 
     if (!photoUrlResponse.ok) {
-      const errorData = await photoUrlResponse.json()
-      console.error("Error fetching photo url:", errorData)
+      console.warn("Google Places photo request failed", { status: photoUrlResponse.status })
       return res.status(photoUrlResponse.status).json({
         message: "Failed to fetch photo url",
-        error: errorData
       })
     }
 
@@ -48,9 +55,11 @@ export async function GET(
 
     res.status(404).json({ message: "Photo URI not found in Google response" })
   } catch (error) {
-    console.error("Google Places photo integration error:", error)
+    console.error("Google Places photo integration error")
     res.status(500).json({
       message: "Internal server error fetching Google Places photo",
     })
+  } finally {
+    clearTimeout(timeout)
   }
 }

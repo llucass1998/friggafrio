@@ -124,16 +124,12 @@ const liveAdapter: PaymentFrontendAdapter = {
     if (method === "card" && !input?.token) throw new Error("Conclua a tokenização segura do cartão para continuar.")
     const session = await liveSession(context, method, input)
     if (method === "pix") return resultOf(session, method, context.prepared.total)
-    if (session.status === "pending") {
-      const completed = await sdk.store.cart.complete(context.cartId, {})
-      if (completed.type !== "order") throw new Error("O cartão ainda não foi autorizado pelo Mercado Pago.")
-      return { status: "captured", uiState: "approved", publicReference: completed.order.id }
-    }
     return resultOf(session, method, context.prepared.total)
   },
   async getStatus(context, publicReference) {
     const session = await retrieveSession(context, publicReference)
-    return resultOf(session, "pix", context.prepared.total)
+    const method = session.data?.payment_method === "card" ? "card" : "pix"
+    return resultOf(session, method, context.prepared.total)
   },
   async cancelAttempt() { throw new Error("Cancelamento deve ser executado pelo backend autorizado.") },
 }

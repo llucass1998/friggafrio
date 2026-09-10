@@ -3,9 +3,10 @@ import { Price } from "@/components/ui/price"
 import type { CheckoutPreparedSummary } from "@/lib/data/checkout/prepare"
 import type { CheckoutCustomerInfo, CheckoutPaymentSelection, PaymentResult } from "@/lib/payments/contracts"
 import { createPaymentFrontendAdapter } from "@/lib/payments/adapter"
+import { completeCartOrder } from "@/lib/data/checkout/complete"
 import { PaymentResultView } from "@/components/payment-result"
 import type { HttpTypes } from "@medusajs/types"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type ReviewStepProps = {
   cart: HttpTypes.StoreCart
@@ -51,6 +52,59 @@ export default function CheckoutReviewStep({
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<PaymentResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const completionStarted = useRef(false)
+  const paymentResultRef = useRef<PaymentResult | null>(null)
+  paymentResultRef.current = result
+
+  useEffect(() => {
+    if (!result || result.uiState !== "pending" || !result.publicReference) return
+    const publicReference = result.publicReference
+    let active = true
+    let attempts = 0
+    const adapter = createPaymentFrontendAdapter()
+    const poll = async () => {
+      if (!active || attempts >= 12) return
+      attempts += 1
+      try {
+        const next = await adapter.getStatus({
+          cartId: prepared.cartId,
+          prepared,
+          payer: {
+            email: customer.email,
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            document: customer.document,
+            documentType: customer.personType === "business" ? "CNPJ" : "CPF",
+          },
+        }, publicReference)
+        if (!active) return
+        setResult(next)
+      } catch {
+        // Keep the pending state; a transient status read must not imply failure.
+      }
+    }
+    const timer = window.setInterval(() => void poll(), 5_000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [customer, prepared, result])
+
+  useEffect(() => {
+    if (!result || result.uiState !== "approved" || completionStarted.current) return
+    completionStarted.current = true
+    void completeCartOrder()
+      .then((order) => {
+        const current = paymentResultRef.current
+        if (current) setResult({ ...current, publicReference: order.id })
+      })
+      .catch((completionError) => {
+        completionStarted.current = false
+        setError(completionError instanceof Error
+          ? completionError.message
+          : "Nao foi possivel concluir o pedido apos a aprovacao do pagamento.")
+      })
+  }, [result])
   const confirmPayment = async () => {
     if (submitting || !consent) return
     setSubmitting(true)

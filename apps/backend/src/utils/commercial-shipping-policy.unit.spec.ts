@@ -10,6 +10,9 @@ import {
   isConfiguredGrandeSpAddress,
   matchingExpressRate,
   createShippingPolicyQuote,
+  computeHaversineKm,
+  CepRoutingDistanceProvider,
+  CompositeShippingDistanceProvider,
 } from "./commercial-shipping-policy"
 
 const distanceProvider = (distanceKm: number) => ({
@@ -168,12 +171,27 @@ describe("commercial shipping V1 policy", () => {
     expect(motoboyAmountCentavos(120)).toBeUndefined()
   })
 
-  it("keeps car pricing server-side by region and subtotal", () => {
+  it("keeps car pricing server-side at a fixed R$150 outside the central area", () => {
     expect(carAmountCentavos("CENTRAL_NEAR", 1)).toBe(0)
     expect(carAmountCentavos("INTERIOR", 99999)).toBe(15000)
-    expect(carAmountCentavos("INTERIOR", 100000)).toBe(25000)
-    expect(carAmountCentavos("COAST", 100000)).toBe(25000)
+    expect(carAmountCentavos("INTERIOR", 100000)).toBe(15000)
+    expect(carAmountCentavos("COAST", 100000)).toBe(15000)
+    expect(carAmountCentavos("GRANDE_SP", 100000)).toBe(15000)
     expect(carAmountCentavos("OUT_OF_COVERAGE", 100000)).toBeUndefined()
+  })
+
+  it("quotes the fixed car fee for Grande SP regardless of subtotal", async () => {
+    const quote = await createShippingPolicyQuote({
+      address: { country_code: "br", province: "SP", city: "Osasco", postal_code: "06000-000", address_1: "Rua Example, 1" },
+      lines: [{ quantity: 10, unit_price: 100 }],
+      distanceProvider: distanceProvider(12),
+    })
+    expect(quote.options[1]).toMatchObject({
+      id: "FRIGGAFRIO_CAR_GRANDE_SP",
+      modality: "car",
+      available: true,
+      amountCentavos: 15000,
+    })
   })
 
   it("keeps the three delivery cards visible and eligible for CEP 05144-085", async () => {
@@ -205,6 +223,18 @@ describe("commercial shipping V1 policy", () => {
     expect(quote.options[2]).toMatchObject({ modality: "motoboy", available: false, reason: "Entrega expressa indisponível para este endereço." })
   })
 
+  it("keeps the complete motoboy tariff table aligned with UI-visible bands", () => {
+    expect(motoboyAmountCentavos(0)).toBe(8000)
+    expect(motoboyAmountCentavos(10.01)).toBe(10000)
+    expect(motoboyAmountCentavos(20.01)).toBe(12000)
+    expect(motoboyAmountCentavos(30.01)).toBe(14000)
+    expect(motoboyAmountCentavos(40.01)).toBe(16000)
+    expect(motoboyAmountCentavos(50.01)).toBe(18000)
+    expect(motoboyAmountCentavos(60.01)).toBe(20000)
+    expect(motoboyAmountCentavos(80.01)).toBe(25000)
+    expect(motoboyAmountCentavos(100.01)).toBeUndefined()
+  })
+
   it.each(["RJ", "MG", "ES", "PR"])("blocks every delivery modality outside SP for UF %s", async (province) => {
     const provider = jest.fn(async () => ({ status: "resolved" as const, distanceKm: 5 }))
     const quote = await createShippingPolicyQuote({
@@ -221,5 +251,56 @@ describe("commercial shipping V1 policy", () => {
     expect(quote.options[1]?.reason).toContain("somente no estado de São Paulo")
     expect(quote.options[2]?.reason).toContain("somente no estado de São Paulo")
     expect(provider).not.toHaveBeenCalled()
+  })
+
+  it("calculates accurate geodesic distance using Haversine formula", () => {
+    // Distance from Loja 1 (-23.5475, -46.63611) to Av Paulista (-23.5617698, -46.6553299)
+    const distanceKm = computeHaversineKm(-23.5475, -46.63611, -23.5617698, -46.6553299)
+    expect(distanceKm).toBeGreaterThan(2)
+    expect(distanceKm).toBeLessThan(4)
+  })
+
+  it("resolves route distance via CepRoutingDistanceProvider using geocoding and driving distance", async () => {
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      const urlStr = String(url)
+      if (urlStr.includes("cep.awesomeapi.com.br")) {
+        return new Response(JSON.stringify({ lat: "-23.5617698", lng: "-46.6553299" }), { status: 200 })
+      }
+      if (urlStr.includes("project-osrm.org")) {
+        return new Response(JSON.stringify({ routes: [{ distance: 3600 }] }), { status: 200 })
+      }
+      return new Response(null, { status: 404 })
+    })
+    try {
+      const provider = new CepRoutingDistanceProvider()
+      const result = await provider.resolveDistance({
+        country_code: "br",
+        province: "SP",
+        city: "Sao Paulo",
+        postal_code: "01310-100",
+      })
+      expect(result).toEqual({ status: "resolved", distanceKm: 3.6 })
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
+  it("falls back to CEP routing in CompositeShippingDistanceProvider when primary provider fails", async () => {
+    const failingPrimary = {
+      resolveDistance: jest.fn().mockResolvedValue({ status: "unavailable" as const, reason: "PROVIDER_FAILURE" as const }),
+    }
+    const successfulFallback = {
+      resolveDistance: jest.fn().mockResolvedValue({ status: "resolved" as const, distanceKm: 8.5 }),
+    }
+    const composite = new CompositeShippingDistanceProvider(failingPrimary, successfulFallback as never)
+    const result = await composite.resolveDistance({
+      country_code: "br",
+      province: "SP",
+      city: "Sao Paulo",
+      postal_code: "01310-100",
+    })
+    expect(failingPrimary.resolveDistance).toHaveBeenCalledTimes(1)
+    expect(successfulFallback.resolveDistance).toHaveBeenCalledTimes(1)
+    expect(result).toEqual({ status: "resolved", distanceKm: 8.5 })
   })
 })

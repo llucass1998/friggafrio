@@ -20,12 +20,18 @@ type CardBrick = { unmount?: () => void }
 
 export default function CheckoutPaymentStep({ cart, prepared, selection, onSelectionChange, onNext, onBack }: PaymentStepProps) {
   const [error, setError] = useState<string | null>(null)
+  const [brickReady, setBrickReady] = useState(false)
   const brickRef = useRef<CardBrick | null>(null)
   const brickMountQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
     let disposed = false
-    if (selection?.method !== "card" || !isMercadoPagoFrontendConfigured) return
+    setBrickReady(false)
+    if (selection?.method !== "card") return
+    if (!isMercadoPagoFrontendConfigured) {
+      setError("O pagamento com cartão ainda não está configurado neste ambiente.")
+      return
+    }
 
     const mount = async () => {
       // React development effects may mount, clean up, and mount again before
@@ -59,7 +65,10 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
           },
         })
         if (disposed) brick.unmount?.()
-        else brickRef.current = brick
+        else {
+          brickRef.current = brick
+          setBrickReady(true)
+        }
       } catch (sdkError) {
         if (!disposed) {
           const code = sdkError instanceof Error && (["SDK_CONSTRUCTOR_ERROR", "SDK_BRICKS_UNAVAILABLE", "BRICK_CREATE_REJECTED"] as string[]).includes(sdkError.message)
@@ -76,6 +85,7 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
       disposed = true
       brickRef.current?.unmount?.()
       brickRef.current = null
+      setBrickReady(false)
     }
   }, [onSelectionChange, prepared.email, prepared.total, selection?.method])
 
@@ -113,10 +123,12 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
     {selection?.method === "card" && <section className="rounded-xl border border-[var(--color-border)] p-4" aria-labelledby="secure-card-title">
       <h3 id="secure-card-title" className="font-semibold text-[var(--color-navy)]">Cartao de credito</h3>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">A FriggaFrio nao armazena dados do cartao.</p>
-      <div id="mercado-pago-secure-card-mount" className="mt-4 min-h-56 rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">Carregando formulario seguro do Mercado Pago...</div>
+      <div id="mercado-pago-secure-card-mount" className="mt-4 min-h-56 rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600" aria-busy={!brickReady}>
+        {!brickReady && "Carregando formulario seguro do Mercado Pago..."}
+      </div>
       <p className="mt-3 text-sm text-[var(--color-text-muted)]">O Mercado Pago informa parcelas elegiveis, limitadas a 10x sem juros.</p>
     </section>}
     {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert">{error}</p>}
-    <div className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row"><Button type="button" variant="secondary" onClick={onBack}>Voltar</Button><Button type="button" data-testid="checkout-payment-next" onClick={continueToReview} disabled={!selection || (selection.method === "card" && !selection.card?.token)}>Continuar para revisao</Button></div>
+    <div className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row"><Button type="button" variant="secondary" onClick={onBack}>Voltar</Button><Button type="button" data-testid="checkout-payment-next" onClick={continueToReview} disabled={!selection || (selection.method === "card" && (!brickReady || !selection.card?.token))}>Continuar para revisao</Button></div>
   </div>
 }

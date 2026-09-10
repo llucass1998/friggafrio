@@ -11,7 +11,9 @@ const vlibrasOrigin = "https://vlibras.gov.br"
  * first-party Admin, Storefront, and Mercado Pago Brick requirement.
  */
 export const contentSecurityPolicyReportOnlyOptions: HelmetOptions["contentSecurityPolicy"] = {
-  reportOnly: true,
+  // Keep local/staging report-only until browser evidence is collected; a
+  // production operator can opt into enforcement without changing source.
+  reportOnly: process.env.CSP_ENFORCE?.trim().toLowerCase() !== "true",
   directives: {
     "default-src": ["'self'"],
     "base-uri": ["'self'"],

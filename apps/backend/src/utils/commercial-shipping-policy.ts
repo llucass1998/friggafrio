@@ -23,7 +23,9 @@ export const SHIPPING_POLICY = {
     { min: 60, max: 80, amountCentavos: 20000 }, { min: 80, max: 100, amountCentavos: 25000 },
   ],
   motoboyOver100: { baseCentavos: 25000, perKmCentavos: 300, minimumCentavos: 30000 },
-  car: { economicCentavos: 15000, higherCentavos: 25000, subtotalLimitCentavos: FREE_SHIPPING_THRESHOLD_CENTAVOS },
+  // Car delivery is free only in the central coverage area. Every other
+  // serviceable area in SP has a fixed fee, regardless of cart subtotal.
+  car: { nonCentralCentavos: 15000 },
 } as const
 
 export type ShippingRegion = "CENTRAL_NEAR" | "GRANDE_SP" | "INTERIOR" | "COAST" | "OUT_OF_COVERAGE"
@@ -137,10 +139,153 @@ export class HttpShippingDistanceProvider implements ShippingDistanceProvider {
   }
 }
 
+export const computeHaversineKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371
+  const dLat = (lat2 - lat1) * (Math.PI / 180)
+  const dLon = (lon2 - lon1) * (Math.PI / 180)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+export class CepRoutingDistanceProvider implements ShippingDistanceProvider {
+  private static cache = new Map<string, number>()
+
+  constructor(private readonly timeoutMs = 4000) {}
+
+  async resolveDistance(address: CommercialShippingAddress): Promise<ShippingDistanceResult> {
+    if (address.country_code && address.country_code.toLowerCase() !== "br") {
+      return { status: "unavailable", reason: "ADDRESS_NOT_RESOLVABLE" }
+    }
+    if (address.province && address.province.toLowerCase() !== "sp") {
+      return { status: "unavailable", reason: "ADDRESS_NOT_RESOLVABLE" }
+    }
+    const rawCep = address.postal_code?.replace(/\D/g, "")
+    if (!rawCep || rawCep.length !== 8) {
+      return { status: "unavailable", reason: "ADDRESS_NOT_RESOLVABLE" }
+    }
+
+    const cached = CepRoutingDistanceProvider.cache.get(rawCep)
+    if (typeof cached === "number") {
+      return { status: "resolved", distanceKm: cached }
+    }
+
+    try {
+      let coords = await this.fetchCoordsFromAwesomeApi(rawCep)
+      if (!coords) {
+        coords = await this.fetchCoordsFromBrasilApi(rawCep)
+      }
+      if (!coords) {
+        return { status: "unavailable", reason: "ADDRESS_NOT_RESOLVABLE" }
+      }
+
+      let distanceKm = await this.fetchDrivingDistanceKmFromOsrm(coords.lon, coords.lat)
+      if (typeof distanceKm !== "number") {
+        const straightKm = computeHaversineKm(-23.5475, -46.63611, coords.lat, coords.lon)
+        distanceKm = Math.round(straightKm * 1.3 * 10) / 10
+      }
+
+      CepRoutingDistanceProvider.cache.set(rawCep, distanceKm)
+      return { status: "resolved", distanceKm }
+    } catch {
+      return { status: "unavailable", reason: "PROVIDER_FAILURE" }
+    }
+  }
+
+  private async fetchCoordsFromAwesomeApi(cep: string): Promise<{ lat: number; lon: number } | null> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs)
+    try {
+      const res = await fetch(`https://cep.awesomeapi.com.br/json/${cep}`, { signal: controller.signal })
+      if (!res.ok) return null
+      const data = await res.json() as { lat?: string; lng?: string }
+      const lat = Number(data.lat)
+      const lon = Number(data.lng)
+      if (Number.isFinite(lat) && Number.isFinite(lon) && lat !== 0 && lon !== 0) {
+        return { lat, lon }
+      }
+      return null
+    } catch {
+      return null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  private async fetchCoordsFromBrasilApi(cep: string): Promise<{ lat: number; lon: number } | null> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs)
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`, { signal: controller.signal })
+      if (!res.ok) return null
+      const data = await res.json() as { location?: { coordinates?: { latitude?: string | number; longitude?: string | number } } }
+      const lat = Number(data.location?.coordinates?.latitude)
+      const lon = Number(data.location?.coordinates?.longitude)
+      if (Number.isFinite(lat) && Number.isFinite(lon) && lat !== 0 && lon !== 0) {
+        return { lat, lon }
+      }
+      return null
+    } catch {
+      return null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  private async fetchDrivingDistanceKmFromOsrm(lon: number, lat: number): Promise<number | null> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 2500)
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/-46.63611,-23.5475;${lon},${lat}?overview=false`
+      const res = await fetch(url, { signal: controller.signal })
+      if (!res.ok) return null
+      const data = await res.json() as { routes?: Array<{ distance?: number }> }
+      const meters = data.routes?.[0]?.distance
+      if (typeof meters === "number" && Number.isFinite(meters) && meters >= 0) {
+        return Math.round((meters / 1000) * 10) / 10
+      }
+      return null
+    } catch {
+      return null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+}
+
+export class CompositeShippingDistanceProvider implements ShippingDistanceProvider {
+  constructor(
+    private readonly primary?: ShippingDistanceProvider,
+    private readonly fallback = new CepRoutingDistanceProvider(),
+  ) {}
+
+  async resolveDistance(address: CommercialShippingAddress): Promise<ShippingDistanceResult> {
+    if (this.primary) {
+      try {
+        const result = await this.primary.resolveDistance(address)
+        if (result.status === "resolved") {
+          return result
+        }
+      } catch {
+        // Fallback to cep routing
+      }
+    }
+    const postalCode = address.postal_code?.replace(/\D/g, "")
+    if (!postalCode && !this.primary) {
+      return { status: "unavailable", reason: "EXTERNAL_CREDENTIAL_REQUIRED" }
+    }
+    return this.fallback.resolveDistance(address)
+  }
+}
+
 export const createShippingDistanceProviderFromEnv = (): ShippingDistanceProvider => {
   const endpoint = process.env.FRIGGAFRIO_ROUTE_PROVIDER_URL?.trim()
   const apiKey = process.env.FRIGGAFRIO_ROUTE_PROVIDER_API_KEY?.trim()
-  return endpoint && apiKey ? new HttpShippingDistanceProvider(endpoint, apiKey) : new UnconfiguredShippingDistanceProvider()
+  const primary = endpoint && apiKey ? new HttpShippingDistanceProvider(endpoint, apiKey) : undefined
+  return new CompositeShippingDistanceProvider(primary)
 }
 
 export type ShippingRateKey =
@@ -155,10 +300,9 @@ export type ShippingRateKey =
   | "FRIGGAFRIO_EXPRESS_80_100"
   | "FRIGGAFRIO_EXPRESS_OVER_100"
   | "FRIGGAFRIO_CAR_CENTRAL"
+  | "FRIGGAFRIO_CAR_GRANDE_SP"
   | "FRIGGAFRIO_CAR_INTERIOR_ECONOMIC"
-  | "FRIGGAFRIO_CAR_INTERIOR_HIGH"
   | "FRIGGAFRIO_CAR_COAST_ECONOMIC"
-  | "FRIGGAFRIO_CAR_COAST_HIGH"
 
 export type CommercialShippingRate = {
   key: ShippingRateKey
@@ -185,10 +329,9 @@ export const COMMERCIAL_SHIPPING_RATES: readonly CommercialShippingRate[] = [
   { key: "FRIGGAFRIO_EXPRESS_80_100", type: "express", minDistanceKm: 80, maxDistanceKm: 100, amount: 250, estimated_delivery: EXPRESS_DELIVERY_COPY },
   { key: "FRIGGAFRIO_EXPRESS_OVER_100", type: "express", minDistanceKm: 100, amount: 300, estimated_delivery: EXPRESS_DELIVERY_COPY },
   { key: "FRIGGAFRIO_CAR_CENTRAL", type: "standard_free", amount: 0, amountCentavos: 0, estimated_delivery: STANDARD_DELIVERY_COPY },
+  { key: "FRIGGAFRIO_CAR_GRANDE_SP", type: "standard_paid", amount: 150, amountCentavos: 15000, estimated_delivery: STANDARD_DELIVERY_COPY },
   { key: "FRIGGAFRIO_CAR_INTERIOR_ECONOMIC", type: "standard_paid", amount: 150, amountCentavos: 15000, estimated_delivery: "Rota programada para quarta-feira" },
-  { key: "FRIGGAFRIO_CAR_INTERIOR_HIGH", type: "standard_paid", amount: 250, amountCentavos: 25000, estimated_delivery: "Rota programada para quarta-feira" },
   { key: "FRIGGAFRIO_CAR_COAST_ECONOMIC", type: "standard_paid", amount: 150, amountCentavos: 15000, estimated_delivery: "Rota programada para quinta-feira" },
-  { key: "FRIGGAFRIO_CAR_COAST_HIGH", type: "standard_paid", amount: 250, amountCentavos: 25000, estimated_delivery: "Rota programada para quinta-feira" },
 ] as const
 
 export type CommercialShippingContext = Record<ShippingRateKey, "true" | "false"> & {
@@ -275,9 +418,9 @@ export const motoboyAmountCentavos = (distanceKm: number): number | undefined =>
   return undefined
 }
 
-export const carAmountCentavos = (region: ShippingRegion, subtotalCentavos: number): number | undefined => {
+export const carAmountCentavos = (region: ShippingRegion, _subtotalCentavos: number): number | undefined => {
   if (region === "CENTRAL_NEAR") return 0
-  if (region === "INTERIOR" || region === "COAST") return subtotalCentavos >= SHIPPING_POLICY.car.subtotalLimitCentavos ? SHIPPING_POLICY.car.higherCentavos : SHIPPING_POLICY.car.economicCentavos
+  if (region === "GRANDE_SP" || region === "INTERIOR" || region === "COAST") return SHIPPING_POLICY.car.nonCentralCentavos
   return undefined
 }
 
@@ -309,10 +452,11 @@ const unavailableReasonForDistance = (distance: ShippingDistanceResult): string 
 const outOfStateDeliveryReason =
   "No momento, realizamos entregas somente no estado de São Paulo. Você ainda pode escolher a Retirada na Loja 1."
 
-const carRateKeyFor = (region: ShippingRegion, subtotalCentavos: number): ShippingRateKey => {
+const carRateKeyFor = (region: ShippingRegion, _subtotalCentavos: number): ShippingRateKey => {
   if (region === "CENTRAL_NEAR") return "FRIGGAFRIO_CAR_CENTRAL"
-  if (region === "INTERIOR") return subtotalCentavos >= SHIPPING_POLICY.car.subtotalLimitCentavos ? "FRIGGAFRIO_CAR_INTERIOR_HIGH" : "FRIGGAFRIO_CAR_INTERIOR_ECONOMIC"
-  if (region === "COAST") return subtotalCentavos >= SHIPPING_POLICY.car.subtotalLimitCentavos ? "FRIGGAFRIO_CAR_COAST_HIGH" : "FRIGGAFRIO_CAR_COAST_ECONOMIC"
+  if (region === "GRANDE_SP") return "FRIGGAFRIO_CAR_GRANDE_SP"
+  if (region === "INTERIOR") return "FRIGGAFRIO_CAR_INTERIOR_ECONOMIC"
+  if (region === "COAST") return "FRIGGAFRIO_CAR_COAST_ECONOMIC"
   return "FRIGGAFRIO_CAR_CENTRAL"
 }
 

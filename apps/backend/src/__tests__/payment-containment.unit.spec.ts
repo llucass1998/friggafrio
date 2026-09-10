@@ -59,6 +59,8 @@ describe("payment containment", () => {
     expect(status).toHaveBeenCalledWith(503);
 
     process.env.GATE8_FINALIZATION_ENABLED = "true";
+    process.env.PAYMENTS_ENABLED = "true";
+    process.env.PAYMENT_PROVIDER_ENABLED = "true";
     blockOrderCompletionUntilGate8({} as never, { status } as never, next);
     expect(next).toHaveBeenCalledTimes(1);
 

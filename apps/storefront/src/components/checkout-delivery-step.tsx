@@ -53,7 +53,7 @@ export default function DeliveryStep({ cart, onNext, onBack, resetSelectionToken
   })
   const selectedOption = options.find((option) => option.id === selected)
   const isPickup = selectedOption?.modality === "pickup"
-  const requiresAddress = selectedOption?.modality === "car"
+  const requiresAddress = selectedOption?.modality === "car" || selectedOption?.modality === "motoboy"
   const { data: cartShippingOptions, refetch: refetchShippingOptions } = useShippingOptions({ cart_id: cart.id })
   const pickupShippingOptionId = cartShippingOptions?.find((option) =>
     option.data?.commercial_shipping_option === "FRIGGAFRIO_PICKUP_STORE_1",
@@ -61,6 +61,10 @@ export default function DeliveryStep({ cart, onNext, onBack, resetSelectionToken
   const carShippingOption = cartShippingOptions?.find((option) =>
     option.data?.commercial_shipping_option === "FRIGGAFRIO_CAR_CENTRAL"
     || /carro\s+friggafrio|entrega normal/i.test(option.name || ""),
+  )
+  const motoboyShippingOption = cartShippingOptions?.find((option) =>
+    (typeof option.data?.commercial_shipping_option === "string" && option.data.commercial_shipping_option.startsWith("FRIGGAFRIO_EXPRESS_"))
+    || /entrega expressa|motoboy/i.test(option.name || ""),
   )
 
   useEffect(() => {
@@ -78,14 +82,28 @@ export default function DeliveryStep({ cart, onNext, onBack, resetSelectionToken
           reason: hasAddress && !carShippingOption ? "Esta modalidade ainda não está disponível para este endereço." : "Informe o CEP para consultar disponibilidade e preço.",
         }
       }
-      if (option.modality === "motoboy") return {
-        ...option,
-        available: false,
-        reason: "Esta modalidade será liberada assim que o cálculo automático de rota estiver ativo. Escolha Retirada na Loja 1 ou Carro FriggaFrio para continuar.",
+      if (option.modality === "motoboy") {
+        const hasAddress = Boolean(cart.shipping_address?.postal_code)
+        if (motoboyShippingOption) {
+          return {
+            ...option,
+            shipping_option_id: motoboyShippingOption.id,
+            amount: typeof motoboyShippingOption.amount === "number" ? motoboyShippingOption.amount : option.amount,
+            available: true,
+            reason: undefined,
+          }
+        }
+        return {
+          ...option,
+          available: false,
+          reason: hasAddress
+            ? "Esta modalidade ainda não está disponível para este endereço."
+            : "Esta modalidade será liberada assim que o cálculo automático de rota estiver ativo (indisponível temporariamente). Informe o endereço de entrega para consultar.",
+        }
       }
       return option
     })))
-  }, [carShippingOption, cart.shipping_address?.postal_code, pickupShippingOptionId, resetSelectionToken])
+  }, [carShippingOption, motoboyShippingOption, cart.shipping_address?.postal_code, pickupShippingOptionId, resetSelectionToken])
 
   const submit = async () => {
     const option = options.find((item) => item.id === selected)
@@ -109,8 +127,15 @@ export default function DeliveryStep({ cart, onNext, onBack, resetSelectionToken
         Object.entries(normalized).filter(([key]) => !["number", "neighborhood"].includes(key)).forEach(([key, value]) => data.append(`billing_address.${key}`, String(value ?? "")))
         await setAddresses.mutateAsync(data)
         const refreshed = await refetchShippingOptions()
-        const carOption = refreshed.data?.find((item) => item.data?.commercial_shipping_option === "FRIGGAFRIO_CAR_CENTRAL" || /carro\s+friggafrio|entrega normal/i.test(item.name || ""))
-        selectedShippingOptionId = carOption?.id
+        let matchingOption = null
+        if (option.modality === "car") {
+          matchingOption = refreshed.data?.find((item) => item.data?.commercial_shipping_option === "FRIGGAFRIO_CAR_CENTRAL" || /carro\s+friggafrio|entrega normal/i.test(item.name || ""))
+        } else if (option.modality === "motoboy") {
+          matchingOption = refreshed.data?.find((item) => (typeof item.data?.commercial_shipping_option === "string" && item.data.commercial_shipping_option.startsWith("FRIGGAFRIO_EXPRESS_")) || /entrega expressa|motoboy/i.test(item.name || ""))
+        } else {
+          matchingOption = refreshed.data?.find((item) => item.id === option.shipping_option_id)
+        }
+        selectedShippingOptionId = matchingOption?.id || option.shipping_option_id
         if (!selectedShippingOptionId) {
           setMutationError("Esta modalidade de entrega não está disponível para o endereço informado.")
           return

@@ -1,5 +1,6 @@
 import { MiddlewareRoute } from "@medusajs/medusa"
 import cors from "cors"
+import { getTrustedStoreOrigins } from "../../../../lib/auth/session-security"
 
 export const googleMiddlewares: MiddlewareRoute[] = [
   {
@@ -7,7 +8,10 @@ export const googleMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/google/*",
     middlewares: [
       cors({
-        origin: "*", // Idealmente, restrinja isso para as URLs do Storefront na produção
+        origin: (origin, callback) => {
+          if (!origin || getTrustedStoreOrigins().has(origin)) return callback(null, true)
+          return callback(new Error("Untrusted Google integration origin"))
+        },
         credentials: true,
       }),
     ],

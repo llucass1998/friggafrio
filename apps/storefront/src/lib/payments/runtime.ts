@@ -6,6 +6,7 @@ type RuntimeEnv = {
   VITE_PAYMENT_PROVIDER_ENABLED?: string
   VITE_MERCADO_PAGO_PUBLIC_KEY?: string
   VITE_PAYMENT_PROVIDER_ID?: string
+  VITE_GATE8_FINALIZATION_ENABLED?: string
 }
 
 const runtimeEnv = ((import.meta as ImportMeta & { env?: RuntimeEnv }).env || {})
@@ -23,3 +24,4 @@ export const mercadoPagoProviderId = runtimeEnv.VITE_PAYMENT_PROVIDER_ID?.trim()
 export const isMercadoPagoFrontendConfigured = isPaymentBackendConfigured && Boolean(mercadoPagoPublicKey)
 
 export const isPaymentProduction = runtimeEnv.MODE === "production"
+export const gate8FinalizationEnabled = runtimeEnv.VITE_GATE8_FINALIZATION_ENABLED?.trim().toLowerCase() === "true"

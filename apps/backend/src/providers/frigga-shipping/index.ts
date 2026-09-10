@@ -11,6 +11,7 @@ import {
   createShippingDistanceProviderFromEnv,
   classifyShippingRegion,
   eligibleCommercialSubtotalCentavos,
+  matchingExpressRate,
   motoboyAmountCentavos,
   type CommercialShippingAddress,
 } from "../../utils/commercial-shipping-policy"
@@ -61,6 +62,8 @@ export class FriggaShippingProviderService extends AbstractFulfillmentProviderSe
       if (distance.status !== "resolved") throw new Error("Shipping distance could not be resolved")
       const calculated = motoboyAmountCentavos(distance.distanceKm)
       if (calculated === undefined) throw new Error("Shipping distance is outside the supported policy")
+      const matchingRate = matchingExpressRate(distance.distanceKm)
+      if (!matchingRate || matchingRate.key !== key) throw new Error("Shipping distance does not match this express option")
       amountCentavos = calculated
     } else if (key.startsWith("FRIGGAFRIO_CAR_")) {
       const region = classifyShippingRegion(addressOf(context))

@@ -3,6 +3,7 @@ import {
   registerRateLimit,
   globalApiRateLimit,
   newsletterRateLimit,
+  googleIntegrationRateLimit,
   secureHeaders,
 } from "./middlewares/rate-limiting";
 import { authenticate, defineMiddlewares } from "@medusajs/medusa";
@@ -140,6 +141,11 @@ export default defineMiddlewares({
       matcher: /^\/auth\/customer\/google\/(?:start|callback)(?:\/|$)/,
       method: "GET",
       middlewares: [authRateLimit],
+    },
+    {
+      matcher: "/store/google/*",
+      method: "GET",
+      middlewares: [googleIntegrationRateLimit],
     },
     {
       matcher: "/store/products/:productId/reviews/eligibility",

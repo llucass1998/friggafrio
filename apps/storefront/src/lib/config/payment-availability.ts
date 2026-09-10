@@ -1,3 +1,5 @@
+import { gate8FinalizationEnabled } from "@/lib/payments/runtime"
+
 const paymentsEnabled =
   import.meta.env.VITE_PAYMENTS_ENABLED?.trim().toLowerCase() === "true"
 const providerEnabled =
@@ -18,7 +20,12 @@ export const assertPaymentProcessingEnabled = (): void => {
   }
 }
 
-// Gate 8 finalization is intentionally closed while Gate 7 only prepares carts.
+/**
+ * Gate 8 is an explicit operational switch. Payment flags alone never open
+ * order creation, which keeps a partially configured gateway fail-closed.
+ */
 export const assertGate8FinalizationEnabled = (): void => {
-  throw new Error("A finalizacao do pedido sera habilitada em uma etapa futura.")
+  if (!gate8FinalizationEnabled) {
+    throw new Error("A finalizacao do pedido esta temporariamente indisponivel.")
+  }
 }
