@@ -171,16 +171,16 @@ describe("commercial shipping V1 policy", () => {
     expect(motoboyAmountCentavos(120)).toBeUndefined()
   })
 
-  it("keeps car pricing server-side at a fixed R$150 outside the central area", () => {
+  it("keeps car pricing server-side at R$150 plus 10% outside the central area", () => {
     expect(carAmountCentavos("CENTRAL_NEAR", 1)).toBe(0)
-    expect(carAmountCentavos("INTERIOR", 99999)).toBe(15000)
-    expect(carAmountCentavos("INTERIOR", 100000)).toBe(15000)
-    expect(carAmountCentavos("COAST", 100000)).toBe(15000)
-    expect(carAmountCentavos("GRANDE_SP", 100000)).toBe(15000)
+    expect(carAmountCentavos("INTERIOR", 99999)).toBe(25000)
+    expect(carAmountCentavos("INTERIOR", 100000)).toBe(25000)
+    expect(carAmountCentavos("COAST", 100000)).toBe(25000)
+    expect(carAmountCentavos("GRANDE_SP", 150000)).toBe(30000)
     expect(carAmountCentavos("OUT_OF_COVERAGE", 100000)).toBeUndefined()
   })
 
-  it("quotes the fixed car fee for Grande SP regardless of subtotal", async () => {
+  it("quotes the car fee from the server-side product subtotal for Grande SP", async () => {
     const quote = await createShippingPolicyQuote({
       address: { country_code: "br", province: "SP", city: "Osasco", postal_code: "06000-000", address_1: "Rua Example, 1" },
       lines: [{ quantity: 10, unit_price: 100 }],
@@ -190,7 +190,7 @@ describe("commercial shipping V1 policy", () => {
       id: "FRIGGAFRIO_CAR_GRANDE_SP",
       modality: "car",
       available: true,
-      amountCentavos: 15000,
+      amountCentavos: 25000,
     })
   })
 

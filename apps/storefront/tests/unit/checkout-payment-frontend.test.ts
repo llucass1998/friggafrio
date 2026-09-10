@@ -42,11 +42,18 @@ test("payment UI reserves a secure mount and has no app-owned PAN/CVV fields", (
   assert.match(source, /brickReady/)
   assert.match(source, /!selection\.card\?\.token/)
   assert.match(source, /disabled=\{!selection \|\| \(selection\.method === "card" && \(!brickReady \|\| !selection\.card\?\.token\)\)\}/)
+  assert.match(source, /data-testid="checkout-payment-next"/)
   assert.match(source, /tokenizacao no formulario seguro/)
   assert.match(source, /A tentativa so sera criada apos a confirmacao explicita/)
   assert.doesNotMatch(source, /card-holder-name/)
   assert.doesNotMatch(source, /name=["'][^"']*(pan|cvv|card.?number|security.?code)/i)
   assert.doesNotMatch(source, /MERCADO_PAGO_ACCESS_TOKEN|MERCADO_PAGO_WEBHOOK_SECRET/)
+})
+
+test("disabled primary buttons do not inherit a white hover background", () => {
+  const source = read("../../src/components/ui/button.tsx")
+  assert.match(source, /disabled:pointer-events-none/)
+  assert.doesNotMatch(source, /disabled:hover:bg-inherit/)
 })
 
 test("review confirms through the existing adapter and blocks duplicate submissions", () => {

@@ -40,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           font-bold rounded-[var(--radius-button)]
           motion-interactive
           focus:outline-none focus:ring-2 focus:ring-offset-2
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100 disabled:hover:bg-inherit
+          disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100
           ${variantClasses[variant]}
           ${sizeClasses[size]}
           ${className}

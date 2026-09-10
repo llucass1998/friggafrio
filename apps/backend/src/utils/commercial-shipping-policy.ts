@@ -23,9 +23,9 @@ export const SHIPPING_POLICY = {
     { min: 60, max: 80, amountCentavos: 20000 }, { min: 80, max: 100, amountCentavos: 25000 },
   ],
   motoboyOver100: { baseCentavos: 25000, perKmCentavos: 300, minimumCentavos: 30000 },
-  // Car delivery is free only in the central coverage area. Every other
-  // serviceable area in SP has a fixed fee, regardless of cart subtotal.
-  car: { nonCentralCentavos: 15000 },
+  // Car delivery is free only in the central coverage area. In every other
+  // serviceable area in SP, charge R$150 plus 10% of the product subtotal.
+  car: { nonCentralBaseCentavos: 15000, nonCentralSubtotalRateBasisPoints: 1000 },
 } as const
 
 export type ShippingRegion = "CENTRAL_NEAR" | "GRANDE_SP" | "INTERIOR" | "COAST" | "OUT_OF_COVERAGE"
@@ -418,9 +418,14 @@ export const motoboyAmountCentavos = (distanceKm: number): number | undefined =>
   return undefined
 }
 
-export const carAmountCentavos = (region: ShippingRegion, _subtotalCentavos: number): number | undefined => {
+export const carAmountCentavos = (region: ShippingRegion, subtotalCentavos: number): number | undefined => {
   if (region === "CENTRAL_NEAR") return 0
-  if (region === "GRANDE_SP" || region === "INTERIOR" || region === "COAST") return SHIPPING_POLICY.car.nonCentralCentavos
+  if (region === "GRANDE_SP" || region === "INTERIOR" || region === "COAST") {
+    const percentageCentavos = Math.round(
+      subtotalCentavos * SHIPPING_POLICY.car.nonCentralSubtotalRateBasisPoints / 10_000,
+    )
+    return SHIPPING_POLICY.car.nonCentralBaseCentavos + percentageCentavos
+  }
   return undefined
 }
 

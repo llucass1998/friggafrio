@@ -41,4 +41,17 @@ describe("FriggaFrio calculated shipping provider", () => {
       labels: [],
     })
   })
+
+  it("calculates car delivery as R$150 plus 10% of the eligible product subtotal", async () => {
+    const provider = new FriggaShippingProviderService()
+    await expect(provider.calculatePrice(
+      { commercial_shipping_option: "FRIGGAFRIO_CAR_GRANDE_SP" },
+      {},
+      {
+        id: "cart_1",
+        shipping_address: { country_code: "br", province: "SP", city: "Osasco" },
+        items: [{ quantity: 1, unit_price: 1500 }],
+      } as never,
+    )).resolves.toMatchObject({ calculated_amount: 300 })
+  })
 })
