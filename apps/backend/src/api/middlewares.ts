@@ -230,6 +230,11 @@ export default defineMiddlewares({
       middlewares: [authenticate("customer", ["session", "bearer"])],
     },
     {
+      method: "GET",
+      matcher: "/store/carts/:id/payment-status",
+      middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+    },
+    {
       method: "POST",
       matcher: "/store/carts/:id/line-items",
       middlewares: [invalidateCartCheckoutPreparation],

@@ -6,6 +6,7 @@ import { createPaymentFrontendAdapter } from "@/lib/payments/adapter"
 import { completeCartOrder } from "@/lib/data/checkout/complete"
 import { PaymentResultView } from "@/components/payment-result"
 import type { HttpTypes } from "@medusajs/types"
+import { useNavigate, useParams } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
 type ReviewStepProps = {
@@ -48,6 +49,8 @@ export default function CheckoutReviewStep({
   onPaymentResult,
 }: ReviewStepProps) {
   const currency = cart.currency_code || "brl"
+  const navigate = useNavigate()
+  const { countryCode } = useParams({ strict: false })
   const [consent, setConsent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<PaymentResult | null>(null)
@@ -63,7 +66,7 @@ export default function CheckoutReviewStep({
     let attempts = 0
     const adapter = createPaymentFrontendAdapter()
     const poll = async () => {
-      if (!active || attempts >= 12) return
+      if (!active || attempts >= 180) return
       attempts += 1
       try {
         const next = await adapter.getStatus({
@@ -97,6 +100,10 @@ export default function CheckoutReviewStep({
       .then((order) => {
         const current = paymentResultRef.current
         if (current) setResult({ ...current, publicReference: order.id })
+        navigate({
+          to: `/${countryCode || "br"}/order/${order.id}/confirmed`,
+          replace: true,
+        })
       })
       .catch((completionError) => {
         completionStarted.current = false
@@ -104,7 +111,7 @@ export default function CheckoutReviewStep({
           ? completionError.message
           : "Nao foi possivel concluir o pedido apos a aprovacao do pagamento.")
       })
-  }, [result])
+  }, [countryCode, navigate, result])
   const confirmPayment = async () => {
     if (submitting || !consent) return
     setSubmitting(true)
@@ -124,7 +131,7 @@ export default function CheckoutReviewStep({
     }
   }
 
-  if (result) return <PaymentResultView result={result} onRetry={result.uiState === "rejected" || result.uiState === "error" ? () => setResult(null) : undefined} onBack={onBack} />
+  if (result) return <PaymentResultView result={result} onRetry={result.uiState === "rejected" || result.uiState === "error" ? () => setResult(null) : undefined} onBack={onBack} backLabel="Trocar forma de pagamento" />
 
   return (
     <div className="space-y-5">

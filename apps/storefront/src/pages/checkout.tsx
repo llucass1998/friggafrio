@@ -17,7 +17,8 @@ import type {
   CheckoutPaymentSelection,
   PaymentResult,
 } from "@/lib/payments/contracts"
-import { recoverPaymentAttemptForCart } from "@/lib/payments/adapter"
+import { recoverPaymentAttemptForCart, createPaymentFrontendAdapter } from "@/lib/payments/adapter"
+import { completeCartOrder } from "@/lib/data/checkout/complete"
 import { useCart } from "@/lib/hooks/use-cart"
 import { useCompanySetupStatus } from "@/lib/hooks/use-company-setup"
 import { useAuth } from "@/lib/hooks/use-auth"
@@ -33,7 +34,7 @@ import {
   writeCheckoutSelectionState,
   writePreparedCheckoutState,
 } from "@/lib/utils/checkout-runtime-state"
-import { useLoaderData, useParams } from "@tanstack/react-router"
+import { useLoaderData, useNavigate, useParams } from "@tanstack/react-router"
 import {
   lazy,
   Suspense,
@@ -87,6 +88,9 @@ function CheckoutSetupBlocker({
 
 const Checkout = () => {
   const { step } = useLoaderData({ from: "/$countryCode/checkout" })
+  const navigate = useNavigate()
+  const { countryCode } = useParams({ strict: false })
+  const dismissedPaymentCartId = useRef<string | null>(null)
   const { data: cart, isLoading: cartLoading } = useCart()
   const { authState, customer } = useAuth()
   const [draft] = useState(readCheckoutDraftStorage)
@@ -137,7 +141,7 @@ const Checkout = () => {
     previousRuntimeKey.current = runtimeKey
   }, [runtimeKey])
   useEffect(() => {
-    if (!cart?.id) return
+    if (!cart?.id || dismissedPaymentCartId.current === cart.id) return
     let active = true
     dispatch({ type: "PAYMENT_RECOVERING" })
     void recoverPaymentAttemptForCart(cart.id)
@@ -153,6 +157,84 @@ const Checkout = () => {
       })
     return () => { active = false }
   }, [cart?.id])
+  useEffect(() => {
+    if (!recoveredPayment || recoveredPayment.uiState !== "pending" || !cart?.id) return
+    let active = true
+    let attempts = 0
+    const adapter = createPaymentFrontendAdapter()
+    const publicReference = recoveredPayment.publicReference || ""
+    const poll = async () => {
+      if (!active || attempts >= 180) return
+      attempts += 1
+      try {
+        const next = await adapter.getStatus(
+          {
+            cartId: cart.id,
+            prepared: effectivePrepared || {
+              cartId: cart.id,
+              total: Number(cart.total || 0),
+              subtotal: Number(cart.subtotal || 0),
+              shippingTotal: Number(cart.shipping_total || 0),
+              currency: cart.currency_code || "brl",
+              email: customerInfo.email,
+              shipping: {
+                name: cart.shipping_methods?.[0]?.name || "Entrega",
+                amount: Number(cart.shipping_methods?.[0]?.amount || 0),
+              },
+              items: (cart.items || []).map((i) => ({
+                id: i.id,
+                title: i.title,
+                quantity: i.quantity,
+                lineTotal: Number(i.total || 0),
+              })),
+            },
+            payer: {
+              email: customerInfo.email,
+              firstName: customerInfo.firstName,
+              lastName: customerInfo.lastName,
+              document: customerInfo.document,
+              documentType: customerInfo.personType === "business" ? "CNPJ" : "CPF",
+            },
+          },
+          publicReference,
+        )
+        if (!active) return
+        if (next.uiState === "approved") {
+          setRecoveredPayment(next)
+          try {
+            const order = await completeCartOrder()
+            navigate({
+              to: `/${countryCode || "br"}/order/${order.id}/confirmed`,
+              replace: true,
+            })
+          } catch (completionError) {
+            console.error("Order completion after payment approval failed:", completionError)
+          }
+        } else if (next.uiState !== recoveredPayment.uiState) {
+          setRecoveredPayment(next)
+        }
+      } catch {
+        // Keep pending on transient poll error
+      }
+    }
+    const timer = window.setInterval(() => void poll(), 5_000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [cart, countryCode, customerInfo, effectivePrepared, navigate, recoveredPayment])
+  const handleDismissRecoveredPayment = useCallback(() => {
+    if (cart?.id) {
+      dismissedPaymentCartId.current = cart.id
+    }
+    setRecoveredPayment(null)
+    setSelection(null)
+    if (runtimeKey) {
+      clearCheckoutSelectionState(runtimeKey)
+    }
+    setActiveStep(CheckoutStepKey.PAYMENT)
+    syncStepUrl(CheckoutStepKey.PAYMENT)
+  }, [cart?.id, runtimeKey, syncStepUrl])
   const persistDraft = useCallback((addressConfirmed = flow.addressConfirmed) => {
     writeCheckoutDraftStorage({
       version: CHECKOUT_DRAFT_VERSION,
@@ -336,7 +418,7 @@ const Checkout = () => {
         </header>
         <CheckoutProgress
           steps={steps}
-          currentStepIndex={currentStepIndex}
+          currentStepIndex={cart && recoveredPayment ? 3 : currentStepIndex}
           handleStepChange={goToStep}
           className="mb-7"
         />
@@ -347,7 +429,7 @@ const Checkout = () => {
           >
             <div className="mb-6 border-b border-[var(--color-border)] pb-4">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
-                Etapa {currentStepIndex + 1} de {steps.length}
+                {cart && recoveredPayment ? "Aguardando pagamento" : `Etapa ${currentStepIndex + 1} de ${steps.length}`}
               </p>
               <h2
                 id="checkout-step-title"
@@ -355,13 +437,19 @@ const Checkout = () => {
                 tabIndex={-1}
                 className="mt-1 text-xl font-bold text-[var(--color-navy)]"
               >
-                {steps[currentStepIndex]?.title}
+                {cart && recoveredPayment
+                  ? (recoveredPayment.pix ? "Pague com Pix para concluir seu pedido" : "Confirmação do pagamento")
+                  : steps[currentStepIndex]?.title}
               </h2>
             </div>
             <Suspense fallback={<Loading />}>
               {cartLoading && <Loading />}
               {cart && recoveredPayment ? (
-                <PaymentResultView result={recoveredPayment} onBack={() => setRecoveredPayment(null)} />
+                <PaymentResultView
+                  result={recoveredPayment}
+                  onBack={handleDismissRecoveredPayment}
+                  backLabel="Trocar forma de pagamento"
+                />
               ) : cart && (
                 <>
                   {activeStep === CheckoutStepKey.ADDRESSES && <CheckoutCustomerStep cart={cart} value={safeCustomerInfo} onChange={setCustomerInfo} onNext={handleNext} />}

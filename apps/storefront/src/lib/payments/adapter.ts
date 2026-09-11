@@ -127,6 +127,41 @@ const liveAdapter: PaymentFrontendAdapter = {
     return resultOf(session, method, context.prepared.total)
   },
   async getStatus(context, publicReference) {
+    try {
+      const backendUrl = import.meta.env.VITE_MEDUSA_BACKEND_URL || "http://localhost:9000"
+      const res = await fetch(`${backendUrl}/store/carts/${encodeURIComponent(context.cartId)}/payment-status`, {
+        headers: {
+          "x-publishable-api-key": import.meta.env.VITE_MEDUSA_PUBLISHABLE_KEY || "",
+        },
+        credentials: "include",
+      })
+      if (res.ok) {
+        const payload = (await res.json()) as { status?: string; session_id?: string; payment_method?: string }
+        if (payload.status === "authorized" || payload.status === "captured") {
+          return {
+            status: payload.status as PaymentSessionStatus,
+            uiState: "approved",
+            publicReference,
+          }
+        }
+        if (payload.status === "error" || payload.status === "rejected") {
+          return {
+            status: payload.status as PaymentSessionStatus,
+            uiState: "rejected",
+            publicReference,
+          }
+        }
+        if (payload.status === "canceled") {
+          return {
+            status: payload.status as PaymentSessionStatus,
+            uiState: "cancelled",
+            publicReference,
+          }
+        }
+      }
+    } catch {
+      // Fall through to retrieveSession
+    }
     const session = await retrieveSession(context, publicReference)
     const method = session.data?.payment_method === "card" ? "card" : "pix"
     return resultOf(session, method, context.prepared.total)
