@@ -1,4 +1,7 @@
-type MercadoPagoBrick = { unmount?: () => void }
+type MercadoPagoBrick = {
+  unmount?: () => void
+  getFormData?: () => Promise<Record<string, unknown> | null>
+}
 type MercadoPagoBricks = { create: (name: string, containerId: string, options: Record<string, unknown>) => Promise<MercadoPagoBrick> }
 type MercadoPagoInstance = { bricks: () => MercadoPagoBricks }
 type MercadoPagoConstructor = new (publicKey: string, options?: { locale?: string }) => MercadoPagoInstance
@@ -48,11 +51,12 @@ const loadScript = (): Promise<MercadoPagoConstructor> => {
   return scriptPromise
 }
 
-export const mountMercadoPagoCardBrick = async ({ publicKey, containerId, amount, payerEmail, onSubmit, onError }: {
+export const mountMercadoPagoCardBrick = async ({ publicKey, containerId, amount, payerEmail, onReady, onSubmit, onError }: {
   publicKey: string
   containerId: string
   amount: number
   payerEmail: string
+  onReady?: () => void
   onSubmit: (formData: Record<string, unknown>) => Promise<void>
   onError: (error: unknown) => void
 }): Promise<MercadoPagoBrick> => {
@@ -76,16 +80,21 @@ export const mountMercadoPagoCardBrick = async ({ publicKey, containerId, amount
   }
   try {
     return await bricks.create("cardPayment", containerId, {
-    initialization: { amount, payer: { email: payerEmail } },
-    customization: {
-      visual: { style: { theme: "default" } },
-      paymentMethods: { creditCard: "all" },
-    },
-    callbacks: {
-      onReady: () => undefined,
-      onSubmit,
-      onError,
-    },
+      initialization: { amount, payer: { email: payerEmail } },
+      customization: {
+        visual: {
+          style: { theme: "default" },
+          texts: { formSubmit: "Confirmar dados do cartão" },
+        },
+        paymentMethods: { creditCard: "all" },
+      },
+      callbacks: {
+        onReady: () => {
+          onReady?.()
+        },
+        onSubmit,
+        onError,
+      },
     })
   } catch {
     const error = { code: classifyMercadoPagoBrickError(undefined) }

@@ -16,7 +16,7 @@ describe("content security policy", () => {
         "object-src": ["'none'"],
         "script-src": ["'self'", "https://sdk.mercadopago.com", "https://vlibras.gov.br"],
         "connect-src": ["'self'", "https://api.mercadopago.com", "https://sdk.mercadopago.com", "https://vlibras.gov.br"],
-        "frame-src": ["https://sdk.mercadopago.com", "https://vlibras.gov.br"],
+        "frame-src": ["https://sdk.mercadopago.com", "https://secure-fields.mercadopago.com", "https://vlibras.gov.br"],
         "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
       },
     })

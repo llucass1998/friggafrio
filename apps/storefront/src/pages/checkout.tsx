@@ -230,7 +230,7 @@ const Checkout = () => {
     setRecoveredPayment(null)
     setSelection(null)
     if (runtimeKey) {
-      clearCheckoutSelectionState(runtimeKey)
+      clearCheckoutRuntimeStateKey(runtimeKey)
     }
     setActiveStep(CheckoutStepKey.PAYMENT)
     syncStepUrl(CheckoutStepKey.PAYMENT)

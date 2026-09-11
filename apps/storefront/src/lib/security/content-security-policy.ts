@@ -1,5 +1,6 @@
 const mercadoPagoSdkOrigin = "https://sdk.mercadopago.com"
 const mercadoPagoApiOrigin = "https://api.mercadopago.com"
+const mercadoPagoSecureFieldsOrigin = "https://secure-fields.mercadopago.com"
 const googleFontsCssOrigin = "https://fonts.googleapis.com"
 const googleFontsFilesOrigin = "https://fonts.gstatic.com"
 const vlibrasOrigin = "https://vlibras.gov.br"
@@ -20,6 +21,6 @@ export const storefrontContentSecurityPolicyReportOnly = (isDevelopment: boolean
     `style-src 'self' ${googleFontsCssOrigin}`,
     `script-src 'self' ${mercadoPagoSdkOrigin} ${vlibrasOrigin}`,
     `connect-src 'self' ${mercadoPagoApiOrigin} ${mercadoPagoSdkOrigin} ${vlibrasOrigin}${developmentConnections}`,
-    `frame-src ${mercadoPagoSdkOrigin} ${vlibrasOrigin}`,
+    `frame-src ${mercadoPagoSdkOrigin} ${mercadoPagoSecureFieldsOrigin} ${vlibrasOrigin}`,
   ].join("; ")
 }

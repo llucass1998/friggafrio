@@ -44,6 +44,10 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
           containerId: "mercado-pago-secure-card-mount",
           amount: prepared.total,
           payerEmail: prepared.email,
+          onReady: () => {
+            if (disposed) return
+            setBrickReady(true)
+          },
           onSubmit: async (formData) => {
             if (disposed) return
             const token = typeof formData.token === "string" ? formData.token : ""
@@ -54,6 +58,7 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
               return
             }
             onSelectionChange({ method: "card", card: { secureMountId: "mercado-pago-secure-card-mount", token, paymentMethodId, installments } })
+            onNext()
           },
           onError: (sdkError) => {
             if (disposed) return
@@ -121,12 +126,20 @@ export default function CheckoutPaymentStep({ cart, prepared, selection, onSelec
       })}
     </div>
     {selection?.method === "card" && <section className="rounded-xl border border-[var(--color-border)] p-4" aria-labelledby="secure-card-title">
-      <h3 id="secure-card-title" className="font-semibold text-[var(--color-navy)]">Cartao de credito</h3>
-      <p className="mt-1 text-sm text-[var(--color-text-muted)]">A FriggaFrio nao armazena dados do cartao.</p>
-      <div id="mercado-pago-secure-card-mount" className="mt-4 min-h-56 rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600" aria-busy={!brickReady}>
-        {!brickReady && "Carregando formulario seguro do Mercado Pago..."}
+      <h3 id="secure-card-title" className="font-semibold text-[var(--color-navy)]">Cartão de crédito</h3>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">A FriggaFrio não armazena dados do cartão.</p>
+      <div className="relative mt-4 min-h-56">
+        {!brickReady && (
+          <div className="absolute inset-0 z-10 flex min-h-56 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50/90 p-6 text-sm text-zinc-600 backdrop-blur-xs">
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-primary)] border-t-transparent" />
+              Carregando formulário seguro do Mercado Pago...
+            </span>
+          </div>
+        )}
+        <div id="mercado-pago-secure-card-mount" className="min-h-56 rounded-lg border border-zinc-300 bg-white p-4 text-sm text-zinc-600" aria-busy={!brickReady}></div>
       </div>
-      <p className="mt-3 text-sm text-[var(--color-text-muted)]">O Mercado Pago informa parcelas elegiveis, limitadas a 10x sem juros.</p>
+      <p className="mt-3 text-sm text-[var(--color-text-muted)]">O Mercado Pago informa parcelas elegíveis, limitadas a 10x sem juros.</p>
     </section>}
     {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert">{error}</p>}
     <div className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row"><Button type="button" variant="secondary" onClick={onBack}>Voltar</Button><Button type="button" data-testid="checkout-payment-next" onClick={continueToReview} disabled={!selection || (selection.method === "card" && (!brickReady || !selection.card?.token))}>Continuar para revisao</Button></div>
