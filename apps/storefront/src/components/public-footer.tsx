@@ -217,9 +217,9 @@ export function PublicFooter() {
                   </svg>
                   <span>Pix</span>
                 </div>
-                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="CartÃ£o de CrÃ©dito em atÃ© 10x sem juros">
+                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="Cartão de crédito em até 10x sem juros">
                   <CreditCard className="h-4 w-4 text-sky-400" aria-hidden="true" />
-                  <span>CartÃ£o atÃ© 10x</span>
+                  <span>Cartão 10x</span>
                 </div>
                 <div className="flex h-8 items-center rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Visa">
                   <span className="font-extrabold italic text-blue-400 tracking-wider">VISA</span>
@@ -266,7 +266,7 @@ export function PublicFooter() {
               <p className="pt-2 text-xs text-gray-400">
                 Desenvolvido por{" "}
                 <a
-                  href="https://www.linkedin.com/in/lucas-souza-52422b160"
+                  href="https://www.linkedin.com/in/lucas-souza-furtado/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 underline decoration-gray-600 underline-offset-2 transition-colors hover:text-white"
@@ -274,7 +274,7 @@ export function PublicFooter() {
                   Lucas Souza
                 </a>
                 <a
-                  href="https://www.linkedin.com/in/lucas-souza-52422b160"
+                  href="https://www.linkedin.com/in/lucas-souza-furtado/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn de Lucas Souza"
@@ -295,4 +295,6 @@ export function PublicFooter() {
     </footer>
   )
 }
+
+
 
