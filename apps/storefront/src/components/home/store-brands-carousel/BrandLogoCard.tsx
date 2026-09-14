@@ -13,10 +13,6 @@ export function BrandLogoCard({ name, logoSrc, logoAlt, websiteUrl }: BrandLogoC
         alt={logoAlt || `Logo da ${name}`}
         className="w-full h-full object-contain max-h-[100px] md:max-h-[120px]"
         loading="lazy"
-        onError={(event) => {
-          event.currentTarget.style.display = "none"
-          event.currentTarget.parentElement?.classList.add("brand-logo-fallback")
-        }}
       />
     </div>
   )
