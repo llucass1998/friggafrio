@@ -107,7 +107,7 @@ export function ProductShowcaseCarousel() {
       aria-roledescription="carousel"
       aria-label="Destaques de Equipamentos FriggaFrio"
     >
-      <div className="ff-hero-controls-stage relative">
+      <div className="ff-hero-controls-stage relative overflow-visible">
         <div className="overflow-hidden w-full" ref={emblaRef}>
           <div className="flex touch-pan-y" style={{ backfaceVisibility: "hidden" }}>
             {showcaseSlides.map((slide, index) => (

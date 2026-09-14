@@ -116,7 +116,7 @@ export function PublicFooter() {
           {/* Brand & Sobre */}
           <div className="lg:col-span-1 mb-6 md:mb-0">
             <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-4">
-              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-20 w-auto object-contain brightness-0 invert sm:h-24" />
+              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-24 w-auto object-contain brightness-0 invert sm:h-28" />
             </Link>
             <p className="text-sm text-[var(--color-surface-soft)] leading-relaxed mb-6">
               {storeConfig.description || "Especialistas em refrigeração, ar-condicionado e câmaras frias. Produtos e componentes de alta performance."}

@@ -70,7 +70,7 @@ export function PublicProductCard({ product, compact = false, catalog = false, s
     : "line-clamp-3 min-h-[3.75rem] text-[0.95rem] font-bold leading-[1.25] text-[var(--color-navy)] transition-colors group-hover:text-[var(--color-primary)] sm:text-base"
 
   return (
-    <article data-testid="public-product-card" data-product-card-version="2" className={`ff-product-card ${catalog ? "ff-product-card--catalog" : ""} group relative box-border flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[12px] border border-[#D9E2EA] bg-white shadow-[0_4px_14px_rgba(15,45,75,0.10)]`}>
+    <article data-testid="public-product-card" data-product-card-version="3" className={`ff-product-card ${catalog ? "ff-product-card--catalog" : ""} group relative box-border flex h-full w-full min-w-0 flex-col overflow-visible rounded-[12px] border border-[#D9E2EA] bg-white shadow-[0_8px_24px_rgba(15,45,75,0.12)] transition-shadow duration-200 hover:shadow-[0_12px_30px_rgba(15,45,75,0.18)]`}>
       <div className="absolute right-2 top-2 z-20 flex items-center gap-0.5">
         <FavoriteButton
           productId={product.id}

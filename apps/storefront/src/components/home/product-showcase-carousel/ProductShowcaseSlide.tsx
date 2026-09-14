@@ -30,11 +30,11 @@ export function ProductShowcaseSlide({ slide, isActive, direction = "next" }: Pr
       data-promotional={isPromotional ? "true" : "false"}
     >
       <div
-        className={`ff-hero-slide-stage group relative w-full overflow-hidden ${isPromotional ? promoBg : defaultBg}`}
+        className={`ff-hero-slide-stage group relative w-full overflow-visible ${isPromotional ? promoBg : defaultBg}`}
         data-slide-id={slide.id}
       >
         {/* Artwork - visible on all devices with picture and fallback */}
-        <div className="relative z-10 w-full h-full flex items-center justify-center">
+        <div className="relative z-10 w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]">
           <picture className={`block w-full h-full ${isPromotional ? "" : "bg-slate-900"}`}>
             {mobileImage ? (
               <source media="(max-width: 767px)" srcSet={mobileImage} />

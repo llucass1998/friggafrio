@@ -1,4 +1,5 @@
 import { storeConfig } from "@/config/store"
+import { MessageCircle } from "lucide-react"
 
 const DEFAULT_ASSET = "/images/home/banner-orcamento-whatsapp-friggafrio-compacto.png"
 const DEFAULT_ALT = "Não encontrou o produto? Peça um orçamento pelo WhatsApp"
@@ -32,20 +33,26 @@ export function HomeWhatsAppQuoteBanner({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={alt}
-          className="block w-full overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          className="group block w-full overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(15,45,75,0.12)] transition-shadow hover:shadow-[0_12px_30px_rgba(15,45,75,0.18)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
         >
           <picture className="block w-full overflow-hidden rounded-xl">
             {imageMobile ? (
               <source media="(max-width: 767px)" srcSet={imageMobile} />
             ) : null}
-            <img
+            <div className="relative">
+              <img
               src={imageDesktop}
               alt={alt}
               loading="lazy"
               className="block w-full h-auto rounded-xl object-contain"
               width="1881"
               height="300"
-            />
+              />
+              <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-3 py-2 text-xs font-bold text-white shadow-lg transition-transform group-hover:scale-105">
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                Fale no WhatsApp
+              </span>
+            </div>
           </picture>
         </a>
       </div>

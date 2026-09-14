@@ -57,7 +57,7 @@ export function HomeProductSection({
   if (!isLoading && products.length === 0 && hideWhenEmpty) return null
 
   return (
-    <section data-testid={sectionId} className="relative w-full bg-[var(--color-background)] py-8 md:py-10">
+    <section data-testid={sectionId} className="relative w-full border-t border-slate-200 bg-white py-8 md:py-10">
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
         <div className="py-1">
         <CarouselSectionHeader

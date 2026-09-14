@@ -100,7 +100,7 @@ export function HomePromotionalBanners({
             {banners.map((banner) => (
               <div
                 key={banner.id}
-                className="min-w-0 flex-[0_0_100%] md:flex-auto"
+                className="min-w-0 flex-[0_0_100%] md:flex-auto pb-1"
                 role="group"
                 aria-roledescription="slide"
                 aria-label={banner.alt}
@@ -108,7 +108,7 @@ export function HomePromotionalBanners({
                 <Link
                   to={banner.href as string}
                   aria-label={`Ver produtos de ${banner.alt.toLowerCase()}`}
-                  className="ff-home-banner block overflow-hidden rounded-xl bg-white shadow-sm transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+                  className="ff-home-banner block overflow-hidden rounded-xl bg-white shadow-[0_8px_24px_rgba(15,45,75,0.12)] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
                 >
                   <picture className="block w-full h-full overflow-hidden rounded-xl">
                     {banner.imageMobile ? (
