@@ -48,7 +48,7 @@ export function NewsletterSignup() {
   }
 
   return (
-    <section aria-labelledby="newsletter-title" className="border-t border-[var(--color-border)] bg-[#f3f9fd] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+    <section aria-labelledby="newsletter-title" className="bg-[#f3f9fd] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <div className="mx-auto max-w-[1180px] overflow-hidden rounded-[22px] border border-[#d9e8f2] bg-white shadow-[0_16px_42px_rgba(8,59,102,0.10)]">
         <div className="grid lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
           <div className="bg-[#e8f5fb] p-7 sm:p-9 lg:p-11">

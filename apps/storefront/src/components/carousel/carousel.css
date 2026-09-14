@@ -29,7 +29,7 @@
 .ff-carousel-viewport {
   min-width: 0;
   overflow: hidden;
-  padding-block: 8px 10px;
+  padding-block: 10px 28px;
   touch-action: pan-y pinch-zoom;
   overscroll-behavior-x: contain;
   cursor: grab;
@@ -38,16 +38,38 @@
 .ff-carousel-viewport:active { cursor: grabbing; }
 
 .ff-carousel-stage {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: center;
-  column-gap: 18px;
+  position: relative;
+  width: 100%;
 }
 
-.ff-carousel-stage > .ff-carousel-viewport { grid-column: 2; }
-.ff-carousel-stage:not(:has(> button)) > .ff-carousel-viewport { grid-column: 1 / -1; }
-.ff-carousel-stage > button:first-child { grid-column: 1; }
-.ff-carousel-stage > button:last-child { grid-column: 3; }
+.ff-carousel-stage > .ff-carousel-viewport {
+  width: 100%;
+}
+
+.ff-carousel-stage > button:first-child {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.ff-carousel-stage > button:last-child {
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+@media (min-width: 1024px) {
+  .ff-carousel-stage > button:first-child {
+    left: -22px;
+  }
+  .ff-carousel-stage > button:last-child {
+    right: -22px;
+  }
+}
 
 .ff-product-card {
   /* Shared card rhythm keeps variable titles, SKUs, and price states aligned. */
@@ -148,9 +170,8 @@
 }
 
 @media (min-width: 640px) {
-  /* Keep short shelves on the same card column as shelves with side controls. */
   .ff-carousel-stage:not(:has(> button)) > .ff-carousel-viewport {
-    margin-inline: 36px;
+    margin-inline: 0;
   }
 
   .ff-product-slide,
@@ -194,6 +215,15 @@
 @media (min-width: 1024px) {
   :root {
     --ff-carousel-gap: 20px;
+  }
+
+  .ff-featured-categories .ff-carousel-track {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ff-featured-categories .ff-category-slide {
+    margin-inline-end: 0;
   }
 
   .ff-product-slide,

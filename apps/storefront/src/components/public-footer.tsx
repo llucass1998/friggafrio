@@ -41,7 +41,7 @@ export function PublicFooter() {
     if (baseHref.startsWith("/account") && !customer && baseHref !== "/account/login" && baseHref !== "/account/register") {
       return `/${countryCode}/account/login?returnTo=${encodeURIComponent(`/${countryCode}${baseHref}`)}`
     }
-    
+
     return baseHref.startsWith("/account")
       ? `/${countryCode}${baseHref}`
       : baseHref.startsWith("/") ? `/${countryCode}${baseHref}` : baseHref
@@ -52,7 +52,7 @@ export function PublicFooter() {
   return (
     <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0 border-t-[8px] border-[#bae6fd]">
 
-      {/* 1. Área Superior de Benefícios e Atendimento */}
+      {/* 1. Ãrea Superior de BenefÃ­cios e Atendimento */}
       <div className="border-b border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-2 lg:grid-cols-4 lg:text-left">
@@ -70,12 +70,12 @@ export function PublicFooter() {
 
             <div className="flex min-h-14 flex-col items-center gap-3 lg:flex-row lg:items-center">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366]">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold uppercase text-white">Atendimento Rápido</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Atendimento RÃ¡pido</h4>
                 <a href={`https://wa.me/${storeConfig.whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[#25D366] hover:text-[#20bd5a] transition-colors">Via WhatsApp</a>
               </div>
             </div>
@@ -88,7 +88,7 @@ export function PublicFooter() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja Física</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja FÃ­sica</h4>
                 <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                   {primaryLocation ? `${primaryLocation.addressLine}, ${primaryLocation.city} - ${primaryLocation.stateCode}` : "Venha nos visitar"}
                 </Link>
@@ -103,23 +103,23 @@ export function PublicFooter() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm uppercase">Compra segura</h4>
-                <span className="text-sm text-[var(--color-surface-soft)]">Informações e políticas claras</span>
+                <span className="text-sm text-[var(--color-surface-soft)]">InformaÃ§Ãµes e polÃ­ticas claras</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Área Principal */}
+      {/* 2. Ãrea Principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand & Sobre */}
           <div className="lg:col-span-1 mb-6 md:mb-0">
-            <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-4">
-              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-24 w-auto object-contain brightness-0 invert sm:h-28" />
+            <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-2">
+              <img src="/images/brand/logo-friggafrio.png" alt="FriggaFrio Logo" className="h-28 w-auto object-contain brightness-0 invert sm:h-32" />
             </Link>
-            <p className="text-sm text-[var(--color-surface-soft)] leading-relaxed mb-6">
-              {storeConfig.description || "Especialistas em refrigeração, ar-condicionado e câmaras frias. Produtos e componentes de alta performance."}
+            <p className="text-xs text-[var(--color-surface-soft)] leading-relaxed mb-5">
+              {storeConfig.description || "Especialistas em refrigeraÃ§Ã£o, ar-condicionado e cÃ¢maras frias. Produtos e componentes de alta performance."}
             </p>
             <div className="flex flex-col gap-2">
               <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Redes Sociais</span>
@@ -151,7 +151,7 @@ export function PublicFooter() {
                 {footerNavigation.institutional.filter(item => item.active).map(item => (
                   <li key={item.id}>
                     {item.id === "fale-conosco" ? (
-                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
+                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("OlÃ¡! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
                         {item.label}
                       </a>
                     ) : (
@@ -181,7 +181,7 @@ export function PublicFooter() {
                   </li>
                 ))}
                 {footerNavigation.support.filter(item => item.active).length === 0 && (
-                   <li className="text-sm text-gray-500 italic">Área em construção</li>
+                   <li className="text-sm text-gray-500 italic">Ãrea em construÃ§Ã£o</li>
                 )}
               </ul>
             </Accordion>
@@ -202,23 +202,42 @@ export function PublicFooter() {
         </div>
       </div>
 
-      {/* 3. Área Inferior com Pagamento, Segurança */}
+      {/* 3. Ãrea Inferior com Pagamento, SeguranÃ§a */}
       <div className="bg-gray-900 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4">
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Formas de pagamento</span>
-              <div className="flex max-w-sm items-center gap-3 rounded-xl border border-gray-700 bg-gray-950/60 px-4 py-3 text-gray-300">
-                <CreditCard className="h-6 w-6 shrink-0 text-sky-300" aria-hidden="true" />
-                <p className="text-xs leading-5">As formas disponíveis são apresentadas no checkout quando o pagamento estiver habilitado.</p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 max-w-md">
+                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="Pix">
+                  <svg className="h-4 w-4 text-[#32BCAD]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.472 6.528a4.95 4.95 0 0 0-7.004 0L4.743 12.253a4.953 4.953 0 0 0 0 7.004 4.953 4.953 0 0 0 7.004 0l5.725-5.725a4.953 4.953 0 0 0 0-7.004Zm-1.414 5.59-4.311 4.311a2.953 2.953 0 0 1-4.176 0 2.953 2.953 0 0 1 0-4.176l4.311-4.311a2.953 2.953 0 0 1 4.176 0 2.953 2.953 0 0 1 0 4.176Z" />
+                    <path d="M6.528 6.528a4.95 4.95 0 0 1 7.004 0l5.725 5.725a4.953 4.953 0 0 1 0 7.004 4.953 4.953 0 0 1-7.004 0l-5.725-5.725a4.953 4.953 0 0 1 0-7.004Z" opacity="0.3" />
+                  </svg>
+                  <span>Pix</span>
+                </div>
+                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="CartÃ£o de CrÃ©dito em atÃ© 10x sem juros">
+                  <CreditCard className="h-4 w-4 text-sky-400" aria-hidden="true" />
+                  <span>CartÃ£o atÃ© 10x</span>
+                </div>
+                <div className="flex h-8 items-center rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Visa">
+                  <span className="font-extrabold italic text-blue-400 tracking-wider">VISA</span>
+                </div>
+                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Mastercard">
+                  <div className="flex -space-x-1.5" aria-hidden="true">
+                    <span className="h-3.5 w-3.5 rounded-full bg-[#EB001B] inline-block" />
+                    <span className="h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90 inline-block" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-gray-200">Mastercard</span>
+                </div>
               </div>
             </div>
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Segurança</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">SeguranÃ§a</span>
                 <div className="flex justify-center gap-4">
-                 <div className="flex items-center gap-2 text-gray-300"><LockKeyhole className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Navegação<br/>protegida</span></div>
+                 <div className="flex items-center gap-2 text-gray-300"><LockKeyhole className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">NavegaÃ§Ã£o<br/>protegida</span></div>
                 <div className="flex items-center gap-2 text-gray-300"><BadgeCheck className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Dados da empresa<br/>transparentes</span></div>
               </div>
             </div>
@@ -242,23 +261,23 @@ export function PublicFooter() {
                 </span>
               </p>
               <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">
-                Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
+                PreÃ§os e condiÃ§Ãµes de pagamento exclusivos para compras via internet, podendo variar nas lojas fÃ­sicas. Ofertas vÃ¡lidas atÃ© o tÃ©rmino dos nossos estoques para internet.
               </p>
               <p className="pt-2 text-xs text-gray-400">
                 Desenvolvido por{" "}
                 <a
-                  href="https://www.linkedin.com/in/lucas-souza-furtado"
+                  href="https://www.linkedin.com/in/lucas-souza-52422b160"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 underline decoration-gray-600 underline-offset-2 transition-colors hover:text-white"
                 >
-                  Lucas Souza Furtado
+                  Lucas Souza
                 </a>
                 <a
-                  href="https://www.linkedin.com/in/lucas-souza-furtado"
+                  href="https://www.linkedin.com/in/lucas-souza-52422b160"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="LinkedIn de Lucas Souza Furtado"
+                  aria-label="LinkedIn de Lucas Souza"
                   className="ml-2 inline-flex align-middle text-gray-300 transition-colors hover:text-white"
                 >
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -268,7 +287,7 @@ export function PublicFooter() {
               </p>
             </div>
 
-            
+
 
           </div>
         </div>
@@ -276,3 +295,4 @@ export function PublicFooter() {
     </footer>
   )
 }
+

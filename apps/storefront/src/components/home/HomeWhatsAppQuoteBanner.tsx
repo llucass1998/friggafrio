@@ -1,5 +1,4 @@
 import { storeConfig } from "@/config/store"
-import { MessageCircle } from "lucide-react"
 
 const DEFAULT_ASSET = "/images/home/banner-orcamento-whatsapp-friggafrio-compacto.png"
 const DEFAULT_ALT = "Não encontrou o produto? Peça um orçamento pelo WhatsApp"
@@ -48,10 +47,7 @@ export function HomeWhatsAppQuoteBanner({
               width="1881"
               height="300"
               />
-              <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-3 py-2 text-xs font-bold text-white shadow-lg transition-transform group-hover:scale-105">
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                Fale no WhatsApp
-              </span>
+
             </div>
           </picture>
         </a>
@@ -59,3 +55,4 @@ export function HomeWhatsAppQuoteBanner({
     </section>
   )
 }
+
