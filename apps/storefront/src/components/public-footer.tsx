@@ -247,12 +247,23 @@ export function PublicFooter() {
               <p className="pt-2 text-xs text-gray-400">
                 Desenvolvido por{" "}
                 <a
-                  href="https://github.com/llucass1998"
+                  href="https://www.linkedin.com/in/lucas-souza-furtado"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 underline decoration-gray-600 underline-offset-2 transition-colors hover:text-white"
                 >
-                  Lucas Souza
+                  Lucas Souza Furtado
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/lucas-souza-furtado"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn de Lucas Souza Furtado"
+                  className="ml-2 inline-flex align-middle text-gray-300 transition-colors hover:text-white"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M5.16 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM3.5 9h3.32v11.5H3.5V9Zm5.4 0h3.18v1.57h.05c.44-.83 1.52-1.87 3.14-1.87 3.36 0 3.98 2.21 3.98 5.09v6.71h-3.31v-5.94c0-1.42-.03-3.24-1.98-3.24-1.98 0-2.28 1.55-2.28 3.14v6.04H8.9V9Z" />
+                  </svg>
                 </a>
               </p>
             </div>
