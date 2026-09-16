@@ -116,6 +116,7 @@ export function PublicProductCard({
               src={useOriginalThumbnail ? rawThumbnail || thumbnail : thumbnail}
               alt={productTitle}
               loading="lazy"
+              decoding="async"
               width="300"
               height="300"
               className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"

@@ -1,6 +1,6 @@
 import { storeConfig } from "@/config/store"
 
-const DEFAULT_ASSET = "/images/home/banner-orcamento-whatsapp-friggafrio-compacto.png"
+const DEFAULT_ASSET = "/images/home/banner-orcamento-whatsapp-friggafrio-compacto.webp"
 const DEFAULT_ALT = "Não encontrou o produto? Peça um orçamento pelo WhatsApp"
 const DEFAULT_MESSAGE =
   "Olá! Não encontrou o produto que procuro em estoque e gostaria de solicitar disponibilidade, prazo e orçamento."
@@ -31,7 +31,7 @@ export function HomeWhatsAppQuoteBanner({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={alt}
+          aria-label="Pedir orçamento via WhatsApp"
           className="group block w-full overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(15,45,75,0.12)] transition-shadow hover:shadow-[0_12px_30px_rgba(15,45,75,0.18)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
         >
           <picture className="block w-full overflow-hidden rounded-xl">
@@ -40,12 +40,13 @@ export function HomeWhatsAppQuoteBanner({
             ) : null}
             <div className="relative">
               <img
-              src={imageDesktop}
-              alt={alt}
-              loading="lazy"
-              className="block w-full h-auto rounded-xl object-contain"
-              width="1881"
-              height="300"
+                src={imageDesktop}
+                alt={alt}
+                loading="lazy"
+                decoding="async"
+                className="block w-full h-auto rounded-xl object-contain"
+                width="1881"
+                height="300"
               />
 
             </div>

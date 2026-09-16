@@ -16,6 +16,8 @@ export const Thumbnail = ({ thumbnail, alt, className }: ThumbnailProps) => {
         <img
           src={resolvedThumbnail}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           className={clsx("w-20 h-20 object-cover bg-zinc-50", className)}
         />
       ) : (

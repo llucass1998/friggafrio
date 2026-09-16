@@ -49,7 +49,8 @@ export function ProductShowcaseSlide({ slide, isActive, direction = "next" }: Pr
                 } as React.CSSProperties
               }
               className={`carousel-slide-img z-10 block h-full w-full ${imageFitClass}`}
-              loading={isPromotional || isActive ? "eager" : "lazy"}
+              loading={isActive ? "eager" : "lazy"}
+              decoding="async"
             />
           </picture>
         </div>
