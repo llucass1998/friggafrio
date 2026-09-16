@@ -4,7 +4,7 @@ import { COMPANY_INFORMATION } from "@/config/company"
 import { footerNavigation } from "@/config/footer-navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
-import { BadgeCheck, CreditCard, LockKeyhole } from "lucide-react"
+import { BadgeCheck, LockKeyhole } from "lucide-react"
 
 function Accordion({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -52,7 +52,7 @@ export function PublicFooter() {
   return (
     <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0 border-t-[8px] border-[#bae6fd]">
 
-      {/* 1. Ãrea Superior de BenefÃ­cios e Atendimento */}
+      {/* 1. Área Superior de Benefícios e Atendimento */}
       <div className="border-b border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-2 lg:grid-cols-4 lg:text-left">
@@ -75,7 +75,7 @@ export function PublicFooter() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold uppercase text-white">Atendimento RÃ¡pido</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Atendimento Rápido</h4>
                 <a href={`https://wa.me/${storeConfig.whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[#25D366] hover:text-[#20bd5a] transition-colors">Via WhatsApp</a>
               </div>
             </div>
@@ -88,7 +88,7 @@ export function PublicFooter() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja FÃ­sica</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja Física</h4>
                 <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                   {primaryLocation ? `${primaryLocation.addressLine}, ${primaryLocation.city} - ${primaryLocation.stateCode}` : "Venha nos visitar"}
                 </Link>
@@ -103,14 +103,14 @@ export function PublicFooter() {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm uppercase">Compra segura</h4>
-                <span className="text-sm text-[var(--color-surface-soft)]">InformaÃ§Ãµes e polÃ­ticas claras</span>
+                <span className="text-sm text-[var(--color-surface-soft)]">Informações e políticas claras</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Ãrea Principal */}
+      {/* 2. Área Principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand & Sobre */}
@@ -119,7 +119,7 @@ export function PublicFooter() {
               <img src="/images/brand/logo-friggafrio-optimized.webp" alt="FriggaFrio Logo" loading="lazy" decoding="async" className="h-28 w-auto object-contain brightness-0 invert sm:h-32" />
             </Link>
             <p className="text-xs text-[var(--color-surface-soft)] leading-relaxed mb-5">
-              {storeConfig.description || "Especialistas em refrigeraÃ§Ã£o, ar-condicionado e cÃ¢maras frias. Produtos e componentes de alta performance."}
+              {storeConfig.description || "Especialistas em refrigeração, ar-condicionado e câmaras frias. Produtos e componentes de alta performance."}
             </p>
             <div className="flex flex-col gap-2">
               <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Redes Sociais</span>
@@ -151,7 +151,7 @@ export function PublicFooter() {
                 {footerNavigation.institutional.filter(item => item.active).map(item => (
                   <li key={item.id}>
                     {item.id === "fale-conosco" ? (
-                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("OlÃ¡! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
+                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
                         {item.label}
                       </a>
                     ) : (
@@ -181,7 +181,7 @@ export function PublicFooter() {
                   </li>
                 ))}
                 {footerNavigation.support.filter(item => item.active).length === 0 && (
-                   <li className="text-sm text-gray-500 italic">Ãrea em construÃ§Ã£o</li>
+                   <li className="text-sm text-gray-500 italic">Área em construção</li>
                 )}
               </ul>
             </Accordion>
@@ -202,7 +202,7 @@ export function PublicFooter() {
         </div>
       </div>
 
-      {/* 3. Ãrea Inferior com Pagamento, SeguranÃ§a */}
+      {/* 3. Área Inferior com Pagamento, Segurança */}
       <div className="bg-gray-900 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4">
@@ -216,10 +216,6 @@ export function PublicFooter() {
                     <path d="M6.528 6.528a4.95 4.95 0 0 1 7.004 0l5.725 5.725a4.953 4.953 0 0 1 0 7.004 4.953 4.953 0 0 1-7.004 0l-5.725-5.725a4.953 4.953 0 0 1 0-7.004Z" opacity="0.3" />
                   </svg>
                   <span>Pix</span>
-                </div>
-                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="Cartão de crédito em até 10x sem juros">
-                  <CreditCard className="h-4 w-4 text-sky-400" aria-hidden="true" />
-                  <span>Cartão 10x</span>
                 </div>
                 <div className="flex h-8 items-center rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Visa">
                   <span className="font-extrabold italic text-blue-400 tracking-wider">VISA</span>
@@ -235,9 +231,9 @@ export function PublicFooter() {
             </div>
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">SeguranÃ§a</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Segurança</span>
                 <div className="flex justify-center gap-4">
-                 <div className="flex items-center gap-2 text-gray-300"><LockKeyhole className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">NavegaÃ§Ã£o<br/>protegida</span></div>
+                 <div className="flex items-center gap-2 text-gray-300"><LockKeyhole className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Navegação<br/>protegida</span></div>
                 <div className="flex items-center gap-2 text-gray-300"><BadgeCheck className="h-7 w-7 text-sky-300" aria-hidden="true" /><span className="text-xs">Dados da empresa<br/>transparentes</span></div>
               </div>
             </div>
@@ -261,7 +257,7 @@ export function PublicFooter() {
                 </span>
               </p>
               <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">
-                PreÃ§os e condiÃ§Ãµes de pagamento exclusivos para compras via internet, podendo variar nas lojas fÃ­sicas. Ofertas vÃ¡lidas atÃ© o tÃ©rmino dos nossos estoques para internet.
+                Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
               </p>
               <p className="pt-2 text-xs text-gray-400">
                 Desenvolvido por{" "}
