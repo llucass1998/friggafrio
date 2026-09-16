@@ -24,6 +24,7 @@ import {
   isCartCheckoutReady,
   sortCartItems,
   getCartItemCount,
+  getLineItemThumbnail,
 } from "@/lib/utils/cart"
 import { getCountryCodeFromPath } from "@/lib/utils/region"
 import { getPricePercentageDiff } from "@/lib/utils/price"
@@ -212,7 +213,7 @@ const CompactCartLineItem = ({ item, cart, fields, onRemoveStart }: CartLineItem
   const commercialState = getCartLineCommercialState(item)
   return (
     <div className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)] items-start gap-3" data-testid="cart-item">
-      <Thumbnail thumbnail={item.thumbnail} alt={decodeProductText(item.product_title || item.title || "")} className="h-[72px] w-[72px] rounded-md object-contain" />
+      <Thumbnail thumbnail={getLineItemThumbnail(item)} alt={decodeProductText(item.product_title || item.title || "")} className="h-[72px] w-[72px] rounded-md object-contain" />
       <div className="min-w-0 max-w-full">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -254,7 +255,7 @@ const DisplayCartLineItem = ({ item, cart, className }: CartLineItemProps) => {
       )}
     >
       <Thumbnail
-        thumbnail={item.thumbnail}
+        thumbnail={getLineItemThumbnail(item)}
         alt={decodeProductText(item.product_title || item.title || "")}
         className="w-16 h-16"
       />
@@ -297,7 +298,7 @@ export const CartLineItem = ({
       <div className="flex-shrink-0">
         <div className="w-[88px] h-[88px] rounded-lg overflow-hidden bg-slate-50 border border-[#E2E8F0]">
           <Thumbnail
-            thumbnail={item.thumbnail}
+            thumbnail={getLineItemThumbnail(item)}
             alt={decodeProductText(item.product_title || item.title || "")}
             className="w-full h-full object-cover"
           />
@@ -544,7 +545,7 @@ export const CartEmpty = () => {
 }
 
 
-export const DEFAULT_CART_DROPDOWN_FIELDS = "id,*items,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,total,+currency_code,item_subtotal"
+export const DEFAULT_CART_DROPDOWN_FIELDS = "id,*items,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,*items.variant.product.images,total,+currency_code,item_subtotal"
 
 export const CartDropdown = () => {
   const { isOpen, openCart, closeCart } = useCartDrawer()

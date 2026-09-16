@@ -8,6 +8,7 @@ import {
   isCartCheckoutReady,
   retrieveCartOnce,
   sortCartItems,
+  getLineItemThumbnail,
 } from "../../src/lib/utils/cart.ts"
 
 test("getCartItemCount sums item quantities", () => {
@@ -198,4 +199,73 @@ test("stale cart lookups share one in-flight request", async () => {
   await assert.rejects(first)
   assert.equal(isCartNotFoundError({ message: "Cart with id cart_dead not found" }), true)
   assert.equal(isCartNotFoundError({ status: 401 }), false)
+})
+
+test("getLineItemThumbnail resolves direct thumbnail or falls back through variant and product hierarchy", () => {
+  // 1. Direct item.thumbnail
+  assert.equal(
+    getLineItemThumbnail({ thumbnail: "https://example.com/item.png" }),
+    "https://example.com/item.png"
+  )
+
+  // 2. Variant thumbnail fallback
+  assert.equal(
+    getLineItemThumbnail({
+      thumbnail: null,
+      variant: { thumbnail: "https://example.com/variant.png" },
+    }),
+    "https://example.com/variant.png"
+  )
+
+  // 3. Product thumbnail fallback
+  assert.equal(
+    getLineItemThumbnail({
+      thumbnail: null,
+      variant: {
+        thumbnail: null,
+        product: { thumbnail: "https://example.com/product.png" },
+      },
+    }),
+    "https://example.com/product.png"
+  )
+
+  // 4. Product images array fallback
+  assert.equal(
+    getLineItemThumbnail({
+      thumbnail: null,
+      variant: {
+        thumbnail: null,
+        product: {
+          thumbnail: null,
+          images: [{ url: "https://example.com/product-image.png" }],
+        },
+      },
+    }),
+    "https://example.com/product-image.png"
+  )
+
+  // 5. Direct product images fallback (when variant is omitted)
+  assert.equal(
+    getLineItemThumbnail({
+      thumbnail: null,
+      product: {
+        thumbnail: null,
+        images: [{ url: "https://example.com/direct-product-image.png" }],
+      },
+    }),
+    "https://example.com/direct-product-image.png"
+  )
+
+  // 6. Returns undefined when no image or thumbnail is available
+  assert.equal(getLineItemThumbnail(null), undefined)
+  assert.equal(getLineItemThumbnail(undefined), undefined)
+  assert.equal(getLineItemThumbnail({ thumbnail: null }), undefined)
+  assert.equal(getLineItemThumbnail({ thumbnail: "   " }), undefined)
+  assert.equal(
+    getLineItemThumbnail({
+      thumbnail: null,
+      variant: { thumbnail: null, product: { thumbnail: null, images: [] } },
+    }),
+    undefined
+  )
 })

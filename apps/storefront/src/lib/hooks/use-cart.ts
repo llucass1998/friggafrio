@@ -19,7 +19,7 @@ import {
   retrieveCartOnce,
 } from "@/lib/utils/cart"
 
-const DEFAULT_CART_FIELDS = "*items,*promotions,+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total,+currency_code"
+const DEFAULT_CART_FIELDS = "*items,*promotions,+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,*items.variant.product.images,shipping_methods.name,+subtotal,+item_subtotal,+shipping_total,+discount_total,+tax_total,+total,+currency_code"
 
 let activeCartMutations = 0
 

@@ -23,6 +23,7 @@ import Address from "@/components/address"
 import AddressForm from "@/components/address-form"
 import PaymentContainer from "@/components/payment-container"
 import { formatOrderId } from "@/lib/utils/order"
+import { getLineItemThumbnail } from "@/lib/utils/cart"
 import { AddressFormData } from "@/lib/types/global"
 import { sdk } from "@/lib/medusa"
 import { useQuery } from "@tanstack/react-query"
@@ -987,7 +988,7 @@ export default function OrderPaymentPage() {
               {order.items?.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
                   <Thumbnail
-                    thumbnail={item.thumbnail}
+                    thumbnail={getLineItemThumbnail(item)}
                     alt={item.product_title || item.title}
                     className="w-12 h-12"
                   />

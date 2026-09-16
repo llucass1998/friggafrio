@@ -5,6 +5,7 @@ import Address from "@/components/address"
 import PaymentMethodInfo from "@/components/payment-method-info"
 import { isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { formatOrderId } from "@/lib/utils/order"
+import { getLineItemThumbnail } from "@/lib/utils/cart"
 import { Link, useParams, getRouteApi } from "@tanstack/react-router"
 import { CheckCircleSolid, ShoppingBag } from "@medusajs/icons"
 import { Package, Truck, Info, MapPin, CreditCard, FileText } from "lucide-react"
@@ -166,7 +167,7 @@ const OrderConfirmation = () => {
                   >
                     <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-200 bg-white flex-shrink-0">
                       <Thumbnail
-                        thumbnail={item.thumbnail}
+                        thumbnail={getLineItemThumbnail(item)}
                         alt={item.product_title || item.title}
                         className="w-full h-full object-cover"
                       />

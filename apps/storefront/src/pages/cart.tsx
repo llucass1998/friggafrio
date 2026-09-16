@@ -17,7 +17,7 @@ import { Link, useLoaderData, useNavigate } from "@tanstack/react-router"
 import { toast } from "sonner"
 
 const DEFAULT_CART_FIELDS =
-  "id,*items,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,total,+currency_code,subtotal,item_subtotal,shipping_total,discount_total,tax_total,*promotions"
+  "id,*items,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,*items.variant.product.images,total,+currency_code,subtotal,item_subtotal,shipping_total,discount_total,tax_total,*promotions"
 
 const Cart = () => {
   const { region, countryCode } = useLoaderData({

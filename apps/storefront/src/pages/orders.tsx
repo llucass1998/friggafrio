@@ -7,6 +7,7 @@ import { Thumbnail } from "@/components/ui/thumbnail"
 import { Price } from "@/components/ui/price"
 import Address from "@/components/address"
 import { formatOrderId } from "@/lib/utils/order"
+import { getLineItemThumbnail } from "@/lib/utils/cart"
 import { CheckoutStepKey } from "@/lib/types/global"
 import {
   ShoppingBag,
@@ -228,7 +229,7 @@ function OrderDetailModal({
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Thumbnail
-                            thumbnail={item.thumbnail}
+                            thumbnail={getLineItemThumbnail(item)}
                             alt={item.product_title || item.title}
                             className="w-12 h-12"
                           />

@@ -4,6 +4,7 @@ import { Price } from "@/components/ui/price"
 import { Thumbnail } from "@/components/ui/thumbnail"
 import { isPaidWithGiftCard } from "@/lib/utils/checkout"
 import { formatOrderId } from "@/lib/utils/order"
+import { getLineItemThumbnail } from "@/lib/utils/cart"
 import { HttpTypes } from "@medusajs/types"
 import { DEFAULT_LOCALE } from "@/config/commerce"
 
@@ -54,7 +55,7 @@ export const OrderLineItem = ({ item, order }: OrderLineItemProps) => {
   return (
     <div className="flex items-center gap-4 py-3 border-b border-zinc-200 last:border-b-0">
       <Thumbnail
-        thumbnail={item.thumbnail}
+        thumbnail={getLineItemThumbnail(item)}
         alt={item.product_title || item.title}
         className="w-16 h-16"
       />

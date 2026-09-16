@@ -472,3 +472,25 @@ export const getCurrentCart = (queryClient: QueryClient, fields?: string): HttpT
       predicate: queryKeys.cart.predicate
     })[0]?.[1] || null
 }
+
+export const getLineItemThumbnail = (
+  item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem | null | undefined
+): string | undefined => {
+  if (!item) return undefined
+  if (typeof item.thumbnail === "string" && item.thumbnail.trim()) {
+    return item.thumbnail.trim()
+  }
+  const variant = (item as { variant?: { thumbnail?: string | null; product?: { thumbnail?: string | null; images?: Array<{ url?: string | null }> | null } | null } | null }).variant
+  if (typeof variant?.thumbnail === "string" && variant.thumbnail.trim()) {
+    return variant.thumbnail.trim()
+  }
+  const product = variant?.product || (item as { product?: { thumbnail?: string | null; images?: Array<{ url?: string | null }> | null } | null }).product
+  if (typeof product?.thumbnail === "string" && product.thumbnail.trim()) {
+    return product.thumbnail.trim()
+  }
+  const firstImage = product?.images?.[0]
+  if (firstImage && typeof firstImage.url === "string" && firstImage.url.trim()) {
+    return firstImage.url.trim()
+  }
+  return undefined
+}

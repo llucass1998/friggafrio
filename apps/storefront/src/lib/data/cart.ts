@@ -7,7 +7,7 @@ import {
   sendDeleteRequest 
 } from "@/lib/data/custom"
 
-const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,shipping_methods.name"
+const DEFAULT_CART_FIELDS = "+items.total,+items.unit_price,items.variant.id,items.variant.title,items.variant.thumbnail,items.variant.inventory_quantity,items.variant.manage_inventory,items.variant.allow_backorder,items.variant.product.id,items.variant.product.title,items.variant.product.thumbnail,*items.variant.product.images,shipping_methods.name"
 
 /**
  * Retrieves a cart by ID or from stored ID. Returns null if no cart is found.
