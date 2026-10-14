@@ -5,8 +5,8 @@ import { pageMeta } from "@/lib/seo"
 export const Route = createFileRoute("/nossa-loja")({
   component: PublicStoresPage,
   head: () => pageMeta({
-    title: "Nossa Loja | FriggaFrio",
-    description: "Visite a FriggaFrio em Campos Elíseos, São Paulo. Consulte o endereço e os canais de atendimento.",
+    title: "Nossas lojas | FriggaFrio",
+    description: "Conheça as três unidades FriggaFrio em São Paulo e Mogi Guaçu. Consulte os endereços, mapas e como chegar. Retirada gratuita exclusiva na Loja 1.",
     path: "/nossa-loja",
   }),
 })

@@ -149,7 +149,7 @@ test.describe("final responsive storefront homologation", () => {
     await expect(search).toHaveValue("")
   })
 
-  test("single store, navigation and back/forward flow", async ({ page }) => {
+  test("store selection, navigation and back/forward flow", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto("/br", { waitUntil: "domcontentloaded" })
     await waitForHydration(page)
@@ -158,7 +158,7 @@ test.describe("final responsive storefront homologation", () => {
     await drawer.getByRole("link", { name: "Nossa Loja", exact: true }).click()
     await expect(page).toHaveURL(/\/nossa-loja$/)
     await expect(page.getByTestId("store-location-card")).toHaveCount(1)
-    await expect(page.getByText(/Loja 2/)).toHaveCount(0)
+    await expect(page.getByRole("group", { name: "Escolha uma loja" }).getByRole("button")).toHaveCount(3)
     await expect(page.getByTestId("store-location-card").getByText(/CNPJ:/)).toHaveCount(1)
     await assertNoHorizontalOverflow(page)
 

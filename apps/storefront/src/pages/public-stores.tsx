@@ -1,13 +1,15 @@
+import { useState } from "react"
 import { storeLocations } from "@/config/store-locations"
-import { storeConfig } from "@/config/store"
-import { COMPANY_INFORMATION } from "@/config/company"
+import { storeLocationsStructuredData } from "@/lib/seo"
 import { StoreLocationCard } from "@/components/store-locations/StoreLocationCard"
 import { Link } from "@tanstack/react-router"
-import { Image as ImageIcon, Info, MapPin, MessageCircle, PackageCheck, ShieldCheck } from "lucide-react"
+import { Image as ImageIcon, Info, MapPin, PackageCheck, ShieldCheck } from "lucide-react"
+
+const activeLocations = storeLocations.filter((location) => location.active).sort((a, b) => a.order - b.order)
 
 export function PublicStoresPage() {
-  const activeLocations = storeLocations.filter((location) => location.active)
-  const activeLocation = activeLocations[0]
+  const [selectedLocationId, setSelectedLocationId] = useState("loja-1")
+  const activeLocation = activeLocations.find((location) => location.id === selectedLocationId) ?? activeLocations[0]
 
   if (!activeLocation) {
     return (
@@ -25,26 +27,7 @@ export function PublicStoresPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            name: activeLocation.name,
-            legalName: COMPANY_INFORMATION.legalName,
-            taxID: COMPANY_INFORMATION.cnpj,
-            url: "https://www.friggafrio.com.br/nossa-loja",
-            telephone: storeConfig.phone,
-            email: storeConfig.email,
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: activeLocation.addressLine,
-              addressLocality: activeLocation.district,
-              addressRegion: activeLocation.stateCode,
-              postalCode: activeLocation.postalCode,
-              addressCountry: "BR",
-            },
-            sameAs: [storeConfig.instagramUrl],
-            hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${activeLocation.name} ${activeLocation.addressLine} ${activeLocation.district} ${activeLocation.city} ${activeLocation.stateCode} ${activeLocation.postalCode}`)}`,
-          }),
+          __html: JSON.stringify(storeLocationsStructuredData()),
         }}
       />
 
@@ -61,27 +44,61 @@ export function PublicStoresPage() {
                 </Link>
               </li>
               <li><span className="mx-2">/</span></li>
-              <li><span className="font-semibold text-[var(--color-text)]" aria-current="page">Nossa Loja</span></li>
+              <li><span className="font-semibold text-[var(--color-text)]" aria-current="page">Nossas lojas</span></li>
             </ol>
           </nav>
 
           <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-[var(--color-navy)] md:text-4xl lg:text-5xl">
-            Nossa Loja
+            Nossas lojas
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-[var(--color-text-muted)] md:text-lg">
-            Encontre a unidade FriggaFrio e conheça nossos canais de atendimento para produtos de refrigeração e climatização.
+            Conheça nossas unidades e escolha a melhor localização para visitar.
           </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-[1320px] px-4 pt-12 sm:px-6 lg:px-8">
+        <div role="group" aria-label="Escolha uma loja" className="mb-8 grid gap-4 md:grid-cols-3">
+          {activeLocations.map((location) => {
+            const isSelected = activeLocation.id === location.id
+            return (
+              <button
+                key={location.id}
+                type="button"
+                aria-pressed={isSelected}
+                aria-controls="store-location-details"
+                onClick={() => setSelectedLocationId(location.id)}
+                className={`flex min-w-0 items-center gap-4 rounded-2xl border-2 bg-white p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)] md:flex-col md:items-stretch md:p-4 ${isSelected ? "border-[var(--color-primary)]" : "border-[#E5EDF4] hover:border-[var(--color-primary)]"}`}
+              >
+                <img
+                  src={location.ownImageSrc}
+                  alt=""
+                  width={160}
+                  height={120}
+                  style={{ objectPosition: location.imagePosition }}
+                  className="aspect-[4/3] w-24 shrink-0 rounded-xl object-cover md:w-full"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-lg font-bold text-[var(--color-navy)]">{location.shortName}</span>
+                  <span className="mt-1 block text-sm text-[var(--color-text-muted)]">
+                    {location.addressLine}<br />{location.city}/{location.stateCode}
+                  </span>
+                  <span className="mt-2 block text-xs font-bold text-[var(--color-primary)]">
+                    {isSelected ? "Selecionada" : "Ver unidade"}
+                  </span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <p role="status" className="sr-only">{activeLocation.shortName} selecionada. Detalhes atualizados.</p>
         <div className="mb-16">
           <StoreLocationCard location={activeLocation} />
         </div>
 
         <div className="mt-16 border-t border-[#E5EDF4] pt-16 md:mt-24">
           <h2 className="mb-8 text-center text-2xl font-extrabold text-[var(--color-navy)] md:text-3xl">
-            Antes de visitar a loja
+            Antes de visitar nossas lojas
           </h2>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
@@ -111,21 +128,9 @@ export function PublicStoresPage() {
               </div>
               <h3 className="mb-3 text-lg font-bold text-[var(--color-navy)]">Confira o endereço</h3>
               <p className="leading-relaxed text-[var(--color-text-muted)]">
-                Consulte o endereço completo da nossa loja antes de sair.
+                Consulte o endereço completo da unidade escolhida antes de sair.
               </p>
             </div>
-          </div>
-
-          <div className="mt-12 text-center">
-            <a
-              href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de confirmar a disponibilidade de um produto na FriggaFrio.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-8 py-4 font-bold text-white shadow-sm transition-colors hover:bg-[#20bd5a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
-            >
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
-              Confirmar pelo WhatsApp
-            </a>
           </div>
 
           <div className="mt-16 border-t border-[#E5EDF4] pt-12">
@@ -136,7 +141,7 @@ export function PublicStoresPage() {
                   <h2 className="text-xl font-bold text-[var(--color-navy)]">Retirada gratuita na Loja 1</h2>
                 </div>
                 <p className="leading-relaxed text-[var(--color-text-muted)]">
-                  Escolha a retirada na Loja 1 no checkout e aguarde a confirmação de que o pedido está pronto antes de vir à unidade.
+                  Escolha a retirada na Loja 1 no checkout e aguarde a confirmação de que o pedido está pronto antes de vir à unidade. A retirada de pedidos é exclusiva da Loja 1.
                 </p>
               </div>
               <div className="rounded-[var(--radius-card)] bg-[#F5F8FA] p-6 md:p-8">

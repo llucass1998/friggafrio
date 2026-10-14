@@ -1,5 +1,6 @@
 import { COMPANY_INFORMATION } from "@/config/company"
 import { storeConfig } from "@/config/store"
+import { storeLocations, storeMapsLinks } from "@/config/store-locations"
 
 const configuredSiteUrl = (
   import.meta as ImportMeta & { env?: Record<string, string | undefined> }
@@ -102,5 +103,31 @@ export function structuredDataScript(data: unknown) {
   return {
     type: "application/ld+json" as const,
     children: JSON.stringify(data),
+  }
+}
+
+export function storeLocationsStructuredData() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": storeLocations.filter((location) => location.active).map((location) => ({
+      "@type": "LocalBusiness",
+      "@id": absoluteSiteUrl(`/nossa-loja#${location.id}`),
+      name: `${location.shortName} — FriggaFrio`,
+      url: absoluteSiteUrl("/nossa-loja"),
+      image: location.ownImageSrc ? absoluteSiteUrl(location.ownImageSrc) : undefined,
+      legalName: location.legalName,
+      taxID: location.cnpj,
+      telephone: location.phone,
+      email: location.email,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: location.addressLine,
+        addressLocality: location.city,
+        addressRegion: location.stateCode,
+        postalCode: location.postalCode,
+        addressCountry: location.countryCode,
+      },
+      hasMap: storeMapsLinks(location).search,
+    })),
   }
 }

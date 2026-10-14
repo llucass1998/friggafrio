@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react"
-import { StoreLocation } from "@/config/store-locations"
+import { StoreLocation, storeAddress, storeMapsLinks } from "@/config/store-locations"
 
 interface GoogleStoreMapProps {
   location: StoreLocation
@@ -10,7 +10,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
 
   if (!apiKey) {
     return (
-      <div data-testid="store-map-fallback" className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center lg:min-h-[360px]">
+      <div data-testid="store-map-fallback" className="flex h-[360px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center">
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--color-primary)] shadow-sm">
           <MapPin className="h-6 w-6" aria-hidden="true" />
         </div>
@@ -19,10 +19,10 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
           O mapa interativo não pôde ser carregado no momento. Você ainda pode abrir a localização diretamente no Google Maps.
         </p>
         <p className="mb-5 text-sm font-bold text-[var(--color-navy)]">
-          {location.addressLine}, {location.district} - {location.city}/{location.stateCode}
+          {storeAddress(location)}
         </p>
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${location.placeId ? `place_id:${location.placeId}` : encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`}
+          href={storeMapsLinks(location).search}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Abrir ${location.name} no Google Maps`}
@@ -35,15 +35,13 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
     )
   }
 
-  const queryParam = location.placeId
-    ? `q=place_id:${location.placeId}`
-    : `q=${encodeURIComponent(`${location.addressLine}, ${location.district}, ${location.city} - ${location.stateCode}, ${location.postalCode}`)}`
+  const queryParam = `q=${encodeURIComponent(storeAddress(location))}`
 
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
 
   return (
-    <div className="h-[300px] w-full overflow-hidden rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] shadow-sm lg:h-[360px]">
-      <iframe data-testid="store-map-iframe"
+    <div className="h-[360px] w-full overflow-hidden rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] shadow-sm">
+      <iframe key={location.id} data-testid="store-map-iframe"
         title={`Mapa da ${location.name}`}
         width="100%"
         height="100%"
