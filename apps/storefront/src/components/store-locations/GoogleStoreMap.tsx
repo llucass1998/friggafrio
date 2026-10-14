@@ -10,16 +10,13 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
 
   if (!apiKey) {
     return (
-      <div data-testid="store-map-fallback" className="flex h-[360px] w-full flex-col items-center justify-center rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] p-5 text-center">
+      <div data-testid="store-map-fallback" className="flex h-[280px] w-full flex-col items-center justify-center rounded-2xl border border-[#E5EDF4] bg-[#F5F8FA] p-4 text-center md:h-[360px]">
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--color-primary)] shadow-sm">
           <MapPin className="h-6 w-6" aria-hidden="true" />
         </div>
         <h3 className="mb-2 text-lg font-bold text-[var(--color-navy)]">Localização no mapa</h3>
         <p className="mb-4 max-w-md text-sm text-[var(--color-text-muted)]">
-          O mapa interativo não pôde ser carregado no momento. Você ainda pode abrir a localização diretamente no Google Maps.
-        </p>
-        <p className="mb-5 text-sm font-bold text-[var(--color-navy)]">
-          {storeAddress(location)}
+          Mapa indisponível no momento. Abra a localização no Google Maps ou use o link de rota.
         </p>
         <a
           href={storeMapsLinks(location).search}
@@ -40,7 +37,7 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
 
   return (
-    <div className="h-[360px] w-full overflow-hidden rounded-2xl border-2 border-[#E5EDF4] bg-[#F5F8FA] shadow-sm">
+    <div className="h-[280px] w-full overflow-hidden rounded-2xl border border-[#E5EDF4] bg-[#F5F8FA] md:h-[360px]">
       <iframe key={location.id} data-testid="store-map-iframe"
         title={`Mapa da ${location.name}`}
         width="100%"

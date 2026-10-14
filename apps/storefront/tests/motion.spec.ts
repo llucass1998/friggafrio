@@ -60,14 +60,14 @@ test.describe("storefront motion interactions", () => {
     const drawer = await openMobileDrawer(page)
     await expect(drawer).toBeVisible()
     await expect(drawer.getByRole("link", { name: "Produtos", exact: true })).toBeVisible()
-    await expect(drawer.getByRole("link", { name: "Nossa Loja" })).toBeVisible()
+    await expect(drawer.getByRole("link", { name: "Nossas lojas" })).toBeVisible()
 
     await page.getByTestId("mobile-navigation-overlay").click({ position: { x: 380, y: 420 } })
     await expect(drawer).toHaveAttribute("data-state", "closed")
     await expect(drawer).toHaveAttribute("data-state", "closed")
 
     await openMobileDrawer(page)
-    await drawer.getByRole("link", { name: "Nossa Loja" }).click()
+    await drawer.getByRole("link", { name: "Nossas lojas" }).click()
     await expect(page).toHaveURL(/\/nossa-loja$/)
     await expect(drawer).toHaveAttribute("data-state", "closed")
   })

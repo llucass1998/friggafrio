@@ -19,7 +19,7 @@ export const footerNavigation = {
     },
     {
       id: "nossa-loja",
-      label: "Nossa Loja",
+      label: "Nossas lojas",
       href: "/nossa-loja",
       active: true,
       order: 2

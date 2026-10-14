@@ -90,7 +90,7 @@ test.describe("final responsive storefront homologation", () => {
       await expect(trigger).toHaveAttribute("data-hydrated", "true")
       await openMobileDrawer(page)
       await expect(drawer.getByRole("link", { name: "Produtos", exact: true })).toBeVisible()
-      await expect(drawer.getByRole("link", { name: "Nossa Loja", exact: true })).toBeVisible()
+      await expect(drawer.getByRole("link", { name: "Nossas lojas", exact: true })).toBeVisible()
       await expect(drawer.getByRole("button", { name: "Acessibilidade", exact: true })).toBeVisible()
       await expect(drawer.getByText("Unidade selecionada")).toHaveCount(0)
       await expect(page.getByTestId("mobile-navigation-layer")).toHaveCount(1)
@@ -155,10 +155,10 @@ test.describe("final responsive storefront homologation", () => {
     await waitForHydration(page)
 
     const drawer = await openMobileDrawer(page)
-    await drawer.getByRole("link", { name: "Nossa Loja", exact: true }).click()
+    await drawer.getByRole("link", { name: "Nossas lojas", exact: true }).click()
     await expect(page).toHaveURL(/\/nossa-loja$/)
-    await expect(page.getByTestId("store-location-card")).toHaveCount(1)
-    await expect(page.getByRole("group", { name: "Escolha uma loja" }).getByRole("button")).toHaveCount(3)
+    await expect(page.getByTestId("store-location-card")).toHaveCount(3)
+    await expect(page.getByRole("group", { name: "Unidade exibida no mapa" }).getByRole("button")).toHaveCount(3)
     await expect(page.getByTestId("store-location-card").getByText(/CNPJ:/)).toHaveCount(1)
     await assertNoHorizontalOverflow(page)
 

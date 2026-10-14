@@ -11,7 +11,7 @@ export function HeaderDesktopNav() {
         to="/nossa-loja"
         className="text-[var(--color-navy)] font-medium hover:text-[var(--color-primary)] transition-colors py-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md px-2"
       >
-        Nossa Loja
+        Nossas lojas
       </Link>
 
       {mainNavigation

@@ -63,7 +63,7 @@ test("page SEO describes all units with city locality and only confirmed metadat
   }
 })
 
-test("one detail component, accessible selection, no street view and Loja 1-only pickup", () => {
+test("independent cards, shared map, accessible selection and Loja 1-only pickup", () => {
   const page = readFileSync(new URL("../../src/pages/public-stores.tsx", import.meta.url), "utf8")
   const card = readFileSync(new URL("../../src/components/store-locations/StoreLocationCard.tsx", import.meta.url), "utf8")
   const map = readFileSync(new URL("../../src/components/store-locations/GoogleStoreMap.tsx", import.meta.url), "utf8")
@@ -71,11 +71,28 @@ test("one detail component, accessible selection, no street view and Loja 1-only
   assert.match(page, /useState\("loja-1"\)/)
   assert.match(page, /aria-pressed=\{isSelected\}/)
   assert.match(page, /focus-visible:outline/)
-  assert.match(page, /Retirada gratuita na Loja 1/)
+  assert.match(page, /Retirada gratuita somente na Loja 1/)
   assert.match(page, /retirada de pedidos é exclusiva da Loja 1/)
   assert.doesNotMatch(page + card, /Vista da rua|StoreStreetView|activeView|role="tab/)
-  assert.doesNotMatch(page + card, /scrollIntoView|\.focus\(/)
+  assert.match(page, /prefers-reduced-motion: reduce/)
+  assert.match(page, /scrollIntoView\(\{ behavior: reducedMotion \? "instant" : "smooth"/)
+  assert.match(page, /onClick=\{\(\) => setSelectedLocationId\(location.id\)\}/)
+  assert.doesNotMatch(page + card, /\.focus\(/)
+  assert.equal((page.match(/<GoogleStoreMap /g) ?? []).length, 1)
+  assert.doesNotMatch(card, /GoogleStoreMap|min-h-\[/)
+  assert.match(card, /location.id === "loja-1"/)
+  assert.match(card, /tel:\+55/)
   assert.match(map, /VITE_GOOGLE_MAPS_EMBED_API_KEY/)
   assert.match(map, /encodeURIComponent\(storeAddress\(location\)\)/)
   assert.equal(existsSync(new URL("../../src/components/store-locations/StoreStreetView.tsx", import.meta.url)), false)
+})
+
+test("all store navigation labels use the plural without changing the legal footer", () => {
+  for (const path of ["components/header/HeaderDesktopNav.tsx", "components/header/HeaderMobileDrawer.tsx", "components/public-footer.tsx", "config/footer-navigation.ts"]) {
+    const source = readFileSync(new URL(`../../src/${path}`, import.meta.url), "utf8")
+    assert.match(source, /Nossas lojas/)
+    assert.doesNotMatch(source, /Nossa Loja/)
+  }
+  const footer = readFileSync(new URL("../../src/components/public-footer.tsx", import.meta.url), "utf8")
+  assert.match(footer, /COMPANY_INFORMATION/)
 })

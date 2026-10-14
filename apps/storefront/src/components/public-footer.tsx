@@ -88,9 +88,9 @@ export function PublicFooter() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-bold uppercase text-white">Nossa Loja Física</h4>
+                <h4 className="text-sm font-bold uppercase text-white">Visite nossas unidades</h4>
                 <Link to="/nossa-loja" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                  {primaryLocation ? `${primaryLocation.addressLine}, ${primaryLocation.city} - ${primaryLocation.stateCode}` : "Venha nos visitar"}
+                  Nossas lojas
                 </Link>
               </div>
             </div>

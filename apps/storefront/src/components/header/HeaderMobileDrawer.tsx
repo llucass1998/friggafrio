@@ -265,7 +265,7 @@ export function HeaderMobileDrawer() {
                     onClick={closeMobileMenu}
                     className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                   >
-                    Nossa Loja
+                    Nossas lojas
                   </Link>
                 </li>
                 <li>
