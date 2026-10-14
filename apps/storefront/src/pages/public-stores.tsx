@@ -22,7 +22,7 @@ export function PublicStoresPage() {
   return (
     <div className="w-full bg-[#FAFAFA] pb-16 font-sans text-[var(--color-text)]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(storeLocationsStructuredData()) }} />
-      <div className="mx-auto max-w-[1320px] px-4 sm:px-6 md:px-24 min-[1440px]:px-8">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-24 min-[1440px]:px-8">
         <header className="pb-6 pt-6 md:pt-8">
           <nav className="mb-4 text-sm text-[var(--color-text-muted)]" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">

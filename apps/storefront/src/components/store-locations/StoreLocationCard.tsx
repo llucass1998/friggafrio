@@ -64,7 +64,7 @@ export function StoreLocationCard({ location, onViewMap }: StoreLocationCardProp
           </div>
         )}
         {location.cnpj && <p className="mt-2 text-xs text-[var(--color-text-muted)]">CNPJ: {location.cnpj}</p>}
-        <div className="mt-auto flex flex-col gap-2 pt-6">
+        <div className="mt-auto flex flex-col gap-2 pt-6 max-sm:mx-8">
           <a href={storeMapsLinks(location).directions} target="_blank" rel="noopener noreferrer"
             aria-label={`Como chegar à ${location.shortName}`}
             className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 font-bold text-white hover:bg-[var(--color-primary-hover)] ${focusStyle}`}>
