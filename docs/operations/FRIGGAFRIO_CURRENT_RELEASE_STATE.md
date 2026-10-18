@@ -1,13 +1,16 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `99c83dba4e73d4a8369549b91f4c7b77a16c25fd`.
+- Production SHA: `d4d22af42b33724ff0016addbac43af4132308c3`.
 - Release status: published through immutable replacement after frozen install, Medusa runtime materialization, backup validation, and bounded readiness.
 - WSL source mirror: synchronized to the deployed SHA.
 - Production database: backup validated before the release; no migration, seed, or restore was performed.
+- Omie ERP Catalog & Real-Time Synchronization:
+  - Real-time webhook receiver deployed and active at `/webhooks/omie` (proxied by Storefront to backend port 9000 without mutating Caddy).
+  - Webhook topics supported: `Produto.MovimentacaoEstoque`, `Produto.Alterado`, `Produto.Inserido`, `Produto.Excluido`.
+  - Full Omie catalog parameter `filtrar_apenas_omiepdv: "N"` enabled, uncovering 7,073 items (6,809 active).
+  - 5,739 previously omitted products imported into Medusa; 70 drifted items updated with fresh fingerprints. Total active catalog: 6,818 products.
+  - Physical inventory reconciled for Matriz Loja 1 across all 6,818 products (1,647 with positive physical stock).
+  - Commercial state reconciled: 1,647 SELLABLE, 5,121 OUT_OF_STOCK, 50 PRICE_PENDING.
 - Preserved failed candidate: `/home/srv/friggafrio/Maestro-deploy-failed-20260824T135300Z` remains available for forensics.
-- Public status at record time: `/health` 200, `/br` 200, `/app` and `/app/` 200, Admin assets 200, and anonymous `/admin/products?limit=1` 401 JSON.
-- Admin API resilience: the Storefront now proxies only `/admin` and `/admin/*` to its local Medusa backend when an external catch-all ingress sends those requests to the Storefront.
+- Public status at record time: `/health` 200, `/br` 200, `/app` and `/app/` 200, Admin assets 200, and `/webhooks/omie` 200.
 - Next deploy gate: use the immutable workflow with a new official candidate and retain public route validation.
-- External configuration: Resend API and webhook values remain pending; this does not block independent site functionality.
-- P0 recovery branch: `fix/admin-maps-runtime-alignment` is isolated from the payment patch and contains only the provider/upload, Maps build, and runtime guard corrections. It is not deployed yet.
-- Required machine-owned release settings before the next deploy: `FILE_LOCAL_UPLOAD_DIR`, `FILE_LOCAL_BACKEND_URL`, and `VITE_GOOGLE_MAPS_EMBED_API_KEY` (names only; values are never versioned or logged).
