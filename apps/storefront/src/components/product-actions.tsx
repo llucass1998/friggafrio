@@ -181,7 +181,7 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
       )}
 
       {canBuySelected && (
-        <div className="grid gap-3 border-t border-[var(--color-border)] pt-4 sm:grid-cols-[135px_minmax(0,1fr)] sm:items-end">
+        <div className="grid gap-3 border-t border-[var(--color-border)] pt-5 pb-2 sm:grid-cols-[135px_minmax(0,1fr)] sm:items-end">
           <div>
           <label htmlFor="product-quantity" className="mb-2 block text-sm font-semibold text-[var(--color-navy)]">Quantidade</label>
           <div className="flex h-12 items-center rounded-[9px] border border-[var(--color-border)] bg-white">
@@ -279,7 +279,7 @@ export default ProductActions
 
 export function ProductTrustArguments() {
   return (
-    <div className="grid gap-3 border-t border-[var(--color-border)] pt-4 text-xs text-[var(--color-text-muted)] sm:grid-cols-3" data-testid="product-trust-arguments">
+    <div className="mt-4 grid gap-3 border-t border-[var(--color-border)] pt-5 text-xs text-[var(--color-text-muted)] sm:grid-cols-3" data-testid="product-trust-arguments">
       <span className="inline-flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden="true" /><span><strong className="block text-[var(--color-navy)]">Compra segura</strong>Pagamento protegido</span></span>
       <span className="inline-flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden="true" /><span><strong className="block text-[var(--color-navy)]">Retirada na loja</strong>Compre online e retire em nossa loja</span></span>
       <span className="inline-flex items-start gap-2"><MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden="true" /><span><strong className="block text-[var(--color-navy)]">Atendimento técnico</strong>Nossa equipe está pronta para ajudar</span></span>
