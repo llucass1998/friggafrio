@@ -115,8 +115,19 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand & Sobre */}
           <div className="lg:col-span-1 mb-6 md:mb-0">
-            <Link to={"/$countryCode" as string} params={{ countryCode }} className="inline-block mb-2">
-              <img src="/images/brand/logo-friggafrio-optimized.webp" alt="FriggaFrio Logo" loading="lazy" decoding="async" className="h-28 w-auto object-contain brightness-0 invert sm:h-32" />
+            <Link
+              to={"/$countryCode" as string}
+              params={{ countryCode }}
+              className="inline-flex items-center rounded-lg bg-white px-3.5 py-2 shadow-sm transition hover:opacity-95 mb-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              aria-label="Ir para a página inicial da FriggaFrio"
+            >
+              <img
+                src="/images/brand/logo-friggafrio-optimized.webp"
+                alt="FriggaFrio — Refrigeração e Ar Condicionado"
+                loading="lazy"
+                decoding="async"
+                className="h-[46px] w-auto object-contain sm:h-[52px]"
+              />
             </Link>
             <p className="text-xs text-[var(--color-surface-soft)] leading-relaxed mb-5">
               {storeConfig.description || "Especialistas em refrigeração, ar-condicionado e câmaras frias. Produtos e componentes de alta performance."}

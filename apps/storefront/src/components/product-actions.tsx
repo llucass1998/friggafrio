@@ -181,30 +181,34 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
       )}
 
       {canBuySelected && (
-        <div className="grid gap-3 border-t border-[var(--color-border)] pt-5 pb-2 sm:grid-cols-[135px_minmax(0,1fr)] sm:items-end">
-          <div>
-          <label htmlFor="product-quantity" className="mb-2 block text-sm font-semibold text-[var(--color-navy)]">Quantidade</label>
-          <div className="flex h-12 items-center rounded-[9px] border border-[var(--color-border)] bg-white">
-            <button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={isBusy || quantity <= 1} className="h-11 w-11 shrink-0 text-lg text-[var(--color-navy)] disabled:opacity-40">−</button>
-            <input
-              id="product-quantity"
-              type="number"
-              min={1}
-              max={selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : undefined}
-              value={quantity}
-              onChange={(event) => {
-                const next = Number(event.target.value)
-                if (!Number.isInteger(next)) return
-                const max = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : Number.MAX_SAFE_INTEGER
-                setQuantity(Math.min(max, Math.max(1, next)))
-              }}
-              disabled={isBusy}
-              className="h-full min-w-0 flex-1 border-x border-[var(--color-border)] text-center text-sm font-semibold text-[var(--color-navy)] focus:outline-none"
-              aria-label="Quantidade do produto"
-            />
-            <button type="button" aria-label="Aumentar quantidade" onClick={() => setQuantity((value) => value + 1)} disabled={isBusy || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">+</button>
+        <div className="border-t border-[var(--color-border)] pt-5 pb-2">
+          {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Seletor de Quantidade]
+          <div className="grid gap-3 sm:grid-cols-[135px_minmax(0,1fr)] sm:items-end mb-3">
+            <div>
+              <label htmlFor="product-quantity" className="mb-2 block text-sm font-semibold text-[var(--color-navy)]">Quantidade</label>
+            <div className="flex h-12 items-center rounded-[9px] border border-[var(--color-border)] bg-white">
+              <button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={isBusy || quantity <= 1} className="h-11 w-11 shrink-0 text-lg text-[var(--color-navy)] disabled:opacity-40">−</button>
+              <input
+                id="product-quantity"
+                type="number"
+                min={1}
+                max={selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : undefined}
+                value={quantity}
+                onChange={(event) => {
+                  const next = Number(event.target.value)
+                  if (!Number.isInteger(next)) return
+                  const max = selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" ? selectedVariant.inventory_quantity : Number.MAX_SAFE_INTEGER
+                  setQuantity(Math.min(max, Math.max(1, next)))
+                }}
+                disabled={isBusy}
+                className="h-full min-w-0 flex-1 border-x border-[var(--color-border)] text-center text-sm font-semibold text-[var(--color-navy)] focus:outline-none"
+                aria-label="Quantidade do produto"
+              />
+              <button type="button" aria-label="Aumentar quantidade" onClick={() => setQuantity((value) => value + 1)} disabled={isBusy || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">+</button>
+            </div>
           </div>
-          </div>
+          */}
+
           {/* Botão de Compra direta via WhatsApp como ação principal */}
           {whatsappUrl ? (
             <a
