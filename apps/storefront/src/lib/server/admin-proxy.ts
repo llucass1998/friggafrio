@@ -27,6 +27,7 @@ export function isBackendApiPath(pathname: string): boolean {
   if (pathname === "/auth" || pathname.startsWith("/auth/")) return true
   if (pathname === "/uploads" || pathname.startsWith("/uploads/")) return true
   if (pathname === "/health/ready") return true
+  if (pathname.startsWith("/webhooks/")) return true
   return false
 }
 
