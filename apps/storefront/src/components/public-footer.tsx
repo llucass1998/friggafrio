@@ -50,7 +50,7 @@ export function PublicFooter() {
   const primaryLocation = storeConfig.locations[0]
 
   return (
-    <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0 border-t-[8px] border-[#bae6fd]">
+    <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0">
 
       {/* 1. Área Superior de Benefícios e Atendimento */}
       <div className="border-b border-gray-700/50">
@@ -118,15 +118,15 @@ export function PublicFooter() {
             <Link
               to={"/$countryCode" as string}
               params={{ countryCode }}
-              className="inline-flex items-center rounded-lg bg-white px-3.5 py-2 shadow-sm transition hover:opacity-95 mb-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              className="inline-block mb-4 transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md"
               aria-label="Ir para a página inicial da FriggaFrio"
             >
               <img
-                src="/images/brand/logo-friggafrio-optimized.webp"
+                src="/images/brand/logo-friggafrio-white.webp"
                 alt="FriggaFrio — Refrigeração e Ar Condicionado"
                 loading="lazy"
                 decoding="async"
-                className="h-[46px] w-auto object-contain sm:h-[52px]"
+                className="h-[52px] w-auto object-contain sm:h-[58px]"
               />
             </Link>
             <p className="text-xs text-[var(--color-surface-soft)] leading-relaxed mb-5">
@@ -214,7 +214,7 @@ export function PublicFooter() {
       </div>
 
       {/* 3. Área Inferior com Pagamento, Segurança */}
-      <div className="bg-gray-900 border-t border-gray-800">
+      <div className="bg-[#0e1828] border-t border-[#0d3254]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4">
 
@@ -254,7 +254,7 @@ export function PublicFooter() {
       </div>
 
       {/* Bottom bar - Dados da Empresa e Links Legais */}
-      <div className="bg-black border-t border-gray-800 text-center md:text-left">
+      <div className="bg-[#090f1a] border-t border-[#0e1828] text-center md:text-left">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
