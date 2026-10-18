@@ -14,8 +14,9 @@ describe("Omie reconciliation", () => {
     expect(buildOmieReconciliation([incoming], [])[0].action).toBe("create")
     expect(buildOmieReconciliation([incoming], [{ id: "prod_1", externalId: "10", sku: "SKU-10", fingerprint: omieFingerprint(incoming) }])[0].action).toBe("no-op")
   })
-  it("fails closed on drift and ambiguous mappings", () => {
+  it("fails closed on drift and ambiguous mappings by default, but reconciles drift when allowDrift is true", () => {
     expect(buildOmieReconciliation([product()], [{ id: "prod_1", externalId: "10", sku: "SKU-10", fingerprint: "old" }])[0].action).toBe("conflict")
+    expect(buildOmieReconciliation([product()], [{ id: "prod_1", externalId: "10", sku: "SKU-10", fingerprint: "old" }], new Set(), { allowDrift: true })[0].action).toBe("update")
     expect(buildOmieReconciliation([product(), product() ], [])[1].action).toBe("conflict")
   })
   it("reconciles QUOTE_ONLY visibility while preserving the purchase block", () => {

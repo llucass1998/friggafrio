@@ -8,6 +8,7 @@ type GraphProduct = { id: string; status: string; metadata?: Record<string, unkn
 type ProductUpdate = UpdateProductsWorkflowInputProducts["products"][number]
 
 const applyRequested = () => process.argv.slice(2).some((value) => value.replace(/^--/, "") === "apply")
+const allowDriftRequested = () => process.argv.slice(2).some((value) => value.replace(/^--/, "") === "allow-drift" || value.replace(/^--/, "") === "reconcile-drift")
 
 export default async function omieGate5Sync({ container }: ExecArgs): Promise<void> {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -18,7 +19,7 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
   const raw = await new OmieCatalogReader(new OmieClient({ ...config, timeoutMs: 15_000 })).readAll({ pageSize: 100, maxPages: 200 })
   const normalized = raw.map(normalizeOmieProduct)
   const inactive = new Set(raw.flatMap((record, index) => isInactiveOmieRecord(record) ? [index] : []))
-  const { data } = await query.graph({ entity: "product", fields: ["id", "status", "metadata", "variants.sku"] })
+  const { data } = await query.graph({ entity: "product", fields: ["id", "title", "status", "metadata", "variants.sku"] })
   const existing = (data as GraphProduct[]).map((product): MedusaOmieProjection => ({
     id: product.id,
     externalId: typeof product.metadata?.omie_external_id === "string" ? product.metadata.omie_external_id : null,
@@ -29,10 +30,19 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
     purchaseEnabled: typeof product.metadata?.purchase_enabled === "boolean" ? product.metadata.purchase_enabled : null,
     commercialStatus: typeof product.metadata?.commercial_status === "string" ? product.metadata.commercial_status : null,
   }))
-  const plan = buildOmieReconciliation(normalized, existing, inactive)
+  const plan = buildOmieReconciliation(normalized, existing, inactive, { allowDrift: allowDriftRequested() })
   const counts = { create: 0, update: 0, noOp: 0, conflict: 0, skip: 0 }
   for (const item of plan) counts[item.action === "no-op" ? "noOp" : item.action]++
+  const conflicts = plan.filter((item) => item.action === "conflict")
+  const conflictReasons = conflicts.reduce<Record<string, number>>((acc, item) => {
+    acc[item.reason] = (acc[item.reason] ?? 0) + 1
+    return acc
+  }, {})
   logger.info(`[omie-gate5] mode=${applyRequested() ? "apply" : "dry-run"} products=${raw.length} create=${counts.create} update=${counts.update} no_op=${counts.noOp} conflict=${counts.conflict} skip=${counts.skip}`)
+  logger.info(`[omie-gate5] conflict_breakdown: ${JSON.stringify(conflictReasons)}`)
+  for (const c of conflicts.slice(0, 10)) {
+    logger.info(`[omie-gate5] conflict sample: id=${c.product.externalId} sku=${c.product.variants[0]?.sku} reason=${c.reason} title=${c.product.title}`)
+  }
   if (!applyRequested()) return
   if (counts.conflict > 0) throw new Error("OMIE_RECONCILIATION_CONFLICT")
 
@@ -83,10 +93,12 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
     if (!current || !graphProduct) throw new Error("OMIE_UPDATE_MAPPING_MISSING")
     return {
       id: current.id,
+      title: item.product.title ?? undefined,
       status: ProductStatus.PUBLISHED,
       metadata: {
         ...(graphProduct.metadata ?? {}),
         storefront_visible: true,
+        omie_fingerprint: omieFingerprint(item.product),
       },
     }
   })

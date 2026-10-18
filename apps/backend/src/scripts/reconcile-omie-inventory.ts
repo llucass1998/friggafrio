@@ -29,6 +29,11 @@ const applyRequested = () => (
   || process.argv.slice(2).some((value) => value.replace(/^--/, "") === "apply")
 )
 
+const allowStaleRequested = () => (
+  process.env.OMIE_INVENTORY_ALLOW_STALE === "true"
+  || process.argv.slice(2).some((value) => value.replace(/^--/, "") === "allow-stale" || value.replace(/^--/, "") === "force")
+)
+
 const dateInBrazil = () => {
   const configured = process.env.OMIE_INVENTORY_POSITION_DATE?.trim()
   if (configured) return configured
@@ -84,7 +89,11 @@ export default async function reconcileOmieInventory({ container }: ExecArgs): P
   process.stdout.write(`${JSON.stringify(summary)}\n`)
   const stalePositive = plan.skipped.filter((item) => item.reason.startsWith("STALE_LEVEL_SOURCE_"))
   if (stalePositive.length > 0) {
-    throw new Error(`OMIE_INVENTORY_STALE_LEVEL_BLOCKED:${stalePositive[0]?.productId ?? "unknown"}`)
+    if (allowStaleRequested()) {
+      logger.warn(`[omie-stock] stale positive levels detected for ${stalePositive.length} products, proceeding due to --allow-stale`)
+    } else {
+      throw new Error(`OMIE_INVENTORY_STALE_LEVEL_BLOCKED:${stalePositive[0]?.productId ?? "unknown"}`)
+    }
   }
   if (!applyRequested()) return
 

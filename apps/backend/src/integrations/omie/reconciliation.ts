@@ -41,10 +41,15 @@ export const isInactiveOmieRecord = (record: Record<string, unknown>): boolean =
   return ["S", "SIM", "Y", "YES", "TRUE", "1"].includes(normalized)
 }
 
+export interface ReconciliationOptions {
+  allowDrift?: boolean
+}
+
 export const buildOmieReconciliation = (
   products: readonly NormalizedProduct[],
   existing: readonly MedusaOmieProjection[],
   inactiveIndexes: ReadonlySet<number> = new Set(),
+  options: ReconciliationOptions = {},
 ): ReconciliationItem[] => {
   const byExternal = new Map<string, MedusaOmieProjection[]>()
   const bySku = new Map<string, MedusaOmieProjection[]>()
@@ -71,6 +76,9 @@ export const buildOmieReconciliation = (
     if (matches.size === 0) return { action: "create", product, reason: "new stable mapping" }
     const current = [...matches.values()][0]
     if (current.fingerprint !== omieFingerprint(product)) {
+      if (options.allowDrift) {
+        return { action: "update", product, reason: "managed source drift reconciled" }
+      }
       return { action: "conflict", product, reason: "managed source drift requires explicit review" }
     }
     if (
