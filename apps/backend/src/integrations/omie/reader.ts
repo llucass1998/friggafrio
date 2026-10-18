@@ -93,6 +93,8 @@ export class OmieCatalogReader {
     const response = await this.client.request<unknown>("ListarProdutos", {
       pagina: page,
       registros_por_pagina: pageSize,
+      apenas_importado_api: "N",
+      filtrar_apenas_omiepdv: "N",
     })
     const products = extractProducts(response)
 
