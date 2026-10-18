@@ -1,18 +1,21 @@
 import { Link, useParams } from "@tanstack/react-router"
-import { Heart, ShoppingCart, User } from "lucide-react"
+import { Heart, User } from "lucide-react"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Carrinho no Header]
+// import { ShoppingCart } from "lucide-react"
+// import { useCart } from "@/lib/hooks/use-cart"
+// import { useCartDrawer } from "@/lib/context/cart"
+// import { getCartItemCount } from "@/lib/utils/cart"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { useCart } from "@/lib/hooks/use-cart"
-import { useCartDrawer } from "@/lib/context/cart"
-import { getCartItemCount } from "@/lib/utils/cart"
 import { useFavorites } from "@/lib/hooks/use-favorites"
 
 export function HeaderActions({ compact: _compact = false }: { compact?: boolean }) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
   const { isAuthenticated } = useAuth()
-  const { data: cart } = useCart()
-  const { openCart } = useCartDrawer()
-  const cartItemCount = getCartItemCount(cart?.items)
+  // [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Carrinho no Header]
+  // const { data: cart } = useCart()
+  // const { openCart } = useCartDrawer()
+  // const cartItemCount = getCartItemCount(cart?.items)
   const { favoriteCount } = useFavorites()
 
   return (
@@ -40,6 +43,7 @@ export function HeaderActions({ compact: _compact = false }: { compact?: boolean
         </span>
       </Link>
 
+      {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Botão do Carrinho no Header]
       <button
         type="button"
         onClick={openCart}
@@ -59,6 +63,7 @@ export function HeaderActions({ compact: _compact = false }: { compact?: boolean
           )}
         </span>
       </button>
+      */}
     </div>
   )
 }
