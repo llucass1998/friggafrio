@@ -1,6 +1,6 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `d52e3e60a6402600ef9fa432e6ff3fd185909ea2`.
+- Production SHA: `55dcd28b13b72f1d80b46cf1a93e107f485b60e6`.
 - Release status: published through immutable replacement after frozen install, Medusa runtime materialization, backup validation, and bounded readiness.
 - WSL source mirror: synchronized to the deployed SHA.
 - Production database: backup validated before the release; no migration, seed, or restore was performed.
