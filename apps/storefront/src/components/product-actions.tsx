@@ -1,21 +1,21 @@
-import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
 import { ProductOptionSelect } from "@/components/product-option-select"
-import { useCartDrawer } from "@/lib/context/cart"
-import { useAddToCart, useCart } from "@/lib/hooks/use-cart"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { useCartDrawer } from "@/lib/context/cart"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { useAddToCart, useCart } from "@/lib/hooks/use-cart"
 import { createProductWhatsAppUrl } from "@/lib/whatsapp"
 import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
-import { getCountryCodeFromPath } from "@/lib/utils/region"
-import { CheckoutStepKey } from "@/lib/types/global"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { getCountryCodeFromPath } from "@/lib/utils/region"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { CheckoutStepKey } from "@/lib/types/global"
 import type { HttpTypes } from "@medusajs/types"
-import { useLocation, useNavigate } from "@tanstack/react-router"
+import { useLocation } from "@tanstack/react-router"
 import { isEqual } from "lodash-es"
 import { memo, useEffect, useMemo, useState, type ReactNode } from "react"
-import { Loader2, ShoppingCart, Check, MessageCircle, MapPin, ShieldCheck } from "lucide-react"
-import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
+import { MessageCircle, MapPin, ShieldCheck } from "lucide-react"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { toast } from "sonner"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { useQueryClient } from "@tanstack/react-query"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -28,15 +28,16 @@ type ProductActionsProps = {
 const ProductActions = memo(function ProductActions({ product, region, disabled, afterActions, onVariantChange }: ProductActionsProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | undefined>>({})
   const [quantity, setQuantity] = useState(1)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [isBuyingNow, setIsBuyingNow] = useState(false)
+  // [COMPRAS ONLINE - REATIVAR ANO QUE VEM] const [isSuccess, setIsSuccess] = useState(false)
+  // [COMPRAS ONLINE - REATIVAR ANO QUE VEM] const [isBuyingNow, setIsBuyingNow] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
-  const countryCode = getCountryCodeFromPath(location.pathname) || "br"
-  const queryClient = useQueryClient()
-  const { openCart } = useCartDrawer()
-  const { data: cart } = useCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
-  const addToCartMutation = useAddToCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
+  // [COMPRAS ONLINE - REATIVAR ANO QUE VEM]
+  // const navigate = useNavigate()
+  // const countryCode = getCountryCodeFromPath(location.pathname) || "br"
+  // const queryClient = useQueryClient()
+  // const { openCart } = useCartDrawer()
+  // const { data: cart } = useCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
+  // const addToCartMutation = useAddToCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
 
   useEffect(() => {
     setSelectedOptions({})
@@ -73,11 +74,13 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
     return quantity >= 1 && (typeof available !== "number" || quantity <= available)
   }, [purchaseState, quantity, selectedVariant])
 
+  /* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: isInCart e isButtonGreen]
   const isInCart = Boolean(
     selectedVariant &&
     cart?.items?.some((item) => item.variant_id === selectedVariant.id || item.variant?.id === selectedVariant.id)
   )
   const isButtonGreen = isSuccess || isInCart
+  */
 
   const displayPrice = selectedVariant?.calculated_price?.calculated_amount
     ?? (purchaseState.status === "purchasable" ? purchaseState.price : undefined)
@@ -94,8 +97,9 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
     // Keep the WhatsApp message identical during SSR and hydration.
     url: location.pathname,
   })
-  const isBusy = addToCartMutation.isPending || isBuyingNow
+  const isBusy = false
 
+  /* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: handleCartAction]
   const handleCartAction = async (buyNow: boolean) => {
     if (!selectedVariant?.id || !canBuySelected || isBusy) return
     setIsBuyingNow(buyNow)
@@ -127,6 +131,7 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
       setIsBuyingNow(false)
     }
   }
+  */
 
   const quoteState = purchaseState.status === "quote_only" || purchaseState.status === "price_pending"
   const statusCopy = purchaseState.status === "quote_only"
@@ -200,6 +205,20 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
             <button type="button" aria-label="Aumentar quantidade" onClick={() => setQuantity((value) => value + 1)} disabled={isBusy || (selectedVariant?.manage_inventory === true && typeof selectedVariant.inventory_quantity === "number" && quantity >= selectedVariant.inventory_quantity)} className="h-11 w-11 text-lg text-[var(--color-navy)] disabled:opacity-40">+</button>
           </div>
           </div>
+          {/* Botão de Compra direta via WhatsApp como ação principal */}
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[9px] border border-[#1ebd5b] bg-[#25d366] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#20ba59] hover:shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25d366]"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              Comprar pelo WhatsApp
+            </a>
+          ) : null}
+
+          {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Adicionar ao carrinho]
           <button
             type="button"
             onClick={() => {
@@ -215,9 +234,11 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
             {isButtonGreen ? <Check className="h-4 w-4" aria-hidden="true" /> : <ShoppingCart className="h-4 w-4" aria-hidden="true" />}
             {isSuccess ? "Adicionado" : isInCart ? "No carrinho (ver carrinho)" : "Adicionar ao carrinho"}
           </button>
+          */}
         </div>
       )}
 
+      {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Botão Comprar Agora online]
       {canBuySelected && whatsappUrl && (
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <button type="button" onClick={() => void handleCartAction(true)} disabled={isBusy} className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[9px] border border-[var(--color-primary)] bg-white px-5 py-3 text-sm font-bold text-[var(--color-primary)] transition hover:bg-[var(--color-surface-soft)] disabled:cursor-wait disabled:opacity-60">
@@ -229,6 +250,7 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
           </a>
         </div>
       )}
+      */}
 
       {purchaseState.status === "select_variant" && !selectedVariant && <p className="text-sm font-medium text-amber-700">Selecione uma opção para continuar.</p>}
       {purchaseState.status === "out_of_stock" && <p className="text-sm font-medium text-rose-700">Sem estoque para compra imediata.</p>}

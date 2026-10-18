@@ -2,12 +2,13 @@ import { Link, useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 import { FavoriteButton } from "@/components/favorite-button"
-import { QuickCartButton } from "@/components/quick-cart-button"
+// [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { QuickCartButton } from "@/components/quick-cart-button"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { getInterestFreeInstallment } from "@/lib/utils/installments"
-import ProductRating, { type ProductRatingSummary } from "@/components/product-rating"
+import type { ProductRatingSummary } from "@/components/product-rating"
+// [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductRating from "@/components/product-rating"
 import { resolveMediaUrl } from "@/lib/media-url"
 import { useState } from "react"
 
@@ -26,7 +27,7 @@ export function PublicProductCard({
   catalog = false,
   showInstallment = true,
   promotionLabel,
-  reviewSummary,
+  reviewSummary: _reviewSummary,
 }: PublicProductCardProps) {
   const params = useParams({ strict: false }) as Record<string, string>
   const countryCode = params.countryCode || "br"
@@ -88,11 +89,15 @@ export function PublicProductCard({
       {/* 1. Topo: Estrela e Nota à esquerda | Favorito e Carrinho à direita */}
       <div className="flex items-center justify-between z-10">
         <div className="flex min-h-5 items-center">
+          {/* [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM]
           <ProductRating productId={product.id} summary={reviewSummary} />
+          */}
         </div>
         <div className="flex items-center gap-1">
           <FavoriteButton productId={product.id} productTitle={productTitle} />
+          {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Botão de adicionar ao carrinho no card]
           <QuickCartButton product={product} />
+          */}
         </div>
       </div>
 

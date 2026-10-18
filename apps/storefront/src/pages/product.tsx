@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ImageGallery } from "@/components/ui/image-gallery"
 import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 import ProductActions, { ProductTrustArguments } from "@/components/product-actions"
-import ProductRating from "@/components/product-rating"
+// [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductRating from "@/components/product-rating"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { isVariantInStock } from "@/lib/utils/product"
 import { decodeProductText } from "@/lib/utils/product-text"
@@ -21,9 +21,9 @@ import { ProductSpecificationsTable } from "@/components/product/technical/Produ
 import { ProductApplication } from "@/components/product/technical/ProductApplication"
 import { ProductPackageContents } from "@/components/product/technical/ProductPackageContents"
 import { ProductDocuments } from "@/components/product/technical/ProductDocuments"
-import { ShippingEstimate } from "@/components/shipping-estimate"
+// [FRETE E CÁLCULO DE ENTREGA - REATIVAR ANO QUE VEM] import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
-import ProductReviews from "@/components/product-reviews"
+// [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductReviews from "@/components/product-reviews"
 import RelatedProducts from "@/components/related-products"
 import { resolveMediaUrl } from "@/lib/media-url"
 
@@ -36,7 +36,8 @@ interface ProductPageData {
 
 export function ProductPage() {
   const loaderData = useLoaderData({ strict: false }) as ProductPageData | undefined
-  const { product, region, countryCode = "br", reviewSummary } = loaderData || {}
+  // [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM: const { product, region, countryCode = "br", reviewSummary } = loaderData || {}]
+  const { product, region, countryCode = "br" } = loaderData || {}
   const [activeDetail, setActiveDetail] = useState("overview")
   const [selectedVariant, setSelectedVariant] = useState<HttpTypes.StoreProductVariant | undefined>(undefined)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
@@ -205,9 +206,11 @@ export function ProductPage() {
               <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Resumo técnico</h2>
               <div className="mt-2 flex flex-wrap gap-2">{technicalSummary.map(({ label, value }) => <span key={label} className="rounded-md border border-[#cde1f0] bg-[#eef7fd] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)]">{label}: {value}</span>)}</div>
             </div>}
+            {/* [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM]
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
               {reviewSummary?.total ? <ProductRating productId={product.id} summary={reviewSummary} /> : null}
             </div>
+            */}
           </section>
 
           <aside className="product-purchase-column min-w-0 rounded-[14px] border border-[var(--color-border)] bg-white p-5 shadow-[0_6px_22px_rgba(13,67,105,0.07)] sm:p-6" data-testid="purchase-panel" data-product-info-panel="true" data-has-selectable-variants={hasSelectableVariants} aria-label="Compra do produto" aria-labelledby="product-title">
@@ -216,7 +219,9 @@ export function ProductPage() {
               region={region!}
               onVariantChange={handleVariantChange}
               afterActions={<>
+                {/* [FRETE E CÁLCULO DE ENTREGA - REATIVAR ANO QUE VEM]
                 <ShippingEstimate />
+                */}
                 <ProductTrustArguments />
               </>}
             />
@@ -250,7 +255,9 @@ export function ProductPage() {
         </div>}
       </div>
       {region && <RelatedProducts product={product} regionId={region.id} />}
+      {/* [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM]
       <ProductReviews productId={product.id} productTitle={productTitle} />
+      */}
     </main>
   )
 }
