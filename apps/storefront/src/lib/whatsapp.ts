@@ -4,7 +4,7 @@ export function createWhatsAppUrl(rawNumber?: string): string | null {
   const configuredNumber =
     rawNumber ||
     import.meta.env.VITE_WHATSAPP_NUMBER ||
-    "5511948777156"
+    "5511921396007"
 
   const normalizedNumber = configuredNumber.replace(/\D/g, "")
 

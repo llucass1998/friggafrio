@@ -10,7 +10,7 @@ test("Nossas lojas exposes the three confirmed units in order and preserves Loja
   assert.equal(locations[0].name, "FriggaFrio")
   assert.equal(locations[0].addressLine, "Alameda Glete, 663")
   assert.equal(locations[0].phone, "(11) 4580-1227")
-  assert.equal(locations[0].whatsapp, "5511948777156")
+  assert.equal(locations[0].whatsapp, "5511921396007")
   assert.equal(locations[0].ownImageAlt, "Fachada da FriggaFrio")
   for (const location of locations) {
     assert.equal(location.ownImageSrc, `/images/store/${location.id}-fachada.webp`)

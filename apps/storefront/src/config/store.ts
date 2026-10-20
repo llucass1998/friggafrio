@@ -17,7 +17,7 @@ export const storeConfig: StoreConfig = {
   description: "Especialistas em Refrigeração. Encontre gases refrigerantes, compressores, componentes, ferramentas e soluções técnicas para instalações residenciais, comerciais e industriais.",
   email: "contato@friggafrio.com.br",
   phone: "(11) 4580-1227",
-  whatsappNumber: "5511948777156",
+  whatsappNumber: "5511921396007",
   instagramUrl: "https://www.instagram.com/frigga.frio/",
   locations: storeLocations,
 } as const

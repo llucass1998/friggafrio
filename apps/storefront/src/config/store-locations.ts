@@ -61,7 +61,7 @@ export const storeLocations: StoreLocation[] = [
     // Keep the address as the canonical Maps target until a verified Place ID
     // is available; stale IDs make directions/search links resolve nowhere.
     phone: "(11) 4580-1227",
-    whatsapp: "5511948777156",
+    whatsapp: "5511921396007",
     active: true,
     order: 1,
   },
