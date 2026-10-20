@@ -1,8 +1,11 @@
+import { storeConfig } from "@/config/store"
+
 export const WHATSAPP_DEFAULT_MESSAGE = "Olá! Vim pelo site da Friggafrio e gostaria de falar com a loja."
 
 export function createWhatsAppUrl(rawNumber?: string): string | null {
   const configuredNumber =
     rawNumber ||
+    storeConfig?.whatsappNumber ||
     import.meta.env.VITE_WHATSAPP_NUMBER ||
     "5511921396007"
 
