@@ -5,6 +5,7 @@ import { StoreLocationCard } from "@/components/store-locations/StoreLocationCar
 import { GoogleStoreMap } from "@/components/store-locations/GoogleStoreMap"
 import { Link } from "@tanstack/react-router"
 import { Check, Navigation } from "lucide-react"
+import { siteFeatures } from "@/config/site-features"
 
 const activeLocations = storeLocations.filter((location) => location.active).sort((a, b) => a.order - b.order)
 
@@ -39,7 +40,11 @@ export function PublicStoresPage() {
           {activeLocations.map((location) => <StoreLocationCard key={location.id} location={location} onViewMap={viewOnMap} />)}
         </section>
 
-        {activeLocation && (
+        {/* Marketplace/mapa incorporado preservado.
+            Oculto durante a fase institucional.
+            Reativação: consultar siteFeatures e o guia de rollback.
+        */}
+        {siteFeatures.showEmbeddedStoreMap && activeLocation && (
           <section ref={mapSection} id="store-map-section" aria-labelledby="store-map-heading"
             className="mt-10 scroll-mt-32 lg:scroll-mt-24">
             <h2 id="store-map-heading" className="text-2xl font-bold text-[var(--color-navy)]">Localização das unidades</h2>

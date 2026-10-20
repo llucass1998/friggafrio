@@ -8,6 +8,7 @@ import { HeaderLogo } from "@/components/header/HeaderLogo"
 import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
 import { useAccessibility } from "@/components/accessibility/accessibility-context"
 import { storeConfig } from "@/config/store"
+import { siteFeatures } from "@/config/site-features"
 
 export function HeaderMobileDrawer() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -195,70 +196,20 @@ export function HeaderMobileDrawer() {
 
         <div className="mobile-drawer-content">
           <nav className="px-2 py-1" aria-label="Navegação mobile">
-            <div className="mb-1">
-              <Link
-                to={"/$countryCode/store" as string}
-                params={{ countryCode }}
-                onClick={closeMobileMenu}
-                className="mb-1 block min-h-12 rounded-md border border-[var(--color-primary)]/20 bg-[var(--color-surface-soft)] px-5 py-3 text-sm font-bold text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-              >
-                Ver todos os produtos
-              </Link>
-
-              <h2 className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Categorias</h2>
-              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
-                {productCategories.map((category) => {
-                  const categoryPanelId = `mobile-category-${category.id}`
-                  const isExpanded = expandedCategory === category.id
-                  const children = category.children ?? []
-
-                  return (
-                    <section key={category.id} className="border-b border-[var(--color-border)] last:border-b-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(category.id)}
-                        aria-expanded={isExpanded}
-                        aria-controls={categoryPanelId}
-                        className={`flex min-h-12 w-full items-center gap-3 px-5 py-3 text-left text-sm font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${isExpanded ? "bg-[var(--color-surface-soft)]" : ""}`}
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-[var(--color-primary)]" aria-hidden="true">
-                          <Package className="h-4 w-4" />
-                        </span>
-                        <span className="min-w-0 flex-1">{category.label}</span>
-                        <span className="text-xs font-medium text-[var(--color-text-muted)]">{children.length}</span>
-                        <ChevronRight className={`h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform ${isExpanded ? "rotate-90" : ""}`} aria-hidden="true" />
-                      </button>
-                      <div id={categoryPanelId} aria-hidden={!isExpanded} className={`overflow-hidden transition-[max-height,opacity] duration-[var(--motion-duration-accordion)] ease-[var(--motion-ease-move)] ${isExpanded ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"}`}>
-                        <ul className="border-t border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1">
-                          {children.map((child) => (
-                            <li key={child.id}>
-                              <Link
-                                to={toCountryPath(child.href) as string}
-                                onClick={closeMobileMenu}
-                                tabIndex={isExpanded ? 0 : -1}
-                                className="flex min-h-12 items-center gap-3 rounded-md border-b border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-navy)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                              >
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-primary)]" aria-hidden="true">
-                                  <Package className="h-3.5 w-3.5" />
-                                </span>
-                                <span className="min-w-0 flex-1">{child.label}</span>
-                                <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </section>
-                  )
-                })}
-              </div>
-            </div>
-
             <div>
               <h3 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Institucional
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-1 mb-2">
+                <li>
+                  <Link
+                    to="/quem-somos"
+                    onClick={closeMobileMenu}
+                    className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                  >
+                    Quem Somos
+                  </Link>
+                </li>
                 <li>
                   <Link
                     to="/nossa-loja"
@@ -266,6 +217,16 @@ export function HeaderMobileDrawer() {
                     className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
                   >
                     Nossas lojas
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to={"/$countryCode/store" as string}
+                    params={{ countryCode }}
+                    onClick={closeMobileMenu}
+                    className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                  >
+                    Catálogo de Produtos
                   </Link>
                 </li>
                 <li>
@@ -292,6 +253,71 @@ export function HeaderMobileDrawer() {
                 </li>
               </ul>
             </div>
+
+            {/* Marketplace preservado.
+                Oculto durante a fase institucional.
+                Reativação: consultar siteFeatures e o guia de rollback.
+            */}
+            {siteFeatures.showHeaderProductNavigation && (
+              <div className="mb-1">
+                <Link
+                  to={"/$countryCode/store" as string}
+                  params={{ countryCode }}
+                  onClick={closeMobileMenu}
+                  className="mb-1 block min-h-12 rounded-md border border-[var(--color-primary)]/20 bg-[var(--color-surface-soft)] px-5 py-3 text-sm font-bold text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                >
+                  Ver todos os produtos
+                </Link>
+
+                <h2 className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Categorias</h2>
+                <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
+                  {productCategories.map((category) => {
+                    const categoryPanelId = `mobile-category-${category.id}`
+                    const isExpanded = expandedCategory === category.id
+                    const children = category.children ?? []
+
+                    return (
+                      <section key={category.id} className="border-b border-[var(--color-border)] last:border-b-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(category.id)}
+                          aria-expanded={isExpanded}
+                          aria-controls={categoryPanelId}
+                          className={`flex min-h-12 w-full items-center gap-3 px-5 py-3 text-left text-sm font-semibold text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${isExpanded ? "bg-[var(--color-surface-soft)]" : ""}`}
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-[var(--color-primary)]" aria-hidden="true">
+                            <Package className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">{category.label}</span>
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">{children.length}</span>
+                          <ChevronRight className={`h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform ${isExpanded ? "rotate-90" : ""}`} aria-hidden="true" />
+                        </button>
+                        <div id={categoryPanelId} aria-hidden={!isExpanded} className={`overflow-hidden transition-[max-height,opacity] duration-[var(--motion-duration-accordion)] ease-[var(--motion-ease-move)] ${isExpanded ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"}`}>
+                          <ul className="border-t border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1">
+                            {children.map((child) => (
+                              <li key={child.id}>
+                                <Link
+                                  to={toCountryPath(child.href) as string}
+                                  onClick={closeMobileMenu}
+                                  tabIndex={isExpanded ? 0 : -1}
+                                  className="flex min-h-12 items-center gap-3 rounded-md border-b border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-navy)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-soft)] active:bg-[var(--color-surface-soft)] focus-visible:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                                >
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-primary)]" aria-hidden="true">
+                                    <Package className="h-3.5 w-3.5" />
+                                  </span>
+                                  <span className="min-w-0 flex-1">{child.label}</span>
+                                  <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </section>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <a
               href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de falar com um especialista da FriggaFrio.")}`}
