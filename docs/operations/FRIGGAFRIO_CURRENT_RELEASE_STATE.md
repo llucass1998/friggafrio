@@ -1,7 +1,7 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `8f40e9c6c4b8a0430bad9b8a4b6f35322acdef27`.
-- Release status: published through standard deployment pipeline with marketplace hiding, institutional navigation refinement, 4-column footer, and partner brand carousel.
+- Production SHA: `e1718fc61d0530498d5a0bac7e9888c774f70139`.
+- Release status: published through standard deployment pipeline with re-enabled authentication for Medusa Admin and customer account, and product favorites (saved products) in institutional catalog mode.
 - WSL source mirror: synchronized to the deployed SHA.
 - Production database: backup validated before the release; no migration, seed, or restore was performed.
 - Omie ERP Catalog & Real-Time Synchronization:
