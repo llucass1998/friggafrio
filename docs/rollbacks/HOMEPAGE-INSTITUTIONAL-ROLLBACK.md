@@ -41,8 +41,8 @@ export const siteFeatures = {
   // Banners promocionais e bloco de benefícios comerciais (10x sem juros, etc.)
   showHomeBenefits: false,
 
-  // Carrossel de marcas parceiras na Home
-  showHomeBrandCarousel: false,
+  // Carrossel de marcas parceiras na Home (ativo)
+  showHomeBrandCarousel: true,
 
   // Navegação de produtos no Header (Megamenu de produtos e links diretos)
   showHeaderProductNavigation: false,

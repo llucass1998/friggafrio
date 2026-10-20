@@ -31,7 +31,7 @@ export const siteFeatures = {
   /**
    * Exibição do carrossel de marcas na Home.
    */
-  showHomeBrandCarousel: false,
+  showHomeBrandCarousel: true,
 
   /**
    * Exibição do Megamenu de Produtos e links de categorias no Header.
