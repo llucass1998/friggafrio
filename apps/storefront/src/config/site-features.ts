@@ -44,9 +44,9 @@ export const siteFeatures = {
   showHeaderApplicationsNavigation: false,
 
   /**
-   * Exibição de mapas interativos incorporados (Google Maps iframe) na página de lojas.
+   * Exibição de mapas interativos incorporados (Google Maps iframe) na página de lojas (/nossa-loja).
    */
-  showEmbeddedStoreMap: false,
+  showEmbeddedStoreMap: true,
 
   /**
    * Exibição do link e acessos à Central de Ajuda.

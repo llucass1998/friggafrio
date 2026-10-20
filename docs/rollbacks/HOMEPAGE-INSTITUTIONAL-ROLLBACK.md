@@ -53,8 +53,8 @@ export const siteFeatures = {
   // Submenu de aplicações no Header
   showHeaderApplicationsNavigation: false,
 
-  // Mapa incorporado do Google Maps (iframe) na página de lojas
-  showEmbeddedStoreMap: false,
+  // Mapa incorporado do Google Maps (iframe) na página de lojas (ativo em /nossa-loja, ausente da Home)
+  showEmbeddedStoreMap: true,
 
   // Exibição do link e acessos à Central de Ajuda
   showHelpCenter: false,

@@ -40,7 +40,7 @@ test("siteFeatures defines all institutional flags with safe fail-closed default
   assert.equal(siteFeatures.showHomeBrandCarousel, true)
   assert.equal(siteFeatures.showHeaderProductNavigation, false)
   assert.equal(siteFeatures.showHeaderApplicationsNavigation, false)
-  assert.equal(siteFeatures.showEmbeddedStoreMap, false)
+  assert.equal(siteFeatures.showEmbeddedStoreMap, true)
   assert.equal(siteFeatures.showHelpCenter, false)
   assert.equal(siteFeatures.showDeliveryEstimate, false)
   assert.equal(siteFeatures.showCommerceActions, false)
