@@ -99,7 +99,7 @@ export const footerNavigation = {
       id: "help",
       label: "Central de Ajuda",
       href: "/ajuda",
-      active: true,
+      active: false, // Central de Ajuda ocultada temporariamente por solicitação do cliente
       order: 1
     },
     {

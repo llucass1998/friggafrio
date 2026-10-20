@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
+import { footerNavigation } from "../../src/config/footer-navigation"
 
 const mobileDrawerSource = readFileSync(
   new URL("../../src/components/header/HeaderMobileDrawer.tsx", import.meta.url),
@@ -139,6 +140,20 @@ test("Central de Ajuda displays canonical Matriz address", () => {
   assert.match(helpPageSource, /Alameda Glete, 663, Campos Elíseos/)
   assert.match(helpPageSource, /01215-001/)
   assert.doesNotMatch(helpPageSource, /Rua Anhaia/)
+})
+
+test("Central de Ajuda link is temporarily inactive in footer support navigation", () => {
+  const helpItem = footerNavigation.support.find((item) => item.id === "help")
+  assert.ok(helpItem, "Help navigation item should exist in footer navigation")
+  assert.equal(helpItem.active, false, "Help navigation item must be temporarily inactive")
+  assert.equal(helpItem.href, "/ajuda")
+
+  const termsItem = footerNavigation.support.find((item) => item.id === "terms")
+  const privacyItem = footerNavigation.support.find((item) => item.id === "privacy")
+  const returnsItem = footerNavigation.support.find((item) => item.id === "returns")
+  assert.equal(termsItem?.active, true)
+  assert.equal(privacyItem?.active, true)
+  assert.equal(returnsItem?.active, true)
 })
 
 test("floating accessibility control opens and closes the persistent panel", () => {
