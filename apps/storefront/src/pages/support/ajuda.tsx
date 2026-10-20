@@ -263,8 +263,8 @@ export default function AjudaPage() {
                 <div>
                   <h4 className="font-semibold text-[var(--color-navy)] mb-1">Matriz FriggaFrio</h4>
                   <p className="text-gray-600">
-                    Rua Anhaia, 345 - Bom Retiro<br />
-                    São Paulo - SP
+                    Alameda Glete, 663, Campos Elíseos<br />
+                    São Paulo/SP, 01215-001
                   </p>
                 </div>
               </div>

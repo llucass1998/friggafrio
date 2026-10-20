@@ -135,6 +135,12 @@ test("WhatsApp links use the canonical configured number", () => {
   assert.doesNotMatch(productActionsSource, /wa\.me\/55\$\{storeConfig\.phone/)
 })
 
+test("Central de Ajuda displays canonical Matriz address", () => {
+  assert.match(helpPageSource, /Alameda Glete, 663, Campos Elíseos/)
+  assert.match(helpPageSource, /01215-001/)
+  assert.doesNotMatch(helpPageSource, /Rua Anhaia/)
+})
+
 test("floating accessibility control opens and closes the persistent panel", () => {
   assert.match(accessibilityButtonSource, /onClick=\{togglePanel\}/)
   assert.match(accessibilityButtonSource, /aria-expanded=\{preferences\.panelEnabled\}/)
