@@ -41,7 +41,12 @@ test("siteFeatures defines all institutional flags with safe fail-closed default
   assert.equal(siteFeatures.showHeaderProductNavigation, false)
   assert.equal(siteFeatures.showHeaderApplicationsNavigation, false)
   assert.equal(siteFeatures.showEmbeddedStoreMap, false)
+  assert.equal(siteFeatures.showHelpCenter, false)
+  assert.equal(siteFeatures.showDeliveryEstimate, false)
   assert.equal(siteFeatures.showCommerceActions, false)
+  assert.equal(siteFeatures.showCommerceFooter, false)
+  assert.equal(siteFeatures.showCustomerAccount, false)
+  assert.equal(siteFeatures.showFavorites, false)
 })
 
 test("desktop header prioritizes Quem Somos then Nossas lojas", () => {
@@ -100,4 +105,28 @@ test("rollback guide documents base commit, feature flags and reactivation steps
   assert.match(rollbackDocSource, /backup\/pre-institutional-homepage/)
   assert.match(rollbackDocSource, /siteFeatures/)
   assert.match(rollbackDocSource, /Como Reativar o Marketplace Gradualmente/)
+})
+
+test("commerce routes protect checkout and cart during institutional mode", () => {
+  const cartRoute = readFileSync(new URL("../../src/routes/$countryCode/cart.tsx", import.meta.url), "utf8")
+  const checkoutRoute = readFileSync(new URL("../../src/routes/$countryCode/checkout.tsx", import.meta.url), "utf8")
+  const rootCartRoute = readFileSync(new URL("../../src/routes/cart.tsx", import.meta.url), "utf8")
+  const rootCheckoutRoute = readFileSync(new URL("../../src/routes/checkout.tsx", import.meta.url), "utf8")
+
+  assert.match(cartRoute, /!siteFeatures\.showCommerceActions/)
+  assert.match(cartRoute, /to: "\/\$countryCode\/store"/)
+  assert.match(checkoutRoute, /!siteFeatures\.showCommerceActions/)
+  assert.match(checkoutRoute, /to: "\/\$countryCode\/store"/)
+  assert.match(rootCartRoute, /!siteFeatures\.showCommerceActions/)
+  assert.match(rootCartRoute, /to: "\/\$countryCode\/store"/)
+  assert.match(rootCheckoutRoute, /!siteFeatures\.showCommerceActions/)
+  assert.match(rootCheckoutRoute, /to: "\/\$countryCode\/store"/)
+})
+
+test("footer balances 4 columns and protects commercial payment elements", () => {
+  const footerSource = readFileSync(new URL("../../src/components/public-footer.tsx", import.meta.url), "utf8")
+  assert.match(footerSource, /lg:grid-cols-4/)
+  assert.match(footerSource, /siteFeatures\.showCommerceFooter/)
+  assert.match(footerSource, /siteFeatures\.showCustomerAccount/)
+  assert.doesNotMatch(footerSource, /Área em construção/)
 })

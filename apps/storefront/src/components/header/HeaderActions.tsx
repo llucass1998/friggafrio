@@ -18,28 +18,34 @@ export function HeaderActions({ compact: _compact = false }: { compact?: boolean
 
   return (
     <div className="flex items-center gap-1 md:gap-2">
-      <Link
-        to={isAuthenticated ? ("/$countryCode/account" as string) : ("/$countryCode/account/login" as string)}
-        params={{ countryCode }}
-        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
-        aria-label={isAuthenticated ? "Minha conta" : "Entrar na conta"}
-        title={isAuthenticated ? "Minha conta" : "Entrar"}
-      >
-        <User className="h-5 w-5" aria-hidden="true" />
-      </Link>
+      {/* Autenticação e perfil do cliente: oculto na fase institucional */}
+      {siteFeatures.showCustomerAccount && (
+        <Link
+          to={isAuthenticated ? ("/$countryCode/account" as string) : ("/$countryCode/account/login" as string)}
+          params={{ countryCode }}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+          aria-label={isAuthenticated ? "Minha conta" : "Entrar na conta"}
+          title={isAuthenticated ? "Minha conta" : "Entrar"}
+        >
+          <User className="h-5 w-5" aria-hidden="true" />
+        </Link>
+      )}
 
-      <Link
-        to="/$countryCode/favorites"
-        params={{ countryCode }}
-        className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
-        aria-label={`Favoritos${favoriteCount ? `, ${favoriteCount} ${favoriteCount === 1 ? "item" : "itens"}` : ""}`}
-        title="Favoritos"
-      >
-        <span className="relative inline-flex">
-          <Heart className="h-5 w-5" aria-hidden="true" />
-          {favoriteCount > 0 && <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--color-accent)] px-1 text-[10px] font-bold leading-none text-[var(--color-navy)]" aria-hidden="true">{favoriteCount > 99 ? "99+" : favoriteCount}</span>}
-        </span>
-      </Link>
+      {/* Favoritos: oculto na fase institucional */}
+      {siteFeatures.showFavorites && (
+        <Link
+          to="/$countryCode/favorites"
+          params={{ countryCode }}
+          className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+          aria-label={`Favoritos${favoriteCount ? `, ${favoriteCount} ${favoriteCount === 1 ? "item" : "itens"}` : ""}`}
+          title="Favoritos"
+        >
+          <span className="relative inline-flex">
+            <Heart className="h-5 w-5" aria-hidden="true" />
+            {favoriteCount > 0 && <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--color-accent)] px-1 text-[10px] font-bold leading-none text-[var(--color-navy)]" aria-hidden="true">{favoriteCount > 99 ? "99+" : favoriteCount}</span>}
+          </span>
+        </Link>
+      )}
 
       {/* Marketplace preservado.
           Oculto durante a fase institucional.

@@ -32,11 +32,12 @@ const finishCartMutation = () => {
   return activeCartMutations
 }
 
-export const useCart = ({ fields }: { fields?: string } = {}) => {
+export const useCart = ({ fields, enabled = true }: { fields?: string; enabled?: boolean } = {}) => {
   const queryClient = useQueryClient()
 
   return useQuery({
     queryKey: queryKeys.cart.current(fields),
+    enabled,
     queryFn: async () => {
       const id = getStoredCart()
       if (!id) return null

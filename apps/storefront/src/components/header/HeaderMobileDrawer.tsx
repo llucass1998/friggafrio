@@ -189,9 +189,11 @@ export function HeaderMobileDrawer() {
 
         <div className="border-b border-[var(--color-border)] p-4">
           <HeaderSearch compact />
-          <div className="mt-3">
-            <HeaderPostalCode mobile />
-          </div>
+          {siteFeatures.showDeliveryEstimate && (
+            <div className="mt-3">
+              <HeaderPostalCode mobile />
+            </div>
+          )}
         </div>
 
         <div className="mobile-drawer-content">
@@ -229,15 +231,17 @@ export function HeaderMobileDrawer() {
                     Catálogo de Produtos
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    to="/ajuda"
-                    onClick={closeMobileMenu}
-                    className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-                  >
-                    Central de Ajuda
-                  </Link>
-                </li>
+                {siteFeatures.showHelpCenter && (
+                  <li>
+                    <Link
+                      to="/ajuda"
+                      onClick={closeMobileMenu}
+                      className="block min-h-11 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                    >
+                      Central de Ajuda
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <button
                     type="button"

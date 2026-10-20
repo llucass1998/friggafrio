@@ -4,11 +4,15 @@ import { useCartDrawer } from "@/lib/context/cart"
 import { useCart } from "@/lib/hooks/use-cart"
 import { getCartItemCount } from "@/lib/utils/cart"
 import { DEFAULT_CART_DROPDOWN_FIELDS } from "@/components/cart"
+import { siteFeatures } from "@/config/site-features"
 
 export function FloatingActions() {
   const [showScroll, setShowScroll] = useState(false)
   const { isOpen, openCart } = useCartDrawer()
-  const { data: cart } = useCart({ fields: DEFAULT_CART_DROPDOWN_FIELDS })
+  const { data: cart } = useCart({
+    fields: DEFAULT_CART_DROPDOWN_FIELDS,
+    enabled: siteFeatures.showCommerceActions,
+  })
   const itemCount = getCartItemCount(cart?.items)
 
   useEffect(() => {
@@ -35,7 +39,7 @@ export function FloatingActions() {
   return (
     <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col gap-[10px] safe-area-bottom md:bottom-6 md:right-6 md:gap-3">
       {/* Floating Cart */}
-      {itemCount > 0 && (
+      {siteFeatures.showCommerceActions && itemCount > 0 && (
         <button
           type="button"
           onClick={openCart}

@@ -2,6 +2,7 @@ import React from "react"
 import { useAccessibility } from "@/components/accessibility/accessibility-context"
 import * as Switch from "@radix-ui/react-switch"
 import { storeConfig } from "@/config/store"
+import { siteFeatures } from "@/config/site-features"
 
 export function AccessibilityTopBar() {
   const { preferences, togglePanel } = useAccessibility()
@@ -42,12 +43,14 @@ export function AccessibilityTopBar() {
           >
             Vendas: {phoneFormatted}
           </a>
-          <a 
-            href="/ajuda"
-            className="hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
-          >
-            Central de Ajuda
-          </a>
+          {siteFeatures.showHelpCenter && (
+            <a 
+              href="/ajuda"
+              className="hover:text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm"
+            >
+              Central de Ajuda
+            </a>
+          )}
         </div>
 
       </div>

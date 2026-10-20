@@ -37,14 +37,14 @@ export const footerNavigation = {
       id: "login",
       label: "Fazer login",
       href: "/account/login",
-      active: true,
+      active: false, // Inativo temporariamente na fase institucional
       order: 1
     },
     {
       id: "register",
       label: "Criar conta",
       href: "/account/register",
-      active: true,
+      active: false, // Inativo temporariamente na fase institucional
       order: 2
     },
     {
@@ -52,7 +52,7 @@ export const footerNavigation = {
       label: "Minha conta",
       href: "/account",
       requiresAuth: true,
-      active: true,
+      active: false, // Inativo temporariamente na fase institucional
       order: 3
     },
     {
@@ -60,7 +60,7 @@ export const footerNavigation = {
       label: "Meus pedidos",
       href: "/account/orders",
       requiresAuth: true,
-      active: true,
+      active: false, // Inativo temporariamente na fase institucional
       order: 4
     },
     {
@@ -90,7 +90,7 @@ export const footerNavigation = {
       id: "cart",
       label: "Carrinho",
       href: "/cart",
-      active: true,
+      active: false, // Inativo temporariamente na fase institucional
       order: 2
     }
   ],
@@ -106,22 +106,36 @@ export const footerNavigation = {
       id: "terms",
       label: "Termos de Uso",
       href: "/termos",
-      active: true, // Inativo temporariamente
+      active: true,
       order: 2
     },
     {
       id: "privacy",
       label: "Política de Privacidade",
       href: "/privacidade",
-      active: true, // Inativo temporariamente
+      active: true,
       order: 3
+    },
+    {
+      id: "cookies",
+      label: "Política de Cookies",
+      href: "/politica-de-cookies",
+      active: true,
+      order: 4
+    },
+    {
+      id: "privacy-preferences",
+      label: "Preferências de privacidade",
+      href: "/privacidade#preferencias",
+      active: true,
+      order: 5
     },
     {
       id: "returns",
       label: "Política de Trocas",
       href: "/trocas",
-      active: true, // Inativo temporariamente
-      order: 4
+      active: true,
+      order: 6
     }
   ]
 }

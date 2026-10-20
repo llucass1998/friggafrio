@@ -4,8 +4,11 @@ import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
 import { HeaderMobileDrawer } from "@/components/header/HeaderMobileDrawer"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
+import { siteFeatures } from "@/config/site-features"
 
 export function FullStoreHeader() {
+  const hasActions = siteFeatures.showCustomerAccount || siteFeatures.showFavorites || siteFeatures.showCommerceActions
+
   return (
     <header className="mobile-site-header w-full border-b border-[var(--color-border)] bg-[var(--color-background)]">
       {/* O Top bar com telefone e infos extras foi migrado para o AccessibilityTopBar para unificar a acessibilidade e layout
@@ -27,14 +30,18 @@ export function FullStoreHeader() {
             <HeaderSearch />
           </div>
 
-          <div className="hidden lg:block">
-            <HeaderPostalCode />
-          </div>
+          {siteFeatures.showDeliveryEstimate && (
+            <div className="hidden lg:block">
+              <HeaderPostalCode />
+            </div>
+          )}
 
           {/* Actions */}
-          <div className="flex shrink-0 items-center gap-1">
-            <HeaderActions />
-          </div>
+          {hasActions && (
+            <div className="flex shrink-0 items-center gap-1">
+              <HeaderActions />
+            </div>
+          )}
         </div>
 
       </div>

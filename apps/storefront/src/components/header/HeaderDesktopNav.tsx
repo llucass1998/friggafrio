@@ -31,12 +31,14 @@ export function HeaderDesktopNav() {
       </Link>
 
       {/* Central de Ajuda / Contato */}
-      <Link
-        to="/ajuda"
-        className="text-[var(--color-navy)] font-medium hover:text-[var(--color-primary)] transition-colors py-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md px-2"
-      >
-        Central de Ajuda
-      </Link>
+      {siteFeatures.showHelpCenter && (
+        <Link
+          to="/ajuda"
+          className="text-[var(--color-navy)] font-medium hover:text-[var(--color-primary)] transition-colors py-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-md px-2"
+        >
+          Central de Ajuda
+        </Link>
+      )}
 
       {/* Marketplace preservado.
           Oculto durante a fase institucional.

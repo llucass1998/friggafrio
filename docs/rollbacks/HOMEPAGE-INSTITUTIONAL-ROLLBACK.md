@@ -1,6 +1,6 @@
 # Guia de Rollback e Reativação Comercial — FriggaFrio
 
-Este documento orienta a equipe de engenharia e operações sobre como reverter ou reativar os componentes comerciais do marketplace na Home e no Header da FriggaFrio.
+Este documento orienta a equipe de engenharia e operações sobre como reverter ou reativar os componentes comerciais do marketplace na Home, no Header, no Footer e nas rotas de compra da FriggaFrio.
 
 ---
 
@@ -8,20 +8,23 @@ Este documento orienta a equipe de engenharia e operações sobre como reverter 
 
 - **Branch de Desenvolvimento:** `Maestro`
 - **Commit Base Pré-Institucional:** `48ba71f332d87b66d7e7ec2235ec6d5a5b67099f`
-- **Branch de Backup Local:** `backup/pre-institutional-homepage`
+- **Tag / Branch de Retorno Pré-Institucional:** `backup/pre-institutional-homepage`
+- **Tag de Retorno Ocultação do Marketplace:** `backup/pre-institutional-marketplace-hide`
 - **Data do Snapshot:** 20/10/2026
 
 Caso seja necessário restaurar integralmente o estado anterior a esta fase:
 ```bash
 # Para consultar o commit base seguro
 git log -1 backup/pre-institutional-homepage
+# Para consultar o ponto antes da ocultação total do marketplace
+git log -1 backup/pre-institutional-marketplace-hide
 ```
 
 ---
 
 ## 2. Feature Flags Centralizadas
 
-Os componentes comerciais foram preservados integralmente no código-fonte, nos assets e nas rotas do Medusa. A exibição visual na Home e no Header é controlada de forma declarativa e centralizada em:
+Os componentes comerciais foram preservados integralmente no código-fonte, nos assets e nas rotas do Medusa. A exibição visual na Home, no Header, no Footer e nas páginas de produtos é controlada de forma declarativa e centralizada em:
 
 `apps/storefront/src/config/site-features.ts`
 
@@ -41,7 +44,7 @@ export const siteFeatures = {
   // Banners promocionais e bloco de benefícios comerciais (10x sem juros, etc.)
   showHomeBenefits: false,
 
-  // Carrossel de marcas parceiras na Home (ativo)
+  // Carrossel de marcas parceiras na Home (ativo e visível na parte inferior)
   showHomeBrandCarousel: true,
 
   // Navegação de produtos no Header (Megamenu de produtos e links diretos)
@@ -53,40 +56,113 @@ export const siteFeatures = {
   // Mapa incorporado do Google Maps (iframe) na página de lojas
   showEmbeddedStoreMap: false,
 
-  // Ações comerciais diretas no Header (ex: botão de carrinho)
+  // Exibição do link e acessos à Central de Ajuda
+  showHelpCenter: false,
+
+  // Exibição do componente "Informe seu CEP / Calcule a entrega" no Header
+  showDeliveryEstimate: false,
+
+  // Ações comerciais diretas no Header e layout (ex: botão do carrinho, drawer)
   showCommerceActions: false,
-}
+
+  // Exibição de elementos comerciais no rodapé (formas de pagamento online e avisos de e-commerce)
+  showCommerceFooter: false,
+
+  // Exibição de login, cadastro, minha conta e pedidos na navegação
+  showCustomerAccount: false,
+
+  // Exibição de favoritos vinculados ao perfil comercial
+  showFavorites: false,
+} as const
 ```
 
 ---
 
-## 3. Como Reativar o Marketplace Gradualmente
+## 3. Quais Recursos Foram Ocultados Temporariamente
 
-Para reativar as funcionalidades do marketplace sem necessidade de recodificação:
+1. **Header Desktop, Sticky e Mobile:**
+   - Botão e ícone do carrinho e badge de contagem de itens (`showCommerceActions: false`);
+   - Botão de Minha Conta / Login (`showCustomerAccount: false`);
+   - Botão de Favoritos (`showFavorites: false`);
+   - Componente "Informe seu CEP / Calcule a entrega" (`showDeliveryEstimate: false`);
+   - Link para Central de Ajuda no Header e TopBar (`showHelpCenter: false`).
 
-1. Abra `apps/storefront/src/config/site-features.ts`.
-2. Para reativar todo o fluxo de compras e catálogo comercial na Home e no Header:
-   - Altere `institutionalHome` para `false`.
-   - Altere `showHomeProductShowcase` para `true`.
-   - Altere `showHomeCategories` para `true`.
-   - Altere `showHomeBenefits` para `true`.
-   - Altere `showHomeBrandCarousel` para `true`.
-   - Altere `showHeaderProductNavigation` para `true`.
-   - Altere `showHeaderApplicationsNavigation` para `true`.
-   - Altere `showCommerceActions` para `true`.
-   - Altere `showEmbeddedStoreMap` para `true` (se desejar reativar o mapa embutido).
-3. Execute os testes unitários e de build:
-   ```bash
-   pnpm --filter storefront test
-   pnpm --filter storefront build
-   ```
-4. Submeta as alterações seguindo o fluxo padrão de release via WSL (`deploy/wsl-deploy.sh`).
+2. **Footer (Rodapé):**
+   - Links de "Fazer login", "Criar conta", "Minha conta", "Meus pedidos" (`active: false` em `footerNavigation.account`);
+   - Link de "Carrinho" (`active: false` em `footerNavigation.products`);
+   - Link de "Central de Ajuda" (`active: false` em `footerNavigation.support`);
+   - Área de formas de pagamento online (Pix, Visa, Mastercard) (`showCommerceFooter: false`);
+   - Aviso de "Preços e condições exclusivos para internet" (`showCommerceFooter: false`);
+   - As colunas foram reorganizadas harmonicamente em 4 blocos simétricos: 1. Institucional/Logo, 2. Produtos/Catálogo, 3. Institucional, 4. Atendimento e Políticas.
+
+3. **Carrinho Flutuante e Drawer Global:**
+   - Botão flutuante do carrinho em `FloatingActions.tsx` não é renderizado (`showCommerceActions: false`);
+   - Consulta `useCart` é mantida desativada (`enabled: false`) evitando requisições HTTP desnecessárias;
+   - `<CartDropdown />` não é montado no DOM em `public-layout.tsx`;
+   - O botão "Voltar ao topo" e o botão flutuante de WhatsApp permanecem ativos.
+
+4. **Produtos e Catálogo:**
+   - Referências de parcelamento online ("No Pix ou 10x de R$...") ocultadas no Card (`showCommerceActions: false`);
+   - Botão de favoritos ocultado no Card e no PDP (`showFavorites: false`);
+   - Botão de compra direta e consulta direcionados exclusivamente para WhatsApp com SKU, título e URL do produto;
+   - Preços oficiais do catálogo continuam visíveis; produtos sob cotação continuam como "Sob cotação" ou "Consulte o valor".
+
+5. **Proteção de Rotas de Compra:**
+   - As rotas `/cart`, `/$countryCode/cart`, `/checkout` e `/$countryCode/checkout` redirecionam automaticamente para o catálogo (`/$countryCode/store`) via TanStack Router enquanto `showCommerceActions` for `false`.
 
 ---
 
-## 4. O que Permanece Preservado
+## 4. Como Reativar o Marketplace Gradualmente
+
+Para reativar as funcionalidades do marketplace sem necessidade de recodificação:
+
+### Passo 1 — Reativar Feature Flags
+Abra `apps/storefront/src/config/site-features.ts` e altere as flags desejadas para `true`:
+- `showCommerceActions: true` (reativa botão de carrinho, drawer global, rotas `/cart` e `/checkout`);
+- `showCustomerAccount: true` (reativa login, cadastro e link de conta no Header e Footer);
+- `showFavorites: true` (reativa ícones e lista de favoritos);
+- `showCommerceFooter: true` (reativa formas de pagamento online e avisos de compras online no rodapé);
+- `showDeliveryEstimate: true` (reativa estimativa de CEP no Header);
+- `showHelpCenter: true` (reativa Central de Ajuda na navegação pública);
+- `showHeaderProductNavigation: true` (reativa Megamenu de produtos no Header);
+- `showHomeProductShowcase: true` (reativa vitrines de produtos na Home);
+- `showHomeCategories: true` (reativa carrossel de categorias na Home);
+- `showHomeBenefits: true` (reativa benefícios comerciais na Home);
+- `institutionalHome: false` (se desejar desativar o modo de apresentação institucional da Home).
+
+### Passo 2 — Reativar Links no Footer
+Em `apps/storefront/src/config/footer-navigation.ts`, defina `active: true` para os itens desejados:
+- `login`, `register`, `my-account`, `orders` no array `account`;
+- `cart` no array `products`;
+- `help` no array `support`.
+
+### Passo 3 — Executar Verificações Técnicas
+Antes do relançamento, execute a suíte completa de testes:
+```bash
+pnpm --filter storefront typecheck
+pnpm --filter storefront lint
+pnpm --filter storefront test
+pnpm --filter storefront build
+```
+
+### Passo 4 — Deploy Controlado no WSL
+Seguindo o fail-closed invariant em `AGENTS.md`:
+```bash
+git add .
+git commit -m "feat(storefront): reativa marketplace comercial"
+git push origin Maestro
+# No WSL:
+cd /home/srv/friggafrio/Maestro
+git pull origin Maestro
+pnpm source:sync:check -- --deploy
+./deploy/wsl-deploy.sh
+```
+
+---
+
+## 5. O que Permanece Preservado
 
 - **Catálogo de Produtos:** Todas as rotas de produto (`/$countryCode/products/$handle`), categorias (`/$countryCode/categories/$handle`) e busca (`/$countryCode/store`) continuam intactas e funcionais.
-- **Backend Medusa v2:** Entidades, preços, estoque Omie, carrinhos, autenticação e dados de pedidos não sofreram nenhuma alteração.
+- **Backend Medusa v2:** Entidades, preços, estoque Omie, fluxos de carrinho, workflows, pagamentos Mercado Pago e Stripe, autenticação e dados de pedidos não sofreram nenhuma alteração.
 - **Integração WhatsApp:** Os links de compra direta via WhatsApp direcionam para o número oficial `+55 11 92139-6007`.
-- **Acessibilidade & Responsividade:** Todas as diretrizes de acessibilidade (painel a11y, navegação por teclado, leitor de tela) permanecem ativas e validadas.
+- **Acessibilidade & Responsividade:** Todas as diretrizes de acessibilidade (painel a11y, navegação por teclado, leitor de tela, VLibras) permanecem ativas e validadas.

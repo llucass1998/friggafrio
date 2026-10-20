@@ -4,8 +4,10 @@ import { HeaderActions } from "@/components/header/HeaderActions"
 import { HeaderDesktopNav } from "@/components/header/HeaderDesktopNav"
 import { HeaderLogo } from "@/components/header/HeaderLogo"
 import { HeaderPostalCode } from "@/components/header/HeaderPostalCode"
+import { siteFeatures } from "@/config/site-features"
 
 export function StickyCommerceHeader() {
+  const hasActions = siteFeatures.showCustomerAccount || siteFeatures.showFavorites || siteFeatures.showCommerceActions
   const [isVisible, setIsVisible] = useState(false)
   useEffect(() => {
     const handleScroll = () => {
@@ -45,10 +47,10 @@ export function StickyCommerceHeader() {
             <HeaderSearch compact />
           </div>
 
-          <HeaderPostalCode />
+          {siteFeatures.showDeliveryEstimate && <HeaderPostalCode />}
 
           {/* Actions */}
-          <HeaderActions compact />
+          {hasActions && <HeaderActions compact />}
         </div>
       </div>
     </div>

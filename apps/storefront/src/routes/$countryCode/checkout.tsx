@@ -1,9 +1,10 @@
-import { createFileRoute, notFound } from "@tanstack/react-router"
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 import Checkout from "@/pages/checkout"
 import { getRegion } from "@/lib/data/regions"
 import { CheckoutStepKey } from "@/lib/types/global"
 import { sanitize } from "@/lib/utils/sanitize"
 import { pageMeta } from "@/lib/seo"
+import { siteFeatures } from "@/config/site-features"
 
 export const Route = createFileRoute("/$countryCode/checkout")({
   validateSearch: (search): { step: CheckoutStepKey } => {
@@ -22,6 +23,16 @@ export const Route = createFileRoute("/$countryCode/checkout")({
   },
   loader: async ({ params, context, deps }) => {
     const { countryCode } = params
+
+    // Durante a fase institucional, o checkout online está desativado.
+    // Redireciona acessos diretos ao checkout para o catálogo.
+    if (!siteFeatures.showCommerceActions) {
+      throw redirect({
+        to: "/$countryCode/store",
+        params: { countryCode },
+      })
+    }
+
     const { queryClient } = context
     const { step } = deps
 

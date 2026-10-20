@@ -29,7 +29,7 @@ export const siteFeatures = {
   showHomeBenefits: false,
 
   /**
-   * Exibição do carrossel de marcas na Home.
+   * Exibição do carrossel de marcas na Home. DEVEM PERMANECER VISÍVEIS.
    */
   showHomeBrandCarousel: true,
 
@@ -49,9 +49,34 @@ export const siteFeatures = {
   showEmbeddedStoreMap: false,
 
   /**
-   * Exibição de ações comerciais diretas no Header (ex: botão do carrinho).
+   * Exibição do link e acessos à Central de Ajuda.
+   */
+  showHelpCenter: false,
+
+  /**
+   * Exibição do componente "Informe seu CEP / Calcule a entrega".
+   */
+  showDeliveryEstimate: false,
+
+  /**
+   * Exibição de ações comerciais diretas no Header e layout (ex: botão do carrinho).
    */
   showCommerceActions: false,
+
+  /**
+   * Exibição de elementos comerciais no rodapé (formas de pagamento online e avisos de e-commerce).
+   */
+  showCommerceFooter: false,
+
+  /**
+   * Exibição de login, cadastro, minha conta e pedidos na navegação.
+   */
+  showCustomerAccount: false,
+
+  /**
+   * Exibição de favoritos vinculados ao perfil comercial.
+   */
+  showFavorites: false,
 } as const
 
 export type SiteFeatures = typeof siteFeatures

@@ -23,6 +23,7 @@ import { ProductPackageContents } from "@/components/product/technical/ProductPa
 import { ProductDocuments } from "@/components/product/technical/ProductDocuments"
 // [FRETE E CÁLCULO DE ENTREGA - REATIVAR ANO QUE VEM] import { ShippingEstimate } from "@/components/shipping-estimate"
 import { FavoriteButton } from "@/components/favorite-button"
+import { siteFeatures } from "@/config/site-features"
 // [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductReviews from "@/components/product-reviews"
 import RelatedProducts from "@/components/related-products"
 import { resolveMediaUrl } from "@/lib/media-url"
@@ -192,9 +193,11 @@ export function ProductPage() {
                   <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{availabilityLabel}
                 </div>
               </div>
-              <div className="shrink-0 pt-1">
-                <FavoriteButton productId={product.id} productTitle={productTitle} />
-              </div>
+              {siteFeatures.showFavorites && (
+                <div className="shrink-0 pt-1">
+                  <FavoriteButton productId={product.id} productTitle={productTitle} />
+                </div>
+              )}
             </div>
             {sku && <p className="mt-2 font-mono text-sm text-[var(--color-text-muted)]">Ref.: {sku}</p>}
             {category && <p className="mt-3 text-sm text-[var(--color-text-muted)]">Categoria: <strong className="font-semibold text-[var(--color-navy)]">{category}</strong></p>}

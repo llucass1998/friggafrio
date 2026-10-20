@@ -4,6 +4,7 @@ import { PublicFooter } from "@/components/public-footer"
 import { FloatingActions } from "@/components/FloatingActions"
 import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button"
 import { CartDropdown } from "@/components/cart"
+import { siteFeatures } from "@/config/site-features"
 import { useLocation } from "@tanstack/react-router"
 import { AnalyticsConsent } from "@/components/analytics-consent"
 import {
@@ -59,7 +60,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <AccessibilityFloatingButton />
 
         {/* Dropdown/Drawer Global do Carrinho */}
-        <CartDropdown />
+        {siteFeatures.showCommerceActions && <CartDropdown />}
 
         {/* Painel e Recursos Visuais de Acessibilidade */}
         <AccessibilityPanel />

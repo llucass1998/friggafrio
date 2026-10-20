@@ -2,6 +2,7 @@ import { Link, useParams } from "@tanstack/react-router"
 import { storeConfig } from "@/config/store"
 import { COMPANY_INFORMATION } from "@/config/company"
 import { footerNavigation } from "@/config/footer-navigation"
+import { siteFeatures } from "@/config/site-features"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useState } from "react"
 import { BadgeCheck, LockKeyhole } from "lucide-react"
@@ -102,8 +103,8 @@ export function PublicFooter() {
                 </svg>
               </div>
               <div>
-                <h4 className="font-bold text-white text-sm uppercase">Compra segura</h4>
-                <span className="text-sm text-[var(--color-surface-soft)]">Informações e políticas claras</span>
+                <h4 className="font-bold text-white text-sm uppercase">Informações claras</h4>
+                <span className="text-sm text-[var(--color-surface-soft)]">Dados da empresa e políticas disponíveis</span>
               </div>
             </div>
           </div>
@@ -112,9 +113,9 @@ export function PublicFooter() {
 
       {/* 2. Área Principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Brand & Sobre */}
-          <div className="lg:col-span-1 mb-6 md:mb-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* 1. Logo & Descrição Institucional */}
+          <div className="mb-6 md:mb-0">
             <Link
               to={"/$countryCode" as string}
               params={{ countryCode }}
@@ -142,62 +143,59 @@ export function PublicFooter() {
             </div>
           </div>
 
-                    <div className="md:col-span-4 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            {/* Produtos */}
-            <Accordion title="Produtos" defaultOpen={true}>
-              <ul className="space-y-3">
-                {footerNavigation.products.filter(item => item.active).map(item => (
-                  <li key={item.id}>
+          {/* 2. Produtos / Catálogo */}
+          <Accordion title="Produtos" defaultOpen={true}>
+            <ul className="space-y-3">
+              {footerNavigation.products.filter(item => item.active).map(item => (
+                <li key={item.id}>
+                  <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Accordion>
+
+          {/* 3. Institucional */}
+          <Accordion title="Institucional">
+            <ul className="space-y-3">
+              {footerNavigation.institutional.filter(item => item.active).map(item => (
+                <li key={item.id}>
+                  {item.id === "fale-conosco" ? (
+                    <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
+                      {item.label}
+                    </a>
+                  ) : (
                     <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
                       {item.label}
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </Accordion>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Accordion>
 
-            {/* Institucional */}
-            <Accordion title="Institucional">
-              <ul className="space-y-3">
-                {footerNavigation.institutional.filter(item => item.active).map(item => (
-                  <li key={item.id}>
-                    {item.id === "fale-conosco" ? (
-                      <a href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent("Olá! Estou no site da FriggaFrio e gostaria de falar com a equipe.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors" aria-label="Falar com a FriggaFrio pelo WhatsApp">
-                        {item.label}
-                      </a>
-                    ) : (
-                      <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                        {item.label}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </Accordion>
+          {/* 4. Atendimento e Políticas */}
+          <Accordion title="Atendimento e Políticas">
+            <ul className="space-y-3">
+              {footerNavigation.support.filter(item => item.active).map(item => (
+                <li key={item.id}>
+                  {item.id === "privacy-preferences" ? (
+                    <button type="button" onClick={() => window.dispatchEvent(new Event("friggafrio:privacy-preferences"))} className="text-sm text-[var(--color-surface-soft)] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                      {item.label}
+                    </button>
+                  ) : (
+                    <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Accordion>
 
-            {/* Atendimento */}
-            <Accordion title="Atendimento">
-              <ul className="space-y-3">
-                {footerNavigation.support.filter(item => item.active).map(item => (
-                  <li key={item.id}>
-                    {item.id === "privacy-preferences" ? (
-                      <button type="button" onClick={() => window.dispatchEvent(new Event("friggafrio:privacy-preferences"))} className="text-sm text-[var(--color-surface-soft)] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                        {item.label}
-                      </button>
-                    ) : (
-                      <Link to={item.href as any} className="text-sm text-[var(--color-surface-soft)] hover:text-white transition-colors">
-                        {item.label}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-                {footerNavigation.support.filter(item => item.active).length === 0 && (
-                   <li className="text-sm text-gray-500 italic">Área em construção</li>
-                )}
-              </ul>
-            </Accordion>
-
-            {/* Minha Conta */}
+          {/* Minha Conta (preservado para quando o marketplace for reativado) */}
+          {siteFeatures.showCustomerAccount && footerNavigation.account.some(item => item.active) && (
             <Accordion title="Minha Conta">
               <ul className="space-y-3">
                 {footerNavigation.account.filter(item => item.active).map(item => (
@@ -209,7 +207,7 @@ export function PublicFooter() {
                 ))}
               </ul>
             </Accordion>
-          </div>
+          )}
         </div>
       </div>
 
@@ -218,28 +216,30 @@ export function PublicFooter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4">
 
-            <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Formas de pagamento</span>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 max-w-md">
-                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="Pix">
-                  <svg className="h-4 w-4 text-[#32BCAD]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M17.472 6.528a4.95 4.95 0 0 0-7.004 0L4.743 12.253a4.953 4.953 0 0 0 0 7.004 4.953 4.953 0 0 0 7.004 0l5.725-5.725a4.953 4.953 0 0 0 0-7.004Zm-1.414 5.59-4.311 4.311a2.953 2.953 0 0 1-4.176 0 2.953 2.953 0 0 1 0-4.176l4.311-4.311a2.953 2.953 0 0 1 4.176 0 2.953 2.953 0 0 1 0 4.176Z" />
-                    <path d="M6.528 6.528a4.95 4.95 0 0 1 7.004 0l5.725 5.725a4.953 4.953 0 0 1 0 7.004 4.953 4.953 0 0 1-7.004 0l-5.725-5.725a4.953 4.953 0 0 1 0-7.004Z" opacity="0.3" />
-                  </svg>
-                  <span>Pix</span>
-                </div>
-                <div className="flex h-8 items-center rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Visa">
-                  <span className="font-extrabold italic text-blue-400 tracking-wider">VISA</span>
-                </div>
-                <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Mastercard">
-                  <div className="flex -space-x-1.5" aria-hidden="true">
-                    <span className="h-3.5 w-3.5 rounded-full bg-[#EB001B] inline-block" />
-                    <span className="h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90 inline-block" />
+            {siteFeatures.showCommerceFooter && (
+              <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Formas de pagamento</span>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 max-w-md">
+                  <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm" title="Pix">
+                    <svg className="h-4 w-4 text-[#32BCAD]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M17.472 6.528a4.95 4.95 0 0 0-7.004 0L4.743 12.253a4.953 4.953 0 0 0 0 7.004 4.953 4.953 0 0 0 7.004 0l5.725-5.725a4.953 4.953 0 0 0 0-7.004Zm-1.414 5.59-4.311 4.311a2.953 2.953 0 0 1-4.176 0 2.953 2.953 0 0 1 0-4.176l4.311-4.311a2.953 2.953 0 0 1 4.176 0 2.953 2.953 0 0 1 0 4.176Z" />
+                      <path d="M6.528 6.528a4.95 4.95 0 0 1 7.004 0l5.725 5.725a4.953 4.953 0 0 1 0 7.004 4.953 4.953 0 0 1-7.004 0l-5.725-5.725a4.953 4.953 0 0 1 0-7.004Z" opacity="0.3" />
+                    </svg>
+                    <span>Pix</span>
                   </div>
-                  <span className="text-[11px] font-semibold text-gray-200">Mastercard</span>
+                  <div className="flex h-8 items-center rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Visa">
+                    <span className="font-extrabold italic text-blue-400 tracking-wider">VISA</span>
+                  </div>
+                  <div className="flex h-8 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm" title="Mastercard">
+                    <div className="flex -space-x-1.5" aria-hidden="true">
+                      <span className="h-3.5 w-3.5 rounded-full bg-[#EB001B] inline-block" />
+                      <span className="h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90 inline-block" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-gray-200">Mastercard</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Segurança</span>
@@ -267,9 +267,11 @@ export function PublicFooter() {
                   {primaryLocation?.addressLine} - {primaryLocation?.district} - {primaryLocation?.city} - {primaryLocation?.stateCode} - CEP: {primaryLocation?.postalCode}
                 </span>
               </p>
-              <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">
-                Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
-              </p>
+              {siteFeatures.showCommerceFooter && (
+                <p className="text-[10px] mt-2 text-gray-600 max-w-3xl">
+                  Preços e condições de pagamento exclusivos para compras via internet, podendo variar nas lojas físicas. Ofertas válidas até o término dos nossos estoques para internet.
+                </p>
+              )}
               <p className="pt-2 text-xs text-gray-400">
                 Desenvolvido por{" "}
                 <a

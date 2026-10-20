@@ -2,6 +2,7 @@ import { Link, useParams } from "@tanstack/react-router"
 import type { HttpTypes } from "@medusajs/types"
 import { ProductImagePlaceholder } from "@/components/product/ProductImagePlaceholder"
 import { FavoriteButton } from "@/components/favorite-button"
+import { siteFeatures } from "@/config/site-features"
 // [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { QuickCartButton } from "@/components/quick-cart-button"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
@@ -94,7 +95,9 @@ export function PublicProductCard({
           */}
         </div>
         <div className="flex items-center gap-1">
-          <FavoriteButton productId={product.id} productTitle={productTitle} />
+          {siteFeatures.showFavorites && (
+            <FavoriteButton productId={product.id} productTitle={productTitle} />
+          )}
           {/* [COMPRAS ONLINE - REATIVAR ANO QUE VEM: Botão de adicionar ao carrinho no card]
           <QuickCartButton product={product} />
           */}
@@ -223,7 +226,7 @@ export function PublicProductCard({
                     </span>
                   )}
                 </div>
-                {showInstallment && installment && (
+                {showInstallment && siteFeatures.showCommerceActions && installment && (
                   <span className="text-[11px] text-slate-500">
                     No Pix ou 10x de{" "}
                     {formatCurrencyAmount({
