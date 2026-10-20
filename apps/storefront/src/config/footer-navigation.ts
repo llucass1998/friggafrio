@@ -37,14 +37,14 @@ export const footerNavigation = {
       id: "login",
       label: "Fazer login",
       href: "/account/login",
-      active: false, // Inativo temporariamente na fase institucional
+      active: true,
       order: 1
     },
     {
       id: "register",
       label: "Criar conta",
       href: "/account/register",
-      active: false, // Inativo temporariamente na fase institucional
+      active: true,
       order: 2
     },
     {
@@ -52,30 +52,37 @@ export const footerNavigation = {
       label: "Minha conta",
       href: "/account",
       requiresAuth: true,
-      active: false, // Inativo temporariamente na fase institucional
+      active: true,
       order: 3
+    },
+    {
+      id: "saved-products",
+      label: "Produtos salvos",
+      href: "/favorites",
+      active: true,
+      order: 4
     },
     {
       id: "orders",
       label: "Meus pedidos",
       href: "/account/orders",
       requiresAuth: true,
-      active: false, // Inativo temporariamente na fase institucional
-      order: 4
+      active: false, // Inativo temporariamente na fase de catalogo consultivo
+      order: 5
     },
     {
       id: "cookies",
       label: "Política de Cookies",
       href: "/politica-de-cookies",
-      active: true,
-      order: 5
+      active: false, // Já presente em Atendimento e Políticas
+      order: 6
     },
     {
       id: "privacy-preferences",
       label: "Preferências de privacidade",
       href: "/privacidade#preferencias",
-      active: true,
-      order: 6
+      active: false, // Já presente em Atendimento e Políticas
+      order: 7
     }
   ],
   products: [

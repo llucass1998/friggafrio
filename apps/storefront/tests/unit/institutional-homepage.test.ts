@@ -45,8 +45,8 @@ test("siteFeatures defines all institutional flags with safe fail-closed default
   assert.equal(siteFeatures.showDeliveryEstimate, false)
   assert.equal(siteFeatures.showCommerceActions, false)
   assert.equal(siteFeatures.showCommerceFooter, false)
-  assert.equal(siteFeatures.showCustomerAccount, false)
-  assert.equal(siteFeatures.showFavorites, false)
+  assert.equal(siteFeatures.showCustomerAccount, true)
+  assert.equal(siteFeatures.showFavorites, true)
 })
 
 test("desktop header prioritizes Quem Somos then Nossas lojas", () => {

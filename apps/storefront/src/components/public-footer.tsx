@@ -49,6 +49,7 @@ export function PublicFooter() {
   }
 
   const primaryLocation = storeConfig.locations[0]
+  const hasAccountColumn = siteFeatures.showCustomerAccount && footerNavigation.account.some(item => item.active)
 
   return (
     <footer className="bg-[var(--color-navy)] text-white pt-8 relative w-full shrink-0">
@@ -113,7 +114,7 @@ export function PublicFooter() {
 
       {/* 2. Área Principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${hasAccountColumn ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-8`}>
           {/* 1. Logo & Descrição Institucional */}
           <div className="mb-6 md:mb-0">
             <Link

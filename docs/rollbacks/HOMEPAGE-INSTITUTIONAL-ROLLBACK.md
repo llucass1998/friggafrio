@@ -68,11 +68,11 @@ export const siteFeatures = {
   // Exibição de elementos comerciais no rodapé (formas de pagamento online e avisos de e-commerce)
   showCommerceFooter: false,
 
-  // Exibição de login, cadastro, minha conta e pedidos na navegação
-  showCustomerAccount: false,
+  // Exibição de login, cadastro, minha conta e pedidos na navegação (ativo: permite login Medusa Admin e conta do cliente)
+  showCustomerAccount: true,
 
-  // Exibição de favoritos vinculados ao perfil comercial
-  showFavorites: false,
+  // Exibição de favoritos vinculados ao perfil comercial (ativo: salvar produtos de referência)
+  showFavorites: true,
 } as const
 ```
 
@@ -82,18 +82,19 @@ export const siteFeatures = {
 
 1. **Header Desktop, Sticky e Mobile:**
    - Botão e ícone do carrinho e badge de contagem de itens (`showCommerceActions: false`);
-   - Botão de Minha Conta / Login (`showCustomerAccount: false`);
-   - Botão de Favoritos (`showFavorites: false`);
+   - Botão de Minha Conta / Login ativo (`showCustomerAccount: true` — permite à equipe acessar o Medusa Admin em `/app` e aos clientes gerenciarem a conta);
+   - Botão de Favoritos ativo (`showFavorites: true` — permite aos usuários salvarem produtos do catálogo para consulta posterior);
    - Componente "Informe seu CEP / Calcule a entrega" (`showDeliveryEstimate: false`);
    - Link para Central de Ajuda no Header e TopBar (`showHelpCenter: false`).
 
 2. **Footer (Rodapé):**
-   - Links de "Fazer login", "Criar conta", "Minha conta", "Meus pedidos" (`active: false` em `footerNavigation.account`);
-   - Link de "Carrinho" (`active: false` em `footerNavigation.products`);
-   - Link de "Central de Ajuda" (`active: false` em `footerNavigation.support`);
+   - Links de "Fazer login", "Criar conta", "Minha conta" e "Produtos salvos" ativos (`active: true` em `footerNavigation.account`);
+   - "Meus pedidos" mantido inativo temporariamente (`active: false`);
+   - Link de "Carrinho" mantido inativo temporariamente (`active: false` em `footerNavigation.products`);
+   - Link de "Central de Ajuda" mantido inativo temporariamente (`active: false` em `footerNavigation.support`);
    - Área de formas de pagamento online (Pix, Visa, Mastercard) (`showCommerceFooter: false`);
    - Aviso de "Preços e condições exclusivos para internet" (`showCommerceFooter: false`);
-   - As colunas foram reorganizadas harmonicamente em 4 blocos simétricos: 1. Institucional/Logo, 2. Produtos/Catálogo, 3. Institucional, 4. Atendimento e Políticas.
+   - As colunas estruturam-se harmonicamente com Logo institucional, Produtos, Institucional, Atendimento e Políticas e Minha Conta.
 
 3. **Carrinho Flutuante e Drawer Global:**
    - Botão flutuante do carrinho em `FloatingActions.tsx` não é renderizado (`showCommerceActions: false`);

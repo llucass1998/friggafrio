@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom"
 import { Link, useLocation, useParams } from "@tanstack/react-router"
-import { Accessibility, ChevronRight, Menu, MessageCircle, Package, X } from "lucide-react"
+import { Accessibility, ChevronRight, Heart, Menu, MessageCircle, Package, User, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { productCategories } from "@/components/header/categories"
 import { HeaderSearch } from "@/components/header/HeaderSearch"
@@ -257,6 +257,42 @@ export function HeaderMobileDrawer() {
                 </li>
               </ul>
             </div>
+
+            {(siteFeatures.showCustomerAccount || siteFeatures.showFavorites) && (
+              <div>
+                <h3 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  Minha Conta
+                </h3>
+                <ul className="space-y-1 mb-2">
+                  {siteFeatures.showCustomerAccount && (
+                    <li>
+                      <Link
+                        to={"/$countryCode/account" as string}
+                        params={{ countryCode }}
+                        onClick={closeMobileMenu}
+                        className="flex min-h-11 items-center gap-3 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                      >
+                        <User className="h-5 w-5 text-[var(--color-primary)]" aria-hidden="true" />
+                        Minha Conta / Entrar
+                      </Link>
+                    </li>
+                  )}
+                  {siteFeatures.showFavorites && (
+                    <li>
+                      <Link
+                        to={"/$countryCode/favorites" as string}
+                        params={{ countryCode }}
+                        onClick={closeMobileMenu}
+                        className="flex min-h-11 items-center gap-3 rounded-md px-4 py-3 text-sm font-medium text-[var(--color-navy)] transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+                      >
+                        <Heart className="h-5 w-5 text-[var(--color-primary)]" aria-hidden="true" />
+                        Produtos Salvos (Favoritos)
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
 
             {/* Marketplace preservado.
                 Oculto durante a fase institucional.

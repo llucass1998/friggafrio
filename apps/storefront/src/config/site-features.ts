@@ -71,12 +71,12 @@ export const siteFeatures = {
   /**
    * Exibição de login, cadastro, minha conta e pedidos na navegação.
    */
-  showCustomerAccount: false,
+  showCustomerAccount: true,
 
   /**
-   * Exibição de favoritos vinculados ao perfil comercial.
+   * Exibição de favoritos vinculados ao perfil comercial (salvar produtos).
    */
-  showFavorites: false,
+  showFavorites: true,
 } as const
 
 export type SiteFeatures = typeof siteFeatures
