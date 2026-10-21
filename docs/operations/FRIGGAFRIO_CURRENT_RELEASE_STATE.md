@@ -1,7 +1,7 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `830ba5c8b070d7f8a2d4dde3191fd093ebf633eb`.
-- Release status: published through standard deployment pipeline with interactive store map enabled on /nossa-loja while absent from homepage, authentication enabled for Medusa Admin and customer account, and product favorites in institutional catalog mode.
+- Production SHA: `ac06272eab22690f4521d46cde4c3003be0c478d`.
+- Release status: published through standard deployment pipeline with updated phone numbers for Loja 1 and Loja 2 ((11) 3224-1670), matching CEP for Loja 2, and confirmed address/CEP for Loja 3 (Avenida São Carlos, 847, Mogi Guaçu).
 - WSL source mirror: synchronized to the deployed SHA.
 - Production database: backup validated before the release; no migration, seed, or restore was performed.
 - Omie ERP Catalog & Real-Time Synchronization:
