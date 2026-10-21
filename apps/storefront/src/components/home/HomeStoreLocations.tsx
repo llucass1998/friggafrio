@@ -86,11 +86,9 @@ export function HomeStoreLocations() {
                     </div>
                   )}
 
-                  {location.id === "loja-1" && (
-                    <div className="mt-3 rounded-lg bg-[#EBF5FB] px-3 py-1.5 text-xs font-medium text-[var(--color-primary)]">
-                      Retirada gratuita de pedidos exclusiva nesta unidade.
-                    </div>
-                  )}
+                  <div className="mt-3 rounded-lg bg-[#EBF5FB] px-3 py-1.5 text-xs font-medium text-[var(--color-primary)]">
+                    Retirada gratuita de pedidos nesta unidade.
+                  </div>
 
                   {/* Ações */}
                   <div className="mt-auto pt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">

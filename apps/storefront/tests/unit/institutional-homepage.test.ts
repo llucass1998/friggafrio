@@ -130,3 +130,12 @@ test("footer balances 4 columns and protects commercial payment elements", () =>
   assert.match(footerSource, /siteFeatures\.showCustomerAccount/)
   assert.doesNotMatch(footerSource, /Área em construção/)
 })
+
+test("home store locations displays pickup badge for all stores without exclusiva", () => {
+  const homeStoresSource = readFileSync(
+    new URL("../../src/components/home/HomeStoreLocations.tsx", import.meta.url),
+    "utf8"
+  )
+  assert.match(homeStoresSource, /Retirada gratuita de pedidos nesta unidade\./)
+  assert.doesNotMatch(homeStoresSource, /exclusiva nesta unidade/)
+})
