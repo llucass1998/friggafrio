@@ -9,7 +9,7 @@ test("Nossas lojas exposes the three confirmed units in order and preserves Loja
   assert.deepEqual(locations.map(({ id }) => id), ["loja-1", "loja-2", "loja-3"])
   assert.equal(locations[0].name, "FriggaFrio")
   assert.equal(locations[0].addressLine, "Alameda Glete, 663")
-  assert.equal(locations[0].phone, "(11) 4580-1227")
+  assert.equal(locations[0].phone, "(11) 3224-1670")
   assert.equal(locations[0].whatsapp, "5511921396007")
   assert.equal(locations[0].ownImageAlt, "Fachada da FriggaFrio")
   for (const location of locations) {
@@ -17,18 +17,30 @@ test("Nossas lojas exposes the three confirmed units in order and preserves Loja
     assert.ok(statSync(new URL(`../../public${location.ownImageSrc}`, import.meta.url)).size > 0)
   }
   assert.equal(locations[1].addressLine, "Alameda Glete, 926")
-  assert.equal(locations[2].addressLine, "Avenida São Carlos, 827")
+  assert.equal(locations[1].phone, "(11) 3224-1670")
+  assert.equal(locations[1].postalCode, "01215-001")
+  assert.equal(locations[2].addressLine, "Avenida São Carlos, 847")
   assert.equal(locations[2].district, "Vila São Carlos")
   assert.equal(locations[2].city, "Mogi Guaçu")
+  assert.equal(locations[2].postalCode, "13847-111")
 })
 
 test("new units never inherit unconfirmed contacts, postal codes, CNPJ or hours", () => {
-  for (const location of storeLocations.slice(1)) {
-    for (const key of ["phone", "whatsapp", "postalCode", "cnpj", "legalName", "openingHours", "email"] as const) {
-      assert.equal(location[key], undefined, `${location.id}: ${key}`)
-    }
-    assert.equal(storeWhatsappLink(location), undefined)
+  // Loja 2 has confirmed phone and postalCode; other metadata remains unconfirmed.
+  assert.equal(storeLocations[1].phone, "(11) 3224-1670")
+  assert.equal(storeLocations[1].postalCode, "01215-001")
+  for (const key of ["whatsapp", "cnpj", "legalName", "openingHours", "email"] as const) {
+    assert.equal(storeLocations[1][key], undefined, `loja-2: ${key}`)
   }
+  assert.equal(storeWhatsappLink(storeLocations[1]), undefined)
+
+  // Loja 3 has confirmed address and postalCode; contacts remain unconfirmed.
+  assert.equal(storeLocations[2].postalCode, "13847-111")
+  for (const key of ["phone", "whatsapp", "cnpj", "legalName", "openingHours", "email"] as const) {
+    assert.equal(storeLocations[2][key], undefined, `loja-3: ${key}`)
+  }
+  assert.equal(storeWhatsappLink(storeLocations[2]), undefined)
+
   const whatsapp = new URL(storeWhatsappLink(storeLocations[0])!)
   assert.match(whatsapp.searchParams.get("text")!, /Loja 1, Alameda Glete, 663/)
 })
@@ -41,8 +53,8 @@ test("map search and directions use exactly the same full confirmed address", ()
     assert.equal(new URL(links.directions).searchParams.get("destination"), address)
     assert.doesNotMatch(address, /undefined|null/)
   }
-  assert.equal(storeAddress(storeLocations[1]), "Alameda Glete, 926, São Paulo/SP")
-  assert.equal(storeAddress(storeLocations[2]), "Avenida São Carlos, 827, Vila São Carlos, Mogi Guaçu/SP")
+  assert.equal(storeAddress(storeLocations[1]), "Alameda Glete, 926, Campos Elíseos, São Paulo/SP, 01215-001")
+  assert.equal(storeAddress(storeLocations[2]), "Avenida São Carlos, 847, Vila São Carlos, Mogi Guaçu/SP, 13847-111")
 })
 
 test("page SEO describes all units with city locality and only confirmed metadata", () => {
@@ -55,12 +67,15 @@ test("page SEO describes all units with city locality and only confirmed metadat
     assert.equal(business.hasMap, storeMapsLinks(location).search)
     assert.ok(business["@id"].endsWith(`/nossa-loja#${location.id}`))
     if (index > 0) {
-      for (const key of ["telephone", "email", "taxID", "legalName", "openingHours"]) {
+      for (const key of ["email", "taxID", "legalName", "openingHours"]) {
         assert.equal(key in business, false)
       }
-      assert.equal("postalCode" in business.address, false)
     }
   }
+  assert.equal(data["@graph"][1].telephone, "(11) 3224-1670")
+  assert.equal(data["@graph"][1].address.postalCode, "01215-001")
+  assert.equal(data["@graph"][2].address.postalCode, "13847-111")
+  assert.equal("telephone" in data["@graph"][2], false)
 })
 
 test("independent cards, shared map, accessible selection and Loja 1-only pickup", () => {

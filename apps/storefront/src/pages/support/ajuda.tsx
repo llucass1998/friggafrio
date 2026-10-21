@@ -252,7 +252,7 @@ export default function AjudaPage() {
                   <a href="mailto:vendas@frigga.com.br" className="text-gray-600 hover:text-[var(--color-primary)] transition-colors block">
                     vendas@frigga.com.br
                   </a>
-                  <span className="text-gray-600">(11) 4580-1227</span>
+                  <span className="text-gray-600">(11) 3224-1670</span>
                 </div>
               </div>
 

@@ -72,8 +72,8 @@ for (const width of [360, 390, 768, 1280, 1440]) {
       await assertContrast(route)
       await assertContrast(card.locator("p").first())
       await expect(card.getByRole("link", { name: /WhatsApp/ })).toHaveCount(index === 0 ? 1 : 0)
-      if (index === 0) await expect(card.locator('a[href^="tel:"]')).toHaveAttribute("href", "tel:+551145801227")
-      else await expect(card).not.toContainText(/CEP|CNPJ|Retirada de pedidos|4580/)
+      if (index === 0 || index === 1) await expect(card.locator('a[href^="tel:"]')).toHaveAttribute("href", "tel:+551132241670")
+      if (index > 0) await expect(card).not.toContainText(/CNPJ|Retirada de pedidos/)
 
       const viewMap = card.getByRole("button", { name: `Ver ${location.shortName} no mapa` })
       await route.focus()
