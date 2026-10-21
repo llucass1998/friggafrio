@@ -87,7 +87,7 @@ export function HomeStoreLocations() {
                   )}
 
                   <div className="mt-3 rounded-lg bg-[#EBF5FB] px-3 py-1.5 text-xs font-medium text-[var(--color-primary)]">
-                    Retirada gratuita de pedidos nesta unidade.
+                    Retirada gratuita de pedidos exclusiva nesta unidade.
                   </div>
 
                   {/* Ações */}
