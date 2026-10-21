@@ -94,6 +94,7 @@ export const storeLocations: StoreLocation[] = [
     stateCode: "SP",
     stateName: "São Paulo",
     postalCode: "13847-111",
+    phone: "(19) 9982-8481",
     countryCode: "BR",
     ownImageSrc: "/images/store/loja-3-fachada.webp",
     ownImageAlt: "Fachada da Loja 3 em Mogi Guaçu, com as placas Braido e Frigga preservadas",

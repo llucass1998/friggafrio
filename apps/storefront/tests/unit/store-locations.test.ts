@@ -23,6 +23,7 @@ test("Nossas lojas exposes the three confirmed units in order and preserves Loja
   assert.equal(locations[2].district, "Vila São Carlos")
   assert.equal(locations[2].city, "Mogi Guaçu")
   assert.equal(locations[2].postalCode, "13847-111")
+  assert.equal(locations[2].phone, "(19) 9982-8481")
 })
 
 test("new units never inherit unconfirmed contacts, postal codes, CNPJ or hours", () => {
@@ -34,9 +35,10 @@ test("new units never inherit unconfirmed contacts, postal codes, CNPJ or hours"
   }
   assert.equal(storeWhatsappLink(storeLocations[1]), undefined)
 
-  // Loja 3 has confirmed address and postalCode; contacts remain unconfirmed.
+  // Loja 3 has confirmed address, postalCode and phone; remaining metadata remains unconfirmed.
   assert.equal(storeLocations[2].postalCode, "13847-111")
-  for (const key of ["phone", "whatsapp", "cnpj", "legalName", "openingHours", "email"] as const) {
+  assert.equal(storeLocations[2].phone, "(19) 9982-8481")
+  for (const key of ["whatsapp", "cnpj", "legalName", "openingHours", "email"] as const) {
     assert.equal(storeLocations[2][key], undefined, `loja-3: ${key}`)
   }
   assert.equal(storeWhatsappLink(storeLocations[2]), undefined)
@@ -75,7 +77,7 @@ test("page SEO describes all units with city locality and only confirmed metadat
   assert.equal(data["@graph"][1].telephone, "(11) 3224-1670")
   assert.equal(data["@graph"][1].address.postalCode, "01215-001")
   assert.equal(data["@graph"][2].address.postalCode, "13847-111")
-  assert.equal("telephone" in data["@graph"][2], false)
+  assert.equal(data["@graph"][2].telephone, "(19) 9982-8481")
 })
 
 test("independent cards, shared map, accessible selection and Loja 1-only pickup", () => {
