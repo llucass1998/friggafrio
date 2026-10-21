@@ -1,7 +1,7 @@
 # FriggaFrio Current Release State
 
-- Production SHA: `ac06272eab22690f4521d46cde4c3003be0c478d`.
-- Release status: published through standard deployment pipeline with updated phone numbers for Loja 1 and Loja 2 ((11) 3224-1670), matching CEP for Loja 2, and confirmed address/CEP for Loja 3 (Avenida São Carlos, 847, Mogi Guaçu).
+- Production SHA: `359a2d31a140fb5eab2dd0ddd7b8046b74311dad`.
+- Release status: published through standard deployment pipeline with updated phone numbers for Loja 1 and Loja 2 ((11) 3224-1670), matching CEP for Loja 2, confirmed address/CEP for Loja 3 (Avenida São Carlos, 847, Mogi Guaçu), and dedicated phone for Loja 3 ((19) 9982-8481).
 - WSL source mirror: synchronized to the deployed SHA.
 - Production database: backup validated before the release; no migration, seed, or restore was performed.
 - Omie ERP Catalog & Real-Time Synchronization:
