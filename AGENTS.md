@@ -129,6 +129,7 @@ DB, Redis, uploads, `.env`, Caddy e DNS devem ser preservados salvo task explíc
 ## FRIGGAFRIO_SOURCE_INTEGRITY_GUARD
 
 ## FRIGGAFRIO_LXD_ARTIFACT_V1_APPROVED
+Approval for lxd-artifact-v1 external build profile.
 
 ## TESTS_AND_REGRESSION_MUST_NEVER_RESTORE_OR_MODIFY_SOURCE
 
