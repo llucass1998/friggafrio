@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "profile": "lxd-artifact-v1",
+  "branch": "Maestro",
+  "origin": "https://github.com/llucass1998/friggafrio.git",
+  "platform": {
+    "system": "Linux",
+    "arch": "x86_64",
+    "node": "v22.14.0",
+    "pnpm": "10.12.3",
+    "glibc": "2.35"
+  }
+}

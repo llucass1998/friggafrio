@@ -1,7 +1,7 @@
 import { request as httpRequest, type IncomingMessage, type ServerResponse } from "node:http"
 import type { Connect } from "vite"
 
-const ADMIN_PROXY_ORIGIN = "http://127.0.0.1:9000"
+const ADMIN_PROXY_ORIGIN = "http://127.0.0.1:19000"
 
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
@@ -98,7 +98,7 @@ export const adminProxyMiddleware: Connect.NextHandleFunction = (
   const upstream = httpRequest(
     {
       hostname: "127.0.0.1",
-      port: 9000,
+      port: 19000,
       method: request.method,
       path: `${incoming.pathname}${incoming.search}`,
       headers,

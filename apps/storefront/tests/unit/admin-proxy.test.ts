@@ -24,7 +24,7 @@ test("proxies anonymous Admin requests to the local backend with path and query 
     { headers: { cookie: "session=redacted" } },
   ))
 
-  assert.equal(receivedUrl, "http://127.0.0.1:9000/admin/products?limit=1")
+  assert.equal(receivedUrl, "http://127.0.0.1:19000/admin/products?limit=1")
   assert.equal(receivedMethod, "GET")
   assert.equal(receivedCookie, "session=redacted")
   assert.equal(response.status, 401)
@@ -70,10 +70,10 @@ test("proxies store, auth, uploads, and health/ready namespaces to the local bac
   await proxyAdminRequest(new Request("https://friggafrio.istigestao.com.br/health/ready"))
 
   assert.deepEqual(proxiedUrls, [
-    "http://127.0.0.1:9000/store/regions",
-    "http://127.0.0.1:9000/auth/customer/google/start",
-    "http://127.0.0.1:9000/uploads/products/sensor.jpg",
-    "http://127.0.0.1:9000/health/ready",
+    "http://127.0.0.1:19000/store/regions",
+    "http://127.0.0.1:19000/auth/customer/google/start",
+    "http://127.0.0.1:19000/uploads/products/sensor.jpg",
+    "http://127.0.0.1:19000/health/ready",
   ])
 })
 

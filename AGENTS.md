@@ -128,6 +128,8 @@ DB, Redis, uploads, `.env`, Caddy e DNS devem ser preservados salvo task explíc
 
 ## FRIGGAFRIO_SOURCE_INTEGRITY_GUARD
 
+## FRIGGAFRIO_LXD_ARTIFACT_V1_APPROVED
+
 ## TESTS_AND_REGRESSION_MUST_NEVER_RESTORE_OR_MODIFY_SOURCE
 
 Tests and regression commands must be observational with respect to source.
