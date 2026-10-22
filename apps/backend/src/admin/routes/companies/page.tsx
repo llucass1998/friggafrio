@@ -18,6 +18,7 @@ import { useState, useMemo, useCallback } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { sdk } from "../../lib/client"
 import { Buildings, EllipsisHorizontal, Trash, PencilSquare } from "@medusajs/icons"
+import { BrandHeader } from "../../components/brand-header"
 import { Link } from "react-router-dom"
 
 type SetupStep = {
@@ -290,21 +291,29 @@ const CompaniesPage = () => {
   })
 
   return (
-    <Container className="divide-y p-0">
-      <DataTable instance={table}>
-        <DataTable.Toolbar className="flex items-center justify-between px-6 py-4">
-          <Heading level="h2">Companies</Heading>
-        </DataTable.Toolbar>
-        <DataTable.Table />
-        <DataTable.Pagination />
-      </DataTable>
-    </Container>
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
+      <BrandHeader
+        title="Empresas e Clientes B2B"
+        subtitle="Gerenciamento de contas corporativas e políticas comerciais."
+        badgeText="B2B"
+      />
+      <Container className="divide-y p-0">
+        <DataTable instance={table}>
+          <DataTable.Toolbar className="flex items-center justify-between px-6 py-4">
+            <Heading level="h2">Empresas Cadastradas</Heading>
+          </DataTable.Toolbar>
+          <DataTable.Table />
+          <DataTable.Pagination />
+        </DataTable>
+      </Container>
+    </div>
   )
 }
 
 export const config = defineRouteConfig({
-  label: "Companies",
+  label: "Empresas",
   icon: Buildings,
+  rank: 4,
 })
 
 export default CompaniesPage
