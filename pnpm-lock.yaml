@@ -91,9 +91,6 @@ importers:
       '@medusajs/draft-order':
         specifier: 2.18.0
         version: 2.18.0(@medusajs/admin-sdk@2.18.0)(@medusajs/cli@2.18.0(@types/node@20.0.0))(@medusajs/dashboard@2.18.0(patch_hash=e2dd78008d50f2331352664320a89ada2f566fe91fbd7e37450032800d3cb7db)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/icons@2.18.0(react@19.1.1))(@medusajs/test-utils@2.18.0)(@medusajs/ui@4.2.0(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3))(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.1(react@19.1.1))(react-router-dom@6.30.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
-      '@medusajs/email-preview-server':
-        specifier: ^0.0.10
-        version: 0.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.62.0)(@react-email/render@2.0.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
       '@medusajs/file-local':
         specifier: 2.18.0
         version: 2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))
@@ -170,6 +167,9 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
     devDependencies:
+      '@medusajs/email-preview-server':
+        specifier: ^0.0.10
+        version: 0.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.62.0)(@react-email/render@2.0.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/node@20.0.0)(@types/react-dom@19.1.1(@types/react@19.1.1))(@types/react@19.1.1)(typescript@5.8.3)
       '@medusajs/test-utils':
         specifier: 2.18.0
         version: 2.18.0(@medusajs/core-flows@2.18.0(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0)))(@medusajs/framework@2.18.0(@medusajs/cli@2.18.0(@types/node@20.0.0))(@types/node@20.0.0)(ioredis@5.9.3)(vite@5.4.21(@types/node@20.0.0)(lightningcss@1.33.0))(zod@4.2.0))(@medusajs/medusa@2.18.0)
