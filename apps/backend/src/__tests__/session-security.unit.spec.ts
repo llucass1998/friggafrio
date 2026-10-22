@@ -50,7 +50,22 @@ describe("session request origin validation", () => {
     ).toEqual({ allowed: true });
   });
 
-  it("rejects a cross-site session mutation", () => {
+  it("rejects a cross-site session mutation from an untrusted origin", () => {
+    expect(
+      validateSessionRequestOrigin(
+        {
+          method: "DELETE",
+          cookieHeader: "frigga.sid=session-id",
+          originHeader: "https://attacker.example",
+          secFetchSiteHeader: "cross-site",
+        },
+        trustedOrigins,
+        "frigga.sid",
+      ),
+    ).toEqual({ allowed: false, reason: "cross-site" });
+  });
+
+  it("allows a cross-site session mutation when origin matches trusted deployment origins", () => {
     expect(
       validateSessionRequestOrigin(
         {
@@ -62,7 +77,7 @@ describe("session request origin validation", () => {
         trustedOrigins,
         "frigga.sid",
       ),
-    ).toEqual({ allowed: false, reason: "cross-site" });
+    ).toEqual({ allowed: true });
   });
 
   it("rejects a session mutation without an origin", () => {
@@ -186,13 +201,13 @@ describe("shared auth origin allowlist", () => {
       validateSessionRequestOrigin(
         {
           method: "POST",
-          originHeader: "http://localhost:5173",
+          originHeader: "https://untrusted-attacker.example",
           secFetchSiteHeader: "cross-site",
         },
         localAuthOrigins,
         "frigga.sid",
         true,
-        false, // production mode must reject cross-site
+        false, // production mode must reject cross-site from untrusted origin
       ),
     ).toEqual({ allowed: false, reason: "cross-site" });
 
