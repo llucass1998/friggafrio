@@ -139,7 +139,7 @@ const ProductQualityChecklist = () => {
 }
 
 export const config = defineWidgetConfig({
-  zone: "product.details.side.before",
+  zone: "product.details.side",
   id: "friggafrio.product-quality-checklist",
 })
 

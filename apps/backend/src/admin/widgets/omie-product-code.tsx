@@ -139,7 +139,7 @@ const OmieProductCode = () => {
 }
 
 export const config = defineWidgetConfig({
-  zone: "product.details.before",
+  zone: "product.details",
   id: "friggafrio.omie-product-code",
 })
 

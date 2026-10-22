@@ -201,73 +201,81 @@ const OverviewDashboardPage = () => {
 
         {metrics && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Container className="p-5">
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
-                Catálogo Total
-              </Text>
-              <div className="flex items-baseline justify-between mt-2">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl">
-                  {metrics.total.toLocaleString("pt-BR")}
+            <Link to="/catalog?filter=all" className="group block">
+              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+                <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+                  Catálogo Total
                 </Text>
-                <Badge size="small" color="blue">
-                  {metrics.published} ativos
-                </Badge>
-              </div>
-              <Text size="xsmall" className="text-ui-fg-muted mt-2">
-                Produtos cadastrados na base Medusa
-              </Text>
-            </Container>
+                <div className="flex items-baseline justify-between mt-2">
+                  <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
+                    {metrics.total.toLocaleString("pt-BR")}
+                  </Text>
+                  <Badge size="small" color="blue">
+                    {metrics.published} ativos
+                  </Badge>
+                </div>
+                <Text size="xsmall" className="text-ui-fg-muted mt-2">
+                  Produtos cadastrados na base Medusa
+                </Text>
+              </Container>
+            </Link>
 
-            <Container className="p-5">
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
-                Integração Omie
-              </Text>
-              <div className="flex items-baseline justify-between mt-2">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl">
-                  {metrics.omie_linked.toLocaleString("pt-BR")}
+            <Link to="/catalog?filter=has_omie" className="group block">
+              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+                <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+                  Integração Omie
                 </Text>
-                <Badge size="small" color="green">
-                  {Math.round((metrics.omie_linked / Math.max(1, metrics.total)) * 100)}%
-                </Badge>
-              </div>
-              <Text size="xsmall" className="text-ui-fg-muted mt-2">
-                Produtos com código Omie vinculado
-              </Text>
-            </Container>
+                <div className="flex items-baseline justify-between mt-2">
+                  <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
+                    {metrics.omie_linked.toLocaleString("pt-BR")}
+                  </Text>
+                  <Badge size="small" color="green">
+                    {Math.round((metrics.omie_linked / Math.max(1, metrics.total)) * 100)}%
+                  </Badge>
+                </div>
+                <Text size="xsmall" className="text-ui-fg-muted mt-2">
+                  Produtos com código Omie vinculado
+                </Text>
+              </Container>
+            </Link>
 
-            <Container className="p-5">
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
-                Sob Consulta / Cotação
-              </Text>
-              <div className="flex items-baseline justify-between mt-2">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl">
-                  {metrics.quote_only.toLocaleString("pt-BR")}
+            <Link to="/catalog?filter=quote_only" className="group block">
+              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+                <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+                  Sob Consulta / Cotação
                 </Text>
-                <Badge size="small" color="orange">
-                  WhatsApp
-                </Badge>
-              </div>
-              <Text size="xsmall" className="text-ui-fg-muted mt-2">
-                Atendimento consultivo direto
-              </Text>
-            </Container>
+                <div className="flex items-baseline justify-between mt-2">
+                  <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
+                    {metrics.quote_only.toLocaleString("pt-BR")}
+                  </Text>
+                  <Badge size="small" color="orange">
+                    WhatsApp
+                  </Badge>
+                </div>
+                <Text size="xsmall" className="text-ui-fg-muted mt-2">
+                  Atendimento consultivo direto
+                </Text>
+              </Container>
+            </Link>
 
-            <Container className="p-5">
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
-                Disponibilidade
-              </Text>
-              <div className="flex items-baseline justify-between mt-2">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl">
-                  {(metrics.total - metrics.no_stock).toLocaleString("pt-BR")}
+            <Link to="/catalog?filter=has_stock" className="group block">
+              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+                <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+                  Disponibilidade
                 </Text>
-                <Badge size="small" color="green">
-                  Com Estoque
-                </Badge>
-              </div>
-              <Text size="xsmall" className="text-ui-fg-muted mt-2">
-                {metrics.no_stock} itens com estoque zerado
-              </Text>
-            </Container>
+                <div className="flex items-baseline justify-between mt-2">
+                  <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
+                    {(metrics.total - metrics.no_stock).toLocaleString("pt-BR")}
+                  </Text>
+                  <Badge size="small" color="green">
+                    Com Estoque
+                  </Badge>
+                </div>
+                <Text size="xsmall" className="text-ui-fg-muted mt-2">
+                  {metrics.no_stock} itens com estoque zerado
+                </Text>
+              </Container>
+            </Link>
           </div>
         )}
       </div>
@@ -301,7 +309,7 @@ const OverviewDashboardPage = () => {
                     <Text size="small" weight="plus" className={metrics && metrics.no_image > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
                       {metrics ? metrics.no_image : "..."}
                     </Text>
-                    <Link to="/catalog">
+                    <Link to="/catalog?filter=no_image">
                       <Button size="small" variant="secondary">Filtrar</Button>
                     </Link>
                   </div>
@@ -315,7 +323,7 @@ const OverviewDashboardPage = () => {
                     <Text size="small" weight="plus" className={metrics && metrics.no_price > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
                       {metrics ? metrics.no_price : "..."}
                     </Text>
-                    <Link to="/catalog">
+                    <Link to="/catalog?filter=no_price">
                       <Button size="small" variant="secondary">Filtrar</Button>
                     </Link>
                   </div>
@@ -329,7 +337,7 @@ const OverviewDashboardPage = () => {
                     <Text size="small" weight="plus" className={metrics && metrics.omie_pending > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
                       {metrics ? metrics.omie_pending : "..."}
                     </Text>
-                    <Link to="/catalog">
+                    <Link to="/catalog?filter=no_omie">
                       <Button size="small" variant="secondary">Filtrar</Button>
                     </Link>
                   </div>

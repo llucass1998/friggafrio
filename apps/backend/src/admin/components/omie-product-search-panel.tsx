@@ -30,21 +30,25 @@ export const OmieProductSearchPanel = () => {
   const [code, setCode] = useState("")
   const [result, setResult] = useState<OmieSearchResult | null>(null)
   const search = useMutation({
-    mutationFn: (value: string) => sdk.client.fetch<OmieSearchResult>(
-      "/admin/omie/products/search",
-      { query: { code: value } },
-    ),
+    mutationFn: (value: string) =>
+      sdk.client.fetch<OmieSearchResult>("/admin/omie/products/search", {
+        query: { code: value },
+      }),
     onSuccess: setResult,
     onError: (error) => {
       setResult(null)
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel consultar a Omie agora. Tente novamente.")
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível consultar a Omie agora. Tente novamente.",
+      )
     },
   })
 
   const submit = () => {
     const normalized = code.trim()
     if (!normalized || !CODE_PATTERN.test(normalized)) {
-      toast.error("Informe um codigo Omie valido")
+      toast.error("Informe um código Omie válido")
       return
     }
     search.mutate(normalized)
@@ -59,38 +63,108 @@ export const OmieProductSearchPanel = () => {
   return (
     <div className="flex flex-col gap-4" data-testid="omie-product-search">
       <div>
-        <Heading level="h2">Buscar por codigo FriggaFrio / Omie</Heading>
-        <Text size="small" className="text-ui-fg-subtle">Consulta o Medusa local e, sob demanda, o catalogo Omie somente leitura.</Text>
+        <Heading level="h2">Buscar por código FriggaFrio / Omie</Heading>
+        <Text size="small" className="text-ui-fg-subtle">
+          Consulta o Medusa local e, sob demanda, o catálogo Omie somente leitura.
+        </Text>
       </div>
-      <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={(event) => { event.preventDefault(); submit() }}>
+      <form
+        className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        onSubmit={(event) => {
+          event.preventDefault()
+          submit()
+        }}
+      >
         <label className="min-w-0 flex-1">
-          <Text size="small" weight="plus">Codigo FriggaFrio / Omie</Text>
-          <Input value={code} onChange={(event) => setCode(event.target.value)} inputMode="text" autoComplete="off" aria-label="Codigo FriggaFrio / Omie" />
+          <Text size="small" weight="plus">
+            Código FriggaFrio / Omie
+          </Text>
+          <Input
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            inputMode="text"
+            autoComplete="off"
+            aria-label="Código FriggaFrio / Omie"
+            placeholder="Ex.: DPGS1347 ou VBLR1214"
+          />
         </label>
         <div className="flex gap-2">
-          <Button type="submit" isLoading={search.isPending} disabled={search.isPending}><MagnifyingGlass className="mr-2" /> Buscar</Button>
-          <Button type="button" variant="secondary" onClick={clear} disabled={search.isPending}>Limpar</Button>
+          <Button type="submit" isLoading={search.isPending} disabled={search.isPending}>
+            <MagnifyingGlass className="mr-2" /> Buscar
+          </Button>
+          <Button type="button" variant="secondary" onClick={clear} disabled={search.isPending}>
+            Limpar
+          </Button>
         </div>
       </form>
-      {result && !result.found && <Text className="rounded border p-4">Nenhum resultado local ou na Omie.</Text>}
-      {result?.found && result.results.map((item, index) => (
-        <div key={`${item.source}-${item.code}-${index}`} className="flex flex-col gap-2 rounded border p-4" data-testid="omie-product-search-result">
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <Heading level="h3">{item.title || "Produto encontrado"}</Heading>
-              <Text size="small">Origem: {item.source}</Text>
-              <Text size="small">Codigo FriggaFrio / Omie: {item.code || "-"}</Text>
-              <Text size="small">SKU: {item.sku || "-"}</Text>
-              <Text size="small">Status: {item.status || "-"}</Text>
-              {item.medusa_product_id && <Text size="small">Estoque: {item.inventory_quantity ?? "Nao informado"}</Text>}
+      {result && !result.found && (
+        <Text className="rounded border p-4 text-ui-fg-subtle">
+          Nenhum resultado local ou na Omie para o termo informado.
+        </Text>
+      )}
+      {result?.found &&
+        result.results.map((item, index) => (
+          <div
+            key={`${item.source}-${item.code}-${index}`}
+            className="flex flex-col gap-2 rounded border border-ui-border-base p-4 bg-ui-bg-base"
+            data-testid="omie-product-search-result"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <Heading level="h3">{item.title || "Produto encontrado"}</Heading>
+                <div className="mt-2 space-y-1 text-xs text-ui-fg-subtle">
+                  <p>
+                    <strong className="text-ui-fg-base">Origem:</strong> {item.source}
+                  </p>
+                  <p>
+                    <strong className="text-ui-fg-base">Código FriggaFrio / Omie:</strong>{" "}
+                    <span className="font-mono">{item.code || "-"}</span>
+                  </p>
+                  <p>
+                    <strong className="text-ui-fg-base">SKU:</strong>{" "}
+                    <span className="font-mono">{item.sku || "-"}</span>
+                  </p>
+                  <p>
+                    <strong className="text-ui-fg-base">Status:</strong> {item.status || "-"}
+                  </p>
+                  {item.medusa_product_id && (
+                    <p>
+                      <strong className="text-ui-fg-base">Estoque:</strong>{" "}
+                      {typeof item.inventory_quantity === "number"
+                        ? `${item.inventory_quantity} unid.`
+                        : "Não informado"}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <StatusBadge color={item.medusa_product_id ? "green" : "grey"}>
+                {item.medusa_product_id ? "Vinculado" : "Ainda não vinculado"}
+              </StatusBadge>
             </div>
-            <StatusBadge color={item.medusa_product_id ? "green" : "grey"}>{item.medusa_product_id ? "Vinculado" : "Ainda nao vinculado"}</StatusBadge>
+            {item.medusa_product_id ? (
+              <Link
+                className="mt-2 inline-flex w-fit text-ui-fg-interactive hover:underline text-sm font-medium"
+                to={`/products/${item.medusa_product_id}`}
+              >
+                Abrir produto no Medusa →
+              </Link>
+            ) : (
+              <Text size="xsmall" className="text-ui-fg-muted mt-2">
+                Resultado somente leitura do catálogo Omie.
+              </Text>
+            )}
           </div>
-          {item.medusa_product_id ? <Link className="mt-1 inline-flex w-fit text-ui-fg-interactive" to={`/products/${item.medusa_product_id}`}>Abrir produto</Link> : <Text size="small" className="text-ui-fg-subtle">Resultado somente leitura do catalogo Omie.</Text>}
-        </div>
-      ))}
-      {result?.omie?.status === "unavailable" && <Text size="small" className="text-ui-fg-subtle">Omie indisponivel; resultados locais foram preservados.</Text>}
-      {result?.omie?.status === "credentials_missing" && <Text size="small" className="text-ui-fg-subtle">Consulta Omie nao realizada: credencial ausente.</Text>}
+        ))}
+      {result?.omie?.status === "unavailable" && (
+        <Text size="small" className="text-ui-fg-subtle">
+          Omie indisponível no momento; resultados locais foram preservados.
+        </Text>
+      )}
+      {result?.omie?.status === "credentials_missing" && (
+        <Text size="small" className="text-ui-fg-subtle">
+          Consulta remota Omie não realizada: credenciais não configuradas no ambiente.
+        </Text>
+      )}
     </div>
   )
 }
