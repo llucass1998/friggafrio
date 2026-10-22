@@ -186,6 +186,13 @@ export const GET = async (
       }
     })
 
+    const getTime = (val: unknown): number => {
+      if (!val) return 0
+      if (val instanceof Date) return val.getTime()
+      const t = new Date(val as string | number).getTime()
+      return Number.isFinite(t) ? t : 0
+    }
+
     // Sort by created_at descending by default, or prioritize exact Omie code matches if searching
     if (qFolded) {
       filtered.sort((a, b) => {
@@ -193,10 +200,10 @@ export const GET = async (
         const bOmie = omieMap.get(b.id)?.code_normalized?.toLowerCase() === qFolded
         if (aOmie && !bOmie) return -1
         if (!aOmie && bOmie) return 1
-        return (b.created_at || "").localeCompare(a.created_at || "")
+        return getTime(b.created_at) - getTime(a.created_at)
       })
     } else {
-      filtered.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+      filtered.sort((a, b) => getTime(b.created_at) - getTime(a.created_at))
     }
 
     const totalCount = filtered.length

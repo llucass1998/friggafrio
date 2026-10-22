@@ -60,7 +60,7 @@ describe("Admin catalog items route", () => {
           prices: [{ amount: 45.5, currency_code: "BRL" }],
         },
       ],
-      created_at: "2026-01-01T10:00:00.000Z",
+      created_at: new Date("2026-01-01T10:00:00.000Z") as unknown as string,
     },
     {
       id: "prod_2",
@@ -81,7 +81,7 @@ describe("Admin catalog items route", () => {
           prices: [],
         },
       ],
-      created_at: "2026-01-02T10:00:00.000Z",
+      created_at: new Date("2026-01-02T10:00:00.000Z") as unknown as string,
     },
     {
       id: "prod_3",
@@ -102,7 +102,7 @@ describe("Admin catalog items route", () => {
           prices: [{ amount: 450, currency_code: "BRL" }],
         },
       ],
-      created_at: "2026-01-03T10:00:00.000Z",
+      created_at: new Date("2026-01-03T10:00:00.000Z") as unknown as string,
     },
   ]
 
