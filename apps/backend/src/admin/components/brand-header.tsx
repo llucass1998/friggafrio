@@ -67,31 +67,35 @@ export const BrandHeader: React.FC<BrandHeaderProps> = ({
   children,
 }) => {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-ui-border-base pb-5 mb-6">
-      <div className="flex items-start gap-3">
-        <FriggaFrioLogoIcon className="h-10 w-10 shrink-0 shadow-sm rounded-lg" />
-        <div>
-          <div className="flex items-center gap-2">
-            <Text size="xsmall" weight="plus" className="text-ui-fg-muted uppercase tracking-wider">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-ui-border-base pb-4 sm:pb-5 mb-4 sm:mb-6 min-w-0 w-full">
+      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <FriggaFrioLogoIcon className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 shadow-sm rounded-lg" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <Text size="xsmall" weight="plus" className="text-ui-fg-muted uppercase tracking-wider text-[10px] sm:text-xs">
               FriggaFrio — Gestão Administrativa
             </Text>
             {badgeText && (
-              <Badge size="2xsmall" color="blue">
+              <Badge size="2xsmall" color="blue" className="shrink-0 text-[10px] sm:text-xs">
                 {badgeText}
               </Badge>
             )}
           </div>
-          <Heading level="h1" className="text-ui-fg-base mt-0.5 font-semibold text-xl sm:text-2xl">
+          <Heading level="h1" className="text-ui-fg-base mt-0.5 sm:mt-1 font-semibold text-lg sm:text-2xl break-words">
             {title}
           </Heading>
           {subtitle && (
-            <Text size="small" className="text-ui-fg-subtle mt-0.5">
+            <Text size="small" className="text-ui-fg-subtle mt-0.5 break-words text-xs sm:text-sm">
               {subtitle}
             </Text>
           )}
         </div>
       </div>
-      {children && <div className="flex items-center gap-2">{children}</div>}
+      {children && (
+        <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
+          {children}
+        </div>
+      )}
     </div>
   )
 }

@@ -183,15 +183,15 @@ const CatalogManagementPage = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-4 sm:gap-6 p-3 sm:p-4 md:p-6 max-w-7xl mx-auto w-full min-w-0">
       {/* Brand Header */}
       <BrandHeader
         title="Gestão de Catálogo"
         subtitle="Controle centralizado de produtos, preços, estoque e integração Omie."
         badgeText="Catálogo Comercial"
       >
-        <Link to="/products">
-          <Button variant="secondary" size="small" className="gap-2">
+        <Link to="/products" className="w-full sm:w-auto">
+          <Button variant="secondary" size="small" className="gap-2 w-full sm:w-auto justify-center">
             <ArrowUpRightOnBox className="h-4 w-4" />
             Abrir Produtos Medusa
           </Button>
@@ -199,9 +199,9 @@ const CatalogManagementPage = () => {
       </BrandHeader>
 
       {/* Indicadores Operacionais */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <Heading level="h2" className="text-sm font-semibold text-ui-fg-base uppercase tracking-wider">
+      <div className="w-full min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+          <Heading level="h2" className="text-xs sm:text-sm font-semibold text-ui-fg-base uppercase tracking-wider">
             Indicadores Operacionais do Catálogo
           </Heading>
           {metrics?.last_updated && (
@@ -212,9 +212,9 @@ const CatalogManagementPage = () => {
         </div>
 
         {metricsLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 w-full">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Container key={i} className="p-4 animate-pulse">
+              <Container key={i} className="p-3 sm:p-4 animate-pulse">
                 <div className="h-4 w-20 bg-ui-bg-subtle-hover rounded mb-2" />
                 <div className="h-8 w-12 bg-ui-bg-subtle-hover rounded" />
               </Container>
@@ -231,25 +231,25 @@ const CatalogManagementPage = () => {
         )}
 
         {metrics && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 w-full">
             {/* Card 1: Total de Produtos */}
             <button
               type="button"
               onClick={() => handleFilterChange("all")}
-              className={`text-left transition-all rounded-lg p-4 border cursor-pointer ${
+              className={`text-left transition-all rounded-lg p-3 sm:p-4 border cursor-pointer min-w-0 ${
                 activeFilter === "all"
                   ? "bg-ui-bg-base border-ui-border-interactive shadow-sm ring-1 ring-ui-border-interactive"
                   : "bg-ui-bg-base border-ui-border-base hover:border-ui-border-strong"
               }`}
             >
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium truncate">
                 Total de Produtos
               </Text>
-              <div className="flex items-baseline justify-between mt-1">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base">
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-xl sm:text-2xl">
                   {metrics.total.toLocaleString("pt-BR")}
                 </Text>
-                <Badge size="2xsmall" color="grey">Base Real</Badge>
+                <Badge size="2xsmall" color="grey" className="shrink-0">Base Real</Badge>
               </div>
             </button>
 
@@ -257,20 +257,20 @@ const CatalogManagementPage = () => {
             <button
               type="button"
               onClick={() => handleFilterChange("published")}
-              className={`text-left transition-all rounded-lg p-4 border cursor-pointer ${
+              className={`text-left transition-all rounded-lg p-3 sm:p-4 border cursor-pointer min-w-0 ${
                 activeFilter === "published"
                   ? "bg-ui-bg-base border-ui-border-interactive shadow-sm ring-1 ring-ui-border-interactive"
                   : "bg-ui-bg-base border-ui-border-base hover:border-ui-border-strong"
               }`}
             >
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium truncate">
                 Publicados na Loja
               </Text>
-              <div className="flex items-baseline justify-between mt-1">
-                <Text size="xlarge" weight="plus" className="text-ui-fg-base">
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <Text size="xlarge" weight="plus" className="text-ui-fg-base text-xl sm:text-2xl">
                   {metrics.published.toLocaleString("pt-BR")}
                 </Text>
-                <Badge size="2xsmall" color="green">Ativos</Badge>
+                <Badge size="2xsmall" color="green" className="shrink-0">Ativos</Badge>
               </div>
             </button>
 
@@ -278,23 +278,23 @@ const CatalogManagementPage = () => {
             <button
               type="button"
               onClick={() => handleFilterChange("no_image")}
-              className={`text-left transition-all rounded-lg p-4 border cursor-pointer ${
+              className={`text-left transition-all rounded-lg p-3 sm:p-4 border cursor-pointer min-w-0 ${
                 activeFilter === "no_image"
                   ? "bg-ui-bg-base border-ui-border-interactive shadow-sm ring-1 ring-ui-border-interactive"
                   : "bg-ui-bg-base border-ui-border-base hover:border-ui-border-strong"
               }`}
             >
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium truncate">
                 Sem Imagem
               </Text>
-              <div className="flex items-baseline justify-between mt-1">
-                <Text size="xlarge" weight="plus" className={metrics.no_image > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <Text size="xlarge" weight="plus" className={`text-xl sm:text-2xl ${metrics.no_image > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                   {metrics.no_image.toLocaleString("pt-BR")}
                 </Text>
                 {metrics.no_image > 0 ? (
-                  <Badge size="2xsmall" color="orange">Atenção</Badge>
+                  <Badge size="2xsmall" color="orange" className="shrink-0">Atenção</Badge>
                 ) : (
-                  <Badge size="2xsmall" color="green">OK</Badge>
+                  <Badge size="2xsmall" color="green" className="shrink-0">OK</Badge>
                 )}
               </div>
             </button>
@@ -303,23 +303,23 @@ const CatalogManagementPage = () => {
             <button
               type="button"
               onClick={() => handleFilterChange("no_price")}
-              className={`text-left transition-all rounded-lg p-4 border cursor-pointer ${
+              className={`text-left transition-all rounded-lg p-3 sm:p-4 border cursor-pointer min-w-0 ${
                 activeFilter === "no_price"
                   ? "bg-ui-bg-base border-ui-border-interactive shadow-sm ring-1 ring-ui-border-interactive"
                   : "bg-ui-bg-base border-ui-border-base hover:border-ui-border-strong"
               }`}
             >
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium truncate">
                 Sem Preço Válido
               </Text>
-              <div className="flex items-baseline justify-between mt-1">
-                <Text size="xlarge" weight="plus" className={metrics.no_price > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <Text size="xlarge" weight="plus" className={`text-xl sm:text-2xl ${metrics.no_price > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                   {metrics.no_price.toLocaleString("pt-BR")}
                 </Text>
                 {metrics.no_price > 0 ? (
-                  <Badge size="2xsmall" color="orange">Pendente</Badge>
+                  <Badge size="2xsmall" color="orange" className="shrink-0">Pendente</Badge>
                 ) : (
-                  <Badge size="2xsmall" color="green">100%</Badge>
+                  <Badge size="2xsmall" color="green" className="shrink-0">100%</Badge>
                 )}
               </div>
             </button>
@@ -328,20 +328,20 @@ const CatalogManagementPage = () => {
             <button
               type="button"
               onClick={() => handleFilterChange("no_omie")}
-              className={`text-left transition-all rounded-lg p-4 border cursor-pointer ${
+              className={`text-left transition-all rounded-lg p-3 sm:p-4 border cursor-pointer min-w-0 ${
                 activeFilter === "no_omie"
                   ? "bg-ui-bg-base border-ui-border-interactive shadow-sm ring-1 ring-ui-border-interactive"
                   : "bg-ui-bg-base border-ui-border-base hover:border-ui-border-strong"
               }`}
             >
-              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
+              <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium truncate">
                 Sem Vínculo Omie
               </Text>
-              <div className="flex items-baseline justify-between mt-1">
-                <Text size="xlarge" weight="plus" className={metrics.omie_pending > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <Text size="xlarge" weight="plus" className={`text-xl sm:text-2xl ${metrics.omie_pending > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                   {metrics.omie_pending.toLocaleString("pt-BR")}
                 </Text>
-                <Badge size="2xsmall" color={metrics.omie_pending > 0 ? "orange" : "green"}>
+                <Badge size="2xsmall" color={metrics.omie_pending > 0 ? "orange" : "green"} className="shrink-0">
                   {metrics.omie_linked} Vinculados
                 </Badge>
               </div>
@@ -351,43 +351,45 @@ const CatalogManagementPage = () => {
       </div>
 
       {/* Barra de Filtros e Busca Unificada */}
-      <Container className="p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
+      <Container className="p-3 sm:p-4 w-full min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 w-full sm:max-w-md min-w-0">
             <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-ui-fg-muted h-4 w-4" />
             <Input
               type="text"
               placeholder="Buscar por Nome, SKU, Código Omie ou Marca..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="pl-9 w-full"
               aria-label="Buscar produtos no catálogo"
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <Text size="small" className="text-ui-fg-muted shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Text size="small" className="text-ui-fg-muted shrink-0 text-xs sm:text-sm">
               Filtro:
             </Text>
-            <Select value={activeFilter} onValueChange={handleFilterChange}>
-              <Select.Trigger className="w-56">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="all">Todos os Produtos</Select.Item>
-                <Select.Item value="published">Apenas Publicados</Select.Item>
-                <Select.Item value="draft">Apenas Rascunhos</Select.Item>
-                <Select.Item value="no_image">Sem Imagem Cadastrada</Select.Item>
-                <Select.Item value="no_price">Sem Preço Configurado</Select.Item>
-                <Select.Item value="has_price">Com Preço Configurado</Select.Item>
-                <Select.Item value="quote_only">Sob Consulta / Cotação</Select.Item>
-                <Select.Item value="no_stock">Sem Estoque Disponível</Select.Item>
-                <Select.Item value="has_stock">Com Estoque Disponível</Select.Item>
-                <Select.Item value="no_omie">Sem Vínculo Omie</Select.Item>
-                <Select.Item value="has_omie">Com Vínculo Omie</Select.Item>
-                <Select.Item value="no_collection">Sem Coleção Atribuída</Select.Item>
-              </Select.Content>
-            </Select>
+            <div className="flex-1 sm:flex-initial sm:w-60 min-w-[180px]">
+              <Select value={activeFilter} onValueChange={handleFilterChange}>
+                <Select.Trigger className="w-full">
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Item value="all">Todos os Produtos</Select.Item>
+                  <Select.Item value="published">Apenas Publicados</Select.Item>
+                  <Select.Item value="draft">Apenas Rascunhos</Select.Item>
+                  <Select.Item value="no_image">Sem Imagem Cadastrada</Select.Item>
+                  <Select.Item value="no_price">Sem Preço Configurado</Select.Item>
+                  <Select.Item value="has_price">Com Preço Configurado</Select.Item>
+                  <Select.Item value="quote_only">Sob Consulta / Cotação</Select.Item>
+                  <Select.Item value="no_stock">Sem Estoque Disponível</Select.Item>
+                  <Select.Item value="has_stock">Com Estoque Disponível</Select.Item>
+                  <Select.Item value="no_omie">Sem Vínculo Omie</Select.Item>
+                  <Select.Item value="has_omie">Com Vínculo Omie</Select.Item>
+                  <Select.Item value="no_collection">Sem Coleção Atribuída</Select.Item>
+                </Select.Content>
+              </Select>
+            </div>
 
             {(activeFilter !== "all" || searchTerm) && (
               <Button
@@ -397,7 +399,7 @@ const CatalogManagementPage = () => {
                   setSearchTerm("")
                   handleFilterChange("all")
                 }}
-                className="gap-1 shrink-0"
+                className="gap-1 shrink-0 ml-auto sm:ml-0"
               >
                 <XMark className="h-3.5 w-3.5" /> Limpar
               </Button>
@@ -407,20 +409,26 @@ const CatalogManagementPage = () => {
       </Container>
 
       {/* Tabela de Produtos */}
-      <Container className="p-0 overflow-hidden divide-y divide-ui-border-base">
-        <div className="overflow-x-auto">
-          <Table>
+      <Container className="p-0 overflow-hidden divide-y divide-ui-border-base w-full min-w-0 max-w-full">
+        {/* Mobile scroll hint */}
+        <div className="sm:hidden px-3 py-1.5 bg-ui-bg-subtle border-b border-ui-border-base flex items-center justify-between text-[11px] text-ui-fg-muted">
+          <span>Deslize lateralmente para ver todas as colunas</span>
+          <span className="font-mono">→</span>
+        </div>
+
+        <div className="w-full overflow-x-auto min-w-0">
+          <Table className="w-full">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell className="w-14">Imagem</Table.HeaderCell>
-                <Table.HeaderCell>Produto</Table.HeaderCell>
-                <Table.HeaderCell>Cód. FriggaFrio / Omie</Table.HeaderCell>
-                <Table.HeaderCell>SKU</Table.HeaderCell>
-                <Table.HeaderCell>Preço</Table.HeaderCell>
-                <Table.HeaderCell>Estoque</Table.HeaderCell>
-                <Table.HeaderCell>Coleção / Categoria</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
-                <Table.HeaderCell className="text-right">Ação</Table.HeaderCell>
+                <Table.HeaderCell className="w-12 sm:w-14">Imagem</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[160px]">Produto</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[130px]">Cód. FriggaFrio / Omie</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[90px]">SKU</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[100px]">Preço</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[80px]">Estoque</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[120px]">Coleção / Categoria</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[90px]">Status</Table.HeaderCell>
+                <Table.HeaderCell className="text-right min-w-[90px]">Ação</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
 
@@ -609,8 +617,8 @@ const CatalogManagementPage = () => {
         </div>
 
         {/* Paginação */}
-        <div className="flex items-center justify-between px-6 py-4 bg-ui-bg-subtle">
-          <Text size="small" className="text-ui-fg-subtle">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-ui-bg-subtle text-center sm:text-left">
+          <Text size="small" className="text-ui-fg-subtle text-xs sm:text-sm">
             Exibindo{" "}
             <span className="font-medium text-ui-fg-base">
               {products.length > 0 ? currentPage * PAGE_SIZE + 1 : 0}
@@ -631,7 +639,7 @@ const CatalogManagementPage = () => {
             >
               Anterior
             </Button>
-            <Text size="small" className="text-ui-fg-muted px-2">
+            <Text size="small" className="text-ui-fg-muted px-2 text-xs sm:text-sm">
               Página {currentPage + 1} de {totalPages}
             </Text>
             <Button

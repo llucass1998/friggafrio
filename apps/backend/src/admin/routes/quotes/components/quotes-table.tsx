@@ -34,16 +34,21 @@ export const QuotesTable = () => {
   }
 
   return (
-    <div className="p-0">
-      <Table>
+    <div className="p-0 w-full overflow-x-auto min-w-0">
+      {/* Mobile scroll hint */}
+      <div className="sm:hidden px-3 py-1.5 bg-ui-bg-subtle border-b border-ui-border-base flex items-center justify-between text-[11px] text-ui-fg-muted">
+        <span>Deslize lateralmente para ver todas as colunas</span>
+        <span className="font-mono">→</span>
+      </div>
+      <Table className="w-full">
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>ID</Table.HeaderCell>
-            <Table.HeaderCell>Status</Table.HeaderCell>
-            <Table.HeaderCell>E-mail</Table.HeaderCell>
-            <Table.HeaderCell>Empresa</Table.HeaderCell>
-            <Table.HeaderCell>Total</Table.HeaderCell>
-            <Table.HeaderCell>Criado em</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[80px]">ID</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[100px]">Status</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[140px]">E-mail</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[120px]">Empresa</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[90px]">Total</Table.HeaderCell>
+            <Table.HeaderCell className="min-w-[110px]">Criado em</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>

@@ -117,18 +117,18 @@ const ProductQualityChecklist = () => {
       {/* Items list */}
       <div className="mt-4 space-y-2.5">
         {items.map((item, idx) => (
-          <div key={idx} className="flex items-start justify-between text-xs">
-            <div className="flex items-center gap-2">
+          <div key={idx} className="flex items-start justify-between text-xs gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               {item.ok ? (
                 <CheckCircle className="h-4 w-4 text-ui-tag-green-icon shrink-0" />
               ) : (
                 <ExclamationCircle className="h-4 w-4 text-ui-fg-muted shrink-0" />
               )}
-              <span className={item.ok ? "text-ui-fg-base font-medium" : "text-ui-fg-subtle"}>
+              <span className={`break-words ${item.ok ? "text-ui-fg-base font-medium" : "text-ui-fg-subtle"}`}>
                 {item.label}
               </span>
             </div>
-            <span className="text-ui-fg-muted text-[11px] truncate max-w-[110px]">
+            <span className="text-ui-fg-muted text-[11px] shrink-0 text-right">
               {item.hint}
             </span>
           </div>

@@ -69,13 +69,13 @@ export const OmieProductSearchPanel = () => {
         </Text>
       </div>
       <form
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        className="flex flex-col gap-2.5 sm:flex-row sm:items-end w-full"
         onSubmit={(event) => {
           event.preventDefault()
           submit()
         }}
       >
-        <label className="min-w-0 flex-1">
+        <label className="min-w-0 flex-1 w-full">
           <Text size="small" weight="plus">
             Código FriggaFrio / Omie
           </Text>
@@ -86,13 +86,14 @@ export const OmieProductSearchPanel = () => {
             autoComplete="off"
             aria-label="Código FriggaFrio / Omie"
             placeholder="Ex.: DPGS1347 ou VBLR1214"
+            className="w-full"
           />
         </label>
-        <div className="flex gap-2">
-          <Button type="submit" isLoading={search.isPending} disabled={search.isPending}>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button type="submit" isLoading={search.isPending} disabled={search.isPending} className="flex-1 sm:flex-initial">
             <MagnifyingGlass className="mr-2" /> Buscar
           </Button>
-          <Button type="button" variant="secondary" onClick={clear} disabled={search.isPending}>
+          <Button type="button" variant="secondary" onClick={clear} disabled={search.isPending} className="flex-1 sm:flex-initial">
             Limpar
           </Button>
         </div>
@@ -106,13 +107,15 @@ export const OmieProductSearchPanel = () => {
         result.results.map((item, index) => (
           <div
             key={`${item.source}-${item.code}-${index}`}
-            className="flex flex-col gap-2 rounded border border-ui-border-base p-4 bg-ui-bg-base"
+            className="flex flex-col gap-2 rounded border border-ui-border-base p-3.5 sm:p-4 bg-ui-bg-base min-w-0"
             data-testid="omie-product-search-result"
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
               <div className="min-w-0 flex-1">
-                <Heading level="h3">{item.title || "Produto encontrado"}</Heading>
-                <div className="mt-2 space-y-1 text-xs text-ui-fg-subtle">
+                <Heading level="h3" className="break-words text-base sm:text-lg">
+                  {item.title || "Produto encontrado"}
+                </Heading>
+                <div className="mt-2 space-y-1 text-xs text-ui-fg-subtle break-words">
                   <p>
                     <strong className="text-ui-fg-base">Origem:</strong> {item.source}
                   </p>
@@ -137,7 +140,7 @@ export const OmieProductSearchPanel = () => {
                   )}
                 </div>
               </div>
-              <StatusBadge color={item.medusa_product_id ? "green" : "grey"}>
+              <StatusBadge color={item.medusa_product_id ? "green" : "grey"} className="self-start shrink-0">
                 {item.medusa_product_id ? "Vinculado" : "Ainda não vinculado"}
               </StatusBadge>
             </div>

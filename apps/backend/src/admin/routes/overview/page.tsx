@@ -49,15 +49,15 @@ const OverviewDashboardPage = () => {
   const metrics = data?.metrics
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-4 sm:gap-6 p-3 sm:p-4 md:p-6 max-w-7xl mx-auto w-full min-w-0">
       {/* Brand Header */}
       <BrandHeader
         title="Visão Geral FriggaFrio"
         subtitle="Painel de controle operacional, métricas de catálogo e alertas do sistema."
         badgeText="Dashboard Operacional"
       >
-        <Link to="/catalog">
-          <Button size="small" variant="secondary" className="gap-2">
+        <Link to="/catalog" className="w-full sm:w-auto">
+          <Button size="small" variant="secondary" className="gap-2 w-full sm:w-auto justify-center">
             <BuildingStorefront className="h-4 w-4" />
             Ir para Catálogo
           </Button>
@@ -65,13 +65,13 @@ const OverviewDashboardPage = () => {
       </BrandHeader>
 
       {/* Bloco de Ações Rápidas */}
-      <div>
-        <Heading level="h2" className="text-sm font-semibold text-ui-fg-base uppercase tracking-wider mb-3">
+      <div className="w-full min-w-0">
+        <Heading level="h2" className="text-xs sm:text-sm font-semibold text-ui-fg-base uppercase tracking-wider mb-3">
           Ações Rápidas
         </Heading>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <Link to="/products" className="group">
-            <Container className="p-4 flex flex-col justify-between h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 w-full">
+          <Link to="/products" className="group block min-w-0">
+            <Container className="p-3.5 sm:p-4 flex flex-col justify-between h-24 sm:h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
               <div className="flex items-center justify-between">
                 <div className="h-8 w-8 rounded-lg bg-ui-bg-base border border-ui-border-base flex items-center justify-center text-ui-fg-subtle group-hover:text-ui-fg-interactive">
                   <Plus className="h-4 w-4" />
@@ -79,18 +79,18 @@ const OverviewDashboardPage = () => {
                 <ArrowUpRightOnBox className="h-3.5 w-3.5 text-ui-fg-muted" />
               </div>
               <div>
-                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive">
+                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive text-xs sm:text-sm">
                   Cadastrar Produto
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
+                <Text size="xsmall" className="text-ui-fg-muted text-[11px]">
                   Painel nativo Medusa
                 </Text>
               </div>
             </Container>
           </Link>
 
-          <Link to="/catalog" className="group">
-            <Container className="p-4 flex flex-col justify-between h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
+          <Link to="/catalog" className="group block min-w-0">
+            <Container className="p-3.5 sm:p-4 flex flex-col justify-between h-24 sm:h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
               <div className="flex items-center justify-between">
                 <div className="h-8 w-8 rounded-lg bg-ui-bg-base border border-ui-border-base flex items-center justify-center text-ui-fg-subtle group-hover:text-ui-fg-interactive">
                   <BuildingStorefront className="h-4 w-4" />
@@ -98,18 +98,18 @@ const OverviewDashboardPage = () => {
                 <ArrowUpRightOnBox className="h-3.5 w-3.5 text-ui-fg-muted" />
               </div>
               <div>
-                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive">
+                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive text-xs sm:text-sm">
                   Gestão de Catálogo
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
+                <Text size="xsmall" className="text-ui-fg-muted text-[11px]">
                   Auditoria e filtros rápidos
                 </Text>
               </div>
             </Container>
           </Link>
 
-          <Link to="/omie-products" className="group">
-            <Container className="p-4 flex flex-col justify-between h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
+          <Link to="/omie-products" className="group block min-w-0">
+            <Container className="p-3.5 sm:p-4 flex flex-col justify-between h-24 sm:h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
               <div className="flex items-center justify-between">
                 <div className="h-8 w-8 rounded-lg bg-ui-bg-base border border-ui-border-base flex items-center justify-center text-ui-fg-subtle group-hover:text-ui-fg-interactive">
                   <MagnifyingGlass className="h-4 w-4" />
@@ -117,56 +117,56 @@ const OverviewDashboardPage = () => {
                 <ArrowUpRightOnBox className="h-3.5 w-3.5 text-ui-fg-muted" />
               </div>
               <div>
-                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive">
+                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive text-xs sm:text-sm">
                   Buscar Código Omie
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
+                <Text size="xsmall" className="text-ui-fg-muted text-[11px]">
                   Consulta local e remota
                 </Text>
               </div>
             </Container>
           </Link>
 
-          <Link to="/quotes" className="group">
-            <Container className="p-4 flex flex-col justify-between h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
+          <Link to="/quotes" className="group block min-w-0">
+            <Container className="p-3.5 sm:p-4 flex flex-col justify-between h-24 sm:h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
               <div className="flex items-center justify-between">
                 <div className="h-8 w-8 rounded-lg bg-ui-bg-base border border-ui-border-base flex items-center justify-center text-ui-fg-subtle group-hover:text-ui-fg-interactive">
                   <DocumentText className="h-4 w-4" />
                 </div>
                 {metrics && metrics.pending_quotes > 0 && (
-                  <Badge size="2xsmall" color="orange">
+                  <Badge size="2xsmall" color="orange" className="shrink-0 text-[10px]">
                     {metrics.pending_quotes} pendente(s)
                   </Badge>
                 )}
               </div>
               <div>
-                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive">
+                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive text-xs sm:text-sm">
                   Cotações
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
+                <Text size="xsmall" className="text-ui-fg-muted text-[11px]">
                   Orçamentos de clientes
                 </Text>
               </div>
             </Container>
           </Link>
 
-          <Link to="/product-reviews" className="group">
-            <Container className="p-4 flex flex-col justify-between h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
+          <Link to="/product-reviews" className="group block min-w-0">
+            <Container className="p-3.5 sm:p-4 flex flex-col justify-between h-24 sm:h-28 hover:border-ui-border-interactive hover:shadow-sm transition-all">
               <div className="flex items-center justify-between">
                 <div className="h-8 w-8 rounded-lg bg-ui-bg-base border border-ui-border-base flex items-center justify-center text-ui-fg-subtle group-hover:text-ui-fg-interactive">
                   <Star className="h-4 w-4" />
                 </div>
                 {metrics && metrics.pending_reviews > 0 && (
-                  <Badge size="2xsmall" color="orange">
+                  <Badge size="2xsmall" color="orange" className="shrink-0 text-[10px]">
                     {metrics.pending_reviews} nova(s)
                   </Badge>
                 )}
               </div>
               <div>
-                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive">
+                <Text size="small" weight="plus" className="text-ui-fg-base group-hover:text-ui-fg-interactive text-xs sm:text-sm">
                   Avaliações
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
+                <Text size="xsmall" className="text-ui-fg-muted text-[11px]">
                   Moderação de reviews
                 </Text>
               </div>
@@ -176,9 +176,9 @@ const OverviewDashboardPage = () => {
       </div>
 
       {/* Indicadores Principais */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <Heading level="h2" className="text-sm font-semibold text-ui-fg-base uppercase tracking-wider">
+      <div className="w-full min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+          <Heading level="h2" className="text-xs sm:text-sm font-semibold text-ui-fg-base uppercase tracking-wider">
             Métricas Comerciais Reais
           </Heading>
           {metrics?.last_updated && (
@@ -189,9 +189,9 @@ const OverviewDashboardPage = () => {
         </div>
 
         {isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Container key={i} className="p-5 animate-pulse">
+              <Container key={i} className="p-4 sm:p-5 animate-pulse">
                 <div className="h-4 w-24 bg-ui-bg-subtle-hover rounded mb-3" />
                 <div className="h-8 w-16 bg-ui-bg-subtle-hover rounded" />
               </Container>
@@ -200,17 +200,17 @@ const OverviewDashboardPage = () => {
         )}
 
         {metrics && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Link to="/catalog?filter=all" className="group block">
-              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+            <Link to="/catalog?filter=all" className="group block min-w-0">
+              <Container className="p-4 sm:p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
                 <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
                   Catálogo Total
                 </Text>
-                <div className="flex items-baseline justify-between mt-2">
+                <div className="flex items-baseline justify-between gap-2 mt-2">
                   <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
                     {metrics.total.toLocaleString("pt-BR")}
                   </Text>
-                  <Badge size="small" color="blue">
+                  <Badge size="small" color="blue" className="shrink-0">
                     {metrics.published} ativos
                   </Badge>
                 </div>
@@ -220,16 +220,16 @@ const OverviewDashboardPage = () => {
               </Container>
             </Link>
 
-            <Link to="/catalog?filter=has_omie" className="group block">
-              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+            <Link to="/catalog?filter=has_omie" className="group block min-w-0">
+              <Container className="p-4 sm:p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
                 <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
                   Integração Omie
                 </Text>
-                <div className="flex items-baseline justify-between mt-2">
+                <div className="flex items-baseline justify-between gap-2 mt-2">
                   <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
                     {metrics.omie_linked.toLocaleString("pt-BR")}
                   </Text>
-                  <Badge size="small" color="green">
+                  <Badge size="small" color="green" className="shrink-0">
                     {Math.round((metrics.omie_linked / Math.max(1, metrics.total)) * 100)}%
                   </Badge>
                 </div>
@@ -239,16 +239,16 @@ const OverviewDashboardPage = () => {
               </Container>
             </Link>
 
-            <Link to="/catalog?filter=quote_only" className="group block">
-              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+            <Link to="/catalog?filter=quote_only" className="group block min-w-0">
+              <Container className="p-4 sm:p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
                 <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
                   Sob Consulta / Cotação
                 </Text>
-                <div className="flex items-baseline justify-between mt-2">
+                <div className="flex items-baseline justify-between gap-2 mt-2">
                   <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
                     {metrics.quote_only.toLocaleString("pt-BR")}
                   </Text>
-                  <Badge size="small" color="orange">
+                  <Badge size="small" color="orange" className="shrink-0">
                     WhatsApp
                   </Badge>
                 </div>
@@ -258,16 +258,16 @@ const OverviewDashboardPage = () => {
               </Container>
             </Link>
 
-            <Link to="/catalog?filter=has_stock" className="group block">
-              <Container className="p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
+            <Link to="/catalog?filter=has_stock" className="group block min-w-0">
+              <Container className="p-4 sm:p-5 transition-all hover:border-ui-border-interactive hover:shadow-sm">
                 <Text size="xsmall" className="text-ui-fg-subtle uppercase tracking-wider font-medium">
                   Disponibilidade
                 </Text>
-                <div className="flex items-baseline justify-between mt-2">
+                <div className="flex items-baseline justify-between gap-2 mt-2">
                   <Text size="xlarge" weight="plus" className="text-ui-fg-base text-2xl sm:text-3xl group-hover:text-ui-fg-interactive">
                     {(metrics.total - metrics.no_stock).toLocaleString("pt-BR")}
                   </Text>
-                  <Badge size="small" color="green">
+                  <Badge size="small" color="green" className="shrink-0">
                     Com Estoque
                   </Badge>
                 </div>
@@ -281,32 +281,32 @@ const OverviewDashboardPage = () => {
       </div>
 
       {/* Bloco de Alertas Operacionais */}
-      <div>
-        <Heading level="h2" className="text-sm font-semibold text-ui-fg-base uppercase tracking-wider mb-3">
+      <div className="w-full min-w-0">
+        <Heading level="h2" className="text-xs sm:text-sm font-semibold text-ui-fg-base uppercase tracking-wider mb-3">
           Alertas e Qualidade Cadastral
         </Heading>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full">
           {/* Card Alertas de Imagem e Preço */}
-          <Container className="p-5 flex flex-col justify-between">
+          <Container className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <ExclamationCircle className="h-5 w-5 text-ui-fg-warning" />
-                <Heading level="h3" className="text-base font-semibold text-ui-fg-base">
+                <ExclamationCircle className="h-5 w-5 text-ui-fg-warning shrink-0" />
+                <Heading level="h3" className="text-sm sm:text-base font-semibold text-ui-fg-base break-words">
                   Cadastros com Pendências no Catálogo
                 </Heading>
               </div>
-              <Text size="small" className="text-ui-fg-subtle mb-4">
+              <Text size="small" className="text-ui-fg-subtle mb-4 text-xs sm:text-sm">
                 Identificação imediata de produtos que precisam de atenção visual ou comercial antes de publicação.
               </Text>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-ui-border-base">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-ui-border-base">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Produtos sem imagem cadastrada
                   </Text>
-                  <div className="flex items-center gap-2">
-                    <Text size="small" weight="plus" className={metrics && metrics.no_image > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                    <Text size="small" weight="plus" className={`text-xs sm:text-sm ${metrics && metrics.no_image > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                       {metrics ? metrics.no_image : "..."}
                     </Text>
                     <Link to="/catalog?filter=no_image">
@@ -315,12 +315,12 @@ const OverviewDashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-ui-border-base">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-ui-border-base">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Produtos sem preço configurado
                   </Text>
-                  <div className="flex items-center gap-2">
-                    <Text size="small" weight="plus" className={metrics && metrics.no_price > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                    <Text size="small" weight="plus" className={`text-xs sm:text-sm ${metrics && metrics.no_price > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                       {metrics ? metrics.no_price : "..."}
                     </Text>
                     <Link to="/catalog?filter=no_price">
@@ -329,12 +329,12 @@ const OverviewDashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-2">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Produtos sem vínculo Omie
                   </Text>
-                  <div className="flex items-center gap-2">
-                    <Text size="small" weight="plus" className={metrics && metrics.omie_pending > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                    <Text size="small" weight="plus" className={`text-xs sm:text-sm ${metrics && metrics.omie_pending > 0 ? "text-ui-fg-warning" : "text-ui-fg-base"}`}>
                       {metrics ? metrics.omie_pending : "..."}
                     </Text>
                     <Link to="/catalog?filter=no_omie">
@@ -347,7 +347,7 @@ const OverviewDashboardPage = () => {
 
             <div className="mt-4 pt-3 border-t border-ui-border-base flex justify-end">
               <Link to="/catalog">
-                <Button size="small" variant="transparent" className="text-ui-fg-interactive">
+                <Button size="small" variant="transparent" className="text-ui-fg-interactive text-xs sm:text-sm">
                   Abrir Gestão de Catálogo completa →
                 </Button>
               </Link>
@@ -355,25 +355,25 @@ const OverviewDashboardPage = () => {
           </Container>
 
           {/* Card Atendimento Comercial */}
-          <Container className="p-5 flex flex-col justify-between">
+          <Container className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="h-5 w-5 text-ui-fg-interactive" />
-                <Heading level="h3" className="text-base font-semibold text-ui-fg-base">
+                <CheckCircle className="h-5 w-5 text-ui-fg-interactive shrink-0" />
+                <Heading level="h3" className="text-sm sm:text-base font-semibold text-ui-fg-base break-words">
                   Fila de Atendimento e Clientes
                 </Heading>
               </div>
-              <Text size="small" className="text-ui-fg-subtle mb-4">
+              <Text size="small" className="text-ui-fg-subtle mb-4 text-xs sm:text-sm">
                 Monitoramento do fluxo comercial via orçamentos, cotações e empresas cadastradas.
               </Text>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-ui-border-base">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-ui-border-base">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Cotações em aberto
                   </Text>
-                  <div className="flex items-center gap-2">
-                    <Badge color={metrics && metrics.pending_quotes > 0 ? "orange" : "green"}>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                    <Badge color={metrics && metrics.pending_quotes > 0 ? "orange" : "green"} className="text-xs">
                       {metrics ? metrics.pending_quotes : 0} pendente(s)
                     </Badge>
                     <Link to="/quotes">
@@ -382,12 +382,12 @@ const OverviewDashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-ui-border-base">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-ui-border-base">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Avaliações aguardando moderação
                   </Text>
-                  <div className="flex items-center gap-2">
-                    <Badge color={metrics && metrics.pending_reviews > 0 ? "orange" : "green"}>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                    <Badge color={metrics && metrics.pending_reviews > 0 ? "orange" : "green"} className="text-xs">
                       {metrics ? metrics.pending_reviews : 0} pendente(s)
                     </Badge>
                     <Link to="/product-reviews">
@@ -396,18 +396,18 @@ const OverviewDashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-2">
-                  <Text size="small" className="text-ui-fg-base">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2">
+                  <Text size="small" className="text-ui-fg-base text-xs sm:text-sm">
                     Modo operacional da loja
                   </Text>
-                  <Badge color="blue">Catálogo + WhatsApp</Badge>
+                  <Badge color="blue" className="text-xs self-start sm:self-auto">Catálogo + WhatsApp</Badge>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-ui-border-base flex justify-end">
               <Link to="/quotes">
-                <Button size="small" variant="transparent" className="text-ui-fg-interactive">
+                <Button size="small" variant="transparent" className="text-ui-fg-interactive text-xs sm:text-sm">
                   Gerenciar cotações →
                 </Button>
               </Link>
