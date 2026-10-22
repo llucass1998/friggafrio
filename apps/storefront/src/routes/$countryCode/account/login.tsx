@@ -15,19 +15,12 @@ export const Route = createFileRoute("/$countryCode/account/login")({
   beforeLoad: async ({ params, search }) => {
     // This public status endpoint keeps anonymous login navigation free of
     // expected 401 responses from protected Customer/Admin endpoints.
-    try {
-      await sdk.store.customer.retrieve()
-      const countryCode = params.countryCode || "br"
-      const returnTo = normalizeReturnTo(search.returnTo, countryCode)
-      throw redirect({ href: returnTo })
-    } catch (error: any) {
-      if (error?.to || error?.href) throw error
-    }
+
 
     // Admin sessions use the same public entrypoint but continue to the dashboard.
     try {
       const session = await sdk.client.fetch<{ redirect_to?: string | null }>(
-        "/store/auth/session",
+        "/store/auth/status",
         { method: "GET" },
       )
       if (session.redirect_to === "/app") {

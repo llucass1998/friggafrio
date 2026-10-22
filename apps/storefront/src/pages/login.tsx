@@ -6,6 +6,7 @@ import { DEFAULT_COUNTRY_CODE } from "@/config/commerce"
 import { normalizeReturnTo } from "@/lib/auth/return-to"
 import { configuredAdminOrigin } from "@/lib/auth/admin-origin"
 import { MEDUSA_BACKEND_URL } from "@/config/env"
+import { ADMIN_ORIGIN } from "@/lib/auth/admin-access"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -68,7 +69,10 @@ export default function LoginPage() {
       if (actor === "admin") {
         // Local development shares the API origin; production keeps the Admin
         // origin explicit so an API-only origin cannot become a bad redirect.
-        const adminOrigin =
+        // Admin on production domains shares the storefront origin (the
+        // reverse proxy serves /app), keeping the host-only session cookie
+        // valid. Elsewhere keep the explicit configured origin.
+        const adminOrigin = ADMIN_ORIGIN ??
           configuredAdminOrigin(import.meta.env.VITE_MEDUSA_ADMIN_URL) ??
           (import.meta.env.DEV ? configuredAdminOrigin(MEDUSA_BACKEND_URL) : null)
         if (!adminOrigin) {

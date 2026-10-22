@@ -162,11 +162,20 @@ export const validateSessionRequestOrigin = (
     return { allowed: true };
   }
 
-  if (!isLocalDevelopment && input.secFetchSiteHeader?.toLowerCase() === "cross-site") {
+  // A cross-site request is still accepted when the declared origin (the
+  // Sec-Fetch-Site header is absent in cross-origin fetches of some proxies /
+  // embedded browsers) matches a trusted deployment origin. This keeps the
+  // storefront reachable from any production domain while rejecting genuine
+  // third-party pages.
+  const origin = requestOrigin(input.originHeader, input.refererHeader);
+  if (
+    !isLocalDevelopment &&
+    input.secFetchSiteHeader?.toLowerCase() === "cross-site" &&
+    (!origin || !trustedOrigins.has(origin))
+  ) {
     return { allowed: false, reason: "cross-site" };
   }
 
-  const origin = requestOrigin(input.originHeader, input.refererHeader);
   if (!origin) {
     return { allowed: false, reason: "missing-origin" };
   }

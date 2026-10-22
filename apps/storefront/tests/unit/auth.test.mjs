@@ -58,7 +58,7 @@ test("login route resumes an existing Admin session at /app", () => {
     new URL("../../src/routes/$countryCode/account/login.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /\/store\/auth\/session/);
+  assert.match(source, /\/store\/auth\/(?:session|status)/);
   assert.match(source, /session\.redirect_to === ["']\/app["']/);
   assert.match(source, /ADMIN_ACCESS_URL \?\? ["']\/app["']/);
 });

@@ -40,7 +40,7 @@ const adminProxyPlugin: Plugin = {
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
-  const allowedHosts = ["friggafrio.istigestao.com.br"];
+  const allowedHosts = ["friggafrio.istigestao.com.br", "friggafrio.com.br"];
 
   return {
     server: {
