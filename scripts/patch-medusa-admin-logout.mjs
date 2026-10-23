@@ -75,9 +75,31 @@ for (const dir of directoriesToPatch) {
       totalPatched += 1
     }
 
+    // Patch sidebar header avatar to display FriggaFrio brand logo
+    if (next.includes("grid-cols-[24px_1fr_15px]")) {
+      const avatarPattern = /\{size:"xsmall",fallback:([A-Za-z0-9_$]+)\}/g
+      if (avatarPattern.test(next)) {
+        next = next.replace(avatarPattern, '{size:"xsmall",fallback:$1,src:"/app/frigga-logo.svg"}')
+        totalPatched += 1
+      }
+    }
+
     if (next !== source) {
       await writeFile(file, next)
     }
+  }
+}
+
+const logoSvg = resolve(projectRoot, "apps/backend/src/admin/assets/frigga-logo.svg")
+const logoPng = resolve(projectRoot, "apps/backend/src/admin/assets/frigga-logo.png")
+for (const dir of directoriesToPatch) {
+  const destLogoSvg = resolve(dir, "frigga-logo.svg")
+  const destLogoPng = resolve(dir, "frigga-logo.png")
+  if (existsSync(logoSvg) && destLogoSvg !== logoSvg) {
+    await cp(logoSvg, destLogoSvg, { force: true })
+  }
+  if (existsSync(logoPng) && destLogoPng !== logoPng) {
+    await cp(logoPng, destLogoPng, { force: true })
   }
 }
 

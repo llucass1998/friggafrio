@@ -33,8 +33,10 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
   }
 
   const queryParam = `q=${encodeURIComponent(storeAddress(location))}`
-
-  const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
+  const isDirectFriggaDomain = typeof window !== "undefined" && window.location.hostname.endsWith("friggafrio.com.br")
+  const embedUrl = isDirectFriggaDomain
+    ? `https://friggafrio.istigestao.com.br/maps-embed.html?key=${apiKey}&${queryParam}`
+    : `https://www.google.com/maps/embed/v1/place?key=${apiKey}&${queryParam}`
 
   return (
     <div className="h-[280px] w-full overflow-hidden rounded-2xl border border-[#E5EDF4] bg-[#F5F8FA] md:h-[360px]">
