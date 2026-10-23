@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { createCatalogCacheKey, getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
 
 type Query = { graph: (input: { entity: string; fields: string[]; filters?: Record<string, unknown>; pagination?: { skip: number; take: number } }) => Promise<{ data: unknown[] }> }
 type VariantOption = { id?: string | null; option_id?: string | null }
@@ -61,6 +62,14 @@ const relevanceScore = (
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   try {
+    const cacheKey = createCatalogCacheKey("search", (req.query ?? {}) as Record<string, unknown>)
+    const cached = await getCachedJson<{ product_ids: string[]; count: number }>(cacheKey)
+    if (cached) {
+      res.setHeader?.("X-Cache", "HIT")
+      res.json(cached)
+      return
+    }
+
     const productQuery: { entity: string; fields: string[]; filters: Record<string, unknown> } = {
       entity: "product",
       fields: [
@@ -222,7 +231,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
     })
     const offset = Math.max(0, Number(req.query?.offset) || 0)
     const limit = Math.min(100, Math.max(1, Number(req.query?.limit) || 24))
-    res.json({ product_ids: rows.slice(offset, offset + limit).map((product) => product.id), count: rows.length })
+    const payload = { product_ids: rows.slice(offset, offset + limit).map((product) => product.id), count: rows.length }
+    await setCachedJson(cacheKey, payload, 120)
+    res.setHeader?.("X-Cache", "MISS")
+    res.json(payload)
   } catch {
     // Keep backend failures distinct from a valid zero-result catalog.
     res.status(503).json({ product_ids: [], count: 0, unavailable: true, code: "CATALOG_QUERY_FAILED" })

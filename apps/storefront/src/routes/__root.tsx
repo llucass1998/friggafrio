@@ -9,6 +9,7 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouterState,
 } from "@tanstack/react-router"
 import { Toaster } from "sonner"
 import { initSentry } from "@/lib/sentry"
@@ -64,6 +65,23 @@ export const Route = createRootRouteWithContext<{
   component: RootComponent,
 })
 
+function NavigationProgressBar() {
+  const isNavigating = useRouterState({
+    select: (state) => state.status === "pending",
+  })
+
+  if (!isNavigating) return null
+
+  return (
+    <div
+      aria-hidden="true"
+      className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-[var(--color-primary-hover,#005b94)] overflow-hidden"
+    >
+      <div className="h-full w-full bg-[var(--color-primary,#0070BA)] animate-pulse origin-left" />
+    </div>
+  )
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext()
   useEffect(() => {
@@ -75,6 +93,7 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body>
+        <NavigationProgressBar />
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <CartProvider>

@@ -26,6 +26,8 @@ export function createRouter() {
     routeTree,
     context: { queryClient },
     defaultPreload: "intent", // Puxa os chunks sob demanda quando o usuário foca ou passa o mouse no link
+    defaultPreloadDelay: 150, // Debounce de 150ms no hover para evitar requisições acidentais
+    defaultPreloadStaleTime: 60_000, // Evita re-preload do mesmo item por 60 segundos
     defaultNotFoundComponent: NotFound,
     scrollRestoration: true,
   })

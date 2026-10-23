@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { createCatalogCacheKey, getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
 
 type Query = {
   graph: (input: {
@@ -33,6 +34,14 @@ const publicMetadataSearchValues = (metadata: Record<string, unknown> | null | u
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   try {
+    const cacheKey = createCatalogCacheKey("facets", (req.query ?? {}) as Record<string, unknown>)
+    const cached = await getCachedJson<Record<string, unknown>>(cacheKey)
+    if (cached) {
+      res.setHeader?.("X-Cache", "HIT")
+      res.json(cached)
+      return
+    }
+
     const productQuery: { entity: string; fields: string[]; filters: Record<string, unknown> } = {
       entity: "product",
       fields: [
@@ -128,7 +137,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
       }
     }
 
-    res.json({
+    const result = {
       brands: Array.from(brandMap.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
       price: prices.length > 0 ? { min: Math.min(...prices), max: Math.max(...prices) } : {},
       // Product metadata is not a commercial promotion contract. The catalog
@@ -140,7 +149,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
         title: option.title,
         values: Array.from(option.values.values()).sort((a, b) => a.value.localeCompare(b.value, "pt-BR")),
       })).sort((a, b) => a.title.localeCompare(b.title, "pt-BR")),
-    })
+    }
+
+    await setCachedJson(cacheKey, result, 300)
+    res.setHeader?.("X-Cache", "MISS")
+    res.json(result)
   } catch {
     // Facets are an enhancement; never make the catalog fail closed when a
     // deployment lacks one of the optional expandable relations.

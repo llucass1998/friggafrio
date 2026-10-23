@@ -56,30 +56,19 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     // Cast as product to handle missing types safely
     const product = productData as unknown as HttpTypes.StoreProduct
 
-    // Ensure related products are loaded for SSR to prevent hydration mismatch
-    // This ensures consistent rendering between server and client
-    await queryClient.ensureQueryData({
-      queryKey: queryKeys.products.related(product.id, region.id),
-      queryFn: () => getRelatedProducts(product, region.id),
-    })
-
-    const reviewSummary = await queryClient.ensureQueryData<ProductReviewSummary | null>({
-      queryKey: ["product-review-summary", product.id],
-      queryFn: async () => {
-        try {
-          const response = await getProductReviews({ productId: product.id, limit: 1 })
-          return response.summary
-        } catch {
-          return null
-        }
-      },
-    })
+    // Prefetch related products in background without blocking the page transition
+    queryClient
+      .prefetchQuery({
+        queryKey: queryKeys.products.related(product.id, region.id),
+        queryFn: () => getRelatedProducts(product, region.id),
+      })
+      .catch(() => {})
 
     return sanitize({
       countryCode,
       region,
       product,
-      reviewSummary,
+      reviewSummary: null,
     })
   },
   head: ({ loaderData }) => {

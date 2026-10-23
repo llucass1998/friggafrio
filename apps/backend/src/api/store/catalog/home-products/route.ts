@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { createCatalogCacheKey, getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
 import { selectHomeProductSelection } from "../../../../integrations/catalog/home-selection"
 import {
   filterEligibleCatalog,
@@ -77,6 +78,14 @@ const createDiagnostics = (
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   try {
+    const cacheKey = createCatalogCacheKey("home-products", (req.query ?? {}) as Record<string, unknown>)
+    const cached = await getCachedJson<Record<string, unknown>>(cacheKey)
+    if (cached) {
+      res.setHeader?.("X-Cache", "HIT")
+      res.json(cached)
+      return
+    }
+
     const [{ data: locations }, { data: products }, { data: levels }] = await Promise.all([
       query.graph({ entity: "stock_location", fields: ["id", "name"], pagination: { skip: 0, take: 100 } }),
       query.graph({
@@ -116,7 +125,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
       eligibleProductIds: catalog.included.map((product) => product.id).filter((id) => !excluded.has(id)),
     })
 
-    res.json({
+    const payload = {
       source: selection.source,
       generatedAt: new Date().toISOString(),
       products: selection.productIds.map((id) => ({ id })),
@@ -124,7 +133,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
       ...(process.env.NODE_ENV === "development"
         ? { diagnostics: createDiagnostics(graphProducts, catalog.excluded, catalog.included.length) }
         : {}),
-    })
+    }
+
+    await setCachedJson(cacheKey, payload, 600)
+    res.setHeader?.("X-Cache", "MISS")
+    res.json(payload)
   } catch {
     res.json({
       source: "featured-inventory-fallback",

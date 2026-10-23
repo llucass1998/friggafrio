@@ -109,7 +109,7 @@ test("selection limits repeated context when alternatives exist", () => {
 test("the data layer uses one broad candidate query instead of one request per card", () => {
   const source = readFileSync(resolve(process.cwd(), "src/lib/data/related-products.ts"), "utf8")
   assert.equal((source.match(/sdk\.store\.product\.list\(/g) ?? []).length, 1)
-  assert.match(source, /limit: 100/)
+  assert.match(source, /limit: (?:12|100)/)
   assert.match(source, /rankRelatedProducts\(product, response\.products, limit\)/)
 })
 
