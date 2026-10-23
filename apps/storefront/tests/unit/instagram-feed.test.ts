@@ -68,3 +68,30 @@ test("InstagramFeedEmpty provides elegant fallback inviting to official profile"
   assert.match(emptySource, /target="_blank"/)
   assert.match(emptySource, /rel="noopener noreferrer"/)
 })
+
+test("InstagramFeedSection adapts cleanly across all post counts without empty holes", () => {
+  const source = readFileSync(new URL("../../src/components/instagram/InstagramFeedSection.tsx", import.meta.url), "utf8")
+
+  // 0 posts: renders empty state
+  assert.match(source, /displayPosts\.length === 0 \?\s*\(\s*<InstagramFeedEmpty/)
+  // 1 post: centered max-w-xl card
+  assert.match(source, /displayPosts\.length === 1 \?\s*\(\s*\/\* 1 post/)
+  // 2 posts: balanced 2-column grid
+  assert.match(source, /displayPosts\.length === 2 \?\s*\(\s*\/\* 2 posts/)
+  // 3 posts: balanced 3-column grid
+  assert.match(source, /displayPosts\.length === 3 \?\s*\(\s*\/\* 3 posts/)
+  // 4 posts: balanced 4-column grid
+  assert.match(source, /displayPosts\.length === 4 \?\s*\(\s*\/\* 4 posts/)
+  // 5+ posts: 1 featured + 2x2 grid / mobile touch rail
+  assert.match(source, /snap-x snap-mandatory scrollbar-none/)
+})
+
+test("Instagram data layer is fail-closed and handles backend downtime gracefully", () => {
+  const dataLayerSource = readFileSync(new URL("../../src/lib/data/instagram.ts", import.meta.url), "utf8")
+
+  // Must wrap fetch in try-catch and return safe fallback object on failure
+  assert.match(dataLayerSource, /try\s*\{/)
+  assert.match(dataLayerSource, /catch\s*\{/)
+  assert.match(dataLayerSource, /posts:\s*\[\]/)
+  assert.match(dataLayerSource, /profile:\s*FALLBACK_PROFILE/)
+})

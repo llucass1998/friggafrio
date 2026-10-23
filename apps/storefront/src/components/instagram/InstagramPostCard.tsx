@@ -1,6 +1,6 @@
 import { Play, Copy, ExternalLink } from "lucide-react"
-import type { InstagramPost } from "./instagram.types"
-import { InstagramIcon } from "./InstagramIcon"
+import type { InstagramPost } from "@/components/instagram/instagram.types"
+import { InstagramIcon } from "@/components/instagram/InstagramIcon"
 
 interface InstagramPostCardProps {
   post: InstagramPost

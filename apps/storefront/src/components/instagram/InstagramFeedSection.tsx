@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { storeConfig } from "@/config/store"
 import { getInstagramFeed } from "@/lib/data/instagram"
-import type { InstagramPost } from "./instagram.types"
-import { InstagramPostCard } from "./InstagramPostCard"
-import { InstagramFeedSkeleton } from "./InstagramFeedSkeleton"
-import { InstagramFeedEmpty } from "./InstagramFeedEmpty"
-import { InstagramIcon } from "./InstagramIcon"
+import type { InstagramPost } from "@/components/instagram/instagram.types"
+import { InstagramPostCard } from "@/components/instagram/InstagramPostCard"
+import { InstagramFeedSkeleton } from "@/components/instagram/InstagramFeedSkeleton"
+import { InstagramFeedEmpty } from "@/components/instagram/InstagramFeedEmpty"
+import { InstagramIcon } from "@/components/instagram/InstagramIcon"
 
 export function InstagramFeedSection() {
   const [posts, setPosts] = useState<InstagramPost[]>([])
@@ -101,18 +101,32 @@ export function InstagramFeedSection() {
         ) : displayPosts.length === 0 ? (
           <InstagramFeedEmpty />
         ) : displayPosts.length === 1 ? (
-          /* Single post composition */
+          /* 1 post: Prominent centered card */
           <div className="max-w-xl mx-auto">
             <InstagramPostCard post={featuredPost} isFeatured />
           </div>
         ) : displayPosts.length === 2 ? (
-          /* Two posts composition */
+          /* 2 posts: Balanced 2-column layout */
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <InstagramPostCard post={displayPosts[0]} isFeatured />
             <InstagramPostCard post={displayPosts[1]} isFeatured />
           </div>
+        ) : displayPosts.length === 3 ? (
+          /* 3 posts: Balanced 3-column layout without gaps */
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <InstagramPostCard post={displayPosts[0]} isFeatured />
+            <InstagramPostCard post={displayPosts[1]} />
+            <InstagramPostCard post={displayPosts[2]} />
+          </div>
+        ) : displayPosts.length === 4 ? (
+          /* 4 posts: Balanced 4-column layout */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {displayPosts.map((post) => (
+              <InstagramPostCard key={post.id} post={post} />
+            ))}
+          </div>
         ) : (
-          /* Asymmetric editorial layout (3, 4, or 5 posts) */
+          /* 5 (or more) posts: Asymmetric editorial composition (1 featured ~50% + 4 secondary in 2x2 grid) */
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 items-stretch">
             {/* Featured Post (Left ~50%) */}
             <div className="h-full">
