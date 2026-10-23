@@ -1,4 +1,4 @@
-import { lazy, useEffect } from "react"
+import { lazy, useEffect, useState } from "react"
 import { ErrorBoundary } from "@/components/error-boundary"
 import Layout from "@/components/layout"
 import { listRegions } from "@/lib/data/regions"
@@ -69,8 +69,15 @@ function NavigationProgressBar() {
   const isNavigating = useRouterState({
     select: (state) => state.status === "pending",
   })
+  const [hasMounted, setHasMounted] = useState(false)
 
-  if (!isNavigating) return null
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  // The router state can differ while SSR is streaming and hydration begins.
+  // Rendering only after mounting preserves identical server/client markup.
+  if (!hasMounted || !isNavigating) return null
 
   return (
     <div

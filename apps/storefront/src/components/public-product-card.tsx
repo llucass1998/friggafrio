@@ -108,6 +108,7 @@ export function PublicProductCard({
       <Link
         to={"/$countryCode/products/$handle" as string}
         params={{ countryCode, handle: product.handle }}
+        preload="intent"
         className="flex h-full flex-1 flex-col justify-between rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-primary)]"
         data-testid="product-card-link"
         aria-label={`Ver ${productTitle}`}

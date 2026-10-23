@@ -6,11 +6,10 @@ import { formatMoneyAmountForStructuredData } from "@/lib/utils/price"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import ProductDetails from "@/pages/product"
+import { ProductPageSkeleton } from "@/components/product/ProductPageSkeleton"
 import { HttpTypes } from "@medusajs/types"
 import { createFileRoute, notFound } from "@tanstack/react-router"
 import { PUBLIC_PRODUCT_DETAIL_FIELDS } from "@/lib/data/product-fields"
-import { getProductReviews, type ProductReviewSummary } from "@/lib/data/product-reviews"
-import { getRelatedProducts } from "@/lib/data/related-products"
 import { absoluteSiteUrl, breadcrumbStructuredData, pageMeta, structuredDataScript } from "@/lib/seo"
 import { isLoopbackMediaUrl } from "@/lib/media-url"
 
@@ -20,56 +19,54 @@ const publicMediaUrl = (value: string | null | undefined): string | undefined =>
 }
 
 export const Route = createFileRoute("/$countryCode/products/$handle")({
+  pendingComponent: ProductPageSkeleton,
+  // Exibe o skeleton apenas se o loader ultrapassar 300ms, evitando
+  // piscadas quando a resposta já está no caminho rápido de cache.
+  pendingMs: 300,
   loader: async ({ params, context }) => {
     const { countryCode, handle } = params
     const { queryClient } = context
 
-    const region = await queryClient.ensureQueryData({
-      queryKey: ["region", countryCode],
-      queryFn: () => getRegion({ country_code: countryCode }),
-    })
-
-    if (!region || !handle) {
+    if (!handle) {
       throw notFound()
     }
 
-    // Single comprehensive product fetch with all needed fields
-    const productData = await queryClient.ensureQueryData({
-      queryKey: ["product", handle, region.id],
-      queryFn: async () => {
-        try {
-          return await retrieveProduct({
-            handle,
-            region_id: region.id,
-            fields: PUBLIC_PRODUCT_DETAIL_FIELDS,
-          })
-        } catch {
-          throw notFound()
-        }
-      },
-    })
-
-    if (!productData) {
-      throw notFound()
-    }
-
-    // Cast as product to handle missing types safely
-    const product = productData as unknown as HttpTypes.StoreProduct
-
-    // Prefetch related products in background without blocking the page transition
-    queryClient
-      .prefetchQuery({
-        queryKey: queryKeys.products.related(product.id, region.id),
-        queryFn: () => getRelatedProducts(product, region.id),
+    try {
+      const region = await queryClient.ensureQueryData({
+        queryKey: ["region", countryCode],
+        queryFn: () => getRegion({ country_code: countryCode }),
       })
-      .catch(() => {})
 
-    return sanitize({
-      countryCode,
-      region,
-      product,
-      reviewSummary: null,
-    })
+      if (!region) {
+        throw notFound()
+      }
+
+      // Single comprehensive product fetch with all needed fields
+      const productData = await queryClient.ensureQueryData({
+        queryKey: queryKeys.products.detail(handle, region.id),
+        queryFn: () => retrieveProduct({
+          handle,
+          region_id: region.id,
+          fields: PUBLIC_PRODUCT_DETAIL_FIELDS,
+        }),
+      })
+
+      if (!productData) {
+        throw notFound()
+      }
+
+      // Cast as product to handle missing types safely
+      const product = productData as unknown as HttpTypes.StoreProduct
+
+      return sanitize({
+        countryCode,
+        region,
+        product,
+        reviewSummary: null,
+      })
+    } catch {
+      throw notFound()
+    }
   },
   head: ({ loaderData }) => {
     const { product, region, countryCode, reviewSummary } = loaderData || {}
@@ -137,7 +134,7 @@ export const Route = createFileRoute("/$countryCode/products/$handle")({
     }
 
     // Get first product image for preloading (critical for LCP)
-    const firstImageUrl = (product.images as any[])?.map((image) => publicMediaUrl(image?.url)).find(Boolean) || publicMediaUrl(product.thumbnail)
+    const firstImageUrl = product.images?.map((image: { url?: string }) => publicMediaUrl(image?.url)).find(Boolean) || publicMediaUrl(product.thumbnail)
 
     const metadata = pageMeta({
       title: `${productName} | FriggaFrio`,
