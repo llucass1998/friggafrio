@@ -58,6 +58,7 @@ test("InstagramPostCard includes badges, secure link, and accessible overlay", (
   assert.match(cardSource, /Ver no Instagram/)
   assert.match(cardSource, /aria-label/)
   assert.match(cardSource, /loading="lazy"/)
+  assert.match(cardSource, /absolute inset-0 h-full w-full object-cover/)
 })
 
 test("InstagramFeedEmpty provides elegant fallback inviting to official profile", () => {
@@ -67,6 +68,13 @@ test("InstagramFeedEmpty provides elegant fallback inviting to official profile"
   assert.match(emptySource, /@frigga\.frio/)
   assert.match(emptySource, /target="_blank"/)
   assert.match(emptySource, /rel="noopener noreferrer"/)
+})
+
+test("InstagramFeedSkeleton mirrors 4:5 aspect ratio and stretch alignment without CLS", () => {
+  const skeletonSource = readFileSync(new URL("../../src/components/instagram/InstagramFeedSkeleton.tsx", import.meta.url), "utf8")
+
+  assert.match(skeletonSource, /items-stretch/)
+  assert.match(skeletonSource, /aspect-\[4\/5\]/)
 })
 
 test("InstagramFeedSection adapts cleanly across all post counts without empty holes", () => {

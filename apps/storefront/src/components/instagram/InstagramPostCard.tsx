@@ -21,7 +21,7 @@ export function InstagramPostCard({ post, isFeatured = false }: InstagramPostCar
       aria-label={ariaLabel}
       className={`group relative block overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#0A1626] shadow-xs transition-all duration-300 hover:shadow-xl hover:border-[#38BDF8]/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
         isFeatured
-          ? "aspect-[4/5] lg:aspect-auto lg:h-full w-full min-h-[340px] sm:min-h-[440px]"
+          ? "aspect-[4/5] lg:aspect-auto lg:h-full lg:min-h-0 w-full min-h-[340px] sm:min-h-[440px]"
           : "aspect-[4/5] w-full"
       }`}
     >
@@ -32,7 +32,7 @@ export function InstagramPostCard({ post, isFeatured = false }: InstagramPostCar
         loading="lazy"
         decoding="async"
         referrerPolicy="no-referrer"
-        className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+        className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
       />
 
       {/* Top Right Media Type Badge or Instagram Glyph */}
