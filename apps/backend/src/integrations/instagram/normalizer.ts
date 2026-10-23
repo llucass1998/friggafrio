@@ -1,6 +1,7 @@
 import type { MetaInstagramMediaItem, NormalizedInstagramPost } from "./types"
 
-const INSTAGRAM_PERMALINK_REGEX = /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?$/i
+const INSTAGRAM_PERMALINK_REGEX =
+  /^https:\/\/(?:www\.)?instagram\.com\/(?:(?:p|reel|tv)\/[A-Za-z0-9_-]+|[A-Za-z0-9_.-]+)\/?$/i
 
 /**
  * Sanitizes captions by removing HTML markup, scripts, and control characters.
@@ -23,10 +24,11 @@ export function isValidInstagramPermalink(permalink?: string | null): boolean {
 }
 
 /**
- * Validates an HTTP(S) media URL.
+ * Validates an HTTP(S) or local relative media URL.
  */
 export function isValidMediaUrl(url?: string | null): boolean {
   if (!url) return false
+  if (url.startsWith("/")) return true
   try {
     const parsed = new URL(url)
     return parsed.protocol === "https:" || parsed.protocol === "http:"

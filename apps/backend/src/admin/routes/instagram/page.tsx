@@ -79,15 +79,15 @@ const InstagramFeedAdminPage = () => {
       <BrandHeader
         title="Instagram FriggaFrio"
         subtitle="Gerenciamento do feed oficial do Instagram (@frigga.frio) na página inicial."
-        badgeText={isConfigured ? "API Conectada" : "Token Pendente"}
+        badgeText={isConfigured ? "Meta API Conectada" : "Feed Ativo via SnapWidget"}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Container className="p-4 flex flex-col gap-1">
-          <Text size="small" className="text-ui-fg-muted font-medium">Status da Meta API</Text>
+          <Text size="small" className="text-ui-fg-muted font-medium">Status da Integração</Text>
           <div className="flex items-center gap-2">
-            <Badge color={isConfigured ? "green" : "orange"}>
-              {isConfigured ? "Configurado" : "Não configurado"}
+            <Badge color={isConfigured ? "green" : "blue"}>
+              {isConfigured ? "Meta Graph API" : "SnapWidget Oficial (@frigga.frio)"}
             </Badge>
             {data?.masked_token && (
               <span className="font-mono text-xs text-ui-fg-subtle">{data.masked_token}</span>

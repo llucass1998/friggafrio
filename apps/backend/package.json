@@ -19,6 +19,7 @@
     "seed": "medusa exec ./src/scripts/seed.ts",
     "seed:payments:sandbox": "medusa exec ./src/scripts/configure-mercado-pago-sandbox.ts",
     "seed:shipping:v1": "medusa exec ./src/scripts/seed-commercial-shipping-v1.ts",
+    "seed:instagram": "medusa exec ./src/scripts/seed-instagram-feed.ts",
     "smoke:shipping:v1": "medusa exec ./src/scripts/smoke-commercial-shipping-v1.ts",
     "inventory:omie:project": "medusa exec ./src/scripts/reconcile-omie-inventory.ts",
     "inventory:omie:reconcile": "medusa exec ./src/scripts/reconcile-omie-inventory.ts",

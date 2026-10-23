@@ -52,14 +52,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse): Promise<voi
     }
 
     const client = new InstagramApiClient()
-    if (!client.isConfigured()) {
-      res.status(400).json({
-        error: "INSTAGRAM_NOT_CONFIGURED",
-        message: "INSTAGRAM_ACCESS_TOKEN is not configured on the server.",
-      })
-      return
-    }
-
     const result = await syncInstagramFeed(feedService, client)
     res.status(200).json(result)
   } catch (error) {

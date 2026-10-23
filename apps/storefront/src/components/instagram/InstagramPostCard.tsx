@@ -31,6 +31,7 @@ export function InstagramPostCard({ post, isFeatured = false }: InstagramPostCar
         alt={post.caption ? post.caption.slice(0, 80) : "Publicação FriggaFrio no Instagram"}
         loading="lazy"
         decoding="async"
+        referrerPolicy="no-referrer"
         className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
       />
 
