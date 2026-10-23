@@ -660,7 +660,7 @@ const CatalogManagementPage = () => {
 export const config = defineRouteConfig({
   label: "Gestão de Catálogo",
   icon: BuildingStorefront,
-  rank: 1,
+  rank: 0,
 })
 
 export default CatalogManagementPage

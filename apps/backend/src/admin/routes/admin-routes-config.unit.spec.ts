@@ -6,16 +6,16 @@ import { config as companiesConfig } from "./companies/page"
 import { config as reviewsConfig } from "./product-reviews/page"
 
 describe("Admin UI route configurations and Portuguese labels", () => {
-  it("overview route is top-ranked and labeled in Portuguese", () => {
-    expect(overviewConfig.label).toBe("Visão Geral FriggaFrio")
-    expect(overviewConfig.rank).toBe(0)
-    expect(overviewConfig.icon).toBeDefined()
+  it("catalog route is top-ranked below search and labeled in Portuguese", () => {
+    expect(catalogConfig.label).toBe("Gestão de Catálogo")
+    expect(catalogConfig.rank).toBe(0)
+    expect(catalogConfig.icon).toBeDefined()
   })
 
-  it("catalog route is ranked first after overview and labeled in Portuguese", () => {
-    expect(catalogConfig.label).toBe("Gestão de Catálogo")
-    expect(catalogConfig.rank).toBe(1)
-    expect(catalogConfig.icon).toBeDefined()
+  it("overview route is ranked after catalog and labeled in Portuguese", () => {
+    expect(overviewConfig.label).toBe("Visão Geral FriggaFrio")
+    expect(overviewConfig.rank).toBe(1)
+    expect(overviewConfig.icon).toBeDefined()
   })
 
   it("omie-products route is ranked second and labeled with correct accents", () => {

@@ -422,7 +422,7 @@ const OverviewDashboardPage = () => {
 export const config = defineRouteConfig({
   label: "Visão Geral FriggaFrio",
   icon: ChartBar,
-  rank: 0,
+  rank: 1,
 })
 
 export default OverviewDashboardPage

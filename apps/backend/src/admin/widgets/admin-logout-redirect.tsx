@@ -132,11 +132,31 @@ declare const __STOREFRONT_URL__: string | undefined;
 const AdminLogoutRedirect = () => {
   useEffect(() => {
     const intent = hasLogoutIntent();
-    if (!shouldRedirectAfterAdminLogout(window.location.pathname, intent)) return;
-    clearLogoutIntent();
-    const homeUrl = getStorefrontHomeUrl(__STOREFRONT_URL__, window.location.hostname);
-    if (homeUrl) {
-      window.location.replace(homeUrl);
+    if (shouldRedirectAfterAdminLogout(window.location.pathname, intent)) {
+      clearLogoutIntent();
+      const homeUrl = getStorefrontHomeUrl(__STOREFRONT_URL__, window.location.hostname);
+      if (homeUrl) {
+        window.location.replace(homeUrl);
+        return;
+      }
+    }
+
+    // Default post-login destination to Gestão de Catálogo (/catalog)
+    if (
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/app/login" ||
+        window.location.pathname === "/login" ||
+        window.location.pathname.endsWith("/login"))
+    ) {
+      try {
+        const state = window.history.state;
+        if (!state?.usr?.from) {
+          window.history.replaceState(
+            { ...state, usr: { ...state?.usr, from: { pathname: "/catalog" } } },
+            ""
+          );
+        }
+      } catch {}
     }
   }, []);
 

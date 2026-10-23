@@ -63,6 +63,18 @@ for (const dir of directoriesToPatch) {
       return `${cache}.clear(),${replacement}`
     })
 
+    // Patch home chunk to redirect root /app to /catalog by default instead of /orders
+    if (file.includes("home-") && next.includes('"/orders"')) {
+      next = next.replaceAll('"/orders"', '"/catalog"')
+      totalPatched += 1
+    }
+
+    // Patch login chunk to navigate to /catalog after login when from is not set
+    if (file.includes("login-") && next.includes('||"/orders"')) {
+      next = next.replaceAll('||"/orders"', '||"/catalog"')
+      totalPatched += 1
+    }
+
     if (next !== source) {
       await writeFile(file, next)
     }
@@ -73,5 +85,5 @@ if (existsSync(adminBuild) && existsSync(runtimeAdmin)) {
   await cp(adminBuild, runtimeAdmin, { recursive: true, force: true })
 }
 
-console.log(`Patched ${totalPatched} Medusa Admin logout handlers across directories.`)
+console.log(`Patched ${totalPatched} Medusa Admin logout and entrypoint handlers across directories.`)
 
