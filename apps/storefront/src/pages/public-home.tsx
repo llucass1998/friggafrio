@@ -9,6 +9,7 @@ import { FeaturedCategories } from "@/components/home/FeaturedCategories"
 import { HomeProductSections } from "@/components/home/HomeProductSections"
 import { HomePromotionSection } from "@/components/home/HomePromotionSection"
 import { StoreBrandsCarousel } from "@/components/home/store-brands-carousel"
+import { InstagramFeedSection } from "@/components/instagram/InstagramFeedSection"
 import { NewsletterSignup } from "@/components/newsletter-signup"
 import { siteFeatures } from "@/config/site-features"
 
@@ -43,6 +44,9 @@ export function PublicHomePage() {
       {siteFeatures.showHomeCategories && <FeaturedCategories />}
       {siteFeatures.showHomeBenefits && <BenefitsSection />}
       {siteFeatures.showHomeBrandCarousel && <StoreBrandsCarousel />}
+
+      {/* Seção Instagram FriggaFrio */}
+      {siteFeatures.showInstagramFeed && <InstagramFeedSection />}
 
       {/* Bloco de Newsletter institucional */}
       <NewsletterSignup />

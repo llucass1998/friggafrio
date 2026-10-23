@@ -194,6 +194,9 @@ module.exports = defineConfig({
       resolve: backendPath("src/modules/promotional-broadcast-draft"),
     },
     {
+      resolve: backendPath("src/modules/instagram-feed"),
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       // Payment provider services are instantiated in the payment module's
       // local container, so explicitly bridge the durable operation stores.

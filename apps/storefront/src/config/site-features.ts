@@ -77,6 +77,11 @@ export const siteFeatures = {
    * Exibição de favoritos vinculados ao perfil comercial (salvar produtos).
    */
   showFavorites: true,
+
+  /**
+   * Exibição do feed de publicações oficiais do Instagram na Home.
+   */
+  showInstagramFeed: true,
 } as const
 
 export type SiteFeatures = typeof siteFeatures
