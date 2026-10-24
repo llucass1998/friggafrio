@@ -95,8 +95,10 @@ export interface CommercialApproval {
 
 export interface NormalizedVariant {
   externalId: string | null
+  code: string | null
   title: string | null
   sku: string | null
+  unit: string | null
   weight: number | null
   weightUnit: string | null
   shippingProfile: string | null
@@ -108,8 +110,10 @@ export interface NormalizedVariant {
 
 export interface NormalizedProduct {
   externalId: string | null
+  code: string | null
   title: string | null
   handle: string | null
+  unit: string | null
   category: string | null
   tags: string[]
   image: string | null

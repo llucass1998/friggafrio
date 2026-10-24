@@ -70,6 +70,9 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
         metadata: {
           source: "omie",
           omie_external_id: product.externalId,
+          omie_code: product.code,
+          unit: product.unit,
+          unidade: product.unit,
           omie_fingerprint: omieFingerprint(product),
           is_quote_only: false,
           commercial_status: price.length > 0 ? "OUT_OF_STOCK" : "PRICE_PENDING",
@@ -97,6 +100,9 @@ export default async function omieGate5Sync({ container }: ExecArgs): Promise<vo
       status: ProductStatus.PUBLISHED,
       metadata: {
         ...(graphProduct.metadata ?? {}),
+        omie_code: item.product.code ?? (graphProduct.metadata?.omie_code as string | undefined),
+        unit: item.product.unit ?? (graphProduct.metadata?.unit as string | undefined),
+        unidade: item.product.unit ?? (graphProduct.metadata?.unidade as string | undefined),
         storefront_visible: true,
         omie_fingerprint: omieFingerprint(item.product),
       },

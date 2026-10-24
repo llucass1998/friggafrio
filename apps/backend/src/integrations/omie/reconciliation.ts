@@ -22,9 +22,13 @@ export interface ReconciliationItem {
 
 const canonical = (product: NormalizedProduct) => ({
   externalId: product.externalId,
+  code: product.code,
+  unit: product.unit,
   title: product.title,
   variants: product.variants.map((variant) => ({
     externalId: variant.externalId,
+    code: variant.code,
+    unit: variant.unit,
     title: variant.title,
     sku: variant.sku,
     price: variant.price,

@@ -27,6 +27,7 @@ import { siteFeatures } from "@/config/site-features"
 // [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductReviews from "@/components/product-reviews"
 import RelatedProducts from "@/components/related-products"
 import { resolveMediaUrl } from "@/lib/media-url"
+import { getProductDisplayCode } from "@/lib/utils/product-unit"
 
 interface ProductPageData {
   product: HttpTypes.StoreProduct
@@ -82,7 +83,7 @@ export function ProductPage() {
   const category = product.categories?.[0]?.name || null
   const productTitle = decodeProductText(product.title)
   const productDescription = decodeProductText(product.description || product.subtitle || "")
-  const sku = selectedVariant?.sku || product.variants?.[0]?.sku || null
+  const sku = getProductDisplayCode(product, selectedVariant?.sku || product.variants?.[0]?.sku || null) || null
   const purchaseState = getProductPurchaseState(product)
   const hasSelectableVariants = (product.variants?.length ?? 0) > 1 && Boolean(product.options?.length)
   const technicalSummary = publicSpecs.filter(({ label }) => label !== "Marca").slice(0, 3)

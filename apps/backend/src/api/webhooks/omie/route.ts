@@ -229,6 +229,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 title: normalized.title || matchingProduct.title,
                 metadata: {
                   ...(matchingProduct.metadata ?? {}),
+                  omie_code: normalized.code || (matchingProduct.metadata?.omie_code as string | undefined),
+                  unit: normalized.unit || (matchingProduct.metadata?.unit as string | undefined),
+                  unidade: normalized.unit || (matchingProduct.metadata?.unidade as string | undefined),
                   omie_fingerprint: omieFingerprint(normalized),
                   storefront_visible: true,
                 },
@@ -291,6 +294,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                   metadata: {
                     source: "omie",
                     omie_external_id: normalized.externalId,
+                    omie_code: normalized.code,
+                    unit: normalized.unit,
+                    unidade: normalized.unit,
                     omie_fingerprint: omieFingerprint(normalized),
                     is_quote_only: false,
                     commercial_status: price.length > 0 ? "OUT_OF_STOCK" : "PRICE_PENDING",

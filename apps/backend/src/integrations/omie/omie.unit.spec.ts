@@ -196,10 +196,13 @@ describe("Omie discovery mapping", () => {
     expect(normalizeOmieStock({ nCodProd: 1, cCodigo: "SKU-1" }).state).toBe("MISSING")
   })
 
-  it("preserves numeric Omie identifiers as lossless strings", () => {
-    const product = normalizeOmieProduct({ codigo_produto: 12345, codigo: 67890 })
+  it("preserves numeric Omie identifiers as lossless strings and prioritizes real product code as SKU", () => {
+    const product = normalizeOmieProduct({ codigo_produto: 12345, codigo: 67890, unidade: "KG" })
     expect(product.externalId).toBe("12345")
-    expect(product.variants[0]?.sku).toBe("12345")
+    expect(product.code).toBe("67890")
+    expect(product.unit).toBe("KG")
+    expect(product.variants[0]?.sku).toBe("67890")
+    expect(product.variants[0]?.unit).toBe("KG")
   })
 
   it("normalizes only observed values and keeps incomplete products quote-only", () => {

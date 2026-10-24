@@ -1,4 +1,5 @@
 import type { HttpTypes } from "@medusajs/types"
+import { getProductDisplayCode, getProductUnit } from "@/lib/utils/product-unit"
 
 export type PublicSpec = { label: string; value: string }
 
@@ -8,6 +9,7 @@ const PUBLIC_SPEC_KEYS: Array<[string, string[]]> = [
   ["Tipo", ["type", "tipo", "product_type", "categoria"]],
   ["Conexão", ["connection", "conexao", "conexão"]],
   ["Modelo", ["model", "modelo"]],
+  ["Unidade de venda", ["unit", "unidade", "unidade_medida"]],
   ["Aplicação", ["application", "aplicacao", "aplicação"]],
   ["Marca", ["brand", "marca", "manufacturer", "fabricante"]],
   ["Linha de sucção", ["suction_line", "suctionLine", "linha_succao", "linha_de_succao", "linha de sucção"]],
@@ -60,7 +62,8 @@ export function getPublicProductSpecs(product: HttpTypes.StoreProduct): PublicSp
     fallbackConnection = connMatch[0].trim()
   }
 
-  const fallbackModel = formatPublicValue(sku || null)
+  const displayCode = getProductDisplayCode(product, sku)
+  const fallbackModel = formatPublicValue(displayCode || null)
   const fallbackApp = formatPublicValue(getPublicProductApplication(product) || "Sistemas de refrigeração e climatização")
   const fallbackBrand = formatPublicValue(
     product.collection?.title || metadata.brand || metadata.manufacturer || "FriggaFrio"

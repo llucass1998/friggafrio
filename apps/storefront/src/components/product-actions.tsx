@@ -7,6 +7,7 @@ import { getVariantOptionsKeymap, isVariantInStock } from "@/lib/utils/product"
 import { getProductPurchaseState } from "@/lib/utils/product-state"
 import { decodeProductText } from "@/lib/utils/product-text"
 import { formatCurrencyAmount } from "@/lib/utils/currency"
+import { getProductDisplayCode, getProductUnitSuffix } from "@/lib/utils/product-unit"
 // [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { getCountryCodeFromPath } from "@/lib/utils/region"
 // [COMPRAS ONLINE - REATIVAR ANO QUE VEM] import { CheckoutStepKey } from "@/lib/types/global"
 import type { HttpTypes } from "@medusajs/types"
@@ -88,12 +89,14 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
   const formattedPrice = typeof displayPrice === "number" && displayPrice > 0
     ? formatCurrencyAmount({ amount: displayPrice, currencyCode })
     : undefined
-  const reference = product.variants?.[0]?.sku || undefined
+  const unitSuffix = getProductUnitSuffix(product)
+  const reference = getProductDisplayCode(product, selectedVariant?.sku || product.variants?.[0]?.sku) || undefined
+  const formattedPriceWithUnit = formattedPrice ? `${formattedPrice}${unitSuffix}` : undefined
   const whatsappUrl = createProductWhatsAppUrl({
     title: productTitle,
     reference,
     quantity,
-    price: formattedPrice,
+    price: formattedPriceWithUnit,
     // Keep the WhatsApp message identical during SSR and hydration.
     url: location.pathname,
   })
@@ -157,7 +160,12 @@ const ProductActions = memo(function ProductActions({ product, region, disabled,
           </>
         ) : formattedPrice ? (
           <>
-          <p className="text-[2rem] font-bold tracking-tight text-[var(--color-navy)] md:text-[2.25rem]">{formattedPrice}</p>
+          <p className="text-[2rem] font-bold tracking-tight text-[var(--color-navy)] md:text-[2.25rem]">
+            {formattedPrice}
+            {unitSuffix && (
+              <span className="ml-1 text-lg font-normal text-[var(--color-text-muted)] md:text-xl">{unitSuffix}</span>
+            )}
+          </p>
           </>
         ) : statusCopy ? (
           <p className="text-lg font-medium text-[var(--color-text-muted)]">{statusCopy}</p>

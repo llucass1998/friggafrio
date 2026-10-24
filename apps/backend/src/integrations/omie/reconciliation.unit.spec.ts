@@ -2,9 +2,9 @@ import { buildOmieReconciliation, omieFingerprint, stableOmieHandle } from "./re
 import type { NormalizedProduct } from "./types"
 
 const product = (externalId = "10", sku = "SKU-10"): NormalizedProduct => ({
-  externalId, title: "Produto", handle: null, category: null, tags: [], image: null, source: "omie",
+  externalId, code: sku, title: "Produto", handle: null, unit: "UN", category: null, tags: [], image: null, source: "omie",
   approval: { product: false, price: false, inventory: false, fiscal: false, shipping: false }, commercialStatus: "QUOTE_ONLY",
-  variants: [{ externalId, title: "Produto", sku, weight: null, weightUnit: null, shippingProfile: null, fiscalCode: null,
+  variants: [{ externalId, code: sku, title: "Produto", sku, unit: "UN", weight: null, weightUnit: null, shippingProfile: null, fiscalCode: null,
     price: { amount: 12.5, currency: null, sourceField: "preco_venda" }, inventory: { quantity: 0, location: null, sourceField: "saldo_estoque" }, commercialStatus: "QUOTE_ONLY" }],
 })
 

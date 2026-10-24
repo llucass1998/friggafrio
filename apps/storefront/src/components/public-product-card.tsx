@@ -11,6 +11,7 @@ import { getInterestFreeInstallment } from "@/lib/utils/installments"
 import type { ProductRatingSummary } from "@/components/product-rating"
 // [AVALIAÇÕES E COMENTÁRIOS DOS CLIENTES - REATIVAR ANO QUE VEM] import ProductRating from "@/components/product-rating"
 import { resolveMediaUrl } from "@/lib/media-url"
+import { getProductDisplayCode, getProductUnitSuffix } from "@/lib/utils/product-unit"
 import { useState } from "react"
 
 interface PublicProductCardProps {
@@ -38,7 +39,8 @@ export function PublicProductCard({
   const [useOriginalThumbnail, setUseOriginalThumbnail] = useState(false)
   const productTitle = decodeProductText(product.title)
   const firstVariant = product.variants?.[0]
-  const sku = firstVariant?.sku?.trim() || firstVariant?.barcode?.trim() || firstVariant?.ean?.trim() || firstVariant?.upc?.trim() || null
+  const sku = getProductDisplayCode(product, firstVariant?.sku?.trim() || firstVariant?.barcode?.trim() || firstVariant?.ean?.trim() || firstVariant?.upc?.trim() || null) || null
+  const unitSuffix = getProductUnitSuffix(product)
   const metadata = (product.metadata ?? {}) as Record<string, unknown>
   const metadataBrand = typeof metadata.brand === "string" ? metadata.brand.trim() : ""
   const metadataManufacturer = typeof metadata.manufacturer === "string" ? metadata.manufacturer.trim() : ""
@@ -184,6 +186,7 @@ export function PublicProductCard({
                 {formattedDisplayPrice && (
                   <span className="text-base font-bold text-slate-900 sm:text-lg">
                     {formattedDisplayPrice}
+                    {unitSuffix && <span className="text-xs font-medium text-slate-500">{unitSuffix}</span>}
                   </span>
                 )}
               </>
@@ -196,6 +199,7 @@ export function PublicProductCard({
                 {formattedDisplayPrice && (
                   <span className="text-base font-bold text-slate-900 sm:text-lg">
                     {formattedDisplayPrice}
+                    {unitSuffix && <span className="text-xs font-medium text-slate-500">{unitSuffix}</span>}
                   </span>
                 )}
               </>
@@ -207,6 +211,7 @@ export function PublicProductCard({
                 {formattedDisplayPrice && (
                   <span className="text-base font-bold text-slate-900 sm:text-lg">
                     A partir de {formattedDisplayPrice}
+                    {unitSuffix && <span className="text-xs font-medium text-slate-500">{unitSuffix}</span>}
                   </span>
                 )}
               </>
@@ -220,6 +225,7 @@ export function PublicProductCard({
                 <div className="flex items-center gap-2">
                   <span className="text-base font-bold text-slate-900 sm:text-lg">
                     {formattedDisplayPrice}
+                    {unitSuffix && <span className="text-xs font-medium text-slate-500">{unitSuffix}</span>}
                   </span>
                   {discountBadge && (
                     <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">

@@ -100,10 +100,15 @@ const variantFrom = (record: OmieRecord): NormalizedVariant => {
   }
   const price = priceFrom(record)
   const inventory = inventoryFrom(record)
+  const code = stringValue(record, ["codigo", "cCodigo", "cCodInt"])
+  const unit = stringValue(record, ["unidade", "unidade_medida", "unit"])
+  const sku = stringValue(record, ["codigo", "cCodigo", "sku"]) || stringValue(record, ["codigo_produto", "nCodProd", "id_produto"])
   return {
-    externalId: stringValue(record, ["id_produto", "id_variante", "codigo_produto", "codigo"]),
+    externalId: stringValue(record, ["id_produto", "id_variante", "nCodProd", "codigo_produto", "codigo"]),
+    code,
     title: stringValue(record, ["descricao", "nome", "titulo"]),
-    sku: stringValue(record, ["sku", "codigo_produto", "codigo"]),
+    sku,
+    unit,
     weight: numberValue(record, ["peso", "peso_bruto", "weight"]),
     weightUnit: stringValue(record, ["peso_unidade", "weight_unit"]),
     shippingProfile: stringValue(record, ["shipping_profile", "perfil_envio"]),
@@ -124,16 +129,20 @@ export const normalizeOmieProduct = (record: OmieProductRecord): NormalizedProdu
   }
   const rawVariants = firstValue(record, ["variacoes", "variantes", "variants", "itens"])
   const variants = asRecords(rawVariants).map(variantFrom)
-  const fallbackVariant = variants.length === 0 && stringValue(record, ["sku", "codigo_produto", "codigo"])
+  const fallbackVariant = variants.length === 0 && stringValue(record, ["codigo", "cCodigo", "sku", "codigo_produto"])
     ? [variantFrom(record)]
     : variants
   const representativePrice = fallbackVariant[0]?.price ?? priceFrom(record)
   const representativeInventory = fallbackVariant[0]?.inventory ?? inventoryFrom(record)
+  const code = stringValue(record, ["codigo", "cCodigo", "cCodInt"]) || fallbackVariant[0]?.code || null
+  const unit = stringValue(record, ["unidade", "unidade_medida", "unit"]) || fallbackVariant[0]?.unit || null
 
   return {
-    externalId: stringValue(record, ["id_produto", "codigo_produto", "codigo"]),
+    externalId: stringValue(record, ["id_produto", "nCodProd", "codigo_produto", "codigo"]),
+    code,
     title: stringValue(record, ["descricao", "nome", "titulo"]),
     handle: stringValue(record, ["handle", "slug"]),
+    unit,
     category: stringValue(record, ["categoria", "categoria_nome", "category"]),
     tags: stringArrayValue(record, ["tags", "etiquetas"]),
     image: stringValue(record, ["imagem", "image", "url_imagem"]),
