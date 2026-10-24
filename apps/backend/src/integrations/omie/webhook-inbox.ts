@@ -16,8 +16,8 @@ export function getOmieRedis(): Redis {
   if (!process.env.REDIS_URL) throw new Error("OMIE_REDIS_NOT_CONFIGURED")
   if (!redis || redis.status === "end") {
     redis = new Redis(process.env.REDIS_URL, {
-      connectTimeout: 100, commandTimeout: 100, maxRetriesPerRequest: 0,
-      enableOfflineQueue: false, retryStrategy: (attempt) => attempt > 10 ? null : 1000,
+      connectTimeout: 1500, commandTimeout: 2000, maxRetriesPerRequest: 1,
+      enableOfflineQueue: false, retryStrategy: (attempt) => attempt > 3 ? null : 1000,
     })
     redis.on("error", () => undefined)
   }
