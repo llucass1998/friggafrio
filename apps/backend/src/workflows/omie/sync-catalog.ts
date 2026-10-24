@@ -23,15 +23,35 @@ export async function syncCatalog(input: SyncCatalogInput, container: MedusaCont
       ? { products: [await client.request<Record<string, unknown>>("ConsultarProduto", input.externalId
         ? { codigo_produto: Number(input.externalId) } : { codigo: input.sku })], hasMore: false }
       : await reader.readPage(page, input.pageSize ?? 50)
-    for (const raw of result.products) {
+    const pageProducts = result.products.map((raw) => {
       const product = normalizeOmieProduct(raw)
       if (!product.externalId || !product.title || product.variants.some((variant) => !variant.sku)) throw new Error("OMIE_PRODUCT_IDENTITY_REQUIRED")
-      // O SKU é indexado no Medusa; nunca carregar o catálogo completo para localizar um evento.
+      return { raw, product: product as typeof product & { title: string; externalId: string } }
+    })
+    // O SKU é indexado no Medusa; uma única consulta por página evita N consultas por produto.
+    const pageSkus = [...new Set(pageProducts.flatMap(({ product }) => product.variants.map((variant) => variant.sku as string)))]
+    const { data: rawMatches } = await query.graph({ entity: "product_variant", filters: { sku: pageSkus }, fields: ["id", "sku", "product.id", "product.metadata", "product.variants.id", "product.variants.sku"] })
+    interface ExistingVariantRef { id?: string | null; sku?: string | null }
+    interface ExistingProductRef { id?: string | null; metadata?: Record<string, unknown> | null; variants?: ExistingVariantRef[] | null }
+    interface VariantMatch { id?: string | null; sku?: string | null; product?: ExistingProductRef | null }
+    const matches = rawMatches as VariantMatch[]
+    const productIdsBySku = new Map<string, Set<string>>()
+    const existingByProductId = new Map<string, ExistingProductRef>()
+    for (const variant of matches) {
+      const productId = variant.product?.id
+      if (!productId || !variant.sku || !variant.product) continue
+      existingByProductId.set(productId, variant.product)
+      const owners = productIdsBySku.get(variant.sku) ?? new Set<string>()
+      owners.add(productId)
+      productIdsBySku.set(variant.sku, owners)
+    }
+    const updates: Array<{ id: string; title: string; status?: typeof ProductStatus.DRAFT; metadata: Record<string, unknown> }> = []
+    const creates: CreateProductWorkflowInputDTO[] = []
+    for (const { raw, product } of pageProducts) {
       const skus = product.variants.map((variant) => variant.sku as string)
-      const { data: matches } = await query.graph({ entity: "product_variant", filters: { sku: skus }, fields: ["id", "sku", "product.id", "product.metadata", "product.variants.id", "product.variants.sku"] })
-      const ids = [...new Set(matches.map((variant) => variant.product?.id).filter(Boolean))]
+      const ids = [...new Set(skus.flatMap((sku) => [...(productIdsBySku.get(sku) ?? [])]))]
       if (ids.length > 1) throw new Error("OMIE_PRODUCT_MAPPING_AMBIGUOUS")
-      const existing = matches[0]?.product
+      const existing = ids.length === 1 ? existingByProductId.get(ids[0]!) : undefined
       if (existing?.metadata?.omie_external_id && String(existing.metadata.omie_external_id) !== product.externalId) throw new Error("OMIE_PRODUCT_MAPPING_CONFLICT")
       const inactive = input.deleted || isInactiveOmieRecord(raw)
       const metadata = { ...(existing?.metadata ?? {}), source: "omie", omie_external_id: product.externalId,
@@ -52,18 +72,18 @@ export async function syncCatalog(input: SyncCatalogInput, container: MedusaCont
         options: { Variante: variant.sku! },
         prices: variant.price.amount !== null && variant.price.amount > 0 ? [{ amount: variant.price.amount, currency_code: "brl" }] : [],
       }))
-      if (existing) {
-        await updateProductsWorkflow(container).run({ input: { products: [{ id: existing.id, title: product.title,
-          ...(inactive ? { status: ProductStatus.DRAFT } : {}), metadata,
-          // Opções existentes precisam ser reconciliadas explicitamente antes de mudar variantes.
-        }] } })
+      if (existing?.id) {
+        // Opções existentes precisam ser reconciliadas explicitamente antes de mudar variantes.
+        updates.push({ id: existing.id, title: product.title,
+          ...(inactive ? { status: ProductStatus.DRAFT } : {}), metadata })
       } else if (!inactive) {
-        const create: CreateProductWorkflowInputDTO = { title: product.title, handle: stableOmieHandle(product.externalId), status: ProductStatus.DRAFT,
-          options: [{ title: "Variante", values: skus }], variants, metadata }
-        await createProductsWorkflow(container).run({ input: { products: [create] } })
+        creates.push({ title: product.title, handle: stableOmieHandle(product.externalId), status: ProductStatus.DRAFT,
+          options: [{ title: "Variante", values: skus }], variants, metadata })
       }
       synced++
     }
+    if (updates.length) await updateProductsWorkflow(container).run({ input: { products: updates } })
+    if (creates.length) await createProductsWorkflow(container).run({ input: { products: creates } })
     more = result.hasMore
     page++
   }
