@@ -18,7 +18,7 @@ const SAME_ORIGIN_BACKEND_HOSTS = new Set([
 // hair-pinning through external proxies or deadlocking on preview servers.
 // In the browser, runtimeHostname ensures the public origin or local dev origin is used.
 export const MEDUSA_BACKEND_URL = !isBrowser
-  ? (process.env.INTERNAL_MEDUSA_URL?.trim() || "http://127.0.0.1:9000")
+  ? (process.env.INTERNAL_MEDUSA_URL?.trim() || "http://127.0.0.1:19000")
   : sameOriginBackendUrl(runtimeHostname) ??
     resolveMedusaBackendUrl(rawBackendUrl, runtimeHostname)
 
