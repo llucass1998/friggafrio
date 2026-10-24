@@ -126,6 +126,11 @@ export default defineMiddlewares({
     },
     {
       // Svix verification requires the exact signed request bytes.
+      matcher: "/webhooks/omie",
+      method: "POST",
+      bodyParser: { preserveRawBody: true },
+    },
+    {
       matcher: "/webhooks/resend",
       method: "POST",
       bodyParser: { preserveRawBody: true },

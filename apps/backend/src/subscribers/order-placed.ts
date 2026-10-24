@@ -1,4 +1,5 @@
 import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework"
+import { exportMedusaOrderToOmieWorkflow } from "../workflows/omie"
 
 export default async function orderPlacedHandler({
   event: { data },
@@ -7,11 +8,17 @@ export default async function orderPlacedHandler({
   const logger = container.resolve("logger")
   const orderId = data.id
 
-  logger.info(`[Notifications] Handling 'order.placed' event for order: ${orderId}`)
+  logger.info(`[OrderPlaced] Recebido evento order.placed para ordem: ${orderId}`)
 
-  // Aqui integraríamos com um módulo de notificações (SendGrid, AWS SES, Resend)
-  // const notificationModuleService = container.resolve("notificationModuleService")
-  // await notificationModuleService.createNotifications({ ... })
+  // Exportar pedido de venda para o Omie ERP de forma desacoplada
+  try {
+    await exportMedusaOrderToOmieWorkflow(container).run({
+      input: { orderId },
+    })
+  } catch (err) {
+    logger.error(`[OmieOrderExport] Falha na exportação do pedido ${orderId}; reconciliação necessária`)
+    throw err
+  }
 }
 
 export const config: SubscriberConfig = {

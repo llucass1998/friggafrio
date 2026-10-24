@@ -10,6 +10,13 @@ import {
   planCatalogSync,
   findOmieProductsByCode,
   normalizeOmieProductCode,
+  RESOLVE_OMIE_ENDPOINT,
+  WRITE_OPERATIONS,
+  isWriteOperation,
+  calculateAvailableStock,
+  extractTechnicalAttributes,
+  mapCustomerToOmieUpsert,
+  mapOrderToOmieOrder,
 } from "./index.js"
 
 describe("Omie configuration", () => {
@@ -164,6 +171,70 @@ describe("OmieClient", () => {
       retryable: true,
     })
     expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it("resolves dynamic endpoints for all critical Omie categories", () => {
+    const base = "https://app.omie.com.br"
+    expect(RESOLVE_OMIE_ENDPOINT("ListarPosEstoque", base)).toBe("https://app.omie.com.br/api/v1/estoque/consulta/")
+    expect(RESOLVE_OMIE_ENDPOINT("PosicaoEstoque", base)).toBe("https://app.omie.com.br/api/v1/estoque/consulta/")
+    expect(RESOLVE_OMIE_ENDPOINT("IncluirAjusteEstoque", base)).toBe("https://app.omie.com.br/api/v1/estoque/ajuste/")
+    expect(RESOLVE_OMIE_ENDPOINT("IncluirLocalEstoque", base)).toBe("https://app.omie.com.br/api/v1/estoque/local/")
+    expect(RESOLVE_OMIE_ENDPOINT("ListarMovimentos", base)).toBeNull()
+    expect(RESOLVE_OMIE_ENDPOINT("ListarProdutos", base)).toBe("https://app.omie.com.br/api/v1/geral/produtos/")
+    expect(RESOLVE_OMIE_ENDPOINT("IncluirPedido", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedidovenda/")
+    expect(RESOLVE_OMIE_ENDPOINT("FaturarPedidoVenda", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedidovenda/")
+    expect(RESOLVE_OMIE_ENDPOINT("ConsultarNF", base)).toBe("https://app.omie.com.br/api/v1/produtos/nfconsultar/")
+    expect(RESOLVE_OMIE_ENDPOINT("GetUrlDanfe", base)).toBe("https://app.omie.com.br/api/v1/produtos/notafiscalutil/")
+    expect(RESOLVE_OMIE_ENDPOINT("UpsertClienteCpfCnpj", base)).toBe("https://app.omie.com.br/api/v1/geral/clientes/")
+    expect(RESOLVE_OMIE_ENDPOINT("GerarPix", base)).toBe("https://app.omie.com.br/api/v1/financas/pix/")
+    expect(RESOLVE_OMIE_ENDPOINT("GerarBoleto", base)).toBe("https://app.omie.com.br/api/v1/financas/contareceberboleto/")
+    expect(RESOLVE_OMIE_ENDPOINT("LancarRecebimento", base)).toBe("https://app.omie.com.br/api/v1/financas/contareceber/")
+  })
+
+  it("permits write operations when writesEnabled is true", async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ numero_pedido: "12345", codigo_pedido: 998877 }), { status: 200 }),
+    )
+    const client = new OmieClient(
+      {
+        apiUrl: "https://example.invalid",
+        appKey: "fixture-key",
+        appSecret: "fixture-secret",
+        writesEnabled: true,
+      },
+      { fetchImpl: fetchImpl as unknown as typeof fetch },
+    )
+
+    const result = await client.request("IncluirPedido", { cabecalho: { etapa: "20" } })
+    expect(result).toEqual({ numero_pedido: "12345", codigo_pedido: 998877 })
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("https://example.invalid/api/v1/produtos/pedidovenda/")
+  })
+
+  it("intercepts SOAP faults in JSON response and throws typed SOAP_FAULT error", async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          faultstring: "ERROR: Cliente não encontrado para o CPF informado",
+          faultcode: "SOAP-ENV:Client-500",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    )
+    const client = new OmieClient(
+      {
+        apiUrl: "https://example.invalid",
+        appKey: "fixture-key",
+        appSecret: "fixture-secret",
+        writesEnabled: true,
+      },
+      { fetchImpl: fetchImpl as unknown as typeof fetch },
+    )
+
+    await expect(client.request("ConsultarCliente", { cCPF: "00000000000" })).rejects.toMatchObject({
+      code: "SOAP_FAULT",
+      upstreamCode: "SOAP-ENV:Client-500",
+    })
   })
 })
 
@@ -369,5 +440,142 @@ describe("OmieClientError", () => {
 
     expect(error.message).not.toContain("fixture-secret")
     expect(error.message).toBe("Omie ListarProdutos failed (UPSTREAM)")
+  })
+})
+
+describe("Omie Stock Calculation & Available Stock", () => {
+  it("calculates available stock applying Math.max(0, physical - reserved)", () => {
+    expect(calculateAvailableStock(10, 3)).toBe(7)
+    expect(calculateAvailableStock(10, 10)).toBe(0)
+    expect(calculateAvailableStock(10, 15)).toBe(0)
+    expect(calculateAvailableStock(0, 5)).toBe(0)
+    expect(() => calculateAvailableStock(null, 0)).toThrow("OMIE_INVALID_STOCK")
+    expect(() => calculateAvailableStock(undefined, 2)).toThrow("OMIE_INVALID_STOCK")
+    expect(() => calculateAvailableStock(-5, 0)).toThrow("OMIE_INVALID_STOCK")
+  })
+})
+
+describe("Omie Technical Attributes & Fiscal Mapping", () => {
+  it("extracts brand, BTU capacity, voltage, gas type and inverter from product data", () => {
+    const record = {
+      descricao: "Ar Condicionado Split Hi Wall Daikin 12000 BTUs 220V Inverter R-32",
+      ncm: "8415.10.11",
+      cest: "21.001.00",
+      ean: "7891234567890",
+      peso_bruto: 32.5,
+      peso_liquido: 29.8,
+      altura: 55,
+      largura: 80,
+      profundidade: 30,
+      dias_garantia: 365,
+    }
+
+    const attrs = extractTechnicalAttributes(record, record.descricao)
+    expect(attrs.brand).toBe("Daikin")
+    expect(attrs.capacity_btu).toBe(12000)
+    expect(attrs.voltage).toBe("220V")
+    expect(attrs.gas_type).toBe("R32")
+    expect(attrs.inverter).toBe(true)
+    expect(attrs.ncm).toBe("8415.10.11")
+    expect(attrs.cest).toBe("21.001.00")
+    expect(attrs.ean).toBe("7891234567890")
+    expect(attrs.gross_weight).toBe(32.5)
+    expect(attrs.warranty_days).toBe(365)
+  })
+
+  it("maps FiscalCustomerInput to Omie UpsertClienteCpfCnpj payload correctly", () => {
+    const customer = {
+      external_id: "cus_01JABCDEF",
+      name: "Frigga Climatização LTDA",
+      document: { type: "CNPJ" as const, number: "12.345.678/0001-99" },
+      email: "financeiro@frigga.com.br",
+      phone: "+55 (11) 98765-4321",
+      consumer_final: false,
+      state_registration: "111222333444",
+      address: {
+        address_1: "Avenida Paulista",
+        number: "1000",
+        neighborhood: "Bela Vista",
+        city: "São Paulo",
+        state: "SP",
+        postal_code: "01310-100",
+        country_code: "BR",
+        ibge_code: "3550308",
+      },
+    }
+
+    const payload = mapCustomerToOmieUpsert(customer)
+    expect(payload.codigo_cliente_integracao).toBe("cus_01JABCDEF")
+    expect(payload.cnpj_cpf).toBe("12345678000199")
+    expect(payload.razao_social).toBe("Frigga Climatização LTDA")
+    expect(payload.contribuinte).toBe("S")
+    expect(payload.inscricao_estadual).toBe("111222333444")
+    expect(payload.cidade_ibge).toBe("3550308")
+    expect(payload.tags).toContainEqual({ tag: "CLIENTE_B2B" })
+  })
+
+  it("maps FiscalOrderInput to Omie IncluirPedido payload with installments and freight", () => {
+    const order = {
+      medusa_order_id: "order_01JXYZ",
+      customer: {
+        external_id: "cus_01JABCDEF",
+        name: "João Silva",
+        document: { type: "CPF" as const, number: "123.456.789-00" },
+        consumer_final: true,
+        address: {
+          address_1: "Rua das Flores",
+          city: "São Paulo",
+          state: "SP",
+          postal_code: "01000-000",
+          country_code: "BR",
+        },
+      },
+      items: [
+        {
+          sku: "DAIKIN-12K-220V",
+          quantity: 1,
+          unit_price: 3200,
+          discount: 100,
+          product: {
+            sku: "DAIKIN-12K-220V",
+            omie_code: "1988730838",
+            description: "Split Daikin 12000",
+            unit: "UN",
+            ncm: "84151011",
+            origin: 0,
+            cfop: "5102",
+            cst_csosn: "00",
+            tax_scenario: "123456",
+          },
+        },
+      ],
+      subtotal: 3100,
+      shipping: 150,
+      total: 3250,
+      currency_code: "BRL",
+      payment: {
+        status: "captured" as const,
+        method: "pix" as const,
+        installments: 1,
+      },
+      shipping_method: {
+        key: "express",
+        amount: 150,
+        pickup: false,
+        state: "SP",
+      },
+    }
+
+    const payload = mapOrderToOmieOrder(order, { defaultCenarioImpostos: 123456, defaultCategory: "1.01.01", defaultBankAccount: 123 })
+    expect(payload.cabecalho.codigo_pedido_integracao).toBe("order_01JXYZ")
+    expect(payload.cabecalho.etapa).toBe("20")
+    expect(payload.det).toHaveLength(1)
+    expect(payload.det[0].produto.codigo_produto).toBe(1988730838)
+    expect(payload.det[0].produto.valor_unitario).toBe(3200)
+    expect(payload.det[0].produto.valor_desconto).toBe(100)
+    expect(payload.frete?.modalidade).toBe("0")
+    expect(payload.frete?.valor_frete).toBe(150)
+    expect(payload.parcelas).toHaveLength(1)
+    expect(payload.parcelas?.[0].valor).toBe(3250)
   })
 })

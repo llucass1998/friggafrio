@@ -180,6 +180,17 @@ Known prevention guards:
   panel are compared with the WSL release source by SHA-256. The regression
   suite verifies focus-visible styling, semantic icon, mobile safe-area sizing,
   Dialog description, focus return, and typed preference updates.
+- `MIGRATIONS_BEFORE_CODE_DEPLOY`: toda vez que for introduzido um novo módulo
+  (ex: instagram-feed, novas tabelas ou colunas), aplicar as migrations no banco
+  antes de reiniciar o backend para evitar acúmulo de transações com erro.
+- `STOREFRONT_SYNCHRONIZATION_INTEGRITY`: o código-fonte deve ser sincronizado
+  exclusivamente por Git a partir de commit limpo no ambiente de desenvolvimento,
+  mantendo suíte de testes, documentação e pnpm-lock.yaml íntegros sem arquivos
+  deletados no working tree.
+- `AVOID_CONCURRENT_HIGH_LOAD_SCRIPTS_ON_HADES`: evitar rodar builds/seeds
+  pesados de outros projetos (como update do Mineirão) em horários de pico no
+  servidor Hades, para não saturar I/O de disco físico e congelar temporariamente
+  o driver FUSE do Docker Rootless (derrubando PostgreSQL, Redis e Event Loop).
 
 This is a fail-closed rule for every human, script, and Codex task:
 
