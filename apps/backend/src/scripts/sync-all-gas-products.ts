@@ -35,7 +35,9 @@ const GAS_CODES = [
   "DPGS5073", "DPGS5080", "DPGS5900", "DPGS6005", "DPGS6007", "DPGS6009", "DPGS8080", "DPGS9545", "DPGS9900"
 ]
 
-const applyRequested = () => process.argv.slice(2).some((value) => value.replace(/^--/, "") === "apply")
+const applyRequested = () =>
+  process.env.OMIE_GAS_SYNC_APPLY === "true" ||
+  process.argv.slice(2).some((value) => value.replace(/^--/, "") === "apply")
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default async function syncAllGasProducts({ container }: ExecArgs): Promise<void> {
