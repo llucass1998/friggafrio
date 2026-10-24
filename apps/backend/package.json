@@ -27,6 +27,8 @@
     "inventory:omie:project:apply": "cross-env OMIE_INVENTORY_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-omie-inventory.ts",
     "catalog:commercial:reconcile": "medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
     "catalog:commercial:reconcile:apply": "cross-env STOREFRONT_COMMERCIAL_RECONCILE_APPLY=true medusa exec ./src/scripts/reconcile-storefront-commercial-state.ts",
+    "gas:sync": "medusa exec ./src/scripts/sync-all-gas-products.ts",
+    "gas:sync:apply": "medusa exec ./src/scripts/sync-all-gas-products.ts --apply",
     "seed:validate": "medusa exec ./src/scripts/validate-commercial-defaults.ts",
     "prestart": "node ../../scripts/worktree-guard.mjs",
     "start": "medusa start",

@@ -14,18 +14,10 @@ export function getProductUnitSuffix(product?: HttpTypes.StoreProduct | null): s
   const unit = getProductUnit(product)
   if (!unit) return ""
   switch (unit) {
-    case "KG":
-    case "KILO":
-    case "QUILO":
-      return " / kg"
     case "M":
     case "MT":
     case "METRO":
       return " / m"
-    case "L":
-    case "LT":
-    case "LITRO":
-      return " / L"
     default:
       return ""
   }

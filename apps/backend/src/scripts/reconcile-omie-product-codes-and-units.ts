@@ -77,9 +77,6 @@ export default async function reconcileOmieProductCodesAndUnits({ container }: E
     matched++
     const currentCode = prod.metadata?.omie_code
     const currentUnit = prod.metadata?.unit || prod.metadata?.unidade
-    const isSoldByWeight = omieData.unit === "KG" || omieData.unit === "KILO"
-
-    if (isSoldByWeight) kgCount++
 
     let needsUpdate = false
     const newMetadata = { ...(prod.metadata ?? {}) }
@@ -97,8 +94,9 @@ export default async function reconcileOmieProductCodesAndUnits({ container }: E
       needsUpdate = true
     }
 
-    if (isSoldByWeight && !newMetadata.is_sold_by_weight) {
-      newMetadata.is_sold_by_weight = true
+    // O padrão de preço não é por KG e L; remove a flag legada se existir
+    if (newMetadata.is_sold_by_weight) {
+      delete newMetadata.is_sold_by_weight
       needsUpdate = true
     }
 
@@ -114,7 +112,6 @@ export default async function reconcileOmieProductCodesAndUnits({ container }: E
   logger.info(`  - Produtos correspondentes no Medusa: ${matched}`)
   logger.info(`  - Produtos com código real atualizado: ${codeUpdated}`)
   logger.info(`  - Produtos com unidade de medida atualizada: ${unitUpdated}`)
-  logger.info(`  - Produtos vendidos por quilo (KG): ${kgCount}`)
   logger.info(`  - Total de produtos a atualizar: ${updates.length}`)
 
   if (!applyRequested()) {

@@ -11,13 +11,15 @@ test("getProductUnit extracts and normalizes unit from metadata", () => {
   assert.equal(getProductUnit(null), null)
 })
 
-test("getProductUnitSuffix appends unit suffix for weight and length", () => {
-  assert.equal(getProductUnitSuffix({ metadata: { unit: "KG" } } as unknown as HttpTypes.StoreProduct), " / kg")
-  assert.equal(getProductUnitSuffix({ metadata: { unit: "KILO" } } as unknown as HttpTypes.StoreProduct), " / kg")
-  assert.equal(getProductUnitSuffix({ metadata: { unit: "QUILO" } } as unknown as HttpTypes.StoreProduct), " / kg")
+test("getProductUnitSuffix appends unit suffix only for linear length, not for weight or volume", () => {
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "KG" } } as unknown as HttpTypes.StoreProduct), "")
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "KILO" } } as unknown as HttpTypes.StoreProduct), "")
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "QUILO" } } as unknown as HttpTypes.StoreProduct), "")
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "L" } } as unknown as HttpTypes.StoreProduct), "")
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "LT" } } as unknown as HttpTypes.StoreProduct), "")
+  assert.equal(getProductUnitSuffix({ metadata: { unit: "LITRO" } } as unknown as HttpTypes.StoreProduct), "")
   assert.equal(getProductUnitSuffix({ metadata: { unit: "M" } } as unknown as HttpTypes.StoreProduct), " / m")
   assert.equal(getProductUnitSuffix({ metadata: { unit: "MT" } } as unknown as HttpTypes.StoreProduct), " / m")
-  assert.equal(getProductUnitSuffix({ metadata: { unit: "L" } } as unknown as HttpTypes.StoreProduct), " / L")
   assert.equal(getProductUnitSuffix({ metadata: { unit: "PC" } } as unknown as HttpTypes.StoreProduct), "")
   assert.equal(getProductUnitSuffix({ metadata: { unit: "UN" } } as unknown as HttpTypes.StoreProduct), "")
   assert.equal(getProductUnitSuffix(null), "")
