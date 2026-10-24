@@ -181,8 +181,8 @@ describe("OmieClient", () => {
     expect(RESOLVE_OMIE_ENDPOINT("IncluirLocalEstoque", base)).toBe("https://app.omie.com.br/api/v1/estoque/local/")
     expect(RESOLVE_OMIE_ENDPOINT("ListarMovimentos", base)).toBeNull()
     expect(RESOLVE_OMIE_ENDPOINT("ListarProdutos", base)).toBe("https://app.omie.com.br/api/v1/geral/produtos/")
-    expect(RESOLVE_OMIE_ENDPOINT("IncluirPedido", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedidovenda/")
-    expect(RESOLVE_OMIE_ENDPOINT("FaturarPedidoVenda", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedidovenda/")
+    expect(RESOLVE_OMIE_ENDPOINT("IncluirPedido", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedido/")
+    expect(RESOLVE_OMIE_ENDPOINT("FaturarPedidoVenda", base)).toBe("https://app.omie.com.br/api/v1/produtos/pedido/")
     expect(RESOLVE_OMIE_ENDPOINT("ConsultarNF", base)).toBe("https://app.omie.com.br/api/v1/produtos/nfconsultar/")
     expect(RESOLVE_OMIE_ENDPOINT("GetUrlDanfe", base)).toBe("https://app.omie.com.br/api/v1/produtos/notafiscalutil/")
     expect(RESOLVE_OMIE_ENDPOINT("UpsertClienteCpfCnpj", base)).toBe("https://app.omie.com.br/api/v1/geral/clientes/")
@@ -208,7 +208,7 @@ describe("OmieClient", () => {
     const result = await client.request("IncluirPedido", { cabecalho: { etapa: "20" } })
     expect(result).toEqual({ numero_pedido: "12345", codigo_pedido: 998877 })
     expect(fetchImpl).toHaveBeenCalledTimes(1)
-    expect(fetchImpl.mock.calls[0]?.[0]).toBe("https://example.invalid/api/v1/produtos/pedidovenda/")
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("https://example.invalid/api/v1/produtos/pedido/")
   })
 
   it("intercepts SOAP faults in JSON response and throws typed SOAP_FAULT error", async () => {

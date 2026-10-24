@@ -20,6 +20,7 @@ describe("OmieClient universal safety boundary", () => {
     const client = new OmieClient(clientConfig(), { fetchImpl: fetchImpl as unknown as typeof fetch })
 
     expect(RESOLVE_OMIE_ENDPOINT("ListarProdutos")).toBe("https://app.omie.com.br/api/v1/geral/produtos/")
+    expect(RESOLVE_OMIE_ENDPOINT("ListarLocaisEstoque")).toBe("https://app.omie.com.br/api/v1/estoque/local/")
     expect(RESOLVE_OMIE_ENDPOINT("ConsultarProdutoQueNaoEstaNoRegistry")).toBeNull()
     expect(isWriteOperation("IncluirProdutoInventado")).toBe(false)
 
