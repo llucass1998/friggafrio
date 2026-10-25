@@ -21,13 +21,36 @@
   min-width: 0;
 }
 
-/* The catalog keeps four readable cards beside its 250px filter rail from
+/* The catalog keeps four readable cards beside its 296px filter rail from
    the requested 1280px desktop threshold onward. */
 @media (min-width: 1280px) {
   [data-testid="store-product-grid"],
   .catalog-main > .grid:not([data-testid]) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+/* Discrete, accessible catalog sidebar scrollbar */
+.custom-sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-sidebar-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.custom-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 /* Catalog cards get the larger reading surface without changing shared shelves. */
@@ -90,7 +113,7 @@
 
 @media (min-width: 1024px) {
   .catalog-layout {
-    grid-template-columns: 250px minmax(0, 1fr);
+    grid-template-columns: 296px minmax(0, 1fr);
   }
 }
 

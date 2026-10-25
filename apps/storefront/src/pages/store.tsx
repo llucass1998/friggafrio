@@ -538,7 +538,7 @@ export function StorePage({
         </div>
       </div>
 
-      <div data-testid="catalog-layout" className="catalog-layout mx-auto grid w-[calc(100%-24px)] max-w-[1520px] grid-cols-1 items-start gap-5 sm:w-[calc(100%-32px)] lg:w-[calc(100%-64px)] lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-6">
+      <div data-testid="catalog-layout" className="catalog-layout mx-auto grid w-[calc(100%-24px)] max-w-[1520px] grid-cols-1 items-start gap-5 sm:w-[calc(100%-32px)] lg:w-[calc(100%-64px)] lg:grid-cols-[296px_minmax(0,1fr)] lg:gap-8">
 
         {/* Filtros Mobile Overlay */}
         {mobileFiltersOpen && (
@@ -559,14 +559,16 @@ export function StorePage({
           aria-modal={mobileFiltersOpen ? true : undefined}
           aria-labelledby={mobileFiltersOpen ? "mobile-filters-title" : undefined}
           className={`
-          fixed inset-y-0 left-0 z-50 h-[100dvh] max-h-[100dvh] w-full max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:sticky lg:top-24 lg:h-auto lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:translate-x-0 lg:w-[250px] lg:shadow-none lg:bg-transparent lg:z-0
+          fixed inset-y-0 left-0 z-50 h-[100dvh] max-h-[100dvh] w-full max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+          lg:sticky lg:top-24 lg:h-auto lg:max-h-[calc(100vh-7rem)] lg:translate-x-0 lg:w-[296px] lg:shadow-none lg:bg-transparent lg:z-0
+          lg:overflow-y-auto custom-sidebar-scrollbar lg:pr-3.5
           ${mobileFiltersOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none lg:pointer-events-auto"}
         `}>
           <div className="h-full flex flex-col lg:block">
             {/* Cabecalho Filtros Mobile */}
             <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] lg:hidden bg-white">
               <h2 id="mobile-filters-title" className="font-bold text-[var(--color-navy)] text-lg flex items-center gap-2">
-                <Tags className="w-5 h-5" aria-hidden="true" />
+                <Tags className="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true" />
                 Filtros
               </h2>
               <button
@@ -579,104 +581,141 @@ export function StorePage({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 lg:p-0">
-              <div className="rounded-[14px] border border-[var(--color-border)] bg-white p-5 shadow-[0_6px_22px_rgba(13,67,105,0.07)]">
-                <h2 className="hidden lg:flex text-base font-bold text-[var(--color-navy)] mb-4 items-center gap-2">
-                  <Tags className="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true" />
-                  Filtrar resultados
-                </h2>
+            <div className="flex-1 overflow-y-auto p-4 lg:p-0 lg:overflow-visible">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+                {/* Cabecalho Desktop */}
+                <div className="hidden lg:flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                  <h2 className="text-base font-bold text-[var(--color-navy)] flex items-center gap-2">
+                    <Tags className="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true" />
+                    Filtrar resultados
+                  </h2>
+                  {hasNonSearchFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="text-xs font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
 
-                <div className="mb-5">
-                  <button type="button" aria-expanded={categoriesOpen} onClick={() => setCategoriesOpen((open) => !open)} className="flex min-h-11 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-                    Categorias
-                    <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${categoriesOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                {/* Categorias */}
+                <div>
+                  <button type="button" aria-expanded={categoriesOpen} onClick={() => setCategoriesOpen((open) => !open)} className="flex min-h-10 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                    <span>Categorias</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${categoriesOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
-                  {categoriesOpen && <div className="flex flex-col gap-2">
+                  {categoriesOpen && <div className="mt-2.5 flex flex-col gap-1">
                     <button
                       onClick={() => updateCategory(null)}
-                      className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
+                      className={`text-left text-sm py-1.5 px-2.5 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                         !visibleCategory
-                          ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
-                          : "text-[var(--color-text-muted)] hover:text-[var(--color-navy)] hover:bg-[var(--color-background)]"
+                          ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold shadow-xs"
+                          : "text-slate-600 hover:text-[var(--color-navy)] hover:bg-slate-50"
                       }`}
                     >
                       Todas as categorias
                     </button>
-                  {categories.slice(0, showAllCategories ? 99 : 6).map(category => (
+                    {categories.slice(0, showAllCategories ? 99 : 6).map(category => (
                       <button
                         key={category.id}
                         onClick={() => updateCategory(visibleCategory === category.id ? null : category.id)}
-                        className={`text-left text-sm py-1.5 px-2 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
+                        className={`text-left text-sm py-1.5 px-2.5 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] ${
                           visibleCategory === category.id
-                            ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold"
-                            : "text-[var(--color-text-muted)] hover:text-[var(--color-navy)] hover:bg-[var(--color-background)]"
+                            ? "bg-[var(--color-surface-soft)] text-[var(--color-primary)] font-semibold shadow-xs"
+                            : "text-slate-600 hover:text-[var(--color-navy)] hover:bg-slate-50"
                         }`}
                       >
                         {category.name}
                       </button>
                     ))}
                   </div>}
-                  {categories.length > 6 && <button type="button" onClick={() => setShowAllCategories((show) => !show)} className="mt-3 min-h-11 text-left text-xs font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">{showAllCategories ? "Ver menos" : "Ver mais"}</button>}
+                  {categories.length > 6 && <button type="button" onClick={() => setShowAllCategories((show) => !show)} className="mt-2 min-h-9 text-left text-xs font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">{showAllCategories ? "Ver menos" : "Ver mais"}</button>}
                 </div>
 
-                <div className="border-t border-[var(--color-border)] pt-3">
-                  <button type="button" aria-expanded={brandsOpen} onClick={() => setBrandsOpen((open) => !open)} className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)]">
-                    Marca
-                    <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${brandsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                {/* Marcas */}
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                  <button type="button" aria-expanded={brandsOpen} onClick={() => setBrandsOpen((open) => !open)} className="flex min-h-10 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                    <span>Marca</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${brandsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
                   {brandsOpen && <>
-                  <input type="search" value={brandSearch} onChange={(event) => setBrandSearch(event.target.value)} placeholder="Buscar marca..." aria-label="Buscar marca" className="mt-1 min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]" />
-                  {facetsQuery.isLoading ? (
-                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">Carregando marcas...</p>
-                  ) : availableBrands.length ? (
-                    <div className="mt-2 flex max-h-40 flex-col gap-2 overflow-y-auto">
-                      {availableBrands.slice(0, showAllBrands ? 100 : 8).map((brand) => {
-                        const checked = visibleBrands.includes(brand.id)
-                        return (
-                          <label key={brand.id} className="flex min-h-11 items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => updateBrands(checked
-                                ? visibleBrands.filter((id) => id !== brand.id)
-                                : [...visibleBrands, brand.id])}
-                              className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-primary)]"
-                            />
-                            <span>{brand.name}</span>
-                          </label>
-                        )
-                      })}
-                      {availableBrands.length > 8 && (
-                        <button type="button" onClick={() => setShowAllBrands((show) => !show)} className="min-h-11 text-left text-xs font-semibold text-[var(--color-primary)]">
-                          {showAllBrands ? "Ver menos" : "Ver mais"}
-                        </button>
-                      )}
+                    <div className="relative mt-2 mb-2.5">
+                      <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={brandSearch}
+                        onChange={(event) => setBrandSearch(event.target.value)}
+                        placeholder="Buscar marca..."
+                        aria-label="Buscar marca"
+                        className="min-h-10 w-full rounded-lg border border-slate-200 bg-slate-50/70 pl-9 pr-3 text-sm text-[var(--color-text)] placeholder:text-slate-400 focus:bg-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] focus:outline-none transition-colors"
+                      />
                     </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">Nenhuma marca disponível</p>
-                  )}
+                    {facetsQuery.isLoading ? (
+                      <p className="py-2 text-xs text-slate-500">Carregando marcas...</p>
+                    ) : availableBrands.length ? (
+                      <div className="flex flex-col gap-1">
+                        {availableBrands.slice(0, showAllBrands ? 100 : 8).map((brand) => {
+                          const checked = visibleBrands.includes(brand.id)
+                          return (
+                            <label key={brand.id} className="flex min-h-9 items-center gap-2.5 text-sm text-slate-700 hover:text-[var(--color-navy)] py-1 px-1 rounded hover:bg-slate-50/70 cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => updateBrands(checked
+                                  ? visibleBrands.filter((id) => id !== brand.id)
+                                  : [...visibleBrands, brand.id])}
+                                className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              />
+                              <span>{brand.name}</span>
+                            </label>
+                          )
+                        })}
+                        {availableBrands.length > 8 && (
+                          <button type="button" onClick={() => setShowAllBrands((show) => !show)} className="mt-1 min-h-9 text-left text-xs font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                            {showAllBrands ? "Ver menos" : "Ver mais"}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-2 rounded-lg bg-slate-50/70 px-3 py-3 text-center border border-dashed border-slate-200">
+                        <p className="text-xs font-medium text-slate-500">Nenhuma marca encontrada</p>
+                        {brandSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setBrandSearch("")}
+                            className="mt-1 text-xs font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded"
+                          >
+                            Limpar busca
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </>}
                 </div>
 
-                <div className="border-t border-[var(--color-border)] pt-3">
-                  <button type="button" aria-expanded={availabilityOpen} onClick={() => setAvailabilityOpen((open) => !open)} className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)]">
-                    Disponibilidade
-                    <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${availabilityOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                {/* Disponibilidade */}
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                  <button type="button" aria-expanded={availabilityOpen} onClick={() => setAvailabilityOpen((open) => !open)} className="flex min-h-10 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                    <span>Disponibilidade</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${availabilityOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
-                  {availabilityOpen && <label className="mt-1 flex min-h-11 items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                  {availabilityOpen && <label className="mt-2 flex min-h-9 items-center gap-2.5 text-sm text-slate-700 hover:text-[var(--color-navy)] py-1 px-1 rounded hover:bg-slate-50/70 cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={visibleAvailability}
                       onChange={(event) => updateAvailability(event.target.checked)}
-                      className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-primary)]"
+                      className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
                     Somente em estoque
                   </label>}
                 </div>
 
+                {/* Promocao */}
                 {facets?.promotion_available && (
-                  <div className="border-t border-[var(--color-border)] pt-3">
-                    <label className="flex min-h-11 items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                  <div className="pt-4 mt-4 border-t border-slate-100">
+                    <label className="flex min-h-9 items-center gap-2.5 text-sm text-slate-700 hover:text-[var(--color-navy)] py-1 px-1 rounded hover:bg-slate-50/70 cursor-pointer transition-colors">
                       <input
                         type="checkbox"
                         checked={visiblePromotion}
@@ -692,77 +731,87 @@ export function StorePage({
                             replace: false,
                           })
                         }}
-                        className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-primary)]"
+                        className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                       />
                       Em promoção
                     </label>
                   </div>
                 )}
 
-                <div className="border-t border-[var(--color-border)] pt-3">
-                  <button type="button" aria-expanded={priceOpen} onClick={() => setPriceOpen((open) => !open)} className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)]">
-                    Faixa de preço
-                    <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${priceOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                {/* Faixa de Preco */}
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                  <button type="button" aria-expanded={priceOpen} onClick={() => setPriceOpen((open) => !open)} className="flex min-h-10 w-full items-center justify-between text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                    <span>Faixa de preço</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${priceOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
-                  {priceOpen && <div className="mt-2 grid grid-cols-2 gap-2">
-                    <input
-                      inputMode="decimal"
-                      aria-label="Preço mínimo"
-                      placeholder="Mínimo"
-                      value={visiblePriceMin}
-                      onChange={(event) => {
-                        setPriceError(null)
-                        if (mobileFiltersOpen) setPendingPriceMin(event.target.value)
-                        else setPriceMinInput(event.target.value)
-                      }}
-                      onBlur={() => !mobileFiltersOpen && applyPriceRange(priceMinInput, priceMaxInput)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault()
-                          applyPriceRange(mobileFiltersOpen ? visiblePriceMin : priceMinInput, mobileFiltersOpen ? visiblePriceMax : priceMaxInput)
-                        }
-                      }}
-                      className="min-h-11 w-full rounded-md border border-[var(--color-border)] px-2 text-sm"
-                    />
-                    <input
-                      inputMode="decimal"
-                      aria-label="Preço máximo"
-                      placeholder="Máximo"
-                      value={visiblePriceMax}
-                      onChange={(event) => {
-                        setPriceError(null)
-                        if (mobileFiltersOpen) setPendingPriceMax(event.target.value)
-                        else setPriceMaxInput(event.target.value)
-                      }}
-                      onBlur={() => !mobileFiltersOpen && applyPriceRange(priceMinInput, priceMaxInput)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault()
-                          applyPriceRange(mobileFiltersOpen ? visiblePriceMin : priceMinInput, mobileFiltersOpen ? visiblePriceMax : priceMaxInput)
-                        }
-                      }}
-                      className="min-h-11 w-full rounded-md border border-[var(--color-border)] px-2 text-sm"
-                    />
+                  {priceOpen && <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">R$</span>
+                      <input
+                        inputMode="decimal"
+                        aria-label="Preço mínimo"
+                        placeholder="Mínimo"
+                        value={visiblePriceMin}
+                        onChange={(event) => {
+                          setPriceError(null)
+                          if (mobileFiltersOpen) setPendingPriceMin(event.target.value)
+                          else setPriceMinInput(event.target.value)
+                        }}
+                        onBlur={() => !mobileFiltersOpen && applyPriceRange(priceMinInput, priceMaxInput)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault()
+                            applyPriceRange(mobileFiltersOpen ? visiblePriceMin : priceMinInput, mobileFiltersOpen ? visiblePriceMax : priceMaxInput)
+                          }
+                        }}
+                        className="min-h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">R$</span>
+                      <input
+                        inputMode="decimal"
+                        aria-label="Preço máximo"
+                        placeholder="Máximo"
+                        value={visiblePriceMax}
+                        onChange={(event) => {
+                          setPriceError(null)
+                          if (mobileFiltersOpen) setPendingPriceMax(event.target.value)
+                          else setPriceMaxInput(event.target.value)
+                        }}
+                        onBlur={() => !mobileFiltersOpen && applyPriceRange(priceMinInput, priceMaxInput)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault()
+                            applyPriceRange(mobileFiltersOpen ? visiblePriceMin : priceMinInput, mobileFiltersOpen ? visiblePriceMax : priceMaxInput)
+                          }
+                        }}
+                        className="min-h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] focus:outline-none transition-colors"
+                      />
+                    </div>
                   </div>}
                   {facets?.price?.min !== undefined && facets?.price?.max !== undefined && (
-                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                    <p className="mt-1.5 text-[11px] text-slate-500">
                       De {facets.price.min.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} a {facets.price.max.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                     </p>
                   )}
                   {priceError && <p role="alert" className="mt-2 text-xs font-medium text-[var(--color-danger)]">{priceError}</p>}
                 </div>
 
+                {/* Filtros Tecnicos */}
                 {!hideOptionsPicker && visibleCategory && (facets?.options?.length ?? 0) > 0 && (
-                  <div className="border-t border-[var(--color-border)] pt-3">
-                    <button type="button" aria-expanded={optionsOpen} onClick={() => setOptionsOpen((open) => !open)} className="flex min-h-11 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">
-                      Filtros técnicos
-                      <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${optionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                  <div className="pt-4 mt-4 border-t border-slate-100">
+                    <button type="button" aria-expanded={optionsOpen} onClick={() => setOptionsOpen((open) => !open)} className="flex min-h-10 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded">
+                      <span>Filtros técnicos</span>
+                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${optionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                     </button>
-                    {optionsOpen && <OptionsPicker
-                      selectedValueIds={visibleOptionValueIds}
-                      onChange={updateOptionValueIds}
-                      optionsOverride={facets?.options}
-                    />}
+                    {optionsOpen && <div className="mt-2.5">
+                      <OptionsPicker
+                        selectedValueIds={visibleOptionValueIds}
+                        onChange={updateOptionValueIds}
+                        optionsOverride={facets?.options}
+                      />
+                    </div>}
                   </div>
                 )}
               </div>
