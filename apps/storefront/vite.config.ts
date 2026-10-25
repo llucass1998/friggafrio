@@ -2,7 +2,7 @@ import medusaAiTags from "@medusajs-ai/tags";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import type { Plugin } from "vite";
 import Terminal from "vite-plugin-terminal";
 import viteTsConfigPaths from "vite-tsconfig-paths";
@@ -38,7 +38,12 @@ const adminProxyPlugin: Plugin = {
   },
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
+  const env = { ...loadEnv(mode, import.meta.dirname, "VITE_"), ...process.env };
+  // O mapa é requisito do build público; ausência de chave nunca vira release silenciosa.
+  if (command === "build" && mode === "production" && !env.VITE_GOOGLE_MAPS_EMBED_API_KEY?.trim()) {
+    throw new Error("GOOGLE_MAPS_EMBED_KEY_REQUIRED_FOR_BUILD");
+  }
   const isDev = mode === "development";
   const allowedHosts = ["friggafrio.istigestao.com.br", "friggafrio.com.br"];
 

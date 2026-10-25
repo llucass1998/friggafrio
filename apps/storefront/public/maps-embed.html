@@ -34,9 +34,9 @@
     (function() {
       var params = new URLSearchParams(window.location.search);
       var q = params.get('q') || 'Alameda Glete, 663, Campos Elíseos, São Paulo - SP, 01215-001';
-      var key = params.get('key') || 'AIzaSyCwz5MOUVxL3l-Pkt61obsrSnaDy3t9NtY';
+      var key = params.get('key');
       var frame = document.getElementById('map-frame');
-      if (frame) {
+      if (frame && key) {
         frame.src = 'https://www.google.com/maps/embed/v1/place?key=' + encodeURIComponent(key) + '&q=' + encodeURIComponent(q);
       }
     })();

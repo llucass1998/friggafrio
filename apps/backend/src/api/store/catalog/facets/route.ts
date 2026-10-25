@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { createCatalogCacheKey, getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
+import { cachedPublicCatalog, createCatalogCacheKey, getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
+import { canCachePublicCatalog, publicCatalogInput, queryPublicFacets } from "../../../../integrations/catalog/public-query"
 
 type Query = {
   graph: (input: {
@@ -32,6 +33,21 @@ const publicMetadataSearchValues = (metadata: Record<string, unknown> | null | u
   .map(([, value]) => value)
 
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
+  if (process.env.CATALOG_SQL_QUERY_ENABLED === "true") {
+    try {
+      const input = publicCatalogInput(req)
+      const shareable = await canCachePublicCatalog(req, input, true)
+      const result = shareable
+        ? await cachedPublicCatalog("facets", input, () => queryPublicFacets(req, input), 60)
+        : { value: await queryPublicFacets(req, input), cache: "BYPASS" }
+      res.setHeader?.("X-Cache", result.cache)
+      res.setHeader?.("Cache-Control", "no-store")
+      res.json(result.value)
+    } catch {
+      res.status(503).json({ brands: [], price: {}, options: [], unavailable: true, code: "CATALOG_FACETS_UNAVAILABLE" })
+    }
+    return
+  }
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   try {
     const cacheKey = createCatalogCacheKey("facets", (req.query ?? {}) as Record<string, unknown>)

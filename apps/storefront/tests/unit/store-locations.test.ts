@@ -104,6 +104,16 @@ test("independent cards, shared map, accessible selection and Loja 1-only pickup
   assert.equal(existsSync(new URL("../../src/components/store-locations/StoreStreetView.tsx", import.meta.url)), false)
 })
 
+test("Maps usa o host autorizado pelo Google e o build não aceita chave ausente", () => {
+  const map = readFileSync(new URL("../../src/components/store-locations/GoogleStoreMap.tsx", import.meta.url), "utf8")
+  const embed = readFileSync(new URL("../../public/maps-embed.html", import.meta.url), "utf8")
+  const config = readFileSync(new URL("../../vite.config.ts", import.meta.url), "utf8")
+  assert.match(map, /https:\/\/friggafrio\.istigestao\.com\.br\/maps-embed\.html\?key=/)
+  assert.doesNotMatch(map + embed, /AIza[A-Za-z0-9_-]+/)
+  assert.match(config, /GOOGLE_MAPS_EMBED_KEY_REQUIRED_FOR_BUILD/)
+  assert.match(config, /loadEnv\(mode, import\.meta\.dirname/)
+})
+
 test("all store navigation labels use the plural without changing the legal footer", () => {
   for (const path of ["components/header/HeaderDesktopNav.tsx", "components/header/HeaderMobileDrawer.tsx", "components/public-footer.tsx", "config/footer-navigation.ts"]) {
     const source = readFileSync(new URL(`../../src/${path}`, import.meta.url), "utf8")

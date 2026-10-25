@@ -1,5 +1,6 @@
 import { createStep, StepResponse, createWorkflow, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { invalidatePublicCatalog } from "../../lib/catalog-cache"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { createInventoryLevelsWorkflow, updateInventoryLevelsWorkflow } from "@medusajs/medusa/core-flows"
 import { OmieClient, OmieStockReader, calculateAvailableStock, loadOmieConfig, normalizeOmieStock } from "../../integrations/omie"
@@ -79,6 +80,7 @@ export async function syncInventory(input: SyncInventoryInput, container: Medusa
       }
       if (updates.length) await updateInventoryLevelsWorkflow(container).run({ input: { updates } })
       if (creates.length) await createInventoryLevelsWorkflow(container).run({ input: { inventory_levels: creates } })
+      if (updates.length || creates.length) await invalidatePublicCatalog()
       hasMore = result.hasMore
       page++
     }

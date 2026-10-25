@@ -6,6 +6,12 @@ import type { CatalogFilters } from "@/lib/utils/catalog-filters"
 import { buildCatalogSearchQuery } from "@/lib/utils/catalog-query"
 // import { getAuthHeaders } from "./cookies" // Unused and missing
 
+/** O catálogo não transforma falhas em contagem zero nem cacheia um erro como vazio. */
+export async function listCatalogProducts(queryParams: HttpTypes.StoreProductListParams, regionId: string) {
+  const { products, count } = await sdk.store.product.list({ ...queryParams, region_id: regionId })
+  return { products, count }
+}
+
 export const listProducts = cache(
   async ({
     pageParam = 1,
@@ -101,7 +107,7 @@ export const getCatalogFacets = cache(async ({
 export type CatalogSearchResponse = { product_ids: string[]; count: number; unavailable?: boolean; code?: string; limit?: number }
 
 /** Applies catalog-only filters before pagination in the backend adapter. */
-export const searchCatalog = cache(async ({
+export async function searchCatalog({
   regionId,
   filters,
   limit = 24,
@@ -111,7 +117,7 @@ export const searchCatalog = cache(async ({
   filters?: Record<string, unknown>
   limit?: number
   offset?: number
-}): Promise<CatalogSearchResponse> => {
+}): Promise<CatalogSearchResponse> {
   const query = buildCatalogSearchQuery({ regionId, filters, limit, offset })
   try {
     return await sdk.client.fetch<CatalogSearchResponse>("/store/catalog/search", { method: "GET", query })
@@ -123,7 +129,7 @@ export const searchCatalog = cache(async ({
       code: error instanceof Error ? error.message : "CATALOG_QUERY_UNAVAILABLE",
     }
   }
-})
+}
 
 export const retrieveProduct = cache(
   async (params: any, additionalArgs?: any) => {

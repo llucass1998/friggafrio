@@ -1,7 +1,9 @@
 import { createFileRoute, notFound, useLoaderData, useParams, useRouter } from "@tanstack/react-router"
-import { getRegion } from "@/lib/data/regions"
+import { listRegions } from "@/lib/data/regions"
+import { resolveStoreRegion } from "@/lib/utils/region"
 import Store from "@/pages/store"
-import { listProducts, searchCatalog } from "@/lib/data/products"
+import { CatalogPending } from "@/components/catalog-pending"
+import { listCatalogProducts, searchCatalog } from "@/lib/data/products"
 import { retrieveCategory } from "@/lib/data/categories"
 import { HttpTypes } from "@medusajs/types"
 import { sanitize } from "@/lib/utils/sanitize"
@@ -56,6 +58,9 @@ type CatalogLoaderData = {
 
 export const Route = createFileRoute("/$countryCode/store")({
   validateSearch: storeSearchSchema,
+  pendingComponent: CatalogPending,
+  pendingMs: 200,
+  pendingMinMs: 150,
   loaderDeps: ({ search }) => ({
     optionValueIds: search[OPTION_VALUE_QUERY_KEY],
     category: search.category,
@@ -84,10 +89,12 @@ export const Route = createFileRoute("/$countryCode/store")({
     const promotion = deps.promotion === "true" || deps.promotion === "1" ? true : undefined
     const optionValueIds = normalizeFilterValues(rawOptionValueIds)
 
-    const region = await queryClient.ensureQueryData({
-      queryKey: ["region", countryCode],
-      queryFn: () => getRegion({ country_code: countryCode }),
+    const regions = await queryClient.ensureQueryData({
+      queryKey: ["regions"],
+      queryFn: () => listRegions({ fields: "id, name, currency_code, *countries" }),
+      staleTime: 60_000,
     })
+    const region = resolveStoreRegion(regions, countryCode)
 
     if (!region) {
       throw notFound()
@@ -95,7 +102,7 @@ export const Route = createFileRoute("/$countryCode/store")({
 
     // Legacy navigation still carries category handles in the store query.
     // Resolve them to canonical Medusa IDs before applying the server filter.
-    const categoryId = category
+    const categoryId = category?.startsWith("pcat_") ? category : category
       ? await queryClient.ensureQueryData({
           queryKey: ["category", category],
           queryFn: async () => {
@@ -133,7 +140,7 @@ export const Route = createFileRoute("/$countryCode/store")({
       || sort === "price_asc" || sort === "price_desc"
     const loadCatalogPage = async (targetPage: number) => {
       if (!advancedCatalogQuery) {
-        return listProducts({ queryParams: { ...queryParams, offset: offsetForPage(targetPage, PRODUCTS_PER_PAGE) }, regionId: region.id })
+        return listCatalogProducts({ ...queryParams, offset: offsetForPage(targetPage, PRODUCTS_PER_PAGE) }, region.id)
       }
       const advanced = await searchCatalog({
         regionId: region.id,
@@ -155,11 +162,11 @@ export const Route = createFileRoute("/$countryCode/store")({
         if (advanced.product_ids.length === 0) {
           return { products: [], count: advanced.count ?? 0 }
         }
-        const hydrated = await listProducts({
-          queryParams: { ...queryParams, id: advanced.product_ids, limit: advanced.product_ids.length, offset: 0 },
-          regionId: region.id,
-        })
+        const hydrated = await listCatalogProducts({
+          id: advanced.product_ids, limit: advanced.product_ids.length, offset: 0, fields: PUBLIC_PRODUCT_CARD_FIELDS,
+        }, region.id)
         const byId = new Map(hydrated.products.map((product) => [product.id, product]))
+        if (advanced.product_ids.some((id) => !byId.has(id))) throw new Error("CATALOG_PAGE_CHANGED_RETRY")
         return {
           products: advanced.product_ids
             .map((id) => byId.get(id))
@@ -168,61 +175,8 @@ export const Route = createFileRoute("/$countryCode/store")({
         }
       }
 
-      // Fallback: If custom search endpoint is unavailable, gracefully fall back
-      // to Medusa's standard product list so users can continue browsing and filtering
-      const validCollectionIds = brands.filter((b) => b.startsWith("pcol_"))
-      const brandKeywords = brands.filter((b) => !b.startsWith("pcol_"))
-      const combinedSearch = [q, ...brandKeywords].filter(Boolean).join(" ").trim()
-
-      const safeQueryParams: Record<string, unknown> = {
-        limit: PRODUCTS_PER_PAGE,
-        offset: offsetForPage(targetPage, PRODUCTS_PER_PAGE),
-        fields: PUBLIC_PRODUCT_CARD_FIELDS,
-        ...(combinedSearch ? { q: combinedSearch } : {}),
-        ...(categoryId ? { category_id: [categoryId] } : category ? { category_id: ["__missing_category__"] } : {}),
-        ...(validCollectionIds.length > 0 ? { collection_id: validCollectionIds } : {}),
-      }
-
-      const fallbackResult = await listProducts({
-        queryParams: safeQueryParams,
-        regionId: region.id,
-      })
-      let filteredProducts = fallbackResult.products ?? []
-      if (brands.length > 0) {
-        filteredProducts = filteredProducts.filter((p) => {
-          const titleLower = (p.title || "").toString().toLowerCase()
-          const collectionTitleLower = (p.collection?.title || "").toString().toLowerCase()
-          const brandMeta = ((p.metadata as Record<string, unknown> | null)?.brand || "").toString().toLowerCase()
-          return brands.some((b) => {
-            const bLower = b.toLowerCase()
-            return (
-              titleLower.includes(bLower) ||
-              collectionTitleLower.includes(bLower) ||
-              brandMeta.includes(bLower) ||
-              p.collection?.id === b
-            )
-          })
-        })
-      }
-      if (priceMin !== undefined || priceMax !== undefined) {
-        filteredProducts = filteredProducts.filter((p) => {
-          const prices = (p.variants ?? []).flatMap((v) => v.calculated_price?.calculated_amount ?? []).filter(Number.isFinite)
-          if (!prices.length) return true
-          const minP = Math.min(...prices)
-          if (priceMin !== undefined && minP < priceMin) return false
-          if (priceMax !== undefined && minP > priceMax) return false
-          return true
-        })
-      }
-      if (availability === "in_stock") {
-        filteredProducts = filteredProducts.filter((p) =>
-          (p.variants ?? []).some((v) => v.allow_backorder || !v.manage_inventory || (typeof v.inventory_quantity === "number" && v.inventory_quantity > 0))
-        )
-      }
-      return {
-        products: filteredProducts,
-        count: fallbackResult.count ?? filteredProducts.length,
-      }
+      // Um fallback filtrado depois da paginação produziria totais e resultados incorretos.
+      throw new Error(advanced.code || "CATALOG_QUERY_UNAVAILABLE")
     }
 
     const queryKey = (page: number) => ["products", {

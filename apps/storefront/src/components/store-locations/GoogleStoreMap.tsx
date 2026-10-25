@@ -6,7 +6,7 @@ interface GoogleStoreMapProps {
 }
 
 export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY?.trim()
 
   if (!apiKey) {
     return (
@@ -33,7 +33,8 @@ export function GoogleStoreMap({ location }: GoogleStoreMapProps) {
   }
 
   const queryParam = `q=${encodeURIComponent(storeAddress(location))}`
-  const embedUrl = `https://friggafrio.istigestao.com.br/maps-embed.html?key=${apiKey}&${queryParam}`
+  // A chave Embed existente autoriza este host; o domínio principal recebe 403 do Google.
+  const embedUrl = `https://friggafrio.istigestao.com.br/maps-embed.html?key=${encodeURIComponent(apiKey)}&${queryParam}`
 
   return (
     <div className="h-[280px] w-full overflow-hidden rounded-2xl border border-[#E5EDF4] bg-[#F5F8FA] md:h-[360px]">

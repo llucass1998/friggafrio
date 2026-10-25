@@ -1,4 +1,5 @@
 import Redis from "ioredis"
+import { createHash, randomUUID } from "node:crypto"
 
 let redisClient: Redis | null = null
 
@@ -13,6 +14,7 @@ function getRedisClient(): Redis | null {
   try {
     redisClient = new Redis(redisUrl, {
       connectTimeout: 1500,
+      commandTimeout: 1500,
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       lazyConnect: false,
@@ -61,6 +63,57 @@ export async function setCachedJson(key: string, data: unknown, ttlSeconds: numb
   } catch {
     // Fail silently so catalog functionality is never compromised
   }
+}
+
+const epochKey = "catalog:public:v2:epoch"
+const inFlight = new Map<string, Promise<unknown>>()
+
+export async function invalidatePublicCatalog(): Promise<void> {
+  try { await getRedisClient()?.incr(epochKey) } catch { /* O TTL limita o cache se o Redis estiver indisponível. */ }
+}
+
+/** Coalescência por contexto público; o epoch impede repovoar a versão invalidada. */
+export async function cachedPublicCatalog<T>(namespace: string, context: object, compute: () => Promise<T>, ttl = 30): Promise<{ value: T; cache: string }> {
+  let epoch = "0"
+  const client = getRedisClient()
+  try { epoch = await client?.get(epochKey) ?? "0" } catch { /* Consulta correta sem cache. */ }
+  const digest = createHash("sha256").update(JSON.stringify(context)).digest("hex")
+  const key = `catalog:public:v2:${epoch}:${namespace}:${digest}`
+  const cached = await getCachedJson<T>(key)
+  if (cached !== null) return { value: cached, cache: "HIT" }
+  const existing = inFlight.get(key) as Promise<T> | undefined
+  if (existing) return { value: await existing, cache: "COALESCED" }
+  const promise = (async () => {
+    const token = randomUUID()
+    let locked = false
+    let cacheWritable = !client
+    const lockKey = `${key}:lock`
+    try {
+      if (client) {
+        try {
+          locked = await client.set(lockKey, token, "PX", 15_000, "NX") === "OK"
+          cacheWritable = locked
+          if (!locked) {
+            for (let attempt = 0; attempt < 20; attempt++) {
+              await new Promise((resolve) => setTimeout(resolve, 100))
+              const shared = await getCachedJson<T>(key)
+              if (shared !== null) return shared
+            }
+          }
+        } catch { /* Sem Redis, coalescência local permanece ativa. */ }
+      }
+      const value = await compute()
+      // Se o epoch mudar durante o cálculo, este resultado nunca ocupa a nova versão.
+      if (cacheWritable) await setCachedJson(key, value, ttl)
+      return value
+    } finally {
+      if (locked) {
+        try { await client?.eval("if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) end return 0", 1, lockKey, token) } catch { /* Lease expira automaticamente. */ }
+      }
+    }
+  })()
+  inFlight.set(key, promise)
+  try { return { value: await promise, cache: "MISS" } } finally { if (inFlight.get(key) === promise) inFlight.delete(key) }
 }
 
 export function resetCatalogCacheClientForTesting(): void {

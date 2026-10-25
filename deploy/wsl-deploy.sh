@@ -6,6 +6,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/wsl-guard-lib.sh"
 
 require_wsl
+# Hotfix explícito para o ingress público Hades; não afeta o runtime WSL local.
+if [[ "${1:-}" == "--hades-public-hotfix" ]]; then
+  approved_sha="${2:?SHA aprovado obrigatório}"
+  [[ "$approved_sha" =~ ^[a-f0-9]{40}$ ]] || deploy_fail "HADES_APPROVED_SHA_INVALID"
+  [[ "$(git -C "$SCRIPT_DIR/.." rev-parse HEAD)" == "$approved_sha" ]] || deploy_fail "WSL_SOURCE_SHA_MISMATCH"
+  [[ -z "$(git -C "$SCRIPT_DIR/.." status --porcelain)" ]] || deploy_fail "WSL_SOURCE_DIRTY"
+  # O script remoto é lido do commit Git oficial, nunca copiado como source.
+  exec ssh -p 3242 -o BatchMode=yes -o ConnectTimeout=10 frigga@hades.istigestao.com.br \
+    "git -C /home/frigga/app fetch origin Maestro && git -C /home/frigga/app show $approved_sha:deploy/hades-public-hotfix.sh | bash -s -- $approved_sha"
+fi
 require_expected_paths
 require_deploy_mode
 for command_name in git node pnpm systemctl flock; do require_command "$command_name"; done

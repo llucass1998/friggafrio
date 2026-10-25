@@ -1,5 +1,5 @@
 export const PUBLIC_PRODUCT_CARD_FIELDS =
-  "id,title,subtitle,handle,thumbnail,metadata,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,variants.sku,variants.barcode,variants.ean,variants.upc,*collection,*categories,*images,*variants.options"
+  "id,title,handle,thumbnail,metadata,variants.id,variants.sku,variants.barcode,variants.ean,variants.upc,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,collection.id,collection.title,images.url"
 
 // Home shelves only render compact public cards, so avoid transferring unused
 // description and option fields during the initial page request.

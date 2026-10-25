@@ -106,8 +106,8 @@ index 28522b73fefac055a0ab3031851587f77e65e7d8..ed250cf579ee69e55f8c971e1825ee99
 +    staleTime: 15e3
 +  });
 +  const linkedProductQuery = useQuery({
-+    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids],
-+    queryFn: () => sdk.admin.product.list({ id: privateLinksQuery.data?.product_ids, limit: PAGE_SIZE, offset: 0, is_giftcard: false, fields: "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail" }),
++    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids, searchParams],
++    queryFn: () => sdk.admin.product.list({ ...searchParams, q: void 0, id: privateLinksQuery.data?.product_ids, limit: PAGE_SIZE, offset: searchParams.offset ?? 0, is_giftcard: false, fields: "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail" }),
 +    enabled: codeSearch && Boolean(privateLinksQuery.data?.product_ids?.length)
 +  });
    const { products, count, isLoading, isError, error } = useProducts(
@@ -120,8 +120,8 @@ index 28522b73fefac055a0ab3031851587f77e65e7d8..ed250cf579ee69e55f8c971e1825ee99
 -  const columns = useColumns();
 +  const privateCodes = useMemo(() => Object.fromEntries((privateLinksQuery.data?.links ?? []).map((link) => [link.product_id, link.code_display])), [privateLinksQuery.data]);
 +  const columns = useColumns(privateCodes);
-+  const visibleProducts = (linkedProductQuery.data?.products?.length ? linkedProductQuery.data.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }));
-+  const visibleCount = linkedProductQuery.data?.products?.length ? linkedProductQuery.data.count : count;
++  const visibleProducts = (linkedProductQuery.isEnabled ? linkedProductQuery.data?.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }));
++  const visibleCount = linkedProductQuery.isEnabled ? linkedProductQuery.data?.count ?? 0 : count;
    const { table } = useDataTable({
 -    data: products ?? [],
 +    data: visibleProducts ?? [],
@@ -371,11 +371,11 @@ index 0d9c1b8b2602ef58fbfe66dc2a208f05622b092a..cdd373b9109c489a051cab4869b2d546
 +    staleTime: 15_000,
 +  })
 +  const linkedProductQuery = useQuery({
-+    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids],
++    queryKey: ["frigga-omie-products", privateLinksQuery.data?.product_ids, searchParams],
 +    queryFn: () => sdk.admin.product.list({
-+      id: privateLinksQuery.data?.product_ids,
++      ...searchParams, q: undefined, id: privateLinksQuery.data?.product_ids,
 +      limit: PAGE_SIZE,
-+      offset: 0,
++      offset: searchParams.offset ?? 0,
 +      is_giftcard: false,
 +      fields: "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail",
 +    }),
@@ -391,8 +391,8 @@ index 0d9c1b8b2602ef58fbfe66dc2a208f05622b092a..cdd373b9109c489a051cab4869b2d546
 -  const columns = useColumns()
 +  const privateCodes = useMemo(() => Object.fromEntries((privateLinksQuery.data?.links ?? []).map((link) => [link.product_id, link.code_display])), [privateLinksQuery.data])
 +  const columns = useColumns(privateCodes)
-+  const visibleProducts = (linkedProductQuery.data?.products?.length ? linkedProductQuery.data.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }))
-+  const visibleCount = linkedProductQuery.data?.products?.length ? linkedProductQuery.data.count : count
++  const visibleProducts = (linkedProductQuery.isEnabled ? linkedProductQuery.data?.products : products)?.map((product) => ({ ...product, __frigga_omie_code: privateCodes[product.id] }))
++  const visibleCount = linkedProductQuery.isEnabled ? linkedProductQuery.data?.count ?? 0 : count
 
    const { table } = useDataTable({
 -    data: (products ?? []) as HttpTypes.AdminProduct[],

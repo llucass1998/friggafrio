@@ -1,5 +1,6 @@
 import { createStep, StepResponse, createWorkflow, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys, ProductStatus } from "@medusajs/framework/utils"
+import { invalidatePublicCatalog } from "../../lib/catalog-cache"
 import type { MedusaContainer, CreateProductWorkflowInputDTO } from "@medusajs/framework/types"
 import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { OmieClient, OmieCatalogReader, loadOmieConfig, normalizeOmieProduct } from "../../integrations/omie"
@@ -84,6 +85,7 @@ export async function syncCatalog(input: SyncCatalogInput, container: MedusaCont
     }
     if (updates.length) await updateProductsWorkflow(container).run({ input: { products: updates } })
     if (creates.length) await createProductsWorkflow(container).run({ input: { products: creates } })
+    if (updates.length || creates.length) await invalidatePublicCatalog()
     more = result.hasMore
     page++
   }
