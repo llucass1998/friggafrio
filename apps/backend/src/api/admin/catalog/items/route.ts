@@ -126,8 +126,9 @@ export const GET = async (
       if (qFolded) {
         const titleMatch = product.title?.toLowerCase().includes(qFolded)
         const handleMatch = product.handle?.toLowerCase().includes(qFolded)
+        const omieMetaCode = typeof product.metadata?.omie_code === "string" ? product.metadata.omie_code.toLowerCase() : ""
         const omieDisplayMatch = omieLink?.code_display?.toLowerCase().includes(qFolded)
-        const omieNormMatch = omieLink?.code_normalized?.toLowerCase().includes(qFolded)
+        const omieNormMatch = omieLink?.code_normalized?.toLowerCase().includes(qFolded) || omieMetaCode.includes(qFolded)
         const skuMatch = variants.some((v) => v.sku?.toLowerCase().includes(qFolded))
         const variantTitleMatch = variants.some((v) => v.title?.toLowerCase().includes(qFolded))
         const collectionMatch = product.collection?.title?.toLowerCase().includes(qFolded)
@@ -207,10 +208,23 @@ export const GET = async (
     }
 
     const totalCount = filtered.length
-    const pageItems = filtered.slice(offset, offset + limit).map((product) => ({
-      ...product,
-      omie_link: omieMap.get(product.id) || null,
-    }))
+    const pageItems = filtered.slice(offset, offset + limit).map((product) => {
+      const existingLink = omieMap.get(product.id)
+      const omieCode = typeof product.metadata?.omie_code === "string" ? product.metadata.omie_code.trim() : null
+      const fallbackLink: OmieLink | null = omieCode ? {
+        id: `synthetic_${product.id}`,
+        code_display: omieCode,
+        code_normalized: omieCode.toUpperCase(),
+        product_id: product.id,
+        variant_id: product.variants?.[0]?.id || null,
+        source: "omie-metadata",
+      } : null
+
+      return {
+        ...product,
+        omie_link: existingLink || fallbackLink,
+      }
+    })
 
     res.status(200).json({
       products: pageItems,
