@@ -43,7 +43,8 @@ const OverviewDashboardPage = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-catalog-metrics"],
     queryFn: () => sdk.client.fetch<{ metrics: CatalogMetrics }>("/admin/catalog/metrics"),
-    refetchInterval: 30_000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
   })
 
   const metrics = data?.metrics

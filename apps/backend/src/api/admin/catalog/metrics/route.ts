@@ -1,5 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { getCachedJson, setCachedJson } from "../../../../lib/catalog-cache"
 
 type QueryService = {
   graph: (input: {
@@ -10,12 +11,26 @@ type QueryService = {
   }) => Promise<{ data: Record<string, unknown>[] }>
 }
 
+const METRICS_CACHE_KEY = "admin:catalog-metrics"
+const METRICS_CACHE_TTL_SECONDS = 300 // 5 minutos de cache para evitar travamento do event loop
+
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse,
 ): Promise<void> => {
   res.setHeader("Cache-Control", "no-store")
   res.setHeader("Pragma", "no-cache")
+
+  const forceFresh = req.query?.fresh === "true" || req.query?.force === "true"
+
+  if (!forceFresh) {
+    const cached = await getCachedJson<{ metrics: Record<string, unknown> }>(METRICS_CACHE_KEY)
+    if (cached?.metrics) {
+      res.setHeader("X-Cache", "HIT")
+      res.status(200).json(cached)
+      return
+    }
+  }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as QueryService
 
@@ -167,7 +182,7 @@ export const GET = async (
     const total = products.length
     const omiePending = Math.max(0, total - omieLinked)
 
-    res.status(200).json({
+    const responsePayload = {
       metrics: {
         total,
         published,
@@ -184,7 +199,11 @@ export const GET = async (
         pending_reviews: pendingReviews,
         last_updated: new Date().toISOString(),
       },
-    })
+    }
+
+    await setCachedJson(METRICS_CACHE_KEY, responsePayload, METRICS_CACHE_TTL_SECONDS)
+    res.setHeader("X-Cache", "MISS")
+    res.status(200).json(responsePayload)
   } catch (error) {
     res.status(500).json({
       code: "CATALOG_METRICS_ERROR",

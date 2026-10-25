@@ -155,7 +155,8 @@ const CatalogManagementPage = () => {
   const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useQuery({
     queryKey: ["admin-catalog-metrics"],
     queryFn: () => sdk.client.fetch<{ metrics: CatalogMetrics }>("/admin/catalog/metrics"),
-    refetchInterval: 60_000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
   })
 
   const metrics = metricsData?.metrics
